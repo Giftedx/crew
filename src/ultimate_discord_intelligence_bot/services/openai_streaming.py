@@ -1,9 +1,12 @@
 """OpenAI streaming service for real-time responses."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
+
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING
+
+from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator

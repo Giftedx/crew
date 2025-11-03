@@ -1,12 +1,15 @@
 """Crew executor for modular crew organization."""
 
 from __future__ import annotations
+
 import json
 import os
 import time
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.settings import get_settings
+
+from app.config.settings import get_settings
+
 
 if TYPE_CHECKING:
     from crewai import Crew

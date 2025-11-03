@@ -1,9 +1,11 @@
 """Social graph analysis tool for creator networks."""
 
 from __future__ import annotations
+
 import time
-from typing import Any, TypedDict
 from platform.core.step_result import StepResult
+from typing import Any, TypedDict
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -102,7 +104,7 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         nodes = network_data["nodes"]
         edges = network_data["edges"]
         degree_centrality = len(edges.get(creator_id, []))
-        max_degree = max((len(connections) for connections in edges.values())) if edges else 1
+        max_degree = max(len(connections) for connections in edges.values()) if edges else 1
         normalized_degree = degree_centrality / max_degree if max_degree > 0 else 0
         betweenness = self._calculate_betweenness_centrality(creator_id, edges)
         closeness = self._calculate_closeness_centrality(creator_id, edges)
@@ -142,7 +144,7 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             if source == creator_id:
                 target_followers = nodes.get(target, {}).get("followers", 0)
                 collaboration_influence += target_followers * data["count"]
-        max_followers = max((node.get("followers", 0) for node in nodes.values())) if nodes else 1
+        max_followers = max(node.get("followers", 0) for node in nodes.values()) if nodes else 1
         influence_score = (follower_count + collaboration_influence / 1000) / max_followers
         return SocialGraphAnalysisResult(
             creator_id=creator_id,
@@ -225,7 +227,7 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
                     [
                         target
                         for target in edges.get(creator_id, [])
-                        if any((target in comm for comm in communities.values()))
+                        if any(target in comm for comm in communities.values())
                     ]
                 ),
             },
@@ -296,7 +298,7 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         for _ in range(10):
             new_centrality = {}
             for node in nodes:
-                score = sum((centrality[neighbor] for neighbor in edges.get(node, [])))
+                score = sum(centrality[neighbor] for neighbor in edges.get(node, []))
                 new_centrality[node] = score
             total = sum(new_centrality.values())
             if total > 0:

@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from platform.observability import tracing
 from typing import TYPE_CHECKING
-
-from obs import tracing
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-    from core.learning_engine import LearningEngine
-    from core.router import Router
+    from platform.rl.learning_engine import LearningEngine
+    from platform.router import Router
 
 
 @dataclass
@@ -65,9 +63,7 @@ def run_panel(
         RL engine used to record rewards. If ``None`` the panel runs
         without recording.
     """
-
     agents: list[AgentResult] = []
-
     for role in config.roles:
         model = router.route(
             task="debate",
@@ -76,7 +72,6 @@ def run_panel(
         )
         output = call_model(model, f"{role}: {query}")
         agents.append(AgentResult(role=role, model=model, output=output))
-
     votes: dict[str, str] = {}
     if config.aggregation_strategy == "vote":
         for agent in agents:
@@ -84,12 +79,10 @@ def run_panel(
         final = agents[0].output
     else:
         final = "\n".join(a.output for a in agents)
-
     if engine:
         for agent in agents:
             engine.record("debate", {}, agent.role, agent.confidence)
         engine.record("debate", {}, "panel", reward)
-
     return DebateReport(agents=agents, final=final, votes=votes)
 
 

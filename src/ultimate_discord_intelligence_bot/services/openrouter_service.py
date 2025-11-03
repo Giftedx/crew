@@ -1,12 +1,15 @@
 """Compatibility shim forwarding to the modular OpenRouter service package."""
 
 from __future__ import annotations
+
 import os as _os
 import time as _time
 from platform.http.http_utils import resilient_post as _default_resilient_post
 
+
 __path__ = [_os.path.join(_os.path.dirname(__file__), "openrouter_service")]
 from .openrouter_service.service import OpenRouterService
+
 
 resilient_post = _default_resilient_post
 time = _time

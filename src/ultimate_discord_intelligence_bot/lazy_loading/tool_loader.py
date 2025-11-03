@@ -5,10 +5,12 @@ footprint and improve startup performance.
 """
 
 from __future__ import annotations
+
 import importlib
 import logging
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +115,7 @@ class LazyToolLoader:
         dependencies = tool_dependencies.get(tool_name, [])
         if not dependencies:
             return True
-        return all((self._check_dependency(dep) for dep in dependencies))
+        return all(self._check_dependency(dep) for dep in dependencies)
 
     def _check_dependency(self, dependency: str) -> bool:
         """Check if a specific dependency is available."""

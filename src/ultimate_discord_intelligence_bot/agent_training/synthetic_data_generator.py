@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Synthetic Data Generator for CrewAI Agent Training
 
@@ -10,9 +9,8 @@ import json
 import random
 from dataclasses import dataclass
 from pathlib import Path
+from platform.time import default_utc_now
 from typing import Any
-
-from core.time import default_utc_now  # type: ignore[import-not-found]
 
 
 @dataclass
@@ -49,12 +47,7 @@ class SyntheticDataGenerator:
                     "News article requires cross-platform sentiment analysis",
                 ],
                 "complexity_levels": ["basic", "intermediate", "advanced", "expert"],
-                "required_tools": [
-                    "pipeline_tool",
-                    "fact_check_tool",
-                    "fallacy_tool",
-                    "vector_tool",
-                ],
+                "required_tools": ["pipeline_tool", "fact_check_tool", "fallacy_tool", "vector_tool"],
             },
             "fact_checking": {
                 "scenarios": [
@@ -64,12 +57,7 @@ class SyntheticDataGenerator:
                     "Statistical claim needs data source verification",
                     "Quote attribution requires original source finding",
                 ],
-                "complexity_levels": [
-                    "straightforward",
-                    "nuanced",
-                    "contested",
-                    "deeply_complex",
-                ],
+                "complexity_levels": ["straightforward", "nuanced", "contested", "deeply_complex"],
                 "required_tools": [
                     "fact_check_tool",
                     "context_verification_tool",
@@ -85,12 +73,7 @@ class SyntheticDataGenerator:
                     "Track influencer narrative consistency",
                     "Monitor breaking news spread patterns",
                 ],
-                "complexity_levels": [
-                    "single_platform",
-                    "multi_platform",
-                    "cross_network",
-                    "ecosystem_wide",
-                ],
+                "complexity_levels": ["single_platform", "multi_platform", "cross_network", "ecosystem_wide"],
                 "required_tools": [
                     "multi_platform_monitor_tool",
                     "social_media_monitor_tool",
@@ -106,18 +89,8 @@ class SyntheticDataGenerator:
                     "Analyze rhetoric consistency across platforms",
                     "Evaluate credibility based on fact-check history",
                 ],
-                "complexity_levels": [
-                    "surface_level",
-                    "psychological",
-                    "longitudinal",
-                    "comprehensive",
-                ],
-                "required_tools": [
-                    "character_profile_tool",
-                    "truth_scoring_tool",
-                    "timeline_tool",
-                    "sentiment_tool",
-                ],
+                "complexity_levels": ["surface_level", "psychological", "longitudinal", "comprehensive"],
+                "required_tools": ["character_profile_tool", "truth_scoring_tool", "timeline_tool", "sentiment_tool"],
             },
         }
 
@@ -163,28 +136,17 @@ class SyntheticDataGenerator:
         }
 
     def generate_training_batch(
-        self,
-        agent_role: str,
-        batch_size: int = 50,
-        complexity_distribution: dict[str, float] | None = None,
+        self, agent_role: str, batch_size: int = 50, complexity_distribution: dict[str, float] | None = None
     ) -> list[ToolUsageExample]:
         """Generate a batch of synthetic training examples for an agent."""
         if complexity_distribution is None:
-            complexity_distribution = {
-                "basic": 0.3,
-                "intermediate": 0.4,
-                "advanced": 0.2,
-                "expert": 0.1,
-            }
-
+            complexity_distribution = {"basic": 0.3, "intermediate": 0.4, "advanced": 0.2, "expert": 0.1}
         examples = []
         scenario_config = self.scenario_templates.get(agent_role, self.scenario_templates["content_analysis"])
-
         for _ in range(batch_size):
             complexity = self._sample_complexity(complexity_distribution)
             example = self._generate_single_example(agent_role, scenario_config, complexity)
             examples.append(example)
-
         return examples
 
     def _sample_complexity(self, distribution: dict[str, float]) -> str:
@@ -195,30 +157,14 @@ class SyntheticDataGenerator:
 
     def _generate_single_example(self, agent_role: str, scenario_config: dict, complexity: str) -> ToolUsageExample:
         """Generate a single synthetic training example."""
-        # Select scenario
         scenario = random.choice(scenario_config["scenarios"])
-
-        # Generate context
         context = self._generate_context(agent_role, scenario, complexity)
-
-        # Determine optimal tools
         optimal_tools = self._select_optimal_tools(agent_role, scenario_config, complexity, context)
-
-        # Generate tool sequence
         tool_sequence = self._generate_tool_sequence(optimal_tools, context, complexity)
-
-        # Generate reasoning steps
         reasoning_steps = self._generate_reasoning_steps(agent_role, scenario, complexity)
-
-        # Generate expected outcome
         expected_outcome = self._generate_expected_outcome(scenario, tool_sequence, complexity)
-
-        # Generate anti-patterns
         anti_patterns = self._generate_anti_patterns(optimal_tools, complexity)
-
-        # Calculate quality score
         quality_score = self._calculate_quality_score(tool_sequence, reasoning_steps, complexity)
-
         return ToolUsageExample(
             scenario=scenario,
             context=context,
@@ -239,14 +185,12 @@ class SyntheticDataGenerator:
             "available_tools": self.tools_available,
             "confidence_threshold": 0.8 if complexity in ["advanced", "expert"] else 0.7,
         }
-
-        # Add scenario-specific context
         if "youtube" in scenario.lower() or "video" in scenario.lower():
             base_context.update(
                 {
                     "content_type": "video",
                     "platform": "youtube",
-                    "duration": random.randint(300, 3600),  # 5min to 1hr
+                    "duration": random.randint(300, 3600),
                     "view_count": random.randint(1000, 1000000),
                     "has_transcript": True,
                     "language": "english",
@@ -257,7 +201,7 @@ class SyntheticDataGenerator:
                 {
                     "content_type": "livestream",
                     "platform": "twitch",
-                    "duration": random.randint(1800, 14400),  # 30min to 4hr
+                    "duration": random.randint(1800, 14400),
                     "viewer_count": random.randint(100, 50000),
                     "is_live": random.choice([True, False]),
                     "language": "english",
@@ -273,8 +217,6 @@ class SyntheticDataGenerator:
                     "language": "english",
                 }
             )
-
-        # Add complexity-specific context
         if complexity in ["advanced", "expert"]:
             base_context.update(
                 {
@@ -284,7 +226,6 @@ class SyntheticDataGenerator:
                     "time_sensitive": random.choice([True, False]),
                 }
             )
-
         return base_context
 
     def _select_optimal_tools(
@@ -293,8 +234,6 @@ class SyntheticDataGenerator:
         """Select the optimal tools for the given scenario."""
         base_tools = scenario_config.get("required_tools", [])
         optimal_tools = base_tools.copy()
-
-        # Add complexity-based tools
         if complexity in ["advanced", "expert"]:
             enhancement_tools = [
                 "context_verification_tool",
@@ -304,26 +243,18 @@ class SyntheticDataGenerator:
                 "debate_tool",
             ]
             optimal_tools.extend([tool for tool in enhancement_tools if tool in self.tools_available])
-
-        # Add context-based tools
         if context.get("platform") == "youtube":
             optimal_tools.extend(["youtube_tool", "transcript_index_tool"])
         elif context.get("platform") == "twitch":
             optimal_tools.extend(["twitch_download_tool", "audio_transcription_tool"])
-
         if context.get("requires_deep_analysis"):
             optimal_tools.extend(["memory_storage_tool", "trustworthiness_tracker_tool"])
-
-        # Remove duplicates and filter available tools
         optimal_tools = list({tool for tool in optimal_tools if tool in self.tools_available})
-
         return optimal_tools
 
     def _generate_tool_sequence(self, optimal_tools: list[str], context: dict, complexity: str) -> list[dict[str, Any]]:
         """Generate the optimal sequence of tool usage."""
         sequence = []
-
-        # Phase 1: Content acquisition
         if context.get("content_type") == "video":
             sequence.append(
                 {
@@ -342,8 +273,6 @@ class SyntheticDataGenerator:
                     "reasoning": "Gather post content and surrounding discussion context",
                 }
             )
-
-        # Phase 2: Initial analysis
         if "claim_extractor_tool" in optimal_tools:
             sequence.append(
                 {
@@ -356,8 +285,6 @@ class SyntheticDataGenerator:
                     "reasoning": "Identify specific factual claims that can be verified",
                 }
             )
-
-        # Phase 3: Verification and fact-checking
         if "fact_check_tool" in optimal_tools:
             sequence.append(
                 {
@@ -370,8 +297,6 @@ class SyntheticDataGenerator:
                     "reasoning": "Verify factual accuracy using authoritative sources",
                 }
             )
-
-        # Phase 4: Context and perspective gathering
         if "vector_tool" in optimal_tools:
             sequence.append(
                 {
@@ -381,8 +306,6 @@ class SyntheticDataGenerator:
                     "reasoning": "Find related content and historical context",
                 }
             )
-
-        # Phase 5: Advanced analysis (for complex scenarios)
         if complexity in ["advanced", "expert"]:
             if "fallacy_tool" in optimal_tools:
                 sequence.append(
@@ -393,39 +316,28 @@ class SyntheticDataGenerator:
                         "reasoning": "Identify logical errors and reasoning flaws",
                     }
                 )
-
             if "steelman_argument_tool" in optimal_tools:
                 sequence.append(
                     {
                         "tool": "steelman_argument_tool",
                         "action": "build_strongest_case",
-                        "parameters": {
-                            "claim": "{{primary_claim}}",
-                            "evidence": "{{fact_check_results}}",
-                        },
+                        "parameters": {"claim": "{{primary_claim}}", "evidence": "{{fact_check_results}}"},
                         "reasoning": "Present the strongest possible version of the argument",
                     }
                 )
-
-        # Phase 6: Synthesis and storage
         if "memory_storage_tool" in optimal_tools:
             sequence.append(
                 {
                     "tool": "memory_storage_tool",
                     "action": "store_analysis",
-                    "parameters": {
-                        "data": "{{analysis_results}}",
-                        "tags": ["{{content_type}}", "{{platform}}"],
-                    },
+                    "parameters": {"data": "{{analysis_results}}", "tags": ["{{content_type}}", "{{platform}}"]},
                     "reasoning": "Preserve findings for future reference and learning",
                 }
             )
-
         return sequence
 
     def _generate_reasoning_steps(self, agent_role: str, scenario: str, complexity: str) -> list[str]:
         """Generate reasoning steps appropriate for the agent role and scenario."""
-        # Select appropriate reasoning pattern
         if "fact" in agent_role.lower() or "verify" in scenario.lower():
             pattern = "verification"
         elif "character" in agent_role.lower() or "profile" in scenario.lower():
@@ -434,10 +346,7 @@ class SyntheticDataGenerator:
             pattern = "defensive"
         else:
             pattern = "analytical"
-
         base_steps = self.reasoning_patterns[pattern].copy()
-
-        # Add complexity-specific reasoning
         if complexity in ["advanced", "expert"]:
             base_steps.extend(
                 [
@@ -447,8 +356,6 @@ class SyntheticDataGenerator:
                     "Plan for uncertainty and incomplete information",
                 ]
             )
-
-        # Add scenario-specific reasoning
         if "misinformation" in scenario.lower():
             base_steps.extend(
                 [
@@ -457,7 +364,6 @@ class SyntheticDataGenerator:
                     "Assess harm potential and urgency of response",
                 ]
             )
-
         return base_steps
 
     def _generate_expected_outcome(self, scenario: str, tool_sequence: list[dict], complexity: str) -> str:
@@ -468,10 +374,7 @@ class SyntheticDataGenerator:
             "advanced": "Comprehensive {analysis_type} with {confidence}% confidence, {source_count} sources verified, {limitation_count} limitations identified",
             "expert": "Expert-level {analysis_type} with {confidence}% confidence, {source_count} cross-verified sources, full uncertainty quantification",
         }
-
         template = outcome_templates.get(complexity, outcome_templates["basic"])
-
-        # Determine analysis type from scenario
         if "fact-check" in scenario.lower():
             analysis_type = "fact-check verdict"
         elif "sentiment" in scenario.lower():
@@ -480,7 +383,6 @@ class SyntheticDataGenerator:
             analysis_type = "character profile"
         else:
             analysis_type = "content analysis"
-
         return template.format(
             analysis_type=analysis_type,
             confidence=random.randint(75, 95) if complexity in ["advanced", "expert"] else random.randint(60, 85),
@@ -518,8 +420,6 @@ class SyntheticDataGenerator:
                 "why_bad": "Misses important nuance and can lead to misleading conclusions",
             },
         ]
-
-        # Add complexity-specific anti-patterns
         if complexity in ["advanced", "expert"]:
             anti_patterns.extend(
                 [
@@ -535,38 +435,24 @@ class SyntheticDataGenerator:
                     },
                 ]
             )
-
         return random.sample(anti_patterns, min(len(anti_patterns), 3))
 
     def _calculate_quality_score(self, tool_sequence: list[dict], reasoning_steps: list[str], complexity: str) -> float:
         """Calculate a quality score for the training example."""
         base_score = 0.7
-
-        # Tool sequence quality
         if len(tool_sequence) >= 3:
             base_score += 0.1
         if any("reasoning" in step for step in tool_sequence):
             base_score += 0.1
-
-        # Reasoning quality
         if len(reasoning_steps) >= 5:
             base_score += 0.1
-
-        # Complexity bonus
-        complexity_bonuses = {
-            "basic": 0.0,
-            "intermediate": 0.05,
-            "advanced": 0.1,
-            "expert": 0.15,
-        }
+        complexity_bonuses = {"basic": 0.0, "intermediate": 0.05, "advanced": 0.1, "expert": 0.15}
         base_score += complexity_bonuses.get(complexity, 0.0)
-
         return min(base_score, 1.0)
 
     def save_training_data(self, examples: list[ToolUsageExample], output_path: Path):
         """Save generated training examples to disk."""
         output_path.parent.mkdir(parents=True, exist_ok=True)
-
         training_data = {
             "metadata": {
                 "generated_at": default_utc_now().isoformat(),
@@ -588,42 +474,26 @@ class SyntheticDataGenerator:
                 for ex in examples
             ],
         }
-
         with open(output_path, "w") as f:
             json.dump(training_data, f, indent=2)
-
         print(f"✅ Saved {len(examples)} training examples to {output_path}")
 
 
-def generate_training_data_for_all_agents(
-    tools_available: list[str],
-) -> dict[str, list[ToolUsageExample]]:
+def generate_training_data_for_all_agents(tools_available: list[str]) -> dict[str, list[ToolUsageExample]]:
     """Generate comprehensive training data for all agent roles."""
     generator = SyntheticDataGenerator(tools_available)
-
-    agent_roles = [
-        "content_analysis",
-        "fact_checking",
-        "cross_platform_monitoring",
-        "character_profiling",
-    ]
-
+    agent_roles = ["content_analysis", "fact_checking", "cross_platform_monitoring", "character_profiling"]
     all_training_data = {}
-
     for role in agent_roles:
         print(f"Generating training data for {role}...")
         examples = generator.generate_training_batch(role, batch_size=100)
         all_training_data[role] = examples
-
-        # Save individual agent training data
         output_path = Path(f"data/agent_training/{role}_synthetic_training.json")
         generator.save_training_data(examples, output_path)
-
     return all_training_data
 
 
 if __name__ == "__main__":
-    # Example usage
     available_tools = [
         "pipeline_tool",
         "fact_check_tool",
@@ -642,6 +512,5 @@ if __name__ == "__main__":
         "perspective_synthesizer_tool",
         "debate_tool",
     ]
-
     all_data = generate_training_data_for_all_agents(available_tools)
     print(f"Generated training data for {len(all_data)} agent roles")

@@ -14,7 +14,7 @@ import time
 from platform.core.step_result import StepResult
 from typing import Any
 
-from ultimate_discord_intelligence_bot.settings import ENABLE_WEBSOCKET_UPDATES
+from app.config.settings import ENABLE_WEBSOCKET_UPDATES
 
 
 log = logging.getLogger(__name__)

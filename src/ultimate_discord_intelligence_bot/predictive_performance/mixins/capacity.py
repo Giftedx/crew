@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from platform.time import default_utc_now
 from typing import Any
 
 import numpy as np
-
-from core.time import default_utc_now
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ class CapacityForecastingMixin:
                     recent_interactions = agent_data.get("recent_interactions", [])
                     volume_data.append(float(len(recent_interactions)))
             return volume_data
-        except Exception:  # pragma: no cover
+        except Exception:
             return []
 
     def _forecast_interaction_volume(self, historical_volumes: list[float]) -> dict[str, Any]:
@@ -29,10 +28,9 @@ class CapacityForecastingMixin:
             x = np.array(range(len(historical_volumes))).reshape(-1, 1)
             y = np.array(historical_volumes)
             try:
-                from sklearn.linear_model import LinearRegression  # type: ignore
-            except Exception:  # pragma: no cover - fallback
-                from ..engine import LinearRegression  # type: ignore
-
+                from sklearn.linear_model import LinearRegression
+            except Exception:
+                from ..engine import LinearRegression
             model = LinearRegression()
             model.fit(x, y)
             future_periods = range(len(historical_volumes), len(historical_volumes) + 12)
@@ -65,7 +63,7 @@ class CapacityForecastingMixin:
                 "recommendations": recommendations,
                 "cost_implications": cost_implications,
             }
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Volume forecasting error: {e}")
             return {
                 "predictions": [],

@@ -5,7 +5,9 @@ by only loading tools when they are actually needed.
 """
 
 from __future__ import annotations
+
 from typing import Any
+
 from domains.orchestration.agents.lazy_base import LazyBaseAgent, create_lazy_tool_specs
 from domains.orchestration.agents.registry import register_agent
 

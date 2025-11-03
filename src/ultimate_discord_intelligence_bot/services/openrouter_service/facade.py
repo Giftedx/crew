@@ -5,9 +5,11 @@ coordinating caching, budgeting, metrics, and routing through a single facade.
 """
 
 from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

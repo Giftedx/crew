@@ -10,7 +10,7 @@ import logging
 import time
 from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+from app.config.feature_flags import FeatureFlags
 
 
 if TYPE_CHECKING:

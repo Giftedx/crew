@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING
 from platform.cache.api_cache_middleware import APICacheMiddleware
-from fastapi import FastAPI, Request, Response
 from platform.observability import metrics
+from typing import TYPE_CHECKING
+
+from fastapi import FastAPI, Request, Response
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

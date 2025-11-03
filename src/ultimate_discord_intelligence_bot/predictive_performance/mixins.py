@@ -3,25 +3,17 @@ from __future__ import annotations
 import logging
 import statistics
 from datetime import timedelta
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from scipy import stats
 
-from core.time import default_utc_now
-
-from .models import (
-    AlertSeverity,
-    EarlyWarningAlert,
-    ModelDriftAlert,
-    PredictionConfidence,
-)
+from .models import AlertSeverity, EarlyWarningAlert, ModelDriftAlert, PredictionConfidence
 
 
 if TYPE_CHECKING:
     from collections import deque
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +55,7 @@ class TrendAnalysisMixin:
                 success_rate = sum(1 for d in recent_data if d["context"].get("success", True)) / len(recent_data)
                 if success_rate < 0.9:
                     factors.append("Error handling overhead affecting response time")
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:
             logger.debug(f"Contributing factors analysis error: {e}")
         return factors if factors else ["Standard operational patterns"]
 
@@ -84,7 +76,7 @@ class TrendAnalysisMixin:
                     factors.append("Recent trend changes increase uncertainty")
             if accuracy < 0.8:
                 factors.append("Limited model accuracy affects prediction reliability")
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:
             logger.debug(f"Uncertainty factors analysis error: {e}")
         return factors if factors else ["Normal prediction uncertainty"]
 
@@ -97,7 +89,7 @@ class TrendAnalysisMixin:
             if abs(older_trend) < 0.001:
                 return 0.0
             return (recent_trend - older_trend) / abs(older_trend)
-        except Exception:  # pragma: no cover - defensive default
+        except Exception:
             return 0.0
 
 
@@ -119,12 +111,11 @@ class WarningDetectionMixin:
                 decline_rate = decline_ratio / 10
                 critical_threshold = 0.5
                 interactions_to_critical = max(
-                    1,
-                    (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001),
+                    1, (recent_avg - critical_threshold) / max(decline_rate * recent_avg, 0.001)
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"quality_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
+                    alert_id=f"",
                     severity=AlertSeverity.WARNING if decline_ratio < 0.25 else AlertSeverity.CRITICAL,
                     alert_type="quality",
                     title=f"Quality Degradation Detected: {agent_name}",
@@ -145,7 +136,7 @@ class WarningDetectionMixin:
                         "decline_percentage": decline_ratio * 100,
                     },
                 )
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:
             logger.debug(f"Quality degradation warning check failed: {e}")
         return None
 
@@ -166,12 +157,11 @@ class WarningDetectionMixin:
                 increase_rate = increase_ratio / 10
                 critical_threshold = 30.0
                 interactions_to_critical = max(
-                    1,
-                    (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001),
+                    1, (critical_threshold - recent_avg) / max(increase_rate * recent_avg, 0.001)
                 )
                 time_to_impact = timedelta(hours=interactions_to_critical * 0.5)
                 return EarlyWarningAlert(
-                    alert_id=f"performance_degradation_{agent_name}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
+                    alert_id=f"",
                     severity=AlertSeverity.WARNING if increase_ratio < 0.5 else AlertSeverity.CRITICAL,
                     alert_type="performance",
                     title=f"Performance Degradation Detected: {agent_name}",
@@ -192,7 +182,7 @@ class WarningDetectionMixin:
                         "increase_percentage": increase_ratio * 100,
                     },
                 )
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Performance degradation warning check failed: {e}")
         return None
 
@@ -202,10 +192,7 @@ class WarningDetectionMixin:
             if hasattr(self.enhanced_monitor, "real_time_metrics"):
                 total_interactions = 0
                 agent_loads: dict[str, int] = {}
-                for (
-                    agent_name,
-                    agent_data,
-                ) in self.enhanced_monitor.real_time_metrics.items():
+                for agent_name, agent_data in self.enhanced_monitor.real_time_metrics.items():
                     recent_interactions = len(agent_data.get("recent_interactions", []))
                     agent_loads[agent_name] = recent_interactions
                     total_interactions += recent_interactions
@@ -217,7 +204,7 @@ class WarningDetectionMixin:
                             overloaded_agent = max(agent_loads.items(), key=lambda x: x[1])[0]
                             warnings.append(
                                 EarlyWarningAlert(
-                                    alert_id=f"capacity_imbalance_{default_utc_now().strftime('%Y%m%d_%H%M%S')}",
+                                    alert_id=f"",
                                     severity=AlertSeverity.WARNING,
                                     alert_type="capacity",
                                     title="Agent Load Imbalance Detected",
@@ -239,7 +226,7 @@ class WarningDetectionMixin:
                                     },
                                 )
                             )
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Capacity warnings check failed: {e}")
         return warnings
 
@@ -255,7 +242,7 @@ class CapacityForecastingMixin:
                     recent_interactions = agent_data.get("recent_interactions", [])
                     volume_data.append(float(len(recent_interactions)))
             return volume_data
-        except Exception:  # pragma: no cover
+        except Exception:
             return []
 
     def _forecast_interaction_volume(self, historical_volumes: list[float]) -> dict[str, Any]:
@@ -296,7 +283,7 @@ class CapacityForecastingMixin:
                 "recommendations": recommendations,
                 "cost_implications": cost_implications,
             }
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Volume forecasting error: {e}")
             return {
                 "predictions": [],
@@ -327,9 +314,9 @@ class DriftDetectionMixin:
                 baseline_tools.extend(ctx.get("tools_used", []))
             for ctx in recent_contexts:
                 recent_tools.extend(ctx.get("tools_used", []))
-            if baseline_tools and recent_tools and set(baseline_tools) != set(recent_tools):
+            if baseline_tools and recent_tools and (set(baseline_tools) != set(recent_tools)):
                 factors.append("Changes in tool usage patterns detected")
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Drift factors analysis error: {e}")
         return factors if factors else ["Standard operational variance"]
 
@@ -362,7 +349,7 @@ class DriftDetectionMixin:
                     contributing_factors=contributing_factors,
                     remediation_suggestions=remediation_suggestions,
                 )
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.debug(f"Drift analysis failed for {metric_name}: {e}")
         return None
 
@@ -412,7 +399,7 @@ class ScenarioGenerationMixin:
             scenarios["performance_optimization"] = self._create_performance_scenario(current_state)
             scenarios["cost_optimization"] = self._create_cost_scenario(current_state)
             scenarios["reliability_optimization"] = self._create_reliability_scenario(current_state)
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:
             logger.debug(f"Optimization scenarios generation error: {e}")
         return scenarios
 
@@ -452,11 +439,7 @@ class ScenarioGenerationMixin:
     def _create_cost_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:
         return {
             "scenario_name": "Cost-Efficient Operations",
-            "target_improvements": {
-                "cost_reduction": "25%",
-                "resource_utilization": "+40%",
-                "efficiency_gain": "20%",
-            },
+            "target_improvements": {"cost_reduction": "25%", "resource_utilization": "+40%", "efficiency_gain": "20%"},
             "required_changes": [
                 "Implement intelligent model selection",
                 "Add request batching and optimization",
@@ -466,11 +449,7 @@ class ScenarioGenerationMixin:
             "estimated_timeline": "3-6 weeks",
             "resource_requirements": "High",
             "risk_level": "Medium",
-            "expected_outcomes": {
-                "operational_cost": "-25%",
-                "resource_efficiency": "+40%",
-                "scalability": "+50%",
-            },
+            "expected_outcomes": {"operational_cost": "-25%", "resource_efficiency": "+40%", "scalability": "+50%"},
         }
 
     def _create_reliability_scenario(self, current_state: dict[str, Any]) -> dict[str, Any]:
@@ -561,6 +540,6 @@ class ScenarioGenerationMixin:
                     "confidence": "high",
                 }
             )
-        except Exception as e:  # pragma: no cover - defensive logging
+        except Exception as e:
             logger.debug(f"Predictive recommendations generation error: {e}")
         return recommendations

@@ -1,9 +1,11 @@
 """Estimate token usage costs and enforce simple budgeting."""
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
 from platform.config.configuration import get_config
+from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

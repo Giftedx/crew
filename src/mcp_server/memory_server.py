@@ -21,20 +21,16 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-
-
 try:
-    from fastmcp import FastMCP  # type: ignore
+    from fastmcp import FastMCP
 
     _FASTMCP_AVAILABLE = True
-except Exception:  # pragma: no cover
-    FastMCP = None  # type: ignore
+except Exception:
+    FastMCP = None
     _FASTMCP_AVAILABLE = False
 
-# Defer memory imports to function scope to keep import ordering simple for linters.
 
-
-class _StubMCP:  # pragma: no cover
+class _StubMCP:
     def __init__(self, _name: str):
         self.name = _name
 
@@ -58,23 +54,19 @@ memory_mcp = FastMCP("Memory Server") if _FASTMCP_AVAILABLE else _StubMCP("Memor
 
 
 def _ns(tenant: str, workspace: str, name: str) -> str:
-    # Defensive normalization to strings
     t = str(tenant or "default")
     w = str(workspace or "main")
     n = str(name or "memory")
-    # Local import to avoid import-order lint issues at module level
-    from memory import vector_store
+    from domains.memory import vector_store
 
     return vector_store.VectorStore.namespace(t, w, n)
 
 
 def _sanitize_hit(payload: dict[str, Any]) -> dict[str, Any]:
-    # Redact heavy fields and limit text size
     out = dict(payload or {})
     text = out.get("text")
     if isinstance(text, str) and len(text) > 800:
         out["text"] = text[:800] + "…"
-    # Drop known noisy keys if present
     for k in ["embedding", "raw", "full_text", "transcript"]:
         if k in out:
             out.pop(k, None)
@@ -82,21 +74,13 @@ def _sanitize_hit(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 @memory_mcp.tool
-def vs_search(
-    tenant: str,
-    workspace: str,
-    name: str,
-    query: str,
-    k: int = 5,
-    min_score: float | None = None,
-) -> dict:
+def vs_search(tenant: str, workspace: str, name: str, query: str, k: int = 5, min_score: float | None = None) -> dict:
     """Vector similarity search over a logical namespace.
 
     Returns: { "namespace": str, "hits": [{"score": float, "payload": dict}] }
     """
-
     namespace = _ns(tenant, workspace, name)
-    from memory import embeddings, vector_store
+    from domains.memory import embeddings, vector_store
 
     v = embeddings.embed([query])[0]
     store = vector_store.VectorStore()
@@ -107,7 +91,7 @@ def vs_search(
     hits: list[dict[str, Any]] = []
     for r in res:
         score = float(getattr(r, "score", 0.0))
-        if (min_score is not None) and (score < float(min_score)):
+        if min_score is not None and score < float(min_score):
             continue
         payload = _sanitize_hit(getattr(r, "payload", {}) or {})
         hits.append({"score": score, "payload": payload})
@@ -121,8 +105,7 @@ def vs_list_namespaces(tenant: str, workspace: str) -> dict:
     Uses the physical naming convention (":" -> "__") to reconstruct logical names.
     Returns: { "namespaces": ["tenant:workspace:name", ...], "names": ["name", ...] }
     """
-
-    from memory import vector_store
+    from domains.memory import vector_store
 
     store = vector_store.VectorStore()
     client = store.client
@@ -152,9 +135,8 @@ def vs_samples(tenant: str, workspace: str, name: str, probe: str = "", n: int =
     This uses a vector query with an optional probe (empty string allowed).
     Returns: { "namespace": str, "samples": [payload, ...] }
     """
-
     namespace = _ns(tenant, workspace, name)
-    from memory import embeddings, vector_store
+    from domains.memory import embeddings, vector_store
 
     v = embeddings.embed([probe])[0]
     store = vector_store.VectorStore()
@@ -172,17 +154,15 @@ def vs_samples(tenant: str, workspace: str, name: str, probe: str = "", n: int =
 @memory_mcp.resource("memory://{tenant}/{workspace}/{name}/stats")
 def memory_stats(tenant: str, workspace: str, name: str) -> dict:
     """Basic collection statistics for the namespace (best-effort)."""
-
     ns = _ns(tenant, workspace, name)
     physical = ns.replace(":", "__")
-    from memory import vector_store
+    from domains.memory import vector_store
 
     store = vector_store.VectorStore()
     client = store.client
     info: dict[str, Any] = {"namespace": ns, "collection": physical}
     try:
         c = client.get_collection(physical)
-        # DummyClient returns attributes below; qdrant returns richer models
         vectors_count = getattr(c, "vectors_count", None)
         info["vectors_count"] = int(vectors_count) if vectors_count is not None else None
         cfg = getattr(c, "config", None)
@@ -193,15 +173,8 @@ def memory_stats(tenant: str, workspace: str, name: str) -> dict:
                 info["distance"] = getattr(getattr(vectors, "distance", None), "value", None)
                 info["dimension"] = getattr(vectors, "size", None)
     except Exception:
-        # Best-effort; missing collection or fields
         ...
     return info
 
 
-__all__ = [
-    "memory_mcp",
-    "memory_stats",
-    "vs_list_namespaces",
-    "vs_samples",
-    "vs_search",
-]
+__all__ = ["memory_mcp", "memory_stats", "vs_list_namespaces", "vs_samples", "vs_search"]

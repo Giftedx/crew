@@ -10,8 +10,9 @@ import json
 import logging
 import time
 from collections.abc import Callable
-from typing import Any, ParamSpec, TypeVar
 from platform.core.step_result import StepResult
+from typing import Any, ParamSpec, TypeVar
+
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -179,7 +180,7 @@ class IdempotencyManager:
     def get_stats(self) -> dict[str, Any]:
         """Get idempotency manager statistics."""
         time.time()
-        expired_count = sum((1 for key in self._store.values() if key.is_expired()))
+        expired_count = sum(1 for key in self._store.values() if key.is_expired())
         return {
             "total_keys": len(self._store),
             "expired_keys": expired_count,

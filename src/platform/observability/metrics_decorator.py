@@ -9,9 +9,8 @@ from __future__ import annotations
 import functools
 import time
 from platform.core.step_result import StepResult
+from platform.observability.metrics_collector import record_tool_usage
 from typing import TYPE_CHECKING, Any
-
-from ultimate_discord_intelligence_bot.observability.metrics_collector import record_tool_usage
 
 
 if TYPE_CHECKING:

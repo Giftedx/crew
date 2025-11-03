@@ -2,7 +2,8 @@
 """Guardrail: forbid direct 'requests' calls outside approved modules.
 
 Allowed:
-- src/core/http_utils.py (wrappers live here)
+- platform.http.http_utils (wrappers live here)
+- src/ultimate_discord_intelligence_bot/core/http_utils.py (compatibility shim)
 - tests/** (tests may patch or assert direct requests semantics)
 - src/ultimate_discord_intelligence_bot/tools/discord_download_tool.py (string literal only)
 
@@ -23,7 +24,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 
 ALLOWED_FILES = {
-    "src/core/http_utils.py",
+    "src/ultimate_discord_intelligence_bot/core/http_utils.py",  # Compatibility shim
     "src/core/connection_pool.py",  # Uses Session for pooling but routes through http_utils
     # This tool contains a string literal reference used for debugging output only.
     "src/ultimate_discord_intelligence_bot/tools/discord_download_tool.py",

@@ -5,13 +5,16 @@ frequency per tenant and prevent abuse.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+from app.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

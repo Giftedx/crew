@@ -5,11 +5,12 @@ four tiers: Prohibited, Restricted, Sensitive, and Regulated content.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 class ContentTier(Enum):

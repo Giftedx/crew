@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
+from platform.core.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -15,13 +14,12 @@ class ContentFilter:
 
     def __init__(self):
         """Initialize content filter."""
-        # Lazy import to avoid circular dependencies
         self._moderation_service = None
 
     def _get_moderation_service(self):
         """Get OpenAI moderation service (lazy loaded)."""
         if self._moderation_service is None:
-            from src.security.openai_moderation import OpenAIModerationService
+            from platform.security.openai_moderation import OpenAIModerationService
 
             self._moderation_service = OpenAIModerationService()
         return self._moderation_service
@@ -37,29 +35,22 @@ class ContentFilter:
             StepResult with filtered content or blocking decision
         """
         try:
-            # Skip check for trusted sources
             if trusted_source:
                 logger.debug("Skipping moderation check for trusted source")
                 return StepResult.ok(data={"content": content, "action": "allow"})
-
-            # Check with OpenAI moderation
             moderation = self._get_moderation_service()
             result = moderation.check_content(content)
-
             if result.flagged:
                 logger.warning(f"Content flagged by moderation: {result.categories}")
                 return StepResult.fail(
                     f"Content blocked by moderation. Flagged categories: {list(result.categories.keys())}",
                     metadata={"categories": result.categories, "scores": result.category_scores, "action": "block"},
                 )
-
             return StepResult.ok(
                 data={"content": content, "action": "allow", "moderation_result": result.category_scores}
             )
-
         except Exception as e:
             logger.error(f"Content filter error: {e}")
-            # Fail-safe: allow content on error
             return StepResult.ok(data={"content": content, "action": "allow", "error": str(e)})
 
     def check_batch(self, contents: list[str], trusted_source: bool = False) -> list[StepResult]:
@@ -74,11 +65,9 @@ class ContentFilter:
         """
         if trusted_source:
             return [StepResult.ok(data={"content": c, "action": "allow"}) for c in contents]
-
         try:
             moderation = self._get_moderation_service()
             results = moderation.check_batch(contents)
-
             step_results = []
             for content, result in zip(contents, results, strict=False):
                 if result.flagged:
@@ -90,10 +79,7 @@ class ContentFilter:
                     )
                 else:
                     step_results.append(StepResult.ok(data={"content": content, "action": "allow"}))
-
             return step_results
-
         except Exception as e:
             logger.error(f"Batch content filter error: {e}")
-            # Fail-safe: allow all content
             return [StepResult.ok(data={"content": c, "action": "allow"}) for c in contents]

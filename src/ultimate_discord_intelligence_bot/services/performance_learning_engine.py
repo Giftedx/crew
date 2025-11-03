@@ -6,16 +6,20 @@ request-level and system-level optimization with automated tuning.
 """
 
 from __future__ import annotations
+
 import logging
 import pickle
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
-import numpy as np
 from platform.core.step_result import StepResult
+from typing import Any
+
+import numpy as np
+
 from .rl_cache_optimizer import CacheContext, RLCacheOptimizer
 from .rl_model_router import RLModelRouter, RoutingContext, TaskComplexity
+
 
 logger = logging.getLogger(__name__)
 
@@ -325,7 +329,7 @@ class PerformanceLearningEngine:
     ) -> StepResult:
         """Generate optimization recommendations."""
         recommendations = []
-        if any((opt["type"] == "model_routing" for opt in optimizations)):
+        if any(opt["type"] == "model_routing" for opt in optimizations):
             recommendations.append(
                 {
                     "type": "model_routing",
@@ -334,7 +338,7 @@ class PerformanceLearningEngine:
                     "expected_benefit": "15-20% latency reduction, 20-25% cost reduction",
                 }
             )
-        if any((opt["type"] == "cache_optimization" for opt in optimizations)):
+        if any(opt["type"] == "cache_optimization" for opt in optimizations):
             recommendations.append(
                 {
                     "type": "cache_optimization",
@@ -518,7 +522,7 @@ class PerformanceLearningEngine:
         self.last_optimization = datetime.utcnow()
         if len(self.optimization_history) > 10:
             recent_results = self.optimization_history[-10:]
-            success_rate = sum((1 for r in recent_results if r.success)) / len(recent_results)
+            success_rate = sum(1 for r in recent_results if r.success) / len(recent_results)
             if success_rate > 0.8:
                 self.exploration_rate = max(0.05, self.exploration_rate - 0.01)
             elif success_rate < 0.6:
@@ -529,7 +533,7 @@ class PerformanceLearningEngine:
         if not self.optimization_history:
             return {"status": "no_data"}
         total_optimizations = len(self.optimization_history)
-        successful_optimizations = sum((1 for r in self.optimization_history if r.success))
+        successful_optimizations = sum(1 for r in self.optimization_history if r.success)
         success_rate = successful_optimizations / total_optimizations
         all_improvements = [r.performance_improvements for r in self.optimization_history if r.performance_improvements]
         avg_improvements = {}

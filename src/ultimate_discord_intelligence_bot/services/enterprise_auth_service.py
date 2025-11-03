@@ -1,16 +1,20 @@
 """Enterprise authentication service with SSO, RBAC, and API key management."""
 
 from __future__ import annotations
+
 import hashlib
 import logging
 import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+from platform.core.step_result import StepResult
+
 import bcrypt
 import jwt
-from ultimate_discord_intelligence_bot.settings import ENABLE_ENTERPRISE_TENANT_MANAGEMENT
-from platform.core.step_result import StepResult
+
+from app.config.settings import ENABLE_ENTERPRISE_TENANT_MANAGEMENT
+
 
 log = logging.getLogger(__name__)
 
@@ -191,7 +195,7 @@ class EnterpriseAuthService:
             user_id = f"user_{int(time.time() * 1000)}_{secrets.token_hex(4)}"
             if not email or not username or (not tenant_id):
                 return StepResult.fail("Email, username, and tenant_id are required")
-            if any((user.email == email or user.username == username for user in self.users.values())):
+            if any(user.email == email or user.username == username for user in self.users.values()):
                 return StepResult.fail("User with this email or username already exists")
             if roles is None:
                 roles = {UserRole.USER}

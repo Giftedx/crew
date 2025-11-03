@@ -8,9 +8,8 @@ conversational pipeline, ensuring comprehensive monitoring and analytics.
 from __future__ import annotations
 
 import time
+from platform.core.step_result import StepResult
 from typing import Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .observability import ObservabilityManager, create_observability_manager
 
@@ -48,7 +47,6 @@ class DiscordObservabilityIntegration:
         """Start monitoring a conversation."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.start_conversation_observation(
             conversation_id, user_id, guild_id, channel_id, initial_context
         )
@@ -63,7 +61,6 @@ class DiscordObservabilityIntegration:
         """End monitoring a conversation."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.end_conversation_observation(
             conversation_id, satisfaction_score, topics_discussed, summary
         )
@@ -74,8 +71,6 @@ class DiscordObservabilityIntegration:
         """Track message evaluation step."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
-        # Record the evaluation step
         return await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="message_evaluation",
@@ -89,8 +84,6 @@ class DiscordObservabilityIntegration:
         """Track personality trait adaptation."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
-        # Record personality adaptation step
         step_result = await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="personality_adaptation",
@@ -102,16 +95,13 @@ class DiscordObservabilityIntegration:
                 "adaptation_reason": adaptation_reason,
             },
         )
-
         if step_result.success:
-            # Record personality snapshot
             await self.observability_manager.record_personality_snapshot(
                 trait_name=trait_name,
                 value=new_value,
-                confidence=0.8,  # Medium confidence for adaptations
+                confidence=0.8,
                 context={"adaptation_reason": adaptation_reason, "conversation_id": conversation_id},
             )
-
         return step_result
 
     async def track_reward_computation(
@@ -120,16 +110,12 @@ class DiscordObservabilityIntegration:
         """Track reward computation and user feedback."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
-        # Record reward computation step
         step_result = await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="reward_computation",
             content=f"Computed reward: {final_reward:.3f}",
             metadata={"reward_signals": reward_signals, "final_reward": final_reward, "user_id": user_id},
         )
-
-        # Record user feedback for personality traits
         for trait_name, reward_value in reward_signals.items():
             await self.observability_manager.record_user_feedback(
                 user_id=user_id,
@@ -137,7 +123,6 @@ class DiscordObservabilityIntegration:
                 feedback_value=reward_value,
                 context={"conversation_id": conversation_id, "computation_timestamp": time.time()},
             )
-
         return step_result
 
     async def track_mcp_server_interaction(
@@ -152,7 +137,6 @@ class DiscordObservabilityIntegration:
         """Track MCP server interactions."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="mcp_server_interaction",
@@ -172,7 +156,6 @@ class DiscordObservabilityIntegration:
         """Track memory service operations."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="memory_operation",
@@ -190,7 +173,6 @@ class DiscordObservabilityIntegration:
         """Track errors in the conversation flow."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.record_conversation_step(
             conversation_id=conversation_id,
             step_type="error",
@@ -207,39 +189,33 @@ class DiscordObservabilityIntegration:
         """Get comprehensive analytics for a conversation."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.get_conversation_insights(conversation_id)
 
     async def get_user_analytics(self, user_id: str) -> StepResult:
         """Get comprehensive analytics for a user."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.get_user_insights(user_id)
 
     async def get_system_analytics(self) -> StepResult:
         """Get comprehensive system analytics."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.get_system_insights()
 
     async def export_analytics_data(self, fmt: str = "json") -> StepResult:
         """Export all analytics data."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.export_observability_data(fmt)
 
     async def cleanup_analytics_data(self, max_age_hours: int = 168) -> StepResult:
         """Clean up old analytics data."""
         if not self._initialized:
             return StepResult.fail("Observability integration not initialized")
-
         return await self.observability_manager.cleanup_old_data(max_age_hours)
 
 
-# Factory function for creating observability integration
 def create_discord_observability_integration(
     observability_manager: ObservabilityManager | None = None,
 ) -> DiscordObservabilityIntegration:

@@ -15,7 +15,7 @@ from typing import Any
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
 
-from ultimate_discord_intelligence_bot.settings import get_settings
+from app.config.settings import get_settings
 
 
 log = logging.getLogger(__name__)

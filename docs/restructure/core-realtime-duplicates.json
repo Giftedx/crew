@@ -1,0 +1,8 @@
+{
+  "source_directory": "src/core/realtime",
+  "target_directory": "src/platform/realtime",
+  "total_matching_names": 0,
+  "identical_files": 0,
+  "different_implementations": 0,
+  "duplicates": []
+}

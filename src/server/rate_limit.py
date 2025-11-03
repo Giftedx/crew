@@ -20,14 +20,17 @@ Typing & Optional Dependency Notes:
 """
 
 from __future__ import annotations
+
 import logging
 import os
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any
-from fastapi import FastAPI, Request, Response
 from platform.observability import metrics
+from typing import Any
+
+from fastapi import FastAPI, Request, Response
 from server import middleware_shim
+
 
 try:
     from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint

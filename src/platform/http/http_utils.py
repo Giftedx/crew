@@ -21,20 +21,18 @@ from pathlib import Path
 
 import requests as requests
 
-from .http import (
+from . import requests_wrappers as _rq
+from . import retry_config as _retry_cfg
+from .config import (
     DEFAULT_HTTP_RETRY_ATTEMPTS,
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
     HTTP_SUCCESS_NO_CONTENT,
     REQUEST_TIMEOUT_SECONDS,
     get_request_timeout,
-    is_circuit_breaker_enabled,
-    is_retry_enabled,
-    validate_public_https_url,
 )
-from .http import requests_wrappers as _rq
-from .http import retry_config as _retry_cfg
-from .http.retry import _is_retry_enabled as _is_retry_enabled
+from .retry import is_circuit_breaker_enabled, is_retry_enabled
+from .validators import validate_public_https_url
 
 
 try:
@@ -42,7 +40,7 @@ try:
 except Exception:
     _RedisCache = None
 try:
-    from ultimate_discord_intelligence_bot.settings import Settings
+    from app.config.settings import Settings
 
     def get_settings():
         return Settings()

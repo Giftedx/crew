@@ -1,10 +1,14 @@
 from __future__ import annotations
+
 import logging
-from llmlingua import PromptCompressor
-from platform.observability.metrics import get_metrics
-from ultimate_discord_intelligence_bot.settings import Settings
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
+from llmlingua import PromptCompressor
+
+from app.config.settings import Settings
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 

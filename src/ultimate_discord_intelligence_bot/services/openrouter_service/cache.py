@@ -1,9 +1,11 @@
 """Cache utilities for OpenRouter service."""
 
 from __future__ import annotations
+
 import hashlib
-from typing import Any
 from platform.cache.bounded_cache import BoundedLRUCache, create_llm_cache
+from typing import Any
+
 
 try:
     from platform.cache.redis_cache import RedisCache

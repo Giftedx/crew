@@ -4,15 +4,11 @@ from __future__ import annotations
 
 import json
 import logging
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
-from core.time import default_utc_now  # type: ignore[import-not-found]
-from ultimate_discord_intelligence_bot.enhanced_performance_monitor import (  # type: ignore[import-not-found]
-    EnhancedPerformanceMonitor,
-)
-from ultimate_discord_intelligence_bot.performance_integration import (  # type: ignore[import-not-found]
-    PerformanceIntegrationManager,
-)
+from ultimate_discord_intelligence_bot.enhanced_performance_monitor import EnhancedPerformanceMonitor
+from ultimate_discord_intelligence_bot.performance_integration import PerformanceIntegrationManager
 
 from .anomalies import detect_performance_anomalies
 from .forecast import generate_performance_forecasts
@@ -28,14 +24,7 @@ from .trends import analyze_performance_trends
 
 
 if TYPE_CHECKING:
-    from .models import (
-        OptimizationRecommendation,
-        PerformanceAnomaly,
-        PerformanceForecast,
-        PerformanceTrend,
-    )
-
-
+    from .models import OptimizationRecommendation, PerformanceAnomaly, PerformanceForecast, PerformanceTrend
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +38,6 @@ class AdvancedPerformanceAnalytics:
     ):
         self.enhanced_monitor = enhanced_monitor or EnhancedPerformanceMonitor()
         self.integration_manager = integration_manager or PerformanceIntegrationManager()
-        # Stores and config
         self.historical_trends: dict[str, list[PerformanceTrend]] = {}
         self.detected_anomalies: list[PerformanceAnomaly] = []
         self.active_recommendations: list[OptimizationRecommendation] = []
@@ -63,14 +51,12 @@ class AdvancedPerformanceAnalytics:
         """Perform comprehensive performance analysis using helper modules."""
         try:
             dashboard_data = await self.enhanced_monitor.generate_real_time_dashboard_data()
-
             trends = analyze_performance_trends(self, lookback_hours)
             anomalies = detect_performance_anomalies(self, lookback_hours)
             forecasts = generate_performance_forecasts(self)
             recommendations = generate_recommendations(trends, anomalies, dashboard_data)
             health_score = calculate_system_health_score(self, trends, anomalies, dashboard_data)
             comparative_insights = perform_comparative_analysis(self)
-
             return {
                 "analysis_timestamp": default_utc_now().isoformat(),
                 "lookback_hours": lookback_hours,
@@ -133,7 +119,6 @@ class AdvancedPerformanceAnalytics:
             insights.append("⚠️ Unable to generate insights - check monitoring data availability")
         return insights
 
-    # Convenience wrappers
     async def generate_analytics_report(self, format_type: str = "json") -> str:
         analysis = await self.analyze_comprehensive_performance()
         if format_type == "json":

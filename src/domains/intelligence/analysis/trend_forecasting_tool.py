@@ -10,12 +10,14 @@ This tool provides comprehensive trend forecasting including:
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from collections import defaultdict
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
 
 
@@ -370,7 +372,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
                 source_platform = min(
                     platforms,
                     key=lambda p: min(
-                        (data.get("timestamp", current_time) for data in group_data if data.get("platform") == p)
+                        data.get("timestamp", current_time) for data in group_data if data.get("platform") == p
                     ),
                 )
                 target_platforms = [p for p in platforms if p != source_platform]
@@ -441,18 +443,16 @@ class TrendForecastingTool(BaseTool[StepResult]):
         if current_stage == "growth":
             time_to_peak = 3.0
             peak_engagement = (
-                max((data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data)) * 1.5
+                max(data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data) * 1.5
             )
         elif current_stage == "maturity":
             time_to_peak = 1.0
             peak_engagement = (
-                max((data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data)) * 1.2
+                max(data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data) * 1.2
             )
         else:
             time_to_peak = 0.0
-            peak_engagement = max(
-                (data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data)
-            )
+            peak_engagement = max(data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data)
         return {"time_to_peak": time_to_peak, "peak_engagement": peak_engagement, "peak_duration": 2.0}
 
     def _predict_lifecycle_decline(self, trend_data: list[TrendDataPoint], current_stage: str) -> dict[str, Any]:
@@ -757,7 +757,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
             sum_x = sum(x_values)
             sum_y = sum(y_values)
             sum_xy = sum((x * y for x, y in zip(x_values, y_values, strict=False)))
-            sum_x2 = sum((x * x for x in x_values))
+            sum_x2 = sum(x * x for x in x_values)
             if n * sum_x2 - sum_x * sum_x != 0:
                 slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
                 intercept = (sum_y - slope * sum_x) / n
@@ -782,7 +782,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
         if len(engagement_values) < 2:
             return [{"lower": 0.0, "upper": value * 2} for value in predicted_values]
         mean_value = sum(engagement_values) / len(engagement_values)
-        variance = sum(((x - mean_value) ** 2 for x in engagement_values)) / len(engagement_values)
+        variance = sum((x - mean_value) ** 2 for x in engagement_values) / len(engagement_values)
         std_dev = variance**0.5
         confidence_factor = 1.96
         intervals = []
@@ -810,7 +810,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
         if len(engagement_values) < 2:
             return 0.0
         mean_value = sum(engagement_values) / len(engagement_values)
-        variance = sum(((x - mean_value) ** 2 for x in engagement_values)) / len(engagement_values)
+        variance = sum((x - mean_value) ** 2 for x in engagement_values) / len(engagement_values)
         std_dev = variance**0.5
         if mean_value > 0:
             volatility = std_dev / mean_value
@@ -892,7 +892,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
             performance["model_confidence"] = 0.4
         engagement_values = [data.get("engagement_metrics", {}).get("total_engagement", 0) for data in trend_data]
         if engagement_values:
-            zero_values = sum((1 for v in engagement_values if v == 0))
+            zero_values = sum(1 for v in engagement_values if v == 0)
             if zero_values / len(engagement_values) > 0.3:
                 performance["limitations"].append("High proportion of zero engagement values")
                 performance["model_confidence"] *= 0.8

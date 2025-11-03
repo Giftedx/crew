@@ -5,14 +5,17 @@ and its components.
 """
 
 from __future__ import annotations
+
 import contextlib
 import copy
-from typing import TYPE_CHECKING, Any
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
+
 if TYPE_CHECKING:
-    from core.learning_engine import LearningEngine
+    from platform.rl.learning_engine import LearningEngine
 
 
 def ctx_or_fallback(component: str) -> TenantContext | None:
@@ -23,7 +26,7 @@ def ctx_or_fallback(component: str) -> TenantContext | None:
         ctx = current_tenant()
         if ctx is not None:
             return ctx
-        from core.flags import enabled
+        from platform.flags import enabled
 
         if enabled("ENABLE_TENANCY_STRICT", False):
             raise RuntimeError(f"TenantContext required for {component} but not set (strict mode)")

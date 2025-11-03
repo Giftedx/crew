@@ -16,9 +16,10 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, ClassVar, cast
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, ClassVar, cast
+
 from ...settings import DOWNLOADS_DIR, TEMP_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG
 from ._base import BaseTool
 
@@ -158,14 +159,10 @@ class YtDlpDownloadTool(BaseTool[StepResult]):
             if result.returncode != 0:
                 return _error(result.stderr.strip())
             output_lines = result.stdout.strip().split("\n")
-            if any(("[download]" in line and "has already been downloaded" in line for line in output_lines)):
+            if any("[download]" in line and "has already been downloaded" in line for line in output_lines):
                 try:
                     download_line = next(
-                        (
-                            line
-                            for line in output_lines
-                            if "[download]" in line and "has already been downloaded" in line
-                        )
+                        line for line in output_lines if "[download]" in line and "has already been downloaded" in line
                     )
                     path_match = re.search("\\[download\\]\\s+(.+?)\\s+has already been downloaded", download_line)
                     if path_match:

@@ -4,6 +4,8 @@ Handles intelligent clip selection and platform optimization.
 """
 
 import logging
+from platform.core.step_result import StepResult
+
 from crewai import Agent, Task
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models import (
     ClipCandidate,
@@ -11,7 +13,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models i
     RepurposingConfig,
 )
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -222,7 +224,7 @@ class RepurposingAgent:
         current_platform = None
         for line in lines:
             line = line.strip()
-            if any((platform in line.lower() for platform in ["youtube", "tiktok", "instagram", "x", "twitter"])):
+            if any(platform in line.lower() for platform in ["youtube", "tiktok", "instagram", "x", "twitter"]):
                 current_platform = line
             elif current_platform and line:
                 notes[current_platform] = line

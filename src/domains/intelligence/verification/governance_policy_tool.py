@@ -15,8 +15,10 @@ Returns StepResult with fields:
 """
 
 from __future__ import annotations
-from typing import Any
+
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tools.verification_base import VerificationBaseTool
 
 
@@ -57,7 +59,7 @@ class GovernancePolicyTool(VerificationBaseTool):
         action = "pass"
         if categories:
             action = "review"
-            if any((cat in {"violence", "hate", "self_harm"} for cat in categories)):
+            if any(cat in {"violence", "hate", "self_harm"} for cat in categories):
                 action = "block"
         details = {"matched_terms": matched_terms, "total_hits": total_hits, "tenant": tenant, "workspace": workspace}
         return StepResult.ok(categories=categories, confidence=confidence, action=action, details=details)

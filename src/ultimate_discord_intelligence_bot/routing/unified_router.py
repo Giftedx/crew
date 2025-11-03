@@ -6,12 +6,15 @@ performance tracking across all routing systems.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 try:
     from platform.llm.providers.openrouter import OpenRouterService
@@ -366,9 +369,9 @@ class UnifiedRouterService:
             if not metrics:
                 return {"total_decisions": 0, "metrics": []}
             total_decisions = len(metrics)
-            avg_confidence = sum((m["confidence_score"] for m in metrics)) / total_decisions
-            avg_cost = sum((m["estimated_cost"] for m in metrics)) / total_decisions
-            fallback_rate = sum((m["fallback_used"] for m in metrics)) / total_decisions
+            avg_confidence = sum(m["confidence_score"] for m in metrics) / total_decisions
+            avg_cost = sum(m["estimated_cost"] for m in metrics) / total_decisions
+            fallback_rate = sum(m["fallback_used"] for m in metrics) / total_decisions
             method_counts = {}
             for metric in metrics:
                 method = metric["routing_method"]

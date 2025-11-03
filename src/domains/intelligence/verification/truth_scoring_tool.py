@@ -6,9 +6,10 @@ statements, laying groundwork for richer historical tracking.
 """
 
 from collections.abc import Iterable
-from statistics import mean
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from statistics import mean
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -25,7 +26,7 @@ class TruthScoringTool(BaseTool[StepResult]):
         if not values:
             self._metrics.counter("tool_runs_total", labels={"tool": "truth_scoring", "outcome": "skipped"}).inc()
             return StepResult.skip(reason="no verdicts provided", data={"score": 0.0})
-        score = mean((1 if v else 0 for v in values))
+        score = mean(1 if v else 0 for v in values)
         self._metrics.counter("tool_runs_total", labels={"tool": "truth_scoring", "outcome": "success"}).inc()
         return StepResult.ok(data={"score": score})
 

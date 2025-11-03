@@ -23,10 +23,13 @@ Notes:
 """
 
 from __future__ import annotations
+
 import contextlib
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ._base import BaseTool
+
 
 try:
     from prompt_engine.llmlingua_adapter import maybe_compress_prompt
@@ -82,7 +85,7 @@ class ResearchAndBriefTool(BaseTool[StepResult]):
 
     def run(self, *, query: str, sources_text: list[str] | None = None, max_items: int = 5) -> StepResult:
         if sources_text is not None and (
-            not isinstance(sources_text, list) or any((not isinstance(t, str) for t in sources_text))
+            not isinstance(sources_text, list) or any(not isinstance(t, str) for t in sources_text)
         ):
             return StepResult.fail("Invalid params: sources_text must be a list of strings or null")
         try:

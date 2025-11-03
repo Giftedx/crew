@@ -1,12 +1,16 @@
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass
+from platform.core.step_result import StepResult
 from typing import Any
+
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
+
 from kg.creator_kg_store import CreatorKGStore
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +118,7 @@ class SmartClipComposerTool(BaseTool):
                     "total_clips": len(clip_suggestions),
                     "export_formats": {exp.format_name: exp.filename for exp in exports},
                     "summary": {
-                        "avg_highlight_score": sum((c.highlight_score for c in clip_suggestions))
-                        / len(clip_suggestions)
+                        "avg_highlight_score": sum(c.highlight_score for c in clip_suggestions) / len(clip_suggestions)
                         if clip_suggestions
                         else 0,
                         "clip_duration_range": f"{min_clip_length}s - {max_clip_length}s",
@@ -229,10 +232,8 @@ class SmartClipComposerTool(BaseTool):
         claim_presence = (
             1.0
             if any(
-                (
-                    c.get("timestamp", 0) >= segment["start_time"] and c.get("timestamp", 0) <= segment["end_time"]
-                    for c in segment.get("claims", [])
-                )
+                c.get("timestamp", 0) >= segment["start_time"] and c.get("timestamp", 0) <= segment["end_time"]
+                for c in segment.get("claims", [])
             )
             else 0.3
         )
@@ -245,7 +246,7 @@ class SmartClipComposerTool(BaseTool):
         ]
         if not segment_visual_events:
             return 0.3
-        avg_intensity = sum((event["intensity"] for event in segment_visual_events)) / len(segment_visual_events)
+        avg_intensity = sum(event["intensity"] for event in segment_visual_events) / len(segment_visual_events)
         return min(1.0, avg_intensity * 1.2)
 
     def _calculate_engagement_score(self, segment: dict[str, Any], chat_spikes: list[dict[str, Any]]) -> float:
@@ -255,7 +256,7 @@ class SmartClipComposerTool(BaseTool):
         ]
         if not segment_chat_spikes:
             return 0.2
-        max_velocity = max((spike["velocity"] for spike in segment_chat_spikes))
+        max_velocity = max(spike["velocity"] for spike in segment_chat_spikes)
         return min(1.0, max_velocity / 20.0)
 
     def _generate_reasoning(self, segment: dict[str, Any], score: float) -> str:

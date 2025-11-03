@@ -5,13 +5,11 @@ the observability system for metrics collection, alerting, and dashboard managem
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import Any
-from crewai.tools import BaseTool
-from pydantic import Field
-from platform.observability.metrics import get_metrics
-from ultimate_discord_intelligence_bot.observability import (
+from platform.core.step_result import StepResult
+from platform.observability import (
     AlertingConfig,
     AlertLevel,
     AlertType,
@@ -25,7 +23,12 @@ from ultimate_discord_intelligence_bot.observability import (
     UnifiedMetricsConfig,
     WidgetType,
 )
-from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+from pydantic import Field
+
 
 logger = logging.getLogger(__name__)
 
@@ -258,7 +261,7 @@ class IntelligentAlertingTool(BaseTool):
             conditions_data = data.get("conditions", [])
             conditions = []
             for cond_data in conditions_data:
-                from ultimate_discord_intelligence_bot.observability.intelligent_alerts import AlertCondition
+                from platform.observability.intelligent_alerts import AlertCondition
 
                 condition = AlertCondition(
                     metric_name=cond_data.get("metric_name", ""),
@@ -439,10 +442,7 @@ class DashboardIntegrationTool(BaseTool):
             widgets_data = data.get("widgets", [])
             widgets = []
             for widget_data in widgets_data:
-                from ultimate_discord_intelligence_bot.observability.dashboard_integration import (
-                    DashboardWidget,
-                    MetricsQuery,
-                )
+                from platform.observability.dashboard_integration import DashboardWidget, MetricsQuery
 
                 queries_data = widget_data.get("queries", [])
                 queries = []

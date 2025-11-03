@@ -6,12 +6,14 @@ and transparency reports for users.
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
-from ultimate_discord_intelligence_bot.analysis.bias_metrics import BiasAnalyzer, BiasMetrics
 from platform.core.step_result import StepResult
+from typing import Any
+
+from ultimate_discord_intelligence_bot.analysis.bias_metrics import BiasAnalyzer, BiasMetrics
 
 
 @dataclass
@@ -112,8 +114,8 @@ class BiasDashboard:
         if not source_history:
             return {"message": "No historical data available"}
         recent_trends = source_history[-10:] if len(source_history) >= 10 else source_history
-        avg_bias = sum((trend.bias_score for trend in recent_trends)) / len(recent_trends)
-        avg_leaning = sum((trend.political_leaning for trend in recent_trends)) / len(recent_trends)
+        avg_bias = sum(trend.bias_score for trend in recent_trends) / len(recent_trends)
+        avg_leaning = sum(trend.political_leaning for trend in recent_trends) / len(recent_trends)
         return {
             "total_analyses": len(source_history),
             "average_bias_score": avg_bias,
@@ -183,10 +185,10 @@ class BiasDashboard:
             history_b = [trend for trend in self.bias_history if trend.source == source_b]
             if not history_a or not history_b:
                 return StepResult.fail("Insufficient historical data for comparison")
-            avg_bias_a = sum((trend.bias_score for trend in history_a)) / len(history_a)
-            avg_bias_b = sum((trend.bias_score for trend in history_b)) / len(history_b)
-            avg_leaning_a = sum((trend.political_leaning for trend in history_a)) / len(history_a)
-            avg_leaning_b = sum((trend.political_leaning for trend in history_b)) / len(history_b)
+            avg_bias_a = sum(trend.bias_score for trend in history_a) / len(history_a)
+            avg_bias_b = sum(trend.bias_score for trend in history_b) / len(history_b)
+            avg_leaning_a = sum(trend.political_leaning for trend in history_a) / len(history_a)
+            avg_leaning_b = sum(trend.political_leaning for trend in history_b) / len(history_b)
             bias_difference = abs(avg_bias_a - avg_bias_b)
             leaning_difference = abs(avg_leaning_a - avg_leaning_b)
             similarity_score = 1.0 - (bias_difference + leaning_difference) / 2.0
@@ -318,7 +320,7 @@ class BiasDashboard:
             total_analyses = len(self.bias_history)
             if total_analyses == 0:
                 return StepResult.ok(data={"report": "No data available for transparency report"})
-            avg_bias = sum((trend.bias_score for trend in self.bias_history)) / total_analyses
+            avg_bias = sum(trend.bias_score for trend in self.bias_history) / total_analyses
             sources_analyzed = len({trend.source for trend in self.bias_history})
             low_bias = len([t for t in self.bias_history if t.bias_score < 0.3])
             moderate_bias = len([t for t in self.bias_history if 0.3 <= t.bias_score < 0.6])

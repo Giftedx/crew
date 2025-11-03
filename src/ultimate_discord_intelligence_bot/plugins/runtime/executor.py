@@ -9,20 +9,18 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 
-try:  # Support different jsonschema versions
+try:
     from jsonschema import validate as _js_validate
-except Exception:  # pragma: no cover - fallback when jsonschema missing or API changed
-    _js_validate = None  # type: ignore[assignment]
-
-from core import learn
+except Exception:
+    _js_validate = None
+from platform import learn
 
 from .perm_guard import PermissionGuard, PluginPermissionError
 
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-
-    from core.rl import registry as rl_registry
+    from platform.rl import registry as rl_registry
 
 
 @dataclass
@@ -40,7 +38,7 @@ def _plugin_entry(entrypoint: str, adapters: dict[str, Any], args: dict[str, Any
         func = getattr(module, func_name)
         result = func(adapters=adapters, **args)
         queue.put(PluginResult(success=True, output=result))
-    except Exception as exc:  # pragma: no cover - bubble up for logging
+    except Exception as exc:
         queue.put(PluginResult(success=False, error=str(exc)))
 
 
@@ -55,12 +53,11 @@ class PluginExecutor:
     def _load_manifest(self, plugin_dir: pathlib.Path) -> dict[str, Any]:
         manifest_file = plugin_dir / "manifest.json"
         with manifest_file.open("r", encoding="utf-8") as fh:
-            manifest: Any = json.load(fh)  # Could be any JSON type
+            manifest: Any = json.load(fh)
         if _js_validate is not None:
             _js_validate(manifest, self._schema)
-        else:  # pragma: no cover - degraded validation path
-            # Minimal structural checks as fallback
-            if not isinstance(manifest, dict):  # type: ignore[unreachable]
+        else:
+            if not isinstance(manifest, dict):
                 raise ValueError("Invalid manifest structure")
             required = self._schema.get("required", []) if isinstance(self._schema, dict) else []
             missing = [k for k in required if k not in manifest]
@@ -85,18 +82,13 @@ class PluginExecutor:
             guard.require(manifest.get("capabilities", []))
         except PluginPermissionError as exc:
             return PluginResult(success=False, error=str(exc))
-
         entrypoint = manifest["entrypoint"]
-
         result_holder: dict[str, PluginResult] = {}
 
         def act(chosen_timeout: float):
             start = time.perf_counter()
             queue: mp.Queue = mp.Queue()
-            proc = mp.Process(
-                target=_plugin_entry,
-                args=(entrypoint, adapters, args or {}, queue),
-            )
+            proc = mp.Process(target=_plugin_entry, args=(entrypoint, adapters, args or {}, queue))
             proc.start()
             proc.join(chosen_timeout)
             if proc.is_alive():
@@ -108,14 +100,10 @@ class PluginExecutor:
             result_holder["res"] = res
             outcome = {"cost_usd": 0.0, "latency_ms": elapsed}
             signals = {"quality": 1.0 if res.success else 0.0}
-            return outcome, signals
+            return (outcome, signals)
 
         candidates = [timeout, max(1.0, timeout / 2.0)]
         learn.learn(
-            "plugin",
-            {"name": manifest.get("name", plugin_path.name)},
-            candidates,
-            act,
-            policy_registry=policy_registry,
+            "plugin", {"name": manifest.get("name", plugin_path.name)}, candidates, act, policy_registry=policy_registry
         )
         return result_holder.get("res", PluginResult(success=False, error="no result"))

@@ -13,8 +13,10 @@ Notes:
 """
 
 from __future__ import annotations
+
 import contextlib
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -94,7 +96,7 @@ def _recent_degradations_impl(limit: int = 50) -> dict:
     with minimal fields to keep payloads small.
     """
     try:
-        from core.degradation_reporter import get_degradation_reporter
+        from platform.degradation_reporter import get_degradation_reporter
 
         rep = get_degradation_reporter()
         events = rep.snapshot()[-max(1, int(limit)) :]

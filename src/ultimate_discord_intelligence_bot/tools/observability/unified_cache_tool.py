@@ -6,17 +6,21 @@ across all cache layers.
 """
 
 from __future__ import annotations
+
 import logging
+from platform.core.step_result import StepResult
 from typing import Any
+
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+
 from ultimate_discord_intelligence_bot.cache import (
     ENABLE_CACHE_V2,
     CacheNamespace,
     get_cache_namespace,
     get_unified_cache,
 )
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 

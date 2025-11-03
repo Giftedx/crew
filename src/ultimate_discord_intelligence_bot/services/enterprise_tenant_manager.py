@@ -1,13 +1,16 @@
 """Enterprise tenant management with advanced isolation, resource quotas, and billing."""
 
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
-from ultimate_discord_intelligence_bot.settings import ENABLE_ENTERPRISE_TENANT_MANAGEMENT
 from platform.core.step_result import StepResult
+from typing import Any
+
+from app.config.settings import ENABLE_ENTERPRISE_TENANT_MANAGEMENT
+
 
 log = logging.getLogger(__name__)
 

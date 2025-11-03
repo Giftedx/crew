@@ -7,11 +7,14 @@ Actions:
 """
 
 from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Any, Literal
-from pydantic import BaseModel, Field
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
 from ._base import BaseTool
 
 

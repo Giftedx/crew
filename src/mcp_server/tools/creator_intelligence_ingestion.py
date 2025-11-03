@@ -12,17 +12,20 @@ All tools follow StepResult pattern and include provenance tracking.
 """
 
 from __future__ import annotations
+
 import hashlib
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
-from ingest.models import Provenance
-from ingest.providers import twitch, youtube
-from memory.creator_intelligence_collections import get_collection_manager
-from memory.embedding_service import get_embedding_service
-from memory.vector_store import VectorRecord
 from platform.core.step_result import StepResult
+from typing import Any
+
+from domains.ingestion.pipeline.models import Provenance
+from domains.ingestion.providers import twitch, youtube
+from domains.memory.creator_intelligence_collections import get_collection_manager
+from domains.memory.embedding_service import get_embedding_service
+from domains.memory.vector_store import VectorRecord
+
 
 logger = logging.getLogger(__name__)
 

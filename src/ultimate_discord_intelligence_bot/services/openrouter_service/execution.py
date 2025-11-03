@@ -1,16 +1,19 @@
 """Execution paths for OpenRouter routing."""
 
 from __future__ import annotations
+
 import logging
 import os as _os
 import sys
 import time
-from typing import TYPE_CHECKING, Any
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled
 from platform.http.http_utils import resilient_post as _default_resilient_post
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from .quality import basic_quality_assessment, quality_assessment
 from .service import get_settings
+
 
 if TYPE_CHECKING:
     from .state import RouteState
@@ -26,8 +29,8 @@ except Exception:
 
 
 try:
-    from core.vllm_service import is_vllm_available as _is_vllm_available
-    from core.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
+    from platform.vllm_service import is_vllm_available as _is_vllm_available
+    from platform.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
 except Exception:
     _is_vllm_available = None
     _VLLMAdapterCtor = None
@@ -248,7 +251,7 @@ def execute_online(service: OpenRouterService, state: RouteState) -> dict[str, A
                 text = " ".join(
                     [str(body) if body is not None else "", str(body_txt) if body_txt is not None else ""]
                 ).lower()
-                return any((m in text for m in markers))
+                return any(m in text for m in markers)
         except Exception:
             pass
         return False
@@ -453,7 +456,7 @@ def _post_success(
     reward = _compute_reward(service, state, latency_ms, quality_score=qa_score)
     service.learning.update(state.task_type, state.chosen_model, reward=reward)
     cache_meta = state.cache_metadata or {}
-    cache_hit = any((isinstance(meta, dict) and meta.get("status") == "hit" for meta in cache_meta.values()))
+    cache_hit = any(isinstance(meta, dict) and meta.get("status") == "hit" for meta in cache_meta.values())
     service._adaptive_record_outcome(
         state,
         reward=reward,

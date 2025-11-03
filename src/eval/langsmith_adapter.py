@@ -8,13 +8,15 @@ available or misconfigured.
 """
 
 from __future__ import annotations
+
 import logging
 import os
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
 from platform.config.settings import SecureConfig, get_settings
-from platform.observability import metrics
 from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 
 logger = logging.getLogger(__name__)
 if TYPE_CHECKING:

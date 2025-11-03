@@ -1,10 +1,14 @@
 """Extract factual claims from text using NLP patterns."""
 
 from __future__ import annotations
-from kg.extract import extract
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
+from kg.extract import extract
+
 from ._base import BaseTool
+
 
 MIN_CLAIM_LEN = 5
 

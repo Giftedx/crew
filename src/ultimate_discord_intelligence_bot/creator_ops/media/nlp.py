@@ -6,10 +6,12 @@ keyphrase extraction, claim detection, sentiment analysis, and content safety sc
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 
 try:
     import torch
@@ -17,8 +19,10 @@ try:
 except ImportError:
     torch = None
     pipeline = None
-from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
@@ -338,9 +342,9 @@ class NLPPipeline:
             for indicator in claim_indicators:
                 if indicator in text_lower:
                     verifiability = "medium"
-                    if any((word in text_lower for word in ["study", "research", "data", "statistics"])):
+                    if any(word in text_lower for word in ["study", "research", "data", "statistics"]):
                         verifiability = "high"
-                    elif any((word in text_lower for word in ["believe", "think", "opinion"])):
+                    elif any(word in text_lower for word in ["believe", "think", "opinion"]):
                         verifiability = "low"
                     claim = Claim(
                         text=segment.text,

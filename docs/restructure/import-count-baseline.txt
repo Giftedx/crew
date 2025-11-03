@@ -1,0 +1,14 @@
+Import Count Baseline
+============================================================
+Directory: src
+
+core.* imports: 278
+ai.* imports: 109
+obs.* imports: 39
+ingest.* imports: 14
+analysis.* imports: 29
+memory.* imports (excluding domains.memory): 90
+platform.* imports: 801
+domains.* imports: 86
+
+============================================================

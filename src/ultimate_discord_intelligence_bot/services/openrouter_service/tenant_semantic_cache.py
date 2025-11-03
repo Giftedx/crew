@@ -10,13 +10,15 @@ working without modification.
 """
 
 from __future__ import annotations
+
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
 from platform.cache.enhanced_semantic_cache import create_enhanced_semantic_cache
 from platform.cache.semantic_cache import CacheStats, SemanticCacheInterface, create_semantic_cache
 from platform.config.configuration import get_config
+from typing import Any
+
 
 SanitiseNamespaceFn = Callable[[str | None], str]
 SemanticCacheFactory = Callable[..., SemanticCacheInterface]

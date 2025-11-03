@@ -1,15 +1,18 @@
 from __future__ import annotations
+
 import contextlib
 import json
 import os
 import re
 from collections import Counter
 from pathlib import Path
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -42,7 +45,7 @@ def _extract_keywords(text: str, *, limit: int = 12) -> list[str]:
     tokens = re.findall("[A-Za-z][A-Za-z0-9_-]{2,}", text)
     if not tokens:
         return []
-    counts = Counter((token.lower() for token in tokens))
+    counts = Counter(token.lower() for token in tokens)
     return [token for token, _ in counts.most_common(limit)]
 
 
@@ -105,7 +108,7 @@ class GraphMemoryTool(BaseTool[StepResult]):
         self._unified_store = None
         if use_unified_store:
             try:
-                from memory.unified_graph_store import UnifiedGraphStore
+                from domains.memory.unified_graph_store import UnifiedGraphStore
 
                 self._unified_store = UnifiedGraphStore()
             except Exception as e:

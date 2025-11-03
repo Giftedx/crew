@@ -13,10 +13,13 @@ Notes
 """
 
 from __future__ import annotations
+
 import contextlib
 import time
 from typing import Any
+
 from fastapi import APIRouter, Header, HTTPException, Request
+
 from .a2a_discovery import attach_discovery_routes as _attach_discovery
 from .a2a_metrics import inc_tool_runs as _inc_tool_runs
 from .a2a_metrics import observe_batch_size as _observe_batch_size
@@ -25,6 +28,7 @@ from .a2a_metrics import observe_tool_latency as _observe_tool_latency
 from .a2a_streaming import attach_streaming_demo as _attach_streaming_demo
 from .a2a_tools import api_key_ok as _api_key_ok
 from .a2a_tools import get_tools as _get_tools
+
 
 try:
     from platform.observability import tracing

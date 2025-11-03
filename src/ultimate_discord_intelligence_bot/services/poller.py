@@ -1,12 +1,15 @@
 """Simple scheduler to poll creator platforms for updates."""
 
 from __future__ import annotations
+
 import asyncio
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING
-from core.time import default_utc_now
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult
+
     from ..profiles.store import ProfileStore
 
 

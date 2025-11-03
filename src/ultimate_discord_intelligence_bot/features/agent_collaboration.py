@@ -5,15 +5,17 @@ parallel, and hierarchical execution patterns.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+    from app.config.feature_flags import FeatureFlags
 logger = logging.getLogger(__name__)
 
 
@@ -102,7 +104,7 @@ class AgentCollaboration:
                 logger.error(f"Sequential task failed for agent {task.agent_id}: {e}")
                 results[task.agent_id] = StepResult.fail(f"Task execution failed: {e}")
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
         result = CollaborationResult(
             pattern=CollaborationPattern.SEQUENTIAL,
@@ -147,7 +149,7 @@ class AgentCollaboration:
             else:
                 results[task.agent_id] = result
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
         result = CollaborationResult(
             pattern=CollaborationPattern.PARALLEL,
@@ -208,7 +210,7 @@ class AgentCollaboration:
             for task in subordinate_tasks:
                 results[task.agent_id] = StepResult.fail("Execution failed")
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
         result = CollaborationResult(
             pattern=CollaborationPattern.HIERARCHICAL,
@@ -240,7 +242,7 @@ class AgentCollaboration:
                 results={},
                 execution_time=0.0,
                 success_count=0,
-                failure_count=sum((len(stage) for stage in pipeline_stages)),
+                failure_count=sum(len(stage) for stage in pipeline_stages),
                 metadata={"error": "Agent collaboration disabled"},
             )
         start_time = asyncio.get_event_loop().time()
@@ -260,7 +262,7 @@ class AgentCollaboration:
                     if result.success and result.data:
                         pipeline_context.update(result.data)
         execution_time = asyncio.get_event_loop().time() - start_time
-        success_count = sum((1 for r in results.values() if r.success))
+        success_count = sum(1 for r in results.values() if r.success)
         failure_count = len(results) - success_count
         result = CollaborationResult(
             pattern=CollaborationPattern.PIPELINE,

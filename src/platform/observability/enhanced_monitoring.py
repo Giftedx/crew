@@ -26,8 +26,7 @@ try:
 except ImportError:
     PSUTIL_AVAILABLE = False
 from platform.observability import metrics
-
-from core.time import default_utc_now
+from platform.time import default_utc_now
 
 
 logger = logging.getLogger(__name__)

@@ -17,7 +17,7 @@ def check_file_references(doc_content: str, doc_path: Path, repo_root: Path, doc
     - Backticked file references (e.g., `config/retry.yaml`, `core/http_utils.py`) are assumed repo-root relative.
       If not found, attempt smart fallbacks:
         * If the path starts with a known top-level package (core/, obs/, ingest/, server/, ultimate_discord_intelligence_bot/),
-          also check under src/ (e.g., src/core/http_utils.py).
+          also check under src/ (e.g., platform.http.http_utils).
         * If it's a bare filename (no '/'), search under src/ recursively for a match.
     - Markdown links to .md files are resolved relative to the docs directory for typical intra-doc links.
     """

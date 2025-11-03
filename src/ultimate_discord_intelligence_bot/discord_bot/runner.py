@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import asyncio
 import contextlib
 import os
 import sys
 import traceback
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
 from platform.config.configuration import get_config as _get_secure_config
-from core.time import default_utc_now
+from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
+from platform.time import default_utc_now
+
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
+from .domains.ingestion.pipeline import start_ingest_workers
 from .env import check_environment, enable_autonomous_defaults
-from .ingest import start_ingest_workers
 from .registrations import _register_events, _register_prefix_commands, _register_slash_commands
 from .tools_bootstrap import attach_tools, load_tools
 
@@ -40,7 +42,7 @@ def create_full_bot():
     user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}
     admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {"1", "true", "yes"}
     mode = "agent-only" if not user_cmds_enabled else "user-commands"
-    print(f"🧭 Startup mode: {mode} (admin={('on' if admin_cmds_enabled else 'off')})")
+    print(f"🧭 Startup mode: {mode} (admin={('on' if admin_cmds_enabled else 'off')})"
     _register_prefix_commands(bot)
     _register_slash_commands(bot)
     return bot

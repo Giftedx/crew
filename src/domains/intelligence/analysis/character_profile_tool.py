@@ -1,14 +1,17 @@
 """Aggregate per-person trust metrics and events."""
 
 from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
+
 from .. import settings
 from ._base import BaseTool
 from .leaderboard_tool import LeaderboardTool
 from .trustworthiness_tracker_tool import TrustworthinessTrackerTool
+
 
 if TYPE_CHECKING:
     from pathlib import Path

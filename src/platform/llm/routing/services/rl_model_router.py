@@ -13,11 +13,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from platform.core.step_result import StepResult
 from platform.observability import metrics
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-
-from core.time import default_utc_now
 
 
 if TYPE_CHECKING:

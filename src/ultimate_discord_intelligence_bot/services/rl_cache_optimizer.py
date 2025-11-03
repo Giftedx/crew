@@ -6,15 +6,18 @@ for TTL optimization, predictive cache warming, and usage pattern recognition.
 """
 
 from __future__ import annotations
+
 import hashlib
 import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
-import numpy as np
 from platform.core.step_result import StepResult
+from typing import Any
+
+import numpy as np
+
 
 logger = logging.getLogger(__name__)
 
@@ -534,7 +537,7 @@ class RLCacheOptimizer:
         if not self.optimization_history:
             return {}
         recent_rewards = self.optimization_history[-100:]
-        recent_hits = sum((1 for r in recent_rewards if r.hit))
+        recent_hits = sum(1 for r in recent_rewards if r.hit)
         recent_requests = len(recent_rewards)
         return {
             "recent_hit_rate": recent_hits / recent_requests if recent_requests > 0 else 0.0,

@@ -4,9 +4,11 @@ Contract: public run/_run returns StepResult; helper returns domain object.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ...profiles.schema import CanonicalChannel
 from .._base import BaseTool
 

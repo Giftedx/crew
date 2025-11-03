@@ -1,7 +1,10 @@
 """Main OpenAI integration service combining all OpenAI capabilities."""
 
 from __future__ import annotations
+
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING
+
 from ultimate_discord_intelligence_bot.services.openai_function_calling import OpenAIFunctionCallingService
 from ultimate_discord_intelligence_bot.services.openai_multimodal import MultimodalAnalysisService
 from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
@@ -9,7 +12,7 @@ from ultimate_discord_intelligence_bot.services.openai_streaming import OpenAISt
 from ultimate_discord_intelligence_bot.services.openai_structured_outputs import OpenAIStructuredOutputsService
 from ultimate_discord_intelligence_bot.services.openai_vision import OpenAIVisionService
 from ultimate_discord_intelligence_bot.services.openai_voice import OpenAIVoiceService
-from platform.core.step_result import StepResult
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator

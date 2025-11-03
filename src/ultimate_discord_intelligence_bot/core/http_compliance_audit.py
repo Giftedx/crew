@@ -4,8 +4,10 @@ import re
 import sys
 from pathlib import Path
 
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from platform.core.step_result import StepResult
+
 
 FIXES_PREVIEW_LIMIT = 3
 
@@ -29,7 +31,7 @@ class HTTPComplianceAuditor:
         print("Per Copilot instruction #8: Always use core.http_utils wrappers")
         for file_path in py_files:
             relative_path = str(file_path.name)
-            if any((skip in relative_path for skip in ["http_utils", "test_", "http_compliance_audit"])):
+            if any(skip in relative_path for skip in ["http_utils", "test_", "http_compliance_audit"]):
                 continue
             violations = self._check_file(file_path)
             if violations:

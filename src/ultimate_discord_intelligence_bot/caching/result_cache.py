@@ -5,14 +5,16 @@ enabling performance optimization through intelligent result caching.
 """
 
 from __future__ import annotations
+
 import hashlib
 import json
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -230,9 +232,7 @@ def cache_result(ttl: int | None = None, key_prefix: str = "", metadata: dict[st
             if cached_result is not None:
                 return cached_result
             result = func(*args, **kwargs)
-            if isinstance(result, StepResult) and result.success:
-                cache.set(cache_key, result, ttl=ttl, metadata=metadata)
-            elif not isinstance(result, StepResult):
+            if (isinstance(result, StepResult) and result.success) or not isinstance(result, StepResult):
                 cache.set(cache_key, result, ttl=ttl, metadata=metadata)
             return result
 

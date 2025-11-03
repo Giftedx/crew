@@ -22,17 +22,14 @@ def register_pilot_route(app: FastAPI, settings: Any) -> None:
             settings_enabled = bool(flag)
         else:
             settings_enabled = None
-
         if settings_enabled is None:
             enabled = _os.getenv("ENABLE_LANGGRAPH_PILOT_API", "0").lower() in truthy
         else:
             enabled = settings_enabled
-
         if not enabled:
             return
-
         try:
-            from graphs.langgraph_pilot import run_ingest_analysis_pilot  # type: ignore
+            from graphs.langgraph_pilot import run_ingest_analysis_pilot
 
             @app.get("/pilot/run")
             def _pilot_run(request: Request) -> dict:
@@ -55,12 +52,10 @@ def register_pilot_route(app: FastAPI, settings: Any) -> None:
                     if not isinstance(w, str):
                         w = "main"
                     try:
-                        from memory.vector_store import (
-                            VectorStore,  # local import to avoid heavy deps at import time
-                        )
+                        from domains.memory.vector_store import VectorStore
 
                         ns = VectorStore.namespace(t, w, "pilot")
-                    except Exception:  # pragma: no cover - fallback if import fails
+                    except Exception:
                         ns = f"{t}:{w}:pilot"
                     return {"chunks": 2, "namespace": ns}
 
@@ -93,9 +88,9 @@ def register_pilot_route(app: FastAPI, settings: Any) -> None:
                 with contextlib.suppress(Exception):
                     out["duration_seconds"] = max(0.0, time.perf_counter() - t0)
                 return out
-        except Exception as exc:  # pragma: no cover - optional path
+        except Exception as exc:
             logging.debug("pilot api wiring skipped: %s", exc)
-    except Exception:  # pragma: no cover - environment access issues
+    except Exception:
         pass
 
 

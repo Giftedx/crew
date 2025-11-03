@@ -15,13 +15,15 @@ Usage:
 """
 
 from __future__ import annotations
+
 import argparse
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
 from platform.config.configuration import get_config
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -349,10 +351,10 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
             print("⚠️  yt-dlp not found. Some downloads will be limited. 'pip install yt-dlp' to enable.")
         report["binaries"]["yt-dlp"] = "missing"
     try:
-        from memory import embeddings as _emb
-        from memory import vector_store as _v
-        from memory.qdrant_provider import _DummyClient as _QD
-        from memory.qdrant_provider import get_qdrant_client
+        from domains.memory import embeddings as _emb
+        from domains.memory import vector_store as _v
+        from domains.memory.vector.qdrant import _DummyClient as _QD
+        from domains.memory.vector.qdrant import get_qdrant_client
 
         url = os.getenv("QDRANT_URL", "")
         if url:
@@ -400,7 +402,7 @@ def _run_discord() -> int:
     target = next((p for p in candidates if p.exists()), None)
     if target is None:
         print("❌ start_full_bot.py not found in repo root or scripts/. Ensure repository is intact.")
-        print(f"   Looked in: {', '.join((str(p) for p in candidates))}")
+        print(f"   Looked in: {', '.join(str(p) for p in candidates)}")
         return 2
     print(f"🚀 Launching: {sys.executable} {target}")
     return subprocess.call([sys.executable, str(target)])

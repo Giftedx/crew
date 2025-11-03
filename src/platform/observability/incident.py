@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING
-
-from core.time import default_utc_now
 
 
 if TYPE_CHECKING:
@@ -55,5 +54,4 @@ class IncidentManager:
 
 
 manager = IncidentManager()
-
 __all__ = ["Incident", "IncidentManager", "manager"]

@@ -1,16 +1,19 @@
 """Track per-person truthfulness history and compute trust scores."""
 
 from __future__ import annotations
+
 import json
 import logging
 import os
 from pathlib import Path
+from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from platform.time import default_utc_now
 from threading import Lock
 from typing import ClassVar, TypedDict
-from core.time import default_utc_now
-from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 HIGH_TRUST_THRESHOLD = 0.8
 TRUSTED_THRESHOLD = 0.6

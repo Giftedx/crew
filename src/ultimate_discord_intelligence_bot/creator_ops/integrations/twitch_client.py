@@ -6,14 +6,18 @@ error handling, rate limiting, OAuth support, and EventSub WebSocket integration
 """
 
 from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import time
 from datetime import datetime, timedelta
+from platform import http_utils
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any, ClassVar
+
 import websockets
-from core import http_utils
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models import (
     TwitchChatMessage,
@@ -26,10 +30,11 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_models im
     TwitchVideo,
     TwitchWebSocketMessage,
 )
-from platform.core.step_result import StepResult
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import TwitchOAuthManager
 logger = logging.getLogger(__name__)
 

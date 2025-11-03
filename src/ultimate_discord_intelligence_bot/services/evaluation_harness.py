@@ -9,11 +9,14 @@ Import ordering: module docstring precedes ``__future__`` import per Ruff E402 g
 """
 
 from __future__ import annotations
+
 import json
 import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+
 from .openrouter_service import OpenRouterService
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

@@ -18,7 +18,7 @@ except ImportError:
     HAS_JSONSCHEMA = False
 from platform.core.step_result import StepResult
 
-from ultimate_discord_intelligence_bot.settings import Settings
+from app.config.settings import Settings
 
 
 logger = logging.getLogger(__name__)

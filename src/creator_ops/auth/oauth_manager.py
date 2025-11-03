@@ -10,11 +10,10 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
+from platform.core.step_result import StepResult
 from typing import Any, Protocol, runtime_checkable
 
 import httpx
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -101,7 +100,6 @@ class YouTubeOAuthProvider:
             "access_type": "offline",
             "prompt": "consent",
         }
-
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         return f"{self.base_url}?{query_string}"
 
@@ -114,11 +112,9 @@ class YouTubeOAuthProvider:
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri,
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
             refresh_token=token_data.get("refresh_token"),
@@ -136,14 +132,12 @@ class YouTubeOAuthProvider:
             "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
-            refresh_token=refresh_token,  # Keep existing refresh token
+            refresh_token=refresh_token,
             expires_at=int(time.time()) + token_data.get("expires_in", 3600),
             token_type=token_data.get("token_type", "Bearer"),
             platform="youtube",
@@ -168,7 +162,6 @@ class TwitchOAuthProvider:
             "scope": "user:read:email",
             "state": state,
         }
-
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         return f"{self.base_url}?{query_string}"
 
@@ -181,11 +174,9 @@ class TwitchOAuthProvider:
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri,
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
             refresh_token=token_data.get("refresh_token"),
@@ -203,11 +194,9 @@ class TwitchOAuthProvider:
             "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
             refresh_token=refresh_token,
@@ -228,9 +217,7 @@ class TikTokOAuthProvider:
 
     def get_auth_url(self, state: str, redirect_uri: str) -> str:
         """Get TikTok authorization URL with PKCE."""
-        # Simplified PKCE implementation
-        code_challenge = "dummy_challenge"  # In production, use proper PKCE
-
+        code_challenge = "dummy_challenge"
         params = {
             "client_key": self.client_id,
             "scope": "user.info.basic",
@@ -240,7 +227,6 @@ class TikTokOAuthProvider:
             "code_challenge": code_challenge,
             "code_challenge_method": "S256",
         }
-
         query_string = "&".join([f"{k}={v}" for k, v in params.items()])
         return f"{self.base_url}?{query_string}"
 
@@ -253,11 +239,9 @@ class TikTokOAuthProvider:
             "grant_type": "authorization_code",
             "redirect_uri": redirect_uri,
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
             refresh_token=token_data.get("refresh_token"),
@@ -275,11 +259,9 @@ class TikTokOAuthProvider:
             "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         }
-
         response = httpx.post(self.token_url, data=data)
         response.raise_for_status()
         token_data = response.json()
-
         return OAuthCredentials(
             access_token=token_data["access_token"],
             refresh_token=refresh_token,
@@ -313,11 +295,8 @@ class OAuthManager:
         try:
             credentials.platform = platform
             self.credentials[platform] = credentials
-
-            # Store in backend if available
             if self._storage_backend:
                 self._storage_backend(platform, credentials.to_dict())
-
             logger.info(f"Set OAuth credentials for {platform}")
             return StepResult.ok(data={"platform": platform, "status": "credentials_set"})
         except Exception as e:
@@ -329,35 +308,22 @@ class OAuthManager:
         try:
             if platform not in self.credentials:
                 return StepResult.not_found(f"No credentials found for platform: {platform}")
-
             credentials = self.credentials[platform]
-
-            # Check if token needs refresh
             if credentials.is_expired() and credentials.refresh_token:
                 if platform not in self.providers:
                     return StepResult.fail(f"No OAuth provider for platform: {platform}")
-
                 provider = self.providers[platform]
                 try:
                     refreshed = provider.refresh_token(credentials.refresh_token)
                     refreshed.platform = platform
                     self.credentials[platform] = refreshed
-
-                    # Store refreshed credentials
                     if self._storage_backend:
                         self._storage_backend(platform, refreshed.to_dict())
-
                     logger.info(f"Refreshed access token for {platform}")
-                    return StepResult.ok(
-                        data={
-                            "access_token": refreshed.access_token,
-                            "platform": platform,
-                        }
-                    )
+                    return StepResult.ok(data={"access_token": refreshed.access_token, "platform": platform})
                 except Exception as e:
                     logger.error(f"Failed to refresh token for {platform}: {e}")
                     return StepResult.fail(f"Token refresh failed: {e!s}")
-
             return StepResult.ok(data={"access_token": credentials.access_token, "platform": platform})
         except Exception as e:
             logger.error(f"Failed to get access token for {platform}: {e}")
@@ -368,10 +334,8 @@ class OAuthManager:
         try:
             if platform not in self.providers:
                 return StepResult.not_found(f"No OAuth provider for platform: {platform}")
-
             provider = self.providers[platform]
             auth_url = provider.get_auth_url(state, redirect_uri)
-
             return StepResult.ok(data={"auth_url": auth_url, "platform": platform, "state": state})
         except Exception as e:
             logger.error(f"Failed to get auth URL for {platform}: {e}")
@@ -382,16 +346,12 @@ class OAuthManager:
         try:
             if platform not in self.providers:
                 return StepResult.not_found(f"No OAuth provider for platform: {platform}")
-
             provider = self.providers[platform]
             credentials = provider.exchange_code(code, redirect_uri)
             credentials.platform = platform
-
-            # Store credentials
             self.credentials[platform] = credentials
             if self._storage_backend:
                 self._storage_backend(platform, credentials.to_dict())
-
             logger.info(f"Exchanged code for tokens for {platform}")
             return StepResult.ok(data={"credentials": credentials.to_dict(), "platform": platform})
         except Exception as e:
@@ -403,11 +363,8 @@ class OAuthManager:
         try:
             if platform in self.credentials:
                 del self.credentials[platform]
-
-                # Remove from backend storage
                 if self._storage_backend:
-                    self._storage_backend(platform, None)  # None indicates deletion
-
+                    self._storage_backend(platform, None)
                 logger.info(f"Revoked credentials for {platform}")
                 return StepResult.ok(data={"platform": platform, "status": "revoked"})
             else:
@@ -430,16 +387,13 @@ class OAuthManager:
         try:
             if platform not in self.providers:
                 return StepResult.not_found(f"No OAuth provider for platform: {platform}")
-
             has_credentials = platform in self.credentials
             is_expired = False
             expires_in = 0
-
             if has_credentials:
                 credentials = self.credentials[platform]
                 is_expired = credentials.is_expired()
                 expires_in = credentials.expires_in()
-
             return StepResult.ok(
                 data={
                     "platform": platform,
@@ -463,31 +417,20 @@ class OAuthManager:
                 "has_storage_backend": self._storage_backend is not None,
                 "timestamp": time.time(),
             }
-
-            # Check credential health
             healthy_credentials = 0
             expired_credentials = 0
-
             for _platform, credentials in self.credentials.items():
                 if credentials.is_expired():
                     expired_credentials += 1
                 else:
                     healthy_credentials += 1
-
-            status.update(
-                {
-                    "healthy_credentials": healthy_credentials,
-                    "expired_credentials": expired_credentials,
-                }
-            )
-
+            status.update({"healthy_credentials": healthy_credentials, "expired_credentials": expired_credentials})
             return StepResult.ok(data=status)
         except Exception as e:
             logger.error(f"OAuth health check failed: {e}")
             return StepResult.fail(f"Health check failed: {e!s}")
 
 
-# Global OAuth manager instance
 _oauth_manager: OAuthManager | None = None
 
 
@@ -504,8 +447,6 @@ def setup_default_providers() -> StepResult:
     import os
 
     manager = get_oauth_manager()
-
-    # YouTube provider
     youtube_client_id = os.getenv("YOUTUBE_CLIENT_ID")
     youtube_client_secret = os.getenv("YOUTUBE_CLIENT_SECRET")
     if youtube_client_id and youtube_client_secret:
@@ -513,8 +454,6 @@ def setup_default_providers() -> StepResult:
         result = manager.register_platform("youtube", youtube_provider)
         if not result.success:
             return result
-
-    # Twitch provider
     twitch_client_id = os.getenv("TWITCH_CLIENT_ID")
     twitch_client_secret = os.getenv("TWITCH_CLIENT_SECRET")
     if twitch_client_id and twitch_client_secret:
@@ -522,8 +461,6 @@ def setup_default_providers() -> StepResult:
         result = manager.register_platform("twitch", twitch_provider)
         if not result.success:
             return result
-
-    # TikTok provider
     tiktok_client_id = os.getenv("TIKTOK_CLIENT_ID")
     tiktok_client_secret = os.getenv("TIKTOK_CLIENT_SECRET")
     if tiktok_client_id and tiktok_client_secret:
@@ -531,5 +468,4 @@ def setup_default_providers() -> StepResult:
         result = manager.register_platform("tiktok", tiktok_provider)
         if not result.success:
             return result
-
     return StepResult.ok(data={"status": "default_providers_setup_complete"})

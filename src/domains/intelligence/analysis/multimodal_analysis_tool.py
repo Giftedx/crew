@@ -12,8 +12,11 @@ This tool provides comprehensive multimodal analysis including:
 """
 
 from __future__ import annotations
+
 import time
+
 from pydantic import BaseModel, Field
+
 from ..platform.observability.metrics import get_metrics
 from ..services.multimodal_understanding_service import MultimodalUnderstandingService
 from ..step_result import StepResult

@@ -5,12 +5,15 @@ client libraries, providing seamless integration between CrewAI workflows and MC
 """
 
 from __future__ import annotations
+
 import asyncio
 import contextlib
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import BaseTool
+
 
 try:
     from fastmcp import Client
@@ -34,7 +37,7 @@ class FastMCPClientTool(BaseTool[StepResult]):
     def _validate_server_url(self, server_url: str) -> bool:
         """Validate that the server URL is allowed."""
         allowed_patterns = ["stdio://", "http://localhost:", "https://", "mcp://"]
-        return any((server_url.startswith(pattern) for pattern in allowed_patterns))
+        return any(server_url.startswith(pattern) for pattern in allowed_patterns)
 
     async def _call_mcp_tool_async(self, server_url: str, tool_name: str, arguments: dict[str, Any]) -> StepResult:
         """Asynchronously call an MCP tool on an external server."""

@@ -11,11 +11,13 @@ This tool provides comprehensive virality prediction including:
 """
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
 
 
@@ -255,9 +257,7 @@ class ViralityPredictionTool(BaseTool[StepResult]):
             confidence += 0.2
         if content.get("historical_performance"):
             confidence += 0.2
-        if viral_probability > 0.8:
-            confidence += 0.1
-        elif viral_probability < 0.2:
+        if viral_probability > 0.8 or viral_probability < 0.2:
             confidence += 0.1
         return min(1.0, confidence)
 
@@ -572,7 +572,7 @@ class ViralityPredictionTool(BaseTool[StepResult]):
         """Analyze insights from viral predictions."""
         if not viral_predictions:
             return {"insights": [], "patterns": {}}
-        avg_viral_probability = sum((p["viral_probability"] for p in viral_predictions)) / len(viral_predictions)
+        avg_viral_probability = sum(p["viral_probability"] for p in viral_predictions) / len(viral_predictions)
         all_factors: dict[str, list[float]] = {}
         for prediction in viral_predictions:
             factors = prediction["viral_factors"]

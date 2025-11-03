@@ -54,7 +54,7 @@ class _SettingsLike:
 
 
 try:
-    from ultimate_discord_intelligence_bot.settings import Settings as _real_get_settings
+    from app.config.settings import Settings as _real_get_settings
 
     def get_settings() -> _SettingsLike:
         return _real_get_settings()

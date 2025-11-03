@@ -5,9 +5,11 @@ uniform patterns, error handling, and StepResult usage.
 """
 
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any
 from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -342,7 +344,7 @@ class VerificationTool(StandardTool):
         """
         if not results:
             return 0.0
-        verified_count = sum((1 for r in results if r.get("verified", False)))
+        verified_count = sum(1 for r in results if r.get("verified", False))
         return verified_count / len(results)
 
     def _get_timestamp(self) -> str:

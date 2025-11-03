@@ -9,10 +9,13 @@ This template shows the correct patterns for implementing tools with:
 """
 
 from __future__ import annotations
+
 import logging
-from typing import Any
 from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 

@@ -18,14 +18,14 @@ from platform.core.step_result import StepResult
 from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.settings import Settings
+from app.config.settings import Settings
 
 from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor
 
 
 try:
-    from core import settings as core_settings
+    from platform import settings as core_settings
 except Exception:
     core_settings = None
 

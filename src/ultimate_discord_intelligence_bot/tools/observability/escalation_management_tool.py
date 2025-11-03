@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 

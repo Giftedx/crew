@@ -1,11 +1,14 @@
 """Cache helpers for the OpenRouter routing workflow."""
 
 from __future__ import annotations
+
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from ...cache import combine_keys, generate_key_from_params
+
 
 log = logging.getLogger(__name__)
 if TYPE_CHECKING:
@@ -153,9 +156,9 @@ def check_caches(service: OpenRouterService, state: RouteState) -> dict[str, Any
 
         def _sig(obj: Any) -> str:
             if isinstance(obj, dict):
-                return "{" + ",".join((f"{key}:{_sig(obj[key])}" for key in sorted(obj))) + "}"
+                return "{" + ",".join(f"{key}:{_sig(obj[key])}" for key in sorted(obj)) + "}"
             if isinstance(obj, list):
-                return "[" + ",".join((_sig(item) for item in obj)) + "]"
+                return "[" + ",".join(_sig(item) for item in obj) + "]"
             return str(obj)
 
         provider_sig = _sig(provider) if provider else "{}"

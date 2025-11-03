@@ -1,9 +1,12 @@
 """Performance Dashboard route registration for Week 4 Phase 2 Week 3."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from fastapi.responses import FileResponse
 from server.routers.performance_dashboard import router as performance_router
+
 
 if TYPE_CHECKING:
     from fastapi import FastAPI

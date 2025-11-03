@@ -1,6 +1,7 @@
 """WebSocket service for real-time client communication and live updates."""
 
 from __future__ import annotations
+
 import asyncio
 import contextlib
 import json
@@ -8,11 +9,14 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
+from platform.core.step_result import StepResult
 from typing import Any
+
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
-from ultimate_discord_intelligence_bot.settings import get_settings
-from platform.core.step_result import StepResult
+
+from app.config.settings import get_settings
+
 
 log = logging.getLogger(__name__)
 

@@ -17,10 +17,12 @@ Notes:
 """
 
 from __future__ import annotations
+
 import contextlib
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import BaseTool
 
 
@@ -103,8 +105,8 @@ class RagHybridTool(BaseTool[StepResult]):
 
     def _vector_hits(self, namespace: str, query_text: str, top_k: int) -> list[dict[str, Any]]:
         try:
-            from memory import embeddings
-            from memory.vector_store import VectorStore
+            from domains.memory import embeddings
+            from domains.memory.vector_store import VectorStore
 
             store = VectorStore()
             vec = embeddings.embed([query_text])[0]
@@ -185,7 +187,7 @@ class RagHybridTool(BaseTool[StepResult]):
         except Exception:
             return (hits, False)
         try:
-            from analysis.rerank import rerank
+            from domains.intelligence.analysis.rerank import rerank
 
             texts = [h.get("text", "") for h in hits]
             rr = rerank(query_text, texts, provider=provider, top_n=min(len(texts), len(texts)))

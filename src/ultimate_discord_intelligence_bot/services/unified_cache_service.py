@@ -31,15 +31,18 @@ Usage:
 """
 
 from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import pickle
 import time
-from typing import Any
 from platform.cache.unified_config import get_unified_cache_config
-from ultimate_discord_intelligence_bot.config.base import BaseConfig
 from platform.core.step_result import StepResult
+from typing import Any
+
+from app.config.base import BaseConfig
+
 
 logger = logging.getLogger(__name__)
 

@@ -5,9 +5,11 @@ to keep the main router simple and focused on FastAPI endpoint wiring.
 """
 
 from __future__ import annotations
+
 import os
 from collections.abc import Callable
 from typing import Any
+
 
 try:
     from platform.core.step_result import StepResult
@@ -173,7 +175,7 @@ def load_tools() -> dict[str, ToolFunc]:
                     risks.append("Alert notifications enabled; verify signal routing")
                 if max_time is not None and max_time <= 0:
                     risks.append("No time budget available for deeper research")
-                counts = {"sources": len(sources), "tokens_estimate": sum((len(s.split()) for s in sources))}
+                counts = {"sources": len(sources), "tokens_estimate": sum(len(s.split()) for s in sources)}
                 meta = {
                     "multi_agent": True,
                     "quality_score": None,

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from platform import http_utils
 from typing import Any
-
-from core import http_utils
 
 
 Json = dict[str, Any]
@@ -58,24 +57,18 @@ class A2AClient:
     @staticmethod
     def _ensure_ok(resp: Any) -> None:
         status = getattr(resp, "status_code", 200)
-        if not (200 <= int(status) < 300):
-            # Try to get meaningful text if available
+        if not 200 <= int(status) < 300:
             text = getattr(resp, "text", "")
             raise HttpError(int(status), text or None)
 
-    # Discovery
     def get_agent_card(self) -> Json:
         if self.config.enable_retry:
             resp = http_utils.retrying_get(
-                self._agent_card,
-                headers=self._headers(),
-                timeout_seconds=self.config.timeout_seconds,
+                self._agent_card, headers=self._headers(), timeout_seconds=self.config.timeout_seconds
             )
         else:
             resp = http_utils.resilient_get(
-                self._agent_card,
-                headers=self._headers(),
-                timeout_seconds=self.config.timeout_seconds,
+                self._agent_card, headers=self._headers(), timeout_seconds=self.config.timeout_seconds
             )
         self._ensure_ok(resp)
         return resp.json()
@@ -83,20 +76,15 @@ class A2AClient:
     def get_skills(self) -> Json:
         if self.config.enable_retry:
             resp = http_utils.retrying_get(
-                self._skills,
-                headers=self._headers(),
-                timeout_seconds=self.config.timeout_seconds,
+                self._skills, headers=self._headers(), timeout_seconds=self.config.timeout_seconds
             )
         else:
             resp = http_utils.resilient_get(
-                self._skills,
-                headers=self._headers(),
-                timeout_seconds=self.config.timeout_seconds,
+                self._skills, headers=self._headers(), timeout_seconds=self.config.timeout_seconds
             )
         self._ensure_ok(resp)
         return resp.json()
 
-    # RPC
     def call(self, method: str, params: Json | None = None, id_value: str | int = 1) -> Json:
         payload: Json = {"jsonrpc": "2.0", "id": id_value, "method": method}
         if params is not None:
@@ -119,11 +107,7 @@ class A2AClient:
         data = resp.json()
         if isinstance(data, dict) and "error" in data:
             err = data["error"] or {}
-            raise JsonRpcError(
-                int(err.get("code", -32603)),
-                str(err.get("message", "error")),
-                err.get("data"),
-            )
+            raise JsonRpcError(int(err.get("code", -32603)), str(err.get("message", "error")), err.get("data"))
         if not isinstance(data, dict) or "result" not in data:
             raise JsonRpcError(-32603, "Malformed JSON-RPC response", data)
         return data["result"]
@@ -159,11 +143,7 @@ class A2AClient:
                 raise JsonRpcError(-32603, "Malformed item in batch response", item)
             if "error" in item:
                 err = item["error"] or {}
-                raise JsonRpcError(
-                    int(err.get("code", -32603)),
-                    str(err.get("message", "error")),
-                    err.get("data"),
-                )
+                raise JsonRpcError(int(err.get("code", -32603)), str(err.get("message", "error")), err.get("data"))
             if "result" not in item:
                 raise JsonRpcError(-32603, "Missing result in batch response item", item)
             results.append(item["result"])

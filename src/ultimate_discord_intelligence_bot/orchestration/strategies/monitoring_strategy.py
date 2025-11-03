@@ -5,10 +5,13 @@ scheduling, content velocity tracking, and automated content processing.
 """
 
 from __future__ import annotations
+
 import logging
-from typing import Any
-from ultimate_discord_intelligence_bot.services.monitoring_orchestrator import RealTimeMonitoringOrchestrator
 from platform.core.step_result import StepResult
+from typing import Any
+
+from ultimate_discord_intelligence_bot.services.monitoring_orchestrator import RealTimeMonitoringOrchestrator
+
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +115,7 @@ class MonitoringStrategy:
             "discord": ["discord.com", "discord.gg"],
         }
         for platform, patterns in platform_patterns.items():
-            if any((pattern in url_lower for pattern in patterns)):
+            if any(pattern in url_lower for pattern in patterns):
                 return platform
         return None
 

@@ -5,7 +5,7 @@ This module provides backward compatibility for the creator ops circuit breaker 
 All functionality has been migrated to the canonical implementation.
 """
 
-from core.circuit_breaker_canonical import (
+from platform.circuit_breaker_canonical import (
     CircuitBreaker,
     CircuitBreakerOpenError,
     CircuitBreakerRegistry,
@@ -15,9 +15,7 @@ from core.circuit_breaker_canonical import (
 )
 
 
-# Legacy compatibility
 circuit_manager = get_circuit_breaker_registry()
-
 __all__ = [
     "CircuitBreaker",
     "CircuitBreakerOpenError",

@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +274,7 @@ class DependencyResolverTool(BaseTool):
 
     def _calculate_total_duration(self, phases: list[ExecutionPhase]) -> int:
         """Calculate total estimated duration for the workflow."""
-        return sum((phase.estimated_duration_minutes for phase in phases))
+        return sum(phase.estimated_duration_minutes for phase in phases)
 
     def _find_missing_dependencies(self, dependencies: list[TaskDependency], tasks: list[dict[str, Any]]) -> list[str]:
         """Find dependencies that reference non-existent tasks."""
@@ -291,7 +294,7 @@ class DependencyResolverTool(BaseTool):
         """Calculate metrics for the dependency resolution."""
         total_tasks = len(resolution.execution_order)
         total_phases = len(resolution.execution_phases)
-        parallel_phases = sum((1 for phase in resolution.execution_phases if phase.get("can_parallelize", False)))
+        parallel_phases = sum(1 for phase in resolution.execution_phases if phase.get("can_parallelize", False))
         return {
             "total_tasks": total_tasks,
             "total_phases": total_phases,

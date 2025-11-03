@@ -1,11 +1,15 @@
 """Caching service for ML/AI operations."""
 
 from __future__ import annotations
+
 import logging
-from typing import Any
-from ultimate_discord_intelligence_bot.settings import get_settings
 from platform.core.step_result import StepResult
+from typing import Any
+
+from app.config.settings import get_settings
+
 from ...platform.cache.multi_level_cache import MultiLevelCache
+
 
 logger = logging.getLogger(__name__)
 

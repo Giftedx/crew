@@ -6,10 +6,12 @@ cross-platform retrieval, and semantic search capabilities.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
+
 
 try:
     import torch
@@ -17,9 +19,11 @@ try:
 except ImportError:
     torch = None
     SentenceTransformer = None
-from memory.qdrant_provider import get_qdrant_client
-from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from platform.core.step_result import StepResult
+
+from domains.memory.vector.qdrant import get_qdrant_client
+from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Agent Training Coordinator for CrewAI Agents
 
@@ -10,11 +9,10 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from platform.time import default_utc_now
 from typing import Any
 
 import yaml
-
-from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .synthetic_data_generator import SyntheticDataGenerator, ToolUsageExample
 
@@ -39,12 +37,8 @@ class AgentTrainingCoordinator:
         self.agents_config_path = agents_config_path
         self.tasks_config_path = tasks_config_path
         self.logger = logging.getLogger(__name__)
-
-        # Load current configurations
         self.agents_config = self._load_yaml_config(agents_config_path)
         self.tasks_config = self._load_yaml_config(tasks_config_path)
-
-        # Available tools mapping (from your project)
         self.available_tools = [
             "pipeline_tool",
             "fact_check_tool",
@@ -92,7 +86,6 @@ class AgentTrainingCoordinator:
             "text_classification_tool",
             "summarization_tool",
         ]
-
         self.training_generator = SyntheticDataGenerator(self.available_tools)
 
     def _load_yaml_config(self, config_path: Path) -> dict:
@@ -108,7 +101,6 @@ class AgentTrainingCoordinator:
     def analyze_current_agents(self) -> dict[str, dict]:
         """Analyze current agent configurations and identify enhancement opportunities."""
         analysis = {}
-
         for agent_name, agent_config in self.agents_config.items():
             agent_analysis: dict[str, Any] = {
                 "agent_name": agent_name,
@@ -126,26 +118,18 @@ class AgentTrainingCoordinator:
                 "tool_usage_potential": "unknown",
                 "complexity_level": "basic",
             }
-
-            # Analyze backstory for complexity
             backstory = agent_config.get("backstory", "")
             if len(backstory) > 500:
                 agent_analysis["complexity_level"] = "advanced"
             elif len(backstory) > 200:
                 agent_analysis["complexity_level"] = "intermediate"
-
-            # Identify enhancement opportunities
             if not agent_config.get("reasoning", False):
                 agent_analysis["enhancement_opportunities"].append("enable_reasoning")
-
             if not agent_config.get("memory", False):
                 agent_analysis["enhancement_opportunities"].append("enable_memory")
-
             if "tool" not in backstory.lower() and "analysis" in backstory.lower():
                 agent_analysis["enhancement_opportunities"].append("add_tool_usage_training")
                 agent_analysis["tool_usage_potential"] = "high"
-
-            # Determine agent role for training
             role = agent_config.get("role", "").lower()
             if "fact" in role or "truth" in role:
                 agent_analysis["primary_function"] = "fact_checking"
@@ -155,95 +139,30 @@ class AgentTrainingCoordinator:
                 agent_analysis["primary_function"] = "character_profiling"
             else:
                 agent_analysis["primary_function"] = "content_analysis"
-
             analysis[agent_name] = agent_analysis
-
         return analysis
 
     def generate_enhanced_prompts(
-        self,
-        agent_name: str,
-        current_config: dict,
-        training_examples: list[ToolUsageExample],
+        self, agent_name: str, current_config: dict, training_examples: list[ToolUsageExample]
     ) -> dict[str, str]:
         """Generate enhanced prompts based on training examples."""
-
-        # Extract patterns from training examples
         common_tools = []
         reasoning_patterns = []
         quality_patterns = []
-
-        for example in training_examples[:10]:  # Use top 10 examples
+        for example in training_examples[:10]:
             common_tools.extend(example.optimal_tools)
-            reasoning_patterns.extend(example.reasoning_steps[:3])  # Top 3 reasoning steps
+            reasoning_patterns.extend(example.reasoning_steps[:3])
             if example.quality_score > 0.8:
                 quality_patterns.append(example.expected_outcome)
-
-        # Count tool usage frequency
         tool_frequency: dict[str, int] = {}
         for tool in common_tools:
             tool_frequency[tool] = tool_frequency.get(tool, 0) + 1
-
         top_tools = sorted(tool_frequency.items(), key=lambda x: x[1], reverse=True)[:5]
-
-        # Enhanced backstory
         current_backstory = current_config.get("backstory", "")
-        enhanced_backstory = f"""{current_backstory}
-
-ENHANCED CAPABILITIES & TOOL USAGE TRAINING:
-
-You are equipped with {len(self.available_tools)} sophisticated analysis tools. Your primary toolkit includes:
-{", ".join([tool for tool, _ in top_tools])}.
-
-TOOL USAGE PRINCIPLES:
-1. ALWAYS consider which tools are most appropriate for each specific task
-2. Use tools in logical sequence - gather data first, then analyze, then synthesize
-3. Cross-verify findings using multiple tools when possible
-4. Document your reasoning for tool selection in your responses
-
-REASONING FRAMEWORK:
-{chr(10).join([f"- {pattern}" for pattern in reasoning_patterns[:5]])}
-
-QUALITY STANDARDS:
-- Aim for high-confidence analysis backed by multiple sources
-- Clearly distinguish between verified facts and informed speculation
-- Provide uncertainty quantification when evidence is limited
-- Always include relevant context and limitations in your analysis
-
-AUTONOMOUS DECISION-MAKING:
-- Proactively identify when additional tools could enhance your analysis
-- Suggest alternative approaches when initial methods seem insufficient
-- Continuously improve your tool selection based on task outcomes
-"""
-
-        # Enhanced goal
+        enhanced_backstory = f"{current_backstory}\n\nENHANCED CAPABILITIES & TOOL USAGE TRAINING:\n\nYou are equipped with {len(self.available_tools)} sophisticated analysis tools. Your primary toolkit includes:\n{', '.join([tool for tool, _ in top_tools])}.\n\nTOOL USAGE PRINCIPLES:\n1. ALWAYS consider which tools are most appropriate for each specific task\n2. Use tools in logical sequence - gather data first, then analyze, then synthesize\n3. Cross-verify findings using multiple tools when possible\n4. Document your reasoning for tool selection in your responses\n\nREASONING FRAMEWORK:\n{chr(10).join([f'- {pattern}' for pattern in reasoning_patterns[:5]])}\n\nQUALITY STANDARDS:\n- Aim for high-confidence analysis backed by multiple sources\n- Clearly distinguish between verified facts and informed speculation\n- Provide uncertainty quantification when evidence is limited\n- Always include relevant context and limitations in your analysis\n\nAUTONOMOUS DECISION-MAKING:\n- Proactively identify when additional tools could enhance your analysis\n- Suggest alternative approaches when initial methods seem insufficient\n- Continuously improve your tool selection based on task outcomes\n"
         current_goal = current_config.get("goal", "")
-        enhanced_goal = f"""{current_goal}
-
-ENHANCED OPERATIONAL OBJECTIVES:
-- Maximize analytical accuracy through strategic tool utilization
-- Provide comprehensive, multi-perspective analysis using appropriate tool sequences
-- Maintain transparency about methodology and confidence levels
-- Continuously refine approach based on task complexity and available evidence"""
-
-        # Tool usage guidelines
-        tool_guidelines = f"""TOOL SELECTION GUIDELINES for {agent_name.upper()}:
-
-PRIMARY ANALYSIS TOOLS:
-{chr(10).join([f"- {tool}: Use when {self._get_tool_usage_context(tool)}" for tool, _ in top_tools[:3]])}
-
-VERIFICATION WORKFLOW:
-1. Extract key claims using claim_extractor_tool
-2. Verify facts using fact_check_tool with multiple sources
-3. Cross-reference with vector_tool for historical context
-4. Store findings using memory_storage_tool for future reference
-
-QUALITY ASSURANCE:
-- Use multiple independent sources for verification
-- Apply fallacy_tool to identify logical errors
-- Employ steelman_argument_tool for balanced analysis
-- Document uncertainty and limitations clearly"""
-
+        enhanced_goal = f"{current_goal}\n\nENHANCED OPERATIONAL OBJECTIVES:\n- Maximize analytical accuracy through strategic tool utilization\n- Provide comprehensive, multi-perspective analysis using appropriate tool sequences\n- Maintain transparency about methodology and confidence levels\n- Continuously refine approach based on task complexity and available evidence"
+        tool_guidelines = f"TOOL SELECTION GUIDELINES for {agent_name.upper()}:\n\nPRIMARY ANALYSIS TOOLS:\n{chr(10).join([f'- {tool}: Use when {self._get_tool_usage_context(tool)}' for tool, _ in top_tools[:3]])}\n\nVERIFICATION WORKFLOW:\n1. Extract key claims using claim_extractor_tool\n2. Verify facts using fact_check_tool with multiple sources\n3. Cross-reference with vector_tool for historical context\n4. Store findings using memory_storage_tool for future reference\n\nQUALITY ASSURANCE:\n- Use multiple independent sources for verification\n- Apply fallacy_tool to identify logical errors\n- Employ steelman_argument_tool for balanced analysis\n- Document uncertainty and limitations clearly"
         return {
             "enhanced_backstory": enhanced_backstory,
             "enhanced_goal": enhanced_goal,
@@ -277,8 +196,6 @@ QUALITY ASSURANCE:
             "verification_requirements": "multiple_sources",
             "uncertainty_handling": "explicit_quantification",
         }
-
-        # Role-specific enhancements
         if "fact" in agent_role.lower():
             base_framework.update(
                 {
@@ -316,15 +233,12 @@ QUALITY ASSURANCE:
                     "evidence_prioritization": True,
                 }
             )
-
         return base_framework
 
     def enhance_agent(self, agent_name: str) -> AgentEnhancement:
         """Create complete enhancement package for an agent."""
         current_config = self.agents_config.get(agent_name, {})
         agent_role = current_config.get("role", "")
-
-        # Determine training focus based on agent role
         if "fact" in agent_role.lower() or "truth" in agent_role.lower():
             training_focus = "fact_checking"
         elif "intelligence" in agent_role.lower() or "monitor" in agent_role.lower():
@@ -333,35 +247,20 @@ QUALITY ASSURANCE:
             training_focus = "character_profiling"
         else:
             training_focus = "content_analysis"
-
-        # Generate training examples
         training_examples = self.training_generator.generate_training_batch(
             agent_role=training_focus,
             batch_size=50,
-            complexity_distribution={
-                "basic": 0.2,
-                "intermediate": 0.3,
-                "advanced": 0.3,
-                "expert": 0.2,
-            },
+            complexity_distribution={"basic": 0.2, "intermediate": 0.3, "advanced": 0.3, "expert": 0.2},
         )
-
-        # Generate enhanced prompts
         enhanced_prompts = self.generate_enhanced_prompts(agent_name, current_config, training_examples)
-
-        # Create reasoning framework
         reasoning_framework = self.create_reasoning_framework(agent_role)
-
-        # Define performance metrics
         performance_metrics = {
-            "accuracy_target": 0.90,
+            "accuracy_target": 0.9,
             "tool_usage_efficiency": 0.85,
-            "response_completeness": 0.80,
+            "response_completeness": 0.8,
             "reasoning_quality": 0.85,
             "source_verification_rate": 0.95,
         }
-
-        # Tool usage guidelines
         tool_guidelines = [
             "Always identify the most appropriate tools for each specific analysis task",
             "Use tools in logical sequence to build comprehensive understanding",
@@ -371,7 +270,6 @@ QUALITY ASSURANCE:
             "Leverage memory tools to build knowledge over time",
             "Apply quality checks and uncertainty quantification to all findings",
         ]
-
         return AgentEnhancement(
             agent_name=agent_name,
             current_config=current_config,
@@ -386,33 +284,21 @@ QUALITY ASSURANCE:
         """Apply enhancements to agent configuration."""
         try:
             if backup:
-                # Create backup of current config
                 backup_path = self.agents_config_path.with_suffix(".backup.yaml")
                 self._save_yaml_config(self.agents_config, backup_path)
                 self.logger.info(f"Created backup at {backup_path}")
-
-            # Update agent configuration
             agent_config = self.agents_config[enhancement.agent_name]
-
-            # Apply enhancements
             agent_config["backstory"] = enhancement.enhanced_backstory
             agent_config["reasoning"] = enhancement.reasoning_framework.get("reasoning_enabled", True)
-            agent_config["memory"] = True  # Enable memory for all enhanced agents
-            agent_config["verbose"] = True  # Enable verbose for better debugging
-
-            # Add tool usage metadata
+            agent_config["memory"] = True
+            agent_config["verbose"] = True
             agent_config["tool_guidelines"] = enhancement.tool_usage_guidelines
             agent_config["performance_metrics"] = enhancement.performance_metrics
             agent_config["reasoning_framework"] = enhancement.reasoning_framework
             agent_config["enhanced_at"] = default_utc_now().isoformat()
-
-            # Save updated configuration
             self._save_yaml_config(self.agents_config, self.agents_config_path)
-
-            # Save training examples
             training_path = Path(f"data/agent_training/{enhancement.agent_name}_training_examples.json")
             training_path.parent.mkdir(parents=True, exist_ok=True)
-
             training_data = {
                 "agent_name": enhancement.agent_name,
                 "enhanced_at": default_utc_now().isoformat(),
@@ -430,13 +316,10 @@ QUALITY ASSURANCE:
                     for ex in enhancement.training_examples
                 ],
             }
-
             with open(training_path, "w") as f:
                 json.dump(training_data, f, indent=2)
-
             self.logger.info(f"✅ Successfully enhanced agent {enhancement.agent_name}")
             return True
-
         except Exception as e:
             self.logger.error(f"❌ Failed to enhance agent {enhancement.agent_name}: {e}")
             return False
@@ -444,101 +327,48 @@ QUALITY ASSURANCE:
     def enhance_all_agents(self) -> dict[str, bool]:
         """Enhance all agents in the configuration."""
         results = {}
-
         for agent_name in self.agents_config:
             self.logger.info(f"Enhancing agent: {agent_name}")
-
             try:
                 enhancement = self.enhance_agent(agent_name)
                 success = self.apply_enhancements(enhancement)
                 results[agent_name] = success
-
                 if success:
                     self.logger.info(
                         f"✅ Enhanced {agent_name} - Training examples: {len(enhancement.training_examples)}"
                     )
                 else:
                     self.logger.error(f"❌ Failed to enhance {agent_name}")
-
             except Exception as e:
                 self.logger.error(f"❌ Error enhancing {agent_name}: {e}")
                 results[agent_name] = False
-
         return results
 
     def generate_enhancement_report(self, results: dict[str, bool]) -> str:
         """Generate a comprehensive report of enhancements applied."""
         successful = sum(1 for success in results.values() if success)
         total = len(results)
-
-        report = f"""
-# CrewAI Agent Enhancement Report
-Generated: {default_utc_now().isoformat()}
-
-## Summary
-- **Total Agents**: {total}
-- **Successfully Enhanced**: {successful}
-- **Enhancement Rate**: {(successful / total) * 100:.1f}%
-
-## Enhanced Agents
-"""
-
+        report = f"\n# CrewAI Agent Enhancement Report\nGenerated: {default_utc_now().isoformat()}\n\n## Summary\n- **Total Agents**: {total}\n- **Successfully Enhanced**: {successful}\n- **Enhancement Rate**: {successful / total * 100:.1f}%\n\n## Enhanced Agents\n"
         for agent_name, success in results.items():
             status = "✅ SUCCESS" if success else "❌ FAILED"
             report += f"- **{agent_name}**: {status}\n"
-
-        report += f"""
-## Enhancement Details
-Each successfully enhanced agent now includes:
-- **Enhanced Backstory**: Comprehensive tool usage training and reasoning frameworks
-- **Tool Usage Guidelines**: 7 core principles for optimal tool selection and usage
-- **Reasoning Framework**: Role-specific analytical approaches and quality standards
-- **Performance Metrics**: Target benchmarks for accuracy, efficiency, and completeness
-- **Training Examples**: 50 synthetic training examples with complexity distribution
-- **Memory & Reasoning**: Enabled advanced capabilities for autonomous decision-making
-
-## Training Data Generated
-- **Synthetic Examples**: {successful * 50} total training examples
-- **Complexity Levels**: Basic (20%), Intermediate (30%), Advanced (30%), Expert (20%)
-- **Tool Coverage**: {len(self.available_tools)} available tools with usage patterns
-- **Quality Assurance**: Anti-pattern identification and quality scoring
-
-## Next Steps
-1. Monitor agent performance using new metrics
-2. Analyze tool usage patterns in real deployments
-3. Refine training based on actual outcomes
-4. Expand synthetic training data based on edge cases discovered
-"""
-
+        report += f"\n## Enhancement Details\nEach successfully enhanced agent now includes:\n- **Enhanced Backstory**: Comprehensive tool usage training and reasoning frameworks\n- **Tool Usage Guidelines**: 7 core principles for optimal tool selection and usage\n- **Reasoning Framework**: Role-specific analytical approaches and quality standards\n- **Performance Metrics**: Target benchmarks for accuracy, efficiency, and completeness\n- **Training Examples**: 50 synthetic training examples with complexity distribution\n- **Memory & Reasoning**: Enabled advanced capabilities for autonomous decision-making\n\n## Training Data Generated\n- **Synthetic Examples**: {successful * 50} total training examples\n- **Complexity Levels**: Basic (20%), Intermediate (30%), Advanced (30%), Expert (20%)\n- **Tool Coverage**: {len(self.available_tools)} available tools with usage patterns\n- **Quality Assurance**: Anti-pattern identification and quality scoring\n\n## Next Steps\n1. Monitor agent performance using new metrics\n2. Analyze tool usage patterns in real deployments\n3. Refine training based on actual outcomes\n4. Expand synthetic training data based on edge cases discovered\n"
         return report
 
 
 def main():
     """Main function to enhance all CrewAI agents."""
-    # Configure logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-
-    # Initialize coordinator
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     agents_config_path = Path("/home/crew/src/ultimate_discord_intelligence_bot/config/agents.yaml")
     tasks_config_path = Path("/home/crew/src/ultimate_discord_intelligence_bot/config/tasks.yaml")
-
     coordinator = AgentTrainingCoordinator(agents_config_path, tasks_config_path)
-
-    # Enhance all agents
     print("🚀 Starting CrewAI Agent Enhancement Process...")
     results = coordinator.enhance_all_agents()
-
-    # Generate and save report
     report = coordinator.generate_enhancement_report(results)
     report_path = Path("reports/agent_enhancement_report.md")
     report_path.parent.mkdir(parents=True, exist_ok=True)
-
     with open(report_path, "w") as f:
         f.write(report)
-
     print("\n📊 Enhancement Complete!")
     print(f"📝 Report saved to: {report_path}")
     print(f"✅ Successfully enhanced: {sum(results.values())}/{len(results)} agents")

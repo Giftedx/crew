@@ -1,7 +1,9 @@
 """Twitter/X API integration tool for enhanced Twitter content acquisition."""
 
 from __future__ import annotations
+
 import logging
+
 
 try:
     import tweepy
@@ -11,7 +13,9 @@ except ImportError:
     TWEEPY_AVAILABLE = False
     tweepy = None
 from platform.core.step_result import ErrorCategory, StepResult
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
+
 
 _logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ The Ultimate Discord Intelligence Bot uses a sophisticated CrewAI-based architec
 - **[Error Handling Architecture](architecture/error_handling.md)** - Comprehensive error handling and recovery systems
 - **[Configuration Management](configuration.md)** - Configuration system and feature flags
 
-> Network & HTTP Conventions: See `docs/network_conventions.md` for canonical outbound HTTP guidance (timeouts, URL validation, resilient POST/GET helpers, rate‑limit handling, optional retry/backoff & tracing). Tools performing network I/O should rely on `src/core/http_utils.py` (`resilient_post`, `resilient_get`, `retrying_post`, `retrying_get`, `http_request_with_retry`, constants) rather than re‑implementing validation, timeouts, or monkeypatch‑friendly fallbacks.
+> Network & HTTP Conventions: See `docs/network_conventions.md` for canonical outbound HTTP guidance (timeouts, URL validation, resilient POST/GET helpers, rate‑limit handling, optional retry/backoff & tracing). Tools performing network I/O should rely on `platform.http.http_utils` (`resilient_post`, `resilient_get`, `retrying_post`, `retrying_get`, `http_request_with_retry`, constants) rather than re‑implementing validation, timeouts, or monkeypatch‑friendly fallbacks.
 
 ## Tool Categories Overview
 

@@ -5,13 +5,16 @@ and build upon collective knowledge for enhanced performance and decision-making
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -341,9 +344,9 @@ class AgentKnowledgeBridge:
             for insight in filtered_insights:
                 agent_type = insight.agent_type
                 agent_type_counts[agent_type] = agent_type_counts.get(agent_type, 0) + 1
-            avg_confidence = sum((insight.confidence_score for insight in filtered_insights)) / total_insights
-            total_validations = sum((insight.validation_count for insight in filtered_insights))
-            total_successes = sum((insight.success_count for insight in filtered_insights))
+            avg_confidence = sum(insight.confidence_score for insight in filtered_insights) / total_insights
+            total_validations = sum(insight.validation_count for insight in filtered_insights)
+            total_successes = sum(insight.success_count for insight in filtered_insights)
             return {
                 "total_insights": total_insights,
                 "total_validations": total_validations,
@@ -385,7 +388,7 @@ class AgentKnowledgeBridge:
             if tags:
                 tag_filtered = []
                 for insight in candidate_insights:
-                    if any((tag in insight.tags for tag in tags)):
+                    if any(tag in insight.tags for tag in tags):
                         tag_filtered.append(insight)
                 candidate_insights = tag_filtered
             scored_insights = []
@@ -491,7 +494,7 @@ class AgentKnowledgeBridge:
             "total_insights": len(self._insights),
             "total_agents": len(self._agent_insights),
             "total_tags": len(self._insight_index),
-            "total_validations": sum((len(validations) for validations in self._validation_history.values())),
+            "total_validations": sum(len(validations) for validations in self._validation_history.values()),
             "config": {
                 "enable_insight_sharing": self.config.enable_insight_sharing,
                 "enable_cross_agent_learning": self.config.enable_cross_agent_learning,

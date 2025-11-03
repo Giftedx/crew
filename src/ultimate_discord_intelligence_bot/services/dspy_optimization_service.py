@@ -1,9 +1,13 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-import dspy
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
+import dspy
+
 from .dspy_components.signature import DebateAnalysisSignature
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

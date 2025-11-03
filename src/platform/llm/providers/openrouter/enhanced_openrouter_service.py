@@ -17,10 +17,10 @@ from platform.config.configuration import get_config
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS
 from platform.observability import metrics
 from platform.observability.langsmith_integration import get_enhanced_observability
+from platform.rl.learning_engine import LearningEngine
 from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
-from core.learning_engine import LearningEngine
-from ultimate_discord_intelligence_bot.settings import Settings
+from app.config.settings import Settings
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 from .cache import RedisLLMCache, make_key

@@ -24,7 +24,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from ultimate_discord_intelligence_bot.settings import CONFIG_DIR
+from app.config.settings import CONFIG_DIR
 try:
     from google.auth.transport.requests import Request
     from google.oauth2.credentials import Credentials

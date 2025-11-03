@@ -8,15 +8,12 @@ conversational pipeline, handling feature flag gating and graceful degradation.
 from __future__ import annotations
 
 import logging
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
-    from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-
-
+    from app.config.feature_flags import FeatureFlags
 logger = logging.getLogger(__name__)
 
 
@@ -31,28 +28,20 @@ class MCPIntegrationLayer:
     async def initialize(self) -> None:
         """Initialize MCP servers based on feature flags."""
         try:
-            # Initialize servers based on feature flags
             if self.feature_flags.ENABLE_MCP_MEMORY:
                 await self._init_memory_server()
-
             if self.feature_flags.ENABLE_MCP_KG:
                 await self._init_kg_server()
-
             if self.feature_flags.ENABLE_MCP_CREWAI:
                 await self._init_crewai_server()
-
             if self.feature_flags.ENABLE_MCP_ROUTER:
                 await self._init_routing_server()
-
             if self.feature_flags.ENABLE_MCP_CREATOR_INTELLIGENCE:
                 await self._init_creator_intelligence_server()
-
             self._initialized = True
             logger.info("MCP integration layer initialized successfully")
-
         except Exception as e:
             logger.error(f"Failed to initialize MCP integration layer: {e}")
-            # Continue with degraded functionality
 
     async def _init_memory_server(self) -> None:
         """Initialize memory MCP server."""
@@ -61,7 +50,6 @@ class MCPIntegrationLayer:
 
             self._mcp_servers["memory"] = MemoryServer()
             logger.info("Memory MCP server initialized")
-
         except Exception as e:
             logger.warning(f"Failed to initialize memory MCP server: {e}")
 
@@ -72,7 +60,6 @@ class MCPIntegrationLayer:
 
             self._mcp_servers["kg"] = KGServer()
             logger.info("Knowledge Graph MCP server initialized")
-
         except Exception as e:
             logger.warning(f"Failed to initialize KG MCP server: {e}")
 
@@ -83,7 +70,6 @@ class MCPIntegrationLayer:
 
             self._mcp_servers["crewai"] = CrewAIServer()
             logger.info("CrewAI MCP server initialized")
-
         except Exception as e:
             logger.warning(f"Failed to initialize CrewAI MCP server: {e}")
 
@@ -94,7 +80,6 @@ class MCPIntegrationLayer:
 
             self._mcp_servers["routing"] = RoutingServer()
             logger.info("Routing MCP server initialized")
-
         except Exception as e:
             logger.warning(f"Failed to initialize routing MCP server: {e}")
 
@@ -105,22 +90,18 @@ class MCPIntegrationLayer:
 
             self._mcp_servers["creator_intelligence"] = CreatorIntelligenceServer()
             logger.info("Creator Intelligence MCP server initialized")
-
         except Exception as e:
             logger.warning(f"Failed to initialize creator intelligence MCP server: {e}")
 
-    # Memory Server Integration
     async def search_memories(
         self, tenant: str, workspace: str, name: str, query: str, k: int = 5, min_score: float | None = None
     ) -> StepResult[dict[str, Any]]:
         """Search memories using vector similarity."""
         if not self.feature_flags.ENABLE_MCP_MEMORY:
             return StepResult.fail("Memory MCP server not enabled")
-
         memory_server = self._mcp_servers.get("memory")
         if not memory_server:
             return StepResult.fail("Memory MCP server not initialized")
-
         try:
             result = await memory_server.vs_search(tenant, workspace, name, query, k, min_score)
             return result
@@ -132,11 +113,9 @@ class MCPIntegrationLayer:
         """List available memory namespaces."""
         if not self.feature_flags.ENABLE_MCP_MEMORY:
             return StepResult.fail("Memory MCP server not enabled")
-
         memory_server = self._mcp_servers.get("memory")
         if not memory_server:
             return StepResult.fail("Memory MCP server not initialized")
-
         try:
             result = await memory_server.vs_list_namespaces(tenant, workspace)
             return result
@@ -150,11 +129,9 @@ class MCPIntegrationLayer:
         """Get sample memories from a collection."""
         if not self.feature_flags.ENABLE_MCP_MEMORY:
             return StepResult.fail("Memory MCP server not enabled")
-
         memory_server = self._mcp_servers.get("memory")
         if not memory_server:
             return StepResult.fail("Memory MCP server not initialized")
-
         try:
             result = await memory_server.vs_samples(tenant, workspace, name, probe, n)
             return result
@@ -162,16 +139,13 @@ class MCPIntegrationLayer:
             logger.error(f"Get memory samples failed: {e}")
             return StepResult.fail(f"Get memory samples failed: {e!s}")
 
-    # Knowledge Graph Server Integration
     async def query_knowledge_graph(self, tenant: str, entity: str, depth: int = 1) -> StepResult[dict[str, Any]]:
         """Query the knowledge graph for entity relationships."""
         if not self.feature_flags.ENABLE_MCP_KG:
             return StepResult.fail("Knowledge Graph MCP server not enabled")
-
         kg_server = self._mcp_servers.get("kg")
         if not kg_server:
             return StepResult.fail("Knowledge Graph MCP server not initialized")
-
         try:
             result = await kg_server.kg_query(tenant, entity, depth)
             return result
@@ -183,11 +157,9 @@ class MCPIntegrationLayer:
         """Get timeline events for an entity."""
         if not self.feature_flags.ENABLE_MCP_KG:
             return StepResult.fail("Knowledge Graph MCP server not enabled")
-
         kg_server = self._mcp_servers.get("kg")
         if not kg_server:
             return StepResult.fail("Knowledge Graph MCP server not initialized")
-
         try:
             result = await kg_server.kg_timeline(tenant, entity)
             return result
@@ -195,16 +167,13 @@ class MCPIntegrationLayer:
             logger.error(f"Entity timeline query failed: {e}")
             return StepResult.fail(f"Entity timeline query failed: {e!s}")
 
-    # CrewAI Server Integration
     async def execute_crew(self, inputs: dict[str, Any], crew_type: str = "default") -> StepResult[dict[str, Any]]:
         """Execute a CrewAI crew."""
         if not self.feature_flags.ENABLE_MCP_CREWAI:
             return StepResult.fail("CrewAI MCP server not enabled")
-
         crewai_server = self._mcp_servers.get("crewai")
         if not crewai_server:
             return StepResult.fail("CrewAI MCP server not initialized")
-
         try:
             result = await crewai_server.execute_crew(inputs, crew_type)
             return result
@@ -216,11 +185,9 @@ class MCPIntegrationLayer:
         """Get current crew system status."""
         if not self.feature_flags.ENABLE_MCP_CREWAI:
             return StepResult.fail("CrewAI MCP server not enabled")
-
         crewai_server = self._mcp_servers.get("crewai")
         if not crewai_server:
             return StepResult.fail("CrewAI MCP server not initialized")
-
         try:
             result = await crewai_server.get_crew_status()
             return result
@@ -232,11 +199,9 @@ class MCPIntegrationLayer:
         """Get agent performance metrics."""
         if not self.feature_flags.ENABLE_MCP_CREWAI:
             return StepResult.fail("CrewAI MCP server not enabled")
-
         crewai_server = self._mcp_servers.get("crewai")
         if not crewai_server:
             return StepResult.fail("CrewAI MCP server not initialized")
-
         try:
             result = await crewai_server.get_agent_performance(agent_name)
             return result
@@ -244,16 +209,13 @@ class MCPIntegrationLayer:
             logger.error(f"Get agent performance failed: {e}")
             return StepResult.fail(f"Get agent performance failed: {e!s}")
 
-    # Routing Server Integration
     async def estimate_cost(self, model: str, input_tokens: int, output_tokens: int) -> StepResult[dict[str, Any]]:
         """Estimate cost for LLM call."""
         if not self.feature_flags.ENABLE_MCP_ROUTER:
             return StepResult.fail("Routing MCP server not enabled")
-
         routing_server = self._mcp_servers.get("routing")
         if not routing_server:
             return StepResult.fail("Routing MCP server not initialized")
-
         try:
             result = await routing_server.estimate_cost(model, input_tokens, output_tokens)
             return result
@@ -265,11 +227,9 @@ class MCPIntegrationLayer:
         """Get routing suggestion for task completion."""
         if not self.feature_flags.ENABLE_MCP_ROUTER:
             return StepResult.fail("Routing MCP server not enabled")
-
         routing_server = self._mcp_servers.get("routing")
         if not routing_server:
             return StepResult.fail("Routing MCP server not initialized")
-
         try:
             result = await routing_server.route_completion(task, tokens_hint)
             return result
@@ -281,11 +241,9 @@ class MCPIntegrationLayer:
         """Choose optimal embedding model."""
         if not self.feature_flags.ENABLE_MCP_ROUTER:
             return StepResult.fail("Routing MCP server not enabled")
-
         routing_server = self._mcp_servers.get("routing")
         if not routing_server:
             return StepResult.fail("Routing MCP server not initialized")
-
         try:
             result = await routing_server.choose_embedding_model(dimensions_required)
             return result
@@ -293,18 +251,15 @@ class MCPIntegrationLayer:
             logger.error(f"Embedding model selection failed: {e}")
             return StepResult.fail(f"Embedding model selection failed: {e!s}")
 
-    # Creator Intelligence Server Integration
     async def ingest_youtube_video(
         self, url: str, tenant: str, workspace: str, fetch_transcript: bool = True
     ) -> StepResult[dict[str, Any]]:
         """Ingest YouTube video content."""
         if not self.feature_flags.ENABLE_MCP_CREATOR_INTELLIGENCE:
             return StepResult.fail("Creator Intelligence MCP server not enabled")
-
         creator_server = self._mcp_servers.get("creator_intelligence")
         if not creator_server:
             return StepResult.fail("Creator Intelligence MCP server not initialized")
-
         try:
             result = await creator_server.ingest_youtube_video(url, tenant, workspace, fetch_transcript)
             return result
@@ -324,11 +279,9 @@ class MCPIntegrationLayer:
         """Query creator content using semantic search."""
         if not self.feature_flags.ENABLE_MCP_CREATOR_INTELLIGENCE:
             return StepResult.fail("Creator Intelligence MCP server not enabled")
-
         creator_server = self._mcp_servers.get("creator_intelligence")
         if not creator_server:
             return StepResult.fail("Creator Intelligence MCP server not initialized")
-
         try:
             result = await creator_server.query_creator_content(
                 query_text, collection_type, tenant, workspace, limit, score_threshold
@@ -344,11 +297,9 @@ class MCPIntegrationLayer:
         """Get collection statistics."""
         if not self.feature_flags.ENABLE_MCP_CREATOR_INTELLIGENCE:
             return StepResult.fail("Creator Intelligence MCP server not enabled")
-
         creator_server = self._mcp_servers.get("creator_intelligence")
         if not creator_server:
             return StepResult.fail("Creator Intelligence MCP server not initialized")
-
         try:
             result = await creator_server.get_collection_stats(collection_type, tenant, workspace)
             return result
@@ -358,12 +309,7 @@ class MCPIntegrationLayer:
 
     async def get_integration_status(self) -> dict[str, Any]:
         """Get status of all MCP server integrations."""
-        status = {
-            "initialized": self._initialized,
-            "servers": {},
-        }
-
-        # Check each server
+        status = {"initialized": self._initialized, "servers": {}}
         server_checks = {
             "memory": self.feature_flags.ENABLE_MCP_MEMORY,
             "kg": self.feature_flags.ENABLE_MCP_KG,
@@ -371,12 +317,10 @@ class MCPIntegrationLayer:
             "routing": self.feature_flags.ENABLE_MCP_ROUTER,
             "creator_intelligence": self.feature_flags.ENABLE_MCP_CREATOR_INTELLIGENCE,
         }
-
         for server_name, enabled in server_checks.items():
             status["servers"][server_name] = {
                 "enabled": enabled,
                 "initialized": server_name in self._mcp_servers,
                 "available": enabled and server_name in self._mcp_servers,
             }
-
         return status

@@ -8,6 +8,8 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
+from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import (
     AgendaItem,
@@ -27,7 +29,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models 
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, NLPResult
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -151,7 +153,7 @@ class EpisodeIntelligencePack:
             current_topics = set()
             for segment in transcript.segments:
                 segment_topics = segment.topics or []
-                if not current_topic or not any((topic in current_topics for topic in segment_topics)):
+                if not current_topic or not any(topic in current_topics for topic in segment_topics):
                     if current_topic and current_start_time is not None:
                         agenda_item = AgendaItem(
                             title=current_topic,
@@ -209,7 +211,7 @@ class EpisodeIntelligencePack:
                     if len(segment.text) > 50:
                         speaker_stats[speaker]["contributions"].append(segment.text)
             for speaker, stats in speaker_stats.items():
-                total_time = sum((s["total_time"] for s in speaker_stats.values()))
+                total_time = sum(s["total_time"] for s in speaker_stats.values())
                 speaking_percentage = stats["total_time"] / total_time if total_time > 0 else 0
                 if speaking_percentage > 0.4:
                     role = "Host"
@@ -258,7 +260,7 @@ class EpisodeIntelligencePack:
             ]
             for segment in transcript.segments:
                 text_lower = segment.text.lower()
-                if any((indicator in text_lower for indicator in claim_indicators)):
+                if any(indicator in text_lower for indicator in claim_indicators):
                     claim_type = self._determine_claim_type(segment.text)
                     confidence = self._calculate_claim_confidence(segment.text, claim_type)
                     if confidence >= config.min_claim_confidence:
@@ -301,7 +303,7 @@ class EpisodeIntelligencePack:
                 text = segment.text.strip()
                 if len(text) >= config.min_quotation_length:
                     text_lower = text.lower()
-                    has_indicators = any((indicator in text_lower for indicator in quotation_indicators))
+                    has_indicators = any(indicator in text_lower for indicator in quotation_indicators)
                     significance = self._calculate_quotation_significance(text)
                     viral_potential = self._calculate_viral_potential(text)
                     if has_indicators or significance > 0.5 or viral_potential > 0.5:
@@ -800,13 +802,13 @@ class EpisodeIntelligencePack:
     def _determine_claim_type(self, text: str) -> str:
         """Determine the type of claim based on text content."""
         text_lower = text.lower()
-        if any((word in text_lower for word in ["statistics", "data", "study", "research"])):
+        if any(word in text_lower for word in ["statistics", "data", "study", "research"]):
             return "statistical"
-        elif any((word in text_lower for word in ["history", "historical", "past", "years ago"])):
+        elif any(word in text_lower for word in ["history", "historical", "past", "years ago"]):
             return "historical"
-        elif any((word in text_lower for word in ["science", "scientific", "study", "experiment"])):
+        elif any(word in text_lower for word in ["science", "scientific", "study", "experiment"]):
             return "scientific"
-        elif any((word in text_lower for word in ["personal", "experience", "happened to me"])):
+        elif any(word in text_lower for word in ["personal", "experience", "happened to me"]):
             return "personal"
         else:
             return "general"
@@ -896,11 +898,11 @@ class EpisodeIntelligencePack:
     def _determine_link_type(self, url: str) -> str:
         """Determine the type of link."""
         domain = self._extract_domain(url).lower()
-        if any((social in domain for social in ["twitter", "facebook", "instagram", "tiktok", "youtube"])):
+        if any(social in domain for social in ["twitter", "facebook", "instagram", "tiktok", "youtube"]):
             return "social"
-        elif any((ecommerce in domain for ecommerce in ["amazon", "shopify", "etsy", "ebay"])):
+        elif any(ecommerce in domain for ecommerce in ["amazon", "shopify", "etsy", "ebay"]):
             return "product"
-        elif any((news in domain for news in ["news", "cnn", "bbc", "reuters", "nytimes"])):
+        elif any(news in domain for news in ["news", "cnn", "bbc", "reuters", "nytimes"]):
             return "article"
         else:
             return "website"
@@ -908,12 +910,12 @@ class EpisodeIntelligencePack:
     def _is_affiliate_link(self, url: str) -> bool:
         """Check if link is an affiliate link."""
         affiliate_indicators = ["affiliate", "ref=", "partner", "commission"]
-        return any((indicator in url.lower() for indicator in affiliate_indicators))
+        return any(indicator in url.lower() for indicator in affiliate_indicators)
 
     def _is_sponsored_link(self, url: str) -> bool:
         """Check if link is a sponsored link."""
         sponsored_indicators = ["sponsored", "ad", "promo", "promotion"]
-        return any((indicator in url.lower() for indicator in sponsored_indicators))
+        return any(indicator in url.lower() for indicator in sponsored_indicators)
 
     def _calculate_engagement_score(self, segment: AlignedSegment) -> float:
         """Calculate engagement score for a segment."""
@@ -954,17 +956,17 @@ class EpisodeIntelligencePack:
             "controversial",
             "debate",
         ]
-        return any((controversial in topic.lower() for controversial in controversial_topics))
+        return any(controversial in topic.lower() for controversial in controversial_topics)
 
     def _mentions_individual(self, text: str) -> bool:
         """Check if text mentions an individual."""
         individual_indicators = ["mr.", "mrs.", "ms.", "dr.", "professor", "ceo", "president"]
-        return any((indicator in text.lower() for indicator in individual_indicators))
+        return any(indicator in text.lower() for indicator in individual_indicators)
 
     def _mentions_organization(self, text: str) -> bool:
         """Check if text mentions an organization."""
         org_indicators = ["company", "corporation", "inc.", "llc", "organization", "institution"]
-        return any((indicator in text.lower() for indicator in org_indicators))
+        return any(indicator in text.lower() for indicator in org_indicators)
 
     def _extract_individuals(self, text: str) -> list[str]:
         """Extract individual names from text."""
@@ -989,6 +991,6 @@ class EpisodeIntelligencePack:
         for contribution in contributions:
             contribution_lower = contribution.lower()
             for area, keywords in expertise_keywords.items():
-                if any((keyword in contribution_lower for keyword in keywords)) and area not in expertise_areas:
+                if any(keyword in contribution_lower for keyword in keywords) and area not in expertise_areas:
                     expertise_areas.append(area)
         return expertise_areas

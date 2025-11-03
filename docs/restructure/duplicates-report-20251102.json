@@ -1,0 +1,709 @@
+{
+  "source_directory": "src/ultimate_discord_intelligence_bot/tools",
+  "target_directory": "src/domains",
+  "total_matching_names": 70,
+  "identical_files": 68,
+  "different_implementations": 2,
+  "duplicates": [
+    {
+      "filename": "_base.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/_base.py",
+      "target_path": "src/domains/ingestion/providers/_base.py",
+      "md5_hash": "1321e78d5d560e38813b02cb4c3a5d7c",
+      "target_hash": "988d384248779cf33562ae3447e7cbf9",
+      "file_size": 1732,
+      "target_size": 3314,
+      "verified_identical": false
+    },
+    {
+      "filename": "social_graph_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/social_graph_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/social_graph_analysis_tool.py",
+      "md5_hash": "5a368404c34661ae1df19addcb451688",
+      "target_hash": "5a368404c34661ae1df19addcb451688",
+      "file_size": 26070,
+      "target_size": 26070,
+      "verified_identical": true
+    },
+    {
+      "filename": "virality_prediction_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/virality_prediction_tool.py",
+      "target_path": "src/domains/intelligence/analysis/virality_prediction_tool.py",
+      "md5_hash": "f82ca6cf760748f2387b9df43b66971d",
+      "target_hash": "f82ca6cf760748f2387b9df43b66971d",
+      "file_size": 29675,
+      "target_size": 29675,
+      "verified_identical": true
+    },
+    {
+      "filename": "live_stream_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/live_stream_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/live_stream_analysis_tool.py",
+      "md5_hash": "e9300bda0a2a60f6128a3f44c6005a0f",
+      "target_hash": "e9300bda0a2a60f6128a3f44c6005a0f",
+      "file_size": 24885,
+      "target_size": 24885,
+      "verified_identical": true
+    },
+    {
+      "filename": "image_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/image_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/image_analysis_tool.py",
+      "md5_hash": "15c64268afbfc1bcc5648effa77718ec",
+      "target_hash": "15c64268afbfc1bcc5648effa77718ec",
+      "file_size": 23152,
+      "target_size": 23152,
+      "verified_identical": true
+    },
+    {
+      "filename": "timeline_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/timeline_tool.py",
+      "target_path": "src/domains/intelligence/analysis/timeline_tool.py",
+      "md5_hash": "80d5b763b8bb2f14347e1bf384d6633a",
+      "target_hash": "80d5b763b8bb2f14347e1bf384d6633a",
+      "file_size": 4851,
+      "target_size": 4851,
+      "verified_identical": true
+    },
+    {
+      "filename": "cross_platform_narrative_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/cross_platform_narrative_tool.py",
+      "target_path": "src/domains/intelligence/analysis/cross_platform_narrative_tool.py",
+      "md5_hash": "b1c289e284b2d112bab3bc7f63a0a39f",
+      "target_hash": "b1c289e284b2d112bab3bc7f63a0a39f",
+      "file_size": 31741,
+      "target_size": 31741,
+      "verified_identical": true
+    },
+    {
+      "filename": "narrative_tracker_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/narrative_tracker_tool.py",
+      "target_path": "src/domains/intelligence/analysis/narrative_tracker_tool.py",
+      "md5_hash": "a7eef3c29c265c846b069121be247ab9",
+      "target_hash": "a7eef3c29c265c846b069121be247ab9",
+      "file_size": 16407,
+      "target_size": 16407,
+      "verified_identical": true
+    },
+    {
+      "filename": "perspective_synthesizer_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/perspective_synthesizer_tool.py",
+      "target_path": "src/domains/intelligence/analysis/perspective_synthesizer_tool.py",
+      "md5_hash": "d413ac7b8c73293d1c6e03f5d573bde6",
+      "target_hash": "d413ac7b8c73293d1c6e03f5d573bde6",
+      "file_size": 3915,
+      "target_size": 3915,
+      "verified_identical": true
+    },
+    {
+      "filename": "claim_extractor_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/claim_extractor_tool.py",
+      "target_path": "src/domains/intelligence/analysis/claim_extractor_tool.py",
+      "md5_hash": "da92d2f7956ea1acf54b53815398e44a",
+      "target_hash": "da92d2f7956ea1acf54b53815398e44a",
+      "file_size": 3621,
+      "target_size": 3621,
+      "verified_identical": true
+    },
+    {
+      "filename": "text_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/text_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/text_analysis_tool.py",
+      "md5_hash": "d73db4095b6bc94c80d6cddd7c595bd8",
+      "target_hash": "d73db4095b6bc94c80d6cddd7c595bd8",
+      "file_size": 25666,
+      "target_size": 25666,
+      "verified_identical": true
+    },
+    {
+      "filename": "reanalysis_trigger_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/reanalysis_trigger_tool.py",
+      "target_path": "src/domains/intelligence/analysis/reanalysis_trigger_tool.py",
+      "md5_hash": "335b3a12c2c99a1fab4eef01aaeb5e31",
+      "target_hash": "335b3a12c2c99a1fab4eef01aaeb5e31",
+      "file_size": 444,
+      "target_size": 444,
+      "verified_identical": true
+    },
+    {
+      "filename": "trend_forecasting_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/trend_forecasting_tool.py",
+      "target_path": "src/domains/intelligence/analysis/trend_forecasting_tool.py",
+      "md5_hash": "72b9c55894759b2f0aa0297bc7ef1c1c",
+      "target_hash": "72b9c55894759b2f0aa0297bc7ef1c1c",
+      "file_size": 43332,
+      "target_size": 43332,
+      "verified_identical": true
+    },
+    {
+      "filename": "trend_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/trend_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/trend_analysis_tool.py",
+      "md5_hash": "0e31a6afcfa5e7173d15d78c5a6b5fef",
+      "target_hash": "0e31a6afcfa5e7173d15d78c5a6b5fef",
+      "file_size": 32459,
+      "target_size": 32459,
+      "verified_identical": true
+    },
+    {
+      "filename": "smart_clip_composer_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/smart_clip_composer_tool.py",
+      "target_path": "src/domains/intelligence/analysis/smart_clip_composer_tool.py",
+      "md5_hash": "0c2ff0f4cc58514fae13a98d7e4a900c",
+      "target_hash": "0c2ff0f4cc58514fae13a98d7e4a900c",
+      "file_size": 19514,
+      "target_size": 19514,
+      "verified_identical": true
+    },
+    {
+      "filename": "sentiment_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/sentiment_tool.py",
+      "target_path": "src/domains/intelligence/analysis/sentiment_tool.py",
+      "md5_hash": "28d4348832bdc47553af65f86950da2b",
+      "target_hash": "28d4348832bdc47553af65f86950da2b",
+      "file_size": 1919,
+      "target_size": 1919,
+      "verified_identical": true
+    },
+    {
+      "filename": "enhanced_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/enhanced_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/enhanced_analysis_tool.py",
+      "md5_hash": "959642b558ead0ff86b1809a2601e52b",
+      "target_hash": "959642b558ead0ff86b1809a2601e52b",
+      "file_size": 8816,
+      "target_size": 8816,
+      "verified_identical": true
+    },
+    {
+      "filename": "logical_fallacy_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/logical_fallacy_tool.py",
+      "target_path": "src/domains/intelligence/analysis/logical_fallacy_tool.py",
+      "md5_hash": "feaebbd3ad9672e0f0fce400d6c2f0c1",
+      "target_hash": "feaebbd3ad9672e0f0fce400d6c2f0c1",
+      "file_size": 12869,
+      "target_size": 12869,
+      "verified_identical": true
+    },
+    {
+      "filename": "leaderboard_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/leaderboard_tool.py",
+      "target_path": "src/domains/intelligence/analysis/leaderboard_tool.py",
+      "md5_hash": "67c225532e2a08f31f43e73d33fe82d7",
+      "target_hash": "67c225532e2a08f31f43e73d33fe82d7",
+      "file_size": 5887,
+      "target_size": 5887,
+      "verified_identical": true
+    },
+    {
+      "filename": "video_frame_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/video_frame_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/video_frame_analysis_tool.py",
+      "md5_hash": "f0b5da977780446437a05f873850accc",
+      "target_hash": "f0b5da977780446437a05f873850accc",
+      "file_size": 17033,
+      "target_size": 17033,
+      "verified_identical": true
+    },
+    {
+      "filename": "openai_enhanced_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/openai_enhanced_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/openai_enhanced_analysis_tool.py",
+      "md5_hash": "756a93e4bb13c33fbcde917f55ff5ada",
+      "target_hash": "756a93e4bb13c33fbcde917f55ff5ada",
+      "file_size": 6091,
+      "target_size": 6091,
+      "verified_identical": true
+    },
+    {
+      "filename": "content_quality_assessment_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/content_quality_assessment_tool.py",
+      "target_path": "src/domains/intelligence/analysis/content_quality_assessment_tool.py",
+      "md5_hash": "7ee01bfc8be6567020950bfb30420711",
+      "target_hash": "7ee01bfc8be6567020950bfb30420711",
+      "file_size": 12902,
+      "target_size": 12902,
+      "verified_identical": true
+    },
+    {
+      "filename": "multimodal_analysis_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/multimodal_analysis_tool.py",
+      "target_path": "src/domains/intelligence/analysis/multimodal_analysis_tool.py",
+      "md5_hash": "797e98485b323569a47f8e7c6c149df6",
+      "target_hash": "797e98485b323569a47f8e7c6c149df6",
+      "file_size": 2204,
+      "target_size": 2204,
+      "verified_identical": true
+    },
+    {
+      "filename": "character_profile_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/character_profile_tool.py",
+      "target_path": "src/domains/intelligence/analysis/character_profile_tool.py",
+      "md5_hash": "e1c6f7af2b713159a331dc21346df32f",
+      "target_hash": "e1c6f7af2b713159a331dc21346df32f",
+      "file_size": 4867,
+      "target_size": 4867,
+      "verified_identical": true
+    },
+    {
+      "filename": "debate_command_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/analysis/debate_command_tool.py",
+      "target_path": "src/domains/intelligence/analysis/debate_command_tool.py",
+      "md5_hash": "29bd34b2ddd5ddae34e0a8121fccb0e5",
+      "target_hash": "29bd34b2ddd5ddae34e0a8121fccb0e5",
+      "file_size": 9591,
+      "target_size": 9591,
+      "verified_identical": true
+    },
+    {
+      "filename": "reddit_api_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/reddit_api_tool.py",
+      "target_path": "src/domains/ingestion/providers/reddit_api_tool.py",
+      "md5_hash": "41110d1263adc10b3a9d9e3c5113d988",
+      "target_hash": "41110d1263adc10b3a9d9e3c5113d988",
+      "file_size": 6756,
+      "target_size": 6756,
+      "verified_identical": true
+    },
+    {
+      "filename": "multi_platform_download_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/multi_platform_download_tool.py",
+      "target_path": "src/domains/ingestion/providers/multi_platform_download_tool.py",
+      "md5_hash": "caaf3ef1d752a00191011826a6b7fd14",
+      "target_hash": "caaf3ef1d752a00191011826a6b7fd14",
+      "file_size": 7361,
+      "target_size": 7361,
+      "verified_identical": true
+    },
+    {
+      "filename": "discord_download_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/discord_download_tool.py",
+      "target_path": "src/domains/ingestion/providers/discord_download_tool.py",
+      "md5_hash": "6e47c730af354fca0a157aa9c00dfec5",
+      "target_hash": "6e47c730af354fca0a157aa9c00dfec5",
+      "file_size": 4761,
+      "target_size": 4761,
+      "verified_identical": true
+    },
+    {
+      "filename": "twitter_api_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/twitter_api_tool.py",
+      "target_path": "src/domains/ingestion/providers/twitter_api_tool.py",
+      "md5_hash": "f842d10f3316642fe02dcdca70d25c99",
+      "target_hash": "f842d10f3316642fe02dcdca70d25c99",
+      "file_size": 7642,
+      "target_size": 7642,
+      "verified_identical": true
+    },
+    {
+      "filename": "instagram_stories_archiver_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/instagram_stories_archiver_tool.py",
+      "target_path": "src/domains/ingestion/providers/instagram_stories_archiver_tool.py",
+      "md5_hash": "b5c29b635578879a750c77a2e5184862",
+      "target_hash": "b5c29b635578879a750c77a2e5184862",
+      "file_size": 9867,
+      "target_size": 9867,
+      "verified_identical": true
+    },
+    {
+      "filename": "transcript_index_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/transcript_index_tool.py",
+      "target_path": "src/domains/ingestion/providers/transcript_index_tool.py",
+      "md5_hash": "363e8d9969d8b337a54d299ea5c7a854",
+      "target_hash": "363e8d9969d8b337a54d299ea5c7a854",
+      "file_size": 3511,
+      "target_size": 3511,
+      "verified_identical": true
+    },
+    {
+      "filename": "audio_transcription_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/audio_transcription_tool.py",
+      "target_path": "src/domains/ingestion/providers/audio_transcription_tool.py",
+      "md5_hash": "2405de9a2812243736e5accaf6edfc75",
+      "target_hash": "2405de9a2812243736e5accaf6edfc75",
+      "file_size": 6782,
+      "target_size": 6782,
+      "verified_identical": true
+    },
+    {
+      "filename": "tiktok_enhanced_download_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/tiktok_enhanced_download_tool.py",
+      "target_path": "src/domains/ingestion/providers/tiktok_enhanced_download_tool.py",
+      "md5_hash": "56431f55556a2c837878fc20ec42a6f1",
+      "target_hash": "56431f55556a2c837878fc20ec42a6f1",
+      "file_size": 17346,
+      "target_size": 17346,
+      "verified_identical": true
+    },
+    {
+      "filename": "yt_dlp_download_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/acquisition/yt_dlp_download_tool.py",
+      "target_path": "src/domains/ingestion/providers/yt_dlp_download_tool.py",
+      "md5_hash": "89ab2f5d68f945e7a4b5b7b75ba728a0",
+      "target_hash": "89ab2f5d68f945e7a4b5b7b75ba728a0",
+      "file_size": 14043,
+      "target_size": 14043,
+      "verified_identical": true
+    },
+    {
+      "filename": "strategic_planning_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/strategic_planning_tool.py",
+      "target_path": "src/domains/memory/vector/strategic_planning_tool.py",
+      "md5_hash": "a9c02cc8b47d948a45f7a9c6353dfa47",
+      "target_hash": "a9c02cc8b47d948a45f7a9c6353dfa47",
+      "file_size": 9074,
+      "target_size": 9074,
+      "verified_identical": true
+    },
+    {
+      "filename": "rag_ingest_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/rag_ingest_tool.py",
+      "target_path": "src/domains/memory/vector/rag_ingest_tool.py",
+      "md5_hash": "8349a25e1319228473a2e280f2e29ff7",
+      "target_hash": "8349a25e1319228473a2e280f2e29ff7",
+      "file_size": 3778,
+      "target_size": 3778,
+      "verified_identical": true
+    },
+    {
+      "filename": "rag_query_vs_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/rag_query_vs_tool.py",
+      "target_path": "src/domains/memory/vector/rag_query_vs_tool.py",
+      "md5_hash": "c3eca7ce50a026eea736606090452ef7",
+      "target_hash": "c3eca7ce50a026eea736606090452ef7",
+      "file_size": 4613,
+      "target_size": 4613,
+      "verified_identical": true
+    },
+    {
+      "filename": "graph_memory_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/graph_memory_tool.py",
+      "target_path": "src/domains/memory/vector/graph_memory_tool.py",
+      "md5_hash": "eb766a7819f1a33e84c6b2b723f7bd31",
+      "target_hash": "eb766a7819f1a33e84c6b2b723f7bd31",
+      "file_size": 18188,
+      "target_size": 18188,
+      "verified_identical": true
+    },
+    {
+      "filename": "memory_compaction_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/memory_compaction_tool.py",
+      "target_path": "src/domains/memory/vector/memory_compaction_tool.py",
+      "md5_hash": "f9e47acf097405a8fe74cd5074d5ae76",
+      "target_hash": "f9e47acf097405a8fe74cd5074d5ae76",
+      "file_size": 6462,
+      "target_size": 6462,
+      "verified_identical": true
+    },
+    {
+      "filename": "unified_memory_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/unified_memory_tool.py",
+      "target_path": "src/domains/memory/vector/unified_memory_tool.py",
+      "md5_hash": "ecde8e30d120eabca7cae883442a22ad",
+      "target_hash": "ecde8e30d120eabca7cae883442a22ad",
+      "file_size": 13955,
+      "target_size": 13955,
+      "verified_identical": true
+    },
+    {
+      "filename": "vector_search_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/vector_search_tool.py",
+      "target_path": "src/domains/memory/vector/vector_search_tool.py",
+      "md5_hash": "c947b093af15b15e71d6308f9ae55c60",
+      "target_hash": "c947b093af15b15e71d6308f9ae55c60",
+      "file_size": 5913,
+      "target_size": 5913,
+      "verified_identical": true
+    },
+    {
+      "filename": "memory_storage_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/memory_storage_tool.py",
+      "target_path": "src/domains/memory/vector/memory_storage_tool.py",
+      "md5_hash": "f73a1a018b6cf5573c5c192d07455950",
+      "target_hash": "f73a1a018b6cf5573c5c192d07455950",
+      "file_size": 13167,
+      "target_size": 13167,
+      "verified_identical": true
+    },
+    {
+      "filename": "rag_hybrid_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/rag_hybrid_tool.py",
+      "target_path": "src/domains/memory/vector/rag_hybrid_tool.py",
+      "md5_hash": "179e13175db8a5727e71f2e7dedf7194",
+      "target_hash": "179e13175db8a5727e71f2e7dedf7194",
+      "file_size": 8900,
+      "target_size": 8900,
+      "verified_identical": true
+    },
+    {
+      "filename": "lc_summarize_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/lc_summarize_tool.py",
+      "target_path": "src/domains/memory/vector/lc_summarize_tool.py",
+      "md5_hash": "b6f5af86084091a56ef4b9e9e3bb5764",
+      "target_hash": "b6f5af86084091a56ef4b9e9e3bb5764",
+      "file_size": 5026,
+      "target_size": 5026,
+      "verified_identical": true
+    },
+    {
+      "filename": "mock_vector_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/mock_vector_tool.py",
+      "target_path": "src/domains/memory/vector/mock_vector_tool.py",
+      "md5_hash": "7ea1fbc3fde3a7fcac0bd3493a161174",
+      "target_hash": "7ea1fbc3fde3a7fcac0bd3493a161174",
+      "file_size": 2939,
+      "target_size": 2939,
+      "verified_identical": true
+    },
+    {
+      "filename": "knowledge_ops_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/knowledge_ops_tool.py",
+      "target_path": "src/domains/memory/vector/knowledge_ops_tool.py",
+      "md5_hash": "ea274d50d60075dd14b2fe3509b37eb3",
+      "target_hash": "ea274d50d60075dd14b2fe3509b37eb3",
+      "file_size": 16461,
+      "target_size": 16461,
+      "verified_identical": true
+    },
+    {
+      "filename": "offline_rag_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/offline_rag_tool.py",
+      "target_path": "src/domains/memory/vector/offline_rag_tool.py",
+      "md5_hash": "e9dad08bcf64f89f60f5058dee1ab65a",
+      "target_hash": "e9dad08bcf64f89f60f5058dee1ab65a",
+      "file_size": 4823,
+      "target_size": 4823,
+      "verified_identical": true
+    },
+    {
+      "filename": "prompt_compression_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/prompt_compression_tool.py",
+      "target_path": "src/domains/memory/vector/prompt_compression_tool.py",
+      "md5_hash": "884c1f765f9b91316c6ba4342eae1bfa",
+      "target_hash": "884c1f765f9b91316c6ba4342eae1bfa",
+      "file_size": 4225,
+      "target_size": 4225,
+      "verified_identical": true
+    },
+    {
+      "filename": "mem0_memory_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/mem0_memory_tool.py",
+      "target_path": "src/domains/memory/vector/mem0_memory_tool.py",
+      "md5_hash": "5eb8bf0dfca2405fb8801416c871e877",
+      "target_hash": "5eb8bf0dfca2405fb8801416c871e877",
+      "file_size": 5200,
+      "target_size": 5200,
+      "verified_identical": true
+    },
+    {
+      "filename": "rag_ingest_url_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/rag_ingest_url_tool.py",
+      "target_path": "src/domains/memory/vector/rag_ingest_url_tool.py",
+      "md5_hash": "29ffb8f29890bac276b8699d616aaff3",
+      "target_hash": "29ffb8f29890bac276b8699d616aaff3",
+      "file_size": 5559,
+      "target_size": 5559,
+      "verified_identical": true
+    },
+    {
+      "filename": "research_and_brief_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/research_and_brief_tool.py",
+      "target_path": "src/domains/memory/vector/research_and_brief_tool.py",
+      "md5_hash": "2349623c7d35541e8138bf79ca240973",
+      "target_hash": "2349623c7d35541e8138bf79ca240973",
+      "file_size": 5600,
+      "target_size": 5600,
+      "verified_identical": true
+    },
+    {
+      "filename": "research_and_brief_multi_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/research_and_brief_multi_tool.py",
+      "target_path": "src/domains/memory/vector/research_and_brief_multi_tool.py",
+      "md5_hash": "50c139f29e41e83dfe98cdd9fdcd1161",
+      "target_hash": "50c139f29e41e83dfe98cdd9fdcd1161",
+      "file_size": 4896,
+      "target_size": 4896,
+      "verified_identical": true
+    },
+    {
+      "filename": "vowpal_wabbit_bandit_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/vowpal_wabbit_bandit_tool.py",
+      "target_path": "src/domains/memory/vector/vowpal_wabbit_bandit_tool.py",
+      "md5_hash": "b6a4ac710edcee769123de62a294a86c",
+      "target_hash": "b6a4ac710edcee769123de62a294a86c",
+      "file_size": 4031,
+      "target_size": 4031,
+      "verified_identical": true
+    },
+    {
+      "filename": "hipporag_continual_memory_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/hipporag_continual_memory_tool.py",
+      "target_path": "src/domains/memory/vector/hipporag_continual_memory_tool.py",
+      "md5_hash": "e867d86372e8c7cdbad17fa93c2ee4d5",
+      "target_hash": "e867d86372e8c7cdbad17fa93c2ee4d5",
+      "file_size": 13004,
+      "target_size": 13004,
+      "verified_identical": true
+    },
+    {
+      "filename": "dspy_optimization_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/memory/dspy_optimization_tool.py",
+      "target_path": "src/domains/memory/vector/dspy_optimization_tool.py",
+      "md5_hash": "b3cc30bd37af3479e32d3cd72b56ef48",
+      "target_hash": "b3cc30bd37af3479e32d3cd72b56ef48",
+      "file_size": 11810,
+      "target_size": 11810,
+      "verified_identical": true
+    },
+    {
+      "filename": "trustworthiness_tracker_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/trustworthiness_tracker_tool.py",
+      "target_path": "src/domains/intelligence/verification/trustworthiness_tracker_tool.py",
+      "md5_hash": "eb034ed32d746b4cc24d461184942dda",
+      "target_hash": "eb034ed32d746b4cc24d461184942dda",
+      "file_size": 8291,
+      "target_size": 8291,
+      "verified_identical": true
+    },
+    {
+      "filename": "deception_scoring_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/deception_scoring_tool.py",
+      "target_path": "src/domains/intelligence/verification/deception_scoring_tool.py",
+      "md5_hash": "5dda0b0547605e7cb5ca76297a4d27db",
+      "target_hash": "5dda0b0547605e7cb5ca76297a4d27db",
+      "file_size": 8890,
+      "target_size": 8890,
+      "verified_identical": true
+    },
+    {
+      "filename": "sponsor_compliance_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/sponsor_compliance_tool.py",
+      "target_path": "src/domains/intelligence/verification/sponsor_compliance_tool.py",
+      "md5_hash": "c3f56da77ab6f74ddebb5f39fed28254",
+      "target_hash": "c3f56da77ab6f74ddebb5f39fed28254",
+      "file_size": 20519,
+      "target_size": 20519,
+      "verified_identical": true
+    },
+    {
+      "filename": "context_verification_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/context_verification_tool.py",
+      "target_path": "src/domains/intelligence/verification/context_verification_tool.py",
+      "md5_hash": "7b17eda4a44775acbda61840ac0bf274",
+      "target_hash": "2fb48ee392d701b43523c951bf04e1db",
+      "file_size": 2357,
+      "target_size": 2359,
+      "verified_identical": false
+    },
+    {
+      "filename": "confidence_scoring_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/confidence_scoring_tool.py",
+      "target_path": "src/domains/intelligence/verification/confidence_scoring_tool.py",
+      "md5_hash": "d483e102475d457ded8e78aad22dfec6",
+      "target_hash": "d483e102475d457ded8e78aad22dfec6",
+      "file_size": 1042,
+      "target_size": 1042,
+      "verified_identical": true
+    },
+    {
+      "filename": "claim_verifier_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/claim_verifier_tool.py",
+      "target_path": "src/domains/intelligence/verification/claim_verifier_tool.py",
+      "md5_hash": "4071cdc6175adad223909967b84c23d3",
+      "target_hash": "4071cdc6175adad223909967b84c23d3",
+      "file_size": 13786,
+      "target_size": 13786,
+      "verified_identical": true
+    },
+    {
+      "filename": "output_validation_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/output_validation_tool.py",
+      "target_path": "src/domains/intelligence/verification/output_validation_tool.py",
+      "md5_hash": "bb9b4589d38223e39e72f8a3b460d890",
+      "target_hash": "bb9b4589d38223e39e72f8a3b460d890",
+      "file_size": 2135,
+      "target_size": 2135,
+      "verified_identical": true
+    },
+    {
+      "filename": "fact_check_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/fact_check_tool.py",
+      "target_path": "src/domains/intelligence/verification/fact_check_tool.py",
+      "md5_hash": "9fe194b42d00a409927144b0d2bfe07d",
+      "target_hash": "9fe194b42d00a409927144b0d2bfe07d",
+      "file_size": 12417,
+      "target_size": 12417,
+      "verified_identical": true
+    },
+    {
+      "filename": "governance_policy_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/governance_policy_tool.py",
+      "target_path": "src/domains/intelligence/verification/governance_policy_tool.py",
+      "md5_hash": "7242d736a2a3709d55b30c6c554cef75",
+      "target_hash": "7242d736a2a3709d55b30c6c554cef75",
+      "file_size": 3043,
+      "target_size": 3043,
+      "verified_identical": true
+    },
+    {
+      "filename": "truth_scoring_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/truth_scoring_tool.py",
+      "target_path": "src/domains/intelligence/verification/truth_scoring_tool.py",
+      "md5_hash": "3b26bd98c2ec7d5b5c36ea8a101cb563",
+      "target_hash": "3b26bd98c2ec7d5b5c36ea8a101cb563",
+      "file_size": 1621,
+      "target_size": 1621,
+      "verified_identical": true
+    },
+    {
+      "filename": "consistency_check_tool.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/verification/consistency_check_tool.py",
+      "target_path": "src/domains/intelligence/verification/consistency_check_tool.py",
+      "md5_hash": "8f2db26ca9f0b4847e17945ea0d6cfa3",
+      "target_hash": "8f2db26ca9f0b4847e17945ea0d6cfa3",
+      "file_size": 1076,
+      "target_size": 1076,
+      "verified_identical": true
+    },
+    {
+      "filename": "youtube_resolver.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/platform_resolver/youtube_resolver.py",
+      "target_path": "src/domains/ingestion/providers/youtube_resolver.py",
+      "md5_hash": "a7e5f9d8bb3aa6ece4a5c90d79b03262",
+      "target_hash": "a7e5f9d8bb3aa6ece4a5c90d79b03262",
+      "file_size": 2414,
+      "target_size": 2414,
+      "verified_identical": true
+    },
+    {
+      "filename": "social_resolver.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/platform_resolver/social_resolver.py",
+      "target_path": "src/domains/ingestion/providers/social_resolver.py",
+      "md5_hash": "2338d871de0ead5cc6a42e3cd4e1f9ae",
+      "target_hash": "2338d871de0ead5cc6a42e3cd4e1f9ae",
+      "file_size": 1673,
+      "target_size": 1673,
+      "verified_identical": true
+    },
+    {
+      "filename": "podcast_resolver.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/platform_resolver/podcast_resolver.py",
+      "target_path": "src/domains/ingestion/providers/podcast_resolver.py",
+      "md5_hash": "84db351ca5c8cebb4c0a5c93e84af327",
+      "target_hash": "84db351ca5c8cebb4c0a5c93e84af327",
+      "file_size": 3067,
+      "target_size": 3067,
+      "verified_identical": true
+    },
+    {
+      "filename": "twitch_resolver.py",
+      "source_path": "ultimate_discord_intelligence_bot/tools/platform_resolver/twitch_resolver.py",
+      "target_path": "src/domains/ingestion/providers/twitch_resolver.py",
+      "md5_hash": "840d5766b84fbcf8801f9b4a8b5d31db",
+      "target_hash": "840d5766b84fbcf8801f9b4a8b5d31db",
+      "file_size": 1585,
+      "target_size": 1585,
+      "verified_identical": true
+    }
+  ]
+}

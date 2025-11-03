@@ -17,8 +17,10 @@ Enable with: ENABLE_MCP_CREATOR_INTELLIGENCE=1
 """
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -72,7 +74,7 @@ def _get_collection_manager() -> Any:
     global _collection_manager
     if _collection_manager is None:
         try:
-            from memory.creator_intelligence_collections import get_collection_manager
+            from domains.memory.creator_intelligence_collections import get_collection_manager
 
             _collection_manager = get_collection_manager(enable_semantic_cache=True)
         except Exception as e:
@@ -185,7 +187,7 @@ def query_creator_content(
         ... )
     """
     manager = _get_collection_manager()
-    from memory.embedding_service import get_embedding_service
+    from domains.memory.embedding_service import get_embedding_service
 
     embedding_service = get_embedding_service()
     model_map = {

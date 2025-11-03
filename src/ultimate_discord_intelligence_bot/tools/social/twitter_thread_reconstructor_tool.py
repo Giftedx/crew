@@ -1,9 +1,11 @@
 """Twitter/X thread reconstruction and analysis tool."""
 
 from __future__ import annotations
+
 import time
-from typing import TypedDict
 from platform.core.step_result import StepResult
+from typing import TypedDict
+
 from .._base import BaseTool
 
 
@@ -184,10 +186,8 @@ class TwitterThreadReconstructorTool(BaseTool[StepResult]):
             author_handle = root_tweet["author_handle"]
             author_name = root_tweet["author_name"]
             total_engagement = sum(
-                (
-                    tweet["retweet_count"] + tweet["like_count"] + tweet["reply_count"] + tweet["quote_count"]
-                    for tweet in thread_tweets
-                )
+                tweet["retweet_count"] + tweet["like_count"] + tweet["reply_count"] + tweet["quote_count"]
+                for tweet in thread_tweets
             )
             all_hashtags = []
             all_mentions = []
@@ -280,7 +280,7 @@ class TwitterThreadReconstructorTool(BaseTool[StepResult]):
     def _generate_thread_summary(self, tweets: list[Tweet]) -> str:
         """Generate a summary of the thread content."""
         try:
-            total_content = " ".join((tweet["content"] for tweet in tweets))
+            total_content = " ".join(tweet["content"] for tweet in tweets)
             summary = total_content[:200] + "..." if len(total_content) > 200 else total_content
             return summary
         except Exception:
@@ -304,10 +304,10 @@ class TwitterThreadReconstructorTool(BaseTool[StepResult]):
     def _analyze_thread(self, thread: TwitterThread, tenant: str, workspace: str) -> TwitterThreadAnalysis | None:
         """Analyze thread engagement and viral potential."""
         try:
-            total_retweets = sum((tweet["retweet_count"] for tweet in thread["tweets"]))
-            total_likes = sum((tweet["like_count"] for tweet in thread["tweets"]))
-            total_replies = sum((tweet["reply_count"] for tweet in thread["tweets"]))
-            total_quotes = sum((tweet["quote_count"] for tweet in thread["tweets"]))
+            total_retweets = sum(tweet["retweet_count"] for tweet in thread["tweets"])
+            total_likes = sum(tweet["like_count"] for tweet in thread["tweets"])
+            total_replies = sum(tweet["reply_count"] for tweet in thread["tweets"])
+            total_quotes = sum(tweet["quote_count"] for tweet in thread["tweets"])
             engagement_metrics = {
                 "total_retweets": total_retweets,
                 "total_likes": total_likes,

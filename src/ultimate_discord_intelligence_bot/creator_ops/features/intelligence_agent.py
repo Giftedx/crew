@@ -4,13 +4,16 @@ Provides intelligent content analysis and recommendations for creators.
 """
 
 import logging
+from platform.core.step_result import StepResult
+
 from pydantic import BaseModel
+
 from crewai import Agent, Crew, Task
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import EpisodeIntelligence
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript
 from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPResult
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +213,7 @@ class EpisodeIntelligenceAgent:
         sentences = text.split(". ")
         for sentence in sentences:
             if len(sentence) > 20 and any(
-                (keyword in sentence.lower() for keyword in ["insight", "recommendation", "suggestion", "opportunity"])
+                keyword in sentence.lower() for keyword in ["insight", "recommendation", "suggestion", "opportunity"]
             ):
                 insights.append(sentence.strip())
         return insights[:5]

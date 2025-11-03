@@ -7,10 +7,13 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
-from core.time import default_utc_now
-
 from .context import TenantContext
 from .models import Tenant
+
+
+def default_utc_now() -> datetime:
+    """Get current UTC datetime."""
+    return datetime.now(UTC)
 
 
 if TYPE_CHECKING:
@@ -41,10 +44,8 @@ class TenantRegistry:
             created_raw = data.get("created_at")
             created_at: datetime
             if isinstance(created_raw, datetime):
-                # Normalize to UTC (assume naive datetimes are UTC)
                 created_at = created_raw if created_raw.tzinfo else created_raw.replace(tzinfo=UTC)
             elif isinstance(created_raw, str):
-                # Try ISO parse, fallback to numeric epoch if digits
                 if created_raw.isdigit():
                     try:
                         created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)
@@ -59,9 +60,8 @@ class TenantRegistry:
                     except ValueError:
                         created_at = default_utc_now()
             else:
-                # Try numeric epoch (int/float/other castables)
                 try:
-                    created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)  # type: ignore[arg-type]
+                    created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)
                 except Exception:
                     created_at = default_utc_now()
             tenant = Tenant(
@@ -75,11 +75,7 @@ class TenantRegistry:
             routing = self._load_yaml(tenant_dir / "routing.yaml")
             flags = self._load_yaml(tenant_dir / "flags.yaml")
             self._cache[tenant.slug] = TenantConfig(
-                tenant=tenant,
-                workspaces=data.get("workspaces", {}),
-                budgets=budgets,
-                routing=routing,
-                flags=flags,
+                tenant=tenant, workspaces=data.get("workspaces", {}), budgets=budgets, routing=routing, flags=flags
             )
 
     @staticmethod
@@ -92,7 +88,6 @@ class TenantRegistry:
     def get_tenant(self, slug: str) -> TenantConfig | None:
         return self._cache.get(slug)
 
-    # ------------------------------------------------------------------ helpers
     def get_budget_config(self, tenant_id: str) -> dict[str, Any] | None:
         cfg = self._cache.get(tenant_id)
         return cfg.budgets if cfg else None
@@ -103,7 +98,6 @@ class TenantRegistry:
             return []
         allowed: list[str] | None = None
         if cfg.routing:
-            # workspace override takes precedence
             ws_cfg = cfg.workspaces.get(ctx.workspace_id, {})
             ws_routing = ws_cfg.get("routing")
             if isinstance(ws_routing, dict):
@@ -118,7 +112,6 @@ class TenantRegistry:
         if not cfg or not cfg.routing:
             return []
         providers: list[str] | None = None
-        # workspace override first
         ws_cfg = cfg.workspaces.get(ctx.workspace_id, {})
         ws_routing = ws_cfg.get("routing")
         if isinstance(ws_routing, dict):
@@ -137,7 +130,6 @@ class TenantRegistry:
         if not cfg or not cfg.routing:
             return {}
         models: dict[str, str] | None = None
-        # workspace override first
         ws_cfg = cfg.workspaces.get(ctx.workspace_id, {})
         ws_routing = ws_cfg.get("routing")
         if isinstance(ws_routing, dict) and isinstance(ws_routing.get("models"), dict):
@@ -157,7 +149,6 @@ class TenantRegistry:
         if not cfg:
             return {}
         res: dict[str, float | int] = {}
-        # flags.yaml path
         if cfg.flags and isinstance(cfg.flags.get("rl"), dict):
             rl = cfg.flags["rl"]
             for src, dst in (
@@ -168,7 +159,6 @@ class TenantRegistry:
                 if src in rl:
                     with contextlib.suppress(Exception):
                         res[dst] = float(rl[src]) if "weight" in src else int(rl[src])
-        # routing.yaml alternative keys
         if cfg.routing and isinstance(cfg.routing.get("rewards"), dict):
             rw = cfg.routing["rewards"]
             if "cost_weight" in rw:
@@ -215,7 +205,6 @@ class TenantRegistry:
         if not cfg or not cfg.budgets:
             return None
         budgets = cfg.budgets
-        # Highest precedence: per-task under limits
         limits = budgets.get("limits") if isinstance(budgets, dict) else None
         if isinstance(limits, dict):
             for key in ("by_task", "per_task", "tasks"):
@@ -237,7 +226,6 @@ class TenantRegistry:
                     return float(raw) if raw is not None else None
                 except Exception:
                     pass
-        # Backwards-compatible flat
         if "max_per_request" in budgets:
             try:
                 raw = budgets.get("max_per_request")
@@ -246,7 +234,6 @@ class TenantRegistry:
                 pass
         return None
 
-    # ------------------------------------------------------------------ cumulative budgets
     def get_request_total_limit(self, ctx: TenantContext) -> float | None:
         """Return cumulative total budget for a single high-level request.
 
@@ -275,14 +262,12 @@ class TenantRegistry:
                         candidates.append(float(limits[key]))
                     except Exception:
                         candidates.append(None)
-            # nested: limits.request.max_total
             req = limits.get("request")
             if isinstance(req, dict) and "max_total" in req:
                 try:
                     candidates.append(float(req["max_total"]))
                 except Exception:
                     candidates.append(None)
-        # flat legacy
         if "request_total_limit" in budgets:
             raw_rtl = budgets.get("request_total_limit")
             if raw_rtl is not None:
@@ -291,7 +276,7 @@ class TenantRegistry:
                 except Exception:
                     candidates.append(None)
         for val in candidates:
-            if isinstance(val, float):  # first successful parse wins
+            if isinstance(val, float):
                 return val
         return None
 
@@ -312,7 +297,6 @@ class TenantRegistry:
         limits = budgets.get("limits") if isinstance(budgets, dict) else None
         out: dict[str, float] = {}
         if isinstance(limits, dict):
-            # direct tasks mapping
             tasks = limits.get("tasks")
             if isinstance(tasks, dict):
                 for k, v in tasks.items():

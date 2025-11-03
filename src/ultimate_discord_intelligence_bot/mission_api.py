@@ -17,9 +17,10 @@ StepResult.
 """
 
 from __future__ import annotations
-from typing import Any
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
 
 
 def _safe_str(value: Any) -> str | None:
@@ -114,7 +115,8 @@ async def _maybe_evaluate_and_annotate(
         )
         if not should_eval:
             return result
-        from ai.evaluation.langsmith_evaluator import LangSmithEvaluator
+        from platform.rl.evaluation.langsmith_evaluator import LangSmithEvaluator
+
         from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
         from ultimate_discord_intelligence_bot.services.unified_pipeline import PipelineConfig, UnifiedPipeline
 

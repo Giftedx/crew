@@ -6,13 +6,16 @@ quota management, exponential backoff, and support for all major YouTube feature
 """
 
 from __future__ import annotations
+
 import asyncio
 import json
 import logging
 import time
 from datetime import datetime, timedelta
+from platform import http_utils
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any, ClassVar
-from core import http_utils
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models import (
     YouTubeCaption,
@@ -23,7 +26,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models i
     YouTubeSearchResult,
     YouTubeVideo,
 )
-from platform.core.step_result import StepResult
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.creator_ops.auth.oauth_manager import YouTubeOAuthManager
@@ -395,7 +398,7 @@ class YouTubeClient:
                     if last_message_time is None or message.published_at > last_message_time:
                         new_messages.append(message)
                 if messages:
-                    last_message_time = max((msg.published_at for msg in messages if msg.published_at))
+                    last_message_time = max(msg.published_at for msg in messages if msg.published_at)
                 if new_messages:
                     try:
                         await callback(new_messages)

@@ -6,17 +6,20 @@ detection, automatic clip generation, and stream marker creation.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, SpeakerDiarization, WhisperASR
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import TranscriptAlignment
-from platform.core.step_result import StepResult
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -163,9 +166,7 @@ class LiveClipRadar:
                 return StepResult.fail(f"Monitor not found: {monitor_id}")
             monitor_info = self.active_monitors[monitor_id]
             platform = monitor_info["platform"]
-            if platform == "youtube":
-                pass
-            elif platform == "twitch":
+            if platform == "youtube" or platform == "twitch":
                 pass
             self.active_monitors[monitor_id]["status"] = "stopped"
             self.active_monitors[monitor_id]["end_time"] = datetime.utcnow()

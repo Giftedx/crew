@@ -5,13 +5,16 @@ anomaly detection, and context-aware notifications.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 if TYPE_CHECKING:
     import asyncio
@@ -562,7 +565,7 @@ class IntelligentAlertingService:
             if len(recent_values) < self.config.min_data_points:
                 return anomalies
             mean_value = sum(recent_values) / len(recent_values)
-            variance = sum(((x - mean_value) ** 2 for x in recent_values)) / len(recent_values)
+            variance = sum((x - mean_value) ** 2 for x in recent_values) / len(recent_values)
             std_dev = variance**0.5
             if std_dev == 0:
                 return anomalies

@@ -19,13 +19,16 @@ Instrumentation (Copilot migration spec):
 """
 
 from __future__ import annotations
+
 import logging
 import os
-from typing import TYPE_CHECKING
-from requests import RequestException
+from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_get, resilient_post
 from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING
+
+from requests import RequestException
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

@@ -6,10 +6,12 @@ in content analysis.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import ClassVar
 from platform.core.step_result import StepResult
+from typing import ClassVar
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -220,8 +222,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_partisan_language(self, content: str) -> float:
         """Analyze partisan language usage."""
-        left_count = sum((1 for term in self.left_wing_terms if term in content))
-        right_count = sum((1 for term in self.right_wing_terms if term in content))
+        left_count = sum(1 for term in self.left_wing_terms if term in content)
+        right_count = sum(1 for term in self.right_wing_terms if term in content)
         total_terms = left_count + right_count
         if total_terms == 0:
             return 0.0
@@ -230,8 +232,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_ideological_framing(self, content: str) -> float:
         """Analyze ideological framing techniques."""
-        loaded_count = sum((1 for term in self.loaded_terms if term in content))
-        emotional_count = sum((1 for term in self.emotional_triggers if term in content))
+        loaded_count = sum(1 for term in self.loaded_terms if term in content)
+        emotional_count = sum(1 for term in self.emotional_triggers if term in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -242,8 +244,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
         """Analyze evidence balance in content."""
         supporting_indicators = ["proves", "demonstrates", "shows", "confirms", "validates"]
         opposing_indicators = ["refutes", "contradicts", "disproves", "challenges", "questions"]
-        supporting_count = sum((1 for indicator in supporting_indicators if indicator in content.lower()))
-        opposing_count = sum((1 for indicator in opposing_indicators if indicator in content.lower()))
+        supporting_count = sum(1 for indicator in supporting_indicators if indicator in content.lower())
+        opposing_count = sum(1 for indicator in opposing_indicators if indicator in content.lower())
         total_evidence = supporting_count + opposing_count
         if total_evidence == 0:
             return 0.0
@@ -252,7 +254,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_strawman_arguments(self, content: str) -> float:
         """Analyze strawman argument patterns."""
-        strawman_count = sum((1 for indicator in self.strawman_indicators if indicator in content))
+        strawman_count = sum(1 for indicator in self.strawman_indicators if indicator in content)
         total_sentences = len([s for s in content.split(".") if s.strip()])
         if total_sentences == 0:
             return 0.0
@@ -270,7 +272,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "on one hand",
             "on the other hand",
         ]
-        false_balance_count = sum((1 for indicator in false_balance_indicators if indicator in content))
+        false_balance_count = sum(1 for indicator in false_balance_indicators if indicator in content)
         total_sentences = len([s for s in content.split(".") if s.strip()])
         if total_sentences == 0:
             return 0.0
@@ -287,7 +289,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_emotional_manipulation(self, content: str) -> float:
         """Analyze emotional manipulation in content."""
-        emotional_count = sum((1 for term in self.emotional_triggers if term in content))
+        emotional_count = sum(1 for term in self.emotional_triggers if term in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -346,8 +348,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_ideological_span(self, content: str) -> float:
         """Analyze ideological span of content."""
-        left_count = sum((1 for term in self.left_wing_terms if term in content.lower()))
-        right_count = sum((1 for term in self.right_wing_terms if term in content.lower()))
+        left_count = sum(1 for term in self.left_wing_terms if term in content.lower())
+        right_count = sum(1 for term in self.right_wing_terms if term in content.lower())
         total_ideological_terms = left_count + right_count
         if total_ideological_terms == 0:
             return 0.0
@@ -368,7 +370,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "data suggests",
             "findings show",
         ]
-        source_count = sum((1 for indicator in source_indicators if indicator in content.lower()))
+        source_count = sum(1 for indicator in source_indicators if indicator in content.lower())
         return min(source_count / 5, 1.0)
 
     def _analyze_temporal_diversity(self, content: str) -> float:
@@ -383,7 +385,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "modern",
             "contemporary",
         ]
-        temporal_count = sum((1 for indicator in temporal_indicators if indicator in content.lower()))
+        temporal_count = sum(1 for indicator in temporal_indicators if indicator in content.lower())
         return min(temporal_count / 3, 1.0)
 
     def _analyze_demographic_diversity(self, content: str) -> float:
@@ -400,7 +402,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "educated",
             "working class",
         ]
-        demographic_count = sum((1 for indicator in demographic_indicators if indicator in content.lower()))
+        demographic_count = sum(1 for indicator in demographic_indicators if indicator in content.lower())
         return min(demographic_count / 5, 1.0)
 
     def analyze_framing_techniques(self, content: str) -> StepResult:
@@ -439,7 +441,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_loaded_language(self, content: str) -> float:
         """Analyze loaded language usage."""
-        loaded_count = sum((1 for term in self.loaded_terms if term in content))
+        loaded_count = sum(1 for term in self.loaded_terms if term in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -448,7 +450,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
 
     def _analyze_emotional_appeals(self, content: str) -> float:
         """Analyze emotional appeals in content."""
-        emotional_count = sum((1 for term in self.emotional_triggers if term in content))
+        emotional_count = sum(1 for term in self.emotional_triggers if term in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -468,7 +470,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "frightening",
             "terrifying",
         ]
-        fear_count = sum((1 for indicator in fear_indicators if indicator in content))
+        fear_count = sum(1 for indicator in fear_indicators if indicator in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -489,7 +491,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "our people",
             "those people",
         ]
-        us_them_count = sum((1 for indicator in us_them_indicators if indicator in content))
+        us_them_count = sum(1 for indicator in us_them_indicators if indicator in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -511,7 +513,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "noble",
             "corrupt",
         ]
-        vhv_count = sum((1 for indicator in vhv_indicators if indicator in content))
+        vhv_count = sum(1 for indicator in vhv_indicators if indicator in content)
         total_words = len(content.split())
         if total_words == 0:
             return 0.0
@@ -555,8 +557,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
         """Analyze supporting evidence ratio."""
         supporting_indicators = ["proves", "demonstrates", "shows", "confirms", "validates", "supports"]
         opposing_indicators = ["refutes", "contradicts", "disproves", "challenges", "questions", "undermines"]
-        supporting_count = sum((1 for indicator in supporting_indicators if indicator in content.lower()))
-        opposing_count = sum((1 for indicator in opposing_indicators if indicator in content.lower()))
+        supporting_count = sum(1 for indicator in supporting_indicators if indicator in content.lower())
+        opposing_count = sum(1 for indicator in opposing_indicators if indicator in content.lower())
         total_evidence = supporting_count + opposing_count
         if total_evidence == 0:
             return 0.0
@@ -566,8 +568,8 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
         """Analyze opposing evidence ratio."""
         supporting_indicators = ["proves", "demonstrates", "shows", "confirms", "validates", "supports"]
         opposing_indicators = ["refutes", "contradicts", "disproves", "challenges", "questions", "undermines"]
-        supporting_count = sum((1 for indicator in supporting_indicators if indicator in content.lower()))
-        opposing_count = sum((1 for indicator in opposing_indicators if indicator in content.lower()))
+        supporting_count = sum(1 for indicator in supporting_indicators if indicator in content.lower())
+        opposing_count = sum(1 for indicator in opposing_indicators if indicator in content.lower())
         total_evidence = supporting_count + opposing_count
         if total_evidence == 0:
             return 0.0
@@ -586,7 +588,7 @@ class PoliticalBiasDetector(BaseTool[StepResult]):
             "evidence suggests",
             "findings demonstrate",
         ]
-        cherry_picking_count = sum((1 for indicator in cherry_picking_indicators if indicator in content.lower()))
+        cherry_picking_count = sum(1 for indicator in cherry_picking_indicators if indicator in content.lower())
         total_sentences = len([s for s in content.split(".") if s.strip()])
         if total_sentences == 0:
             return 0.0

@@ -6,30 +6,35 @@ access to 100+ LLM providers.
 """
 
 from __future__ import annotations
+
 import asyncio
 import copy
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Protocol, runtime_checkable, cast, TYPE_CHECKING
 from platform.cache.semantic_cache import get_semantic_cache
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS
-from core.learning_engine import LearningEngine
 from platform.config.configuration import get_config
+from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS
 from platform.observability import metrics
 from platform.observability.langsmith_integration import get_enhanced_observability
+from platform.rl.learning_engine import LearningEngine
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
+
+from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
+from .cache import RedisLLMCache, make_key
 from .prompt_engine import PromptEngine
 from .token_meter import TokenMeter
-from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
-from ultimate_discord_intelligence_bot.settings import Settings
-from .cache import RedisLLMCache, make_key
+
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-    from collections.abc import Callable
-    from .logging_utils import AnalyticsStore
-    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+    from collections.abc import Callable, Sequence
     from platform.core.step_result import StepResult
+
+    from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
+    from .logging_utils import AnalyticsStore
 
 
 class LLMCacheProto(Protocol):
@@ -301,7 +306,7 @@ class EnhancedOpenRouterService:
             if ctx:
                 allowed = self.tenant_registry.get_allowed_models(ctx)
                 if allowed:
-                    filtered = [c for c in candidates if any((a.lower() in c.lower() for a in allowed))]
+                    filtered = [c for c in candidates if any(a.lower() in c.lower() for a in allowed)]
                     if filtered:
                         candidates = filtered
         return candidates
@@ -458,7 +463,7 @@ class EnhancedOpenRouterService:
                     fallbacks=[m for m in models_to_try if m != attempt_model][:2],
                 )
                 content = _extract_content(response)
-                tokens_in = sum((self.prompt_engine.count_tokens(m["content"], attempt_model) for m in messages))
+                tokens_in = sum(self.prompt_engine.count_tokens(m["content"], attempt_model) for m in messages)
                 tokens_out = self.prompt_engine.count_tokens(content, attempt_model) if content else 0
                 cost = 0.0
                 try:

@@ -6,15 +6,18 @@ for optimal model routing based on task characteristics and performance history.
 """
 
 from __future__ import annotations
+
 import json
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any
-import numpy as np
-from core.time import default_utc_now
-from platform.observability import metrics
 from platform.core.step_result import StepResult
+from platform.observability import metrics
+from platform.time import default_utc_now
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
+
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -615,7 +618,7 @@ class RLModelRouter:
             return {}
         recent_rewards = self.routing_history[-100:]
         return {
-            "recent_success_rate": sum((1 for r in recent_rewards if r.success)) / len(recent_rewards),
+            "recent_success_rate": sum(1 for r in recent_rewards if r.success) / len(recent_rewards),
             "recent_average_latency": np.mean([r.latency_ms for r in recent_rewards]),
             "recent_average_cost": np.mean([r.cost_usd for r in recent_rewards]),
             "recent_average_quality": np.mean([r.quality_score for r in recent_rewards]),

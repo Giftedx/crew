@@ -20,10 +20,12 @@ Returns StepResult with:
 """
 
 from __future__ import annotations
+
 from contextlib import suppress
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

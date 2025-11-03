@@ -29,8 +29,8 @@ except Exception:
 
 
 try:
-    from core.vllm_service import is_vllm_available as _is_vllm_available
-    from core.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
+    from platform.vllm_service import is_vllm_available as _is_vllm_available
+    from platform.vllm_service import vLLMOpenRouterAdapter as _VLLMAdapterCtor
 except Exception:
     _is_vllm_available = None
     _VLLMAdapterCtor = None

@@ -8,12 +8,15 @@ Implements state-of-the-art retrieval with:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
 from platform.config.configuration import get_config
-from memory.qdrant_provider import get_qdrant_client
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
+from domains.memory.vector.qdrant import get_qdrant_client
+
 
 if TYPE_CHECKING:
     from qdrant_client.models import ScoredPoint

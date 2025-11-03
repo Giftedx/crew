@@ -10,11 +10,15 @@ multi-modal analysis capabilities including:
 """
 
 from __future__ import annotations
+
 import logging
-from typing import Any
-from fastmcp import FastMCP
 from platform.observability.metrics import get_metrics
+from typing import Any
+
+from fastmcp import FastMCP
+
 from ultimate_discord_intelligence_bot.tools.multi_modal_analysis_tool import MultiModalAnalysisTool
+
 
 logger = logging.getLogger(__name__)
 

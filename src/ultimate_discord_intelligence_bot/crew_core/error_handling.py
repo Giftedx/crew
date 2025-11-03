@@ -5,9 +5,12 @@ and provides standardized error handling utilities.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
-import structlog
+
 from platform.core.step_result import ErrorCategory, StepResult
+from typing import TYPE_CHECKING
+
+import structlog
+
 
 if TYPE_CHECKING:
     from domains.orchestration.crew.interfaces import CrewTask
@@ -74,10 +77,10 @@ class CrewErrorHandler:
             return ErrorCategory.TIMEOUT
         if "rate" in error_type.lower() or "429" in str(error):
             return ErrorCategory.RATE_LIMIT
-        if any((keyword in error_type.lower() for keyword in ["connection", "network", "socket"])):
+        if any(keyword in error_type.lower() for keyword in ["connection", "network", "socket"]):
             return ErrorCategory.NETWORK
         if "validation" in error_type.lower() or "invalid" in str(error).lower():
             return ErrorCategory.VALIDATION
-        if any((keyword in error_type.lower() for keyword in ["auth", "permission", "unauthorized", "forbidden"])):
+        if any(keyword in error_type.lower() for keyword in ["auth", "permission", "unauthorized", "forbidden"]):
             return ErrorCategory.AUTHENTICATION
         return ErrorCategory.PROCESSING

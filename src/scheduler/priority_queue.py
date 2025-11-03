@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from platform.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
+from platform.db_locks import get_lock_for_connection
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
-from core.batching import get_batching_metrics, get_bulk_inserter, get_request_batcher
-from core.db_locks import get_lock_for_connection
-from core.time import default_utc_now
-from ingest import pipeline
+from domains.ingestion.pipeline import pipeline
 
 
 if TYPE_CHECKING:
@@ -33,16 +33,12 @@ class PriorityQueue:
         self._request_batcher = get_request_batcher(conn)
         self._background_tasks: set[asyncio.Task[Any]] = set()
 
-    # --------------------------------------------------------------- enqueue
     def enqueue(self, job: pipeline.IngestJob, priority: int = 0) -> int:
         tags = ",".join(job.tags)
         now = default_utc_now().isoformat()
         with self._lock:
             cur = self.conn.execute(
-                (
-                    "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, "
-                    "priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
-                ),
+                "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     job.tenant,
                     job.workspace,
@@ -65,8 +61,6 @@ class PriorityQueue:
         """Enqueue multiple jobs in bulk for improved performance."""
         if not jobs:
             return []
-
-        # Prepare data tuples for immediate inserts
         now = default_utc_now().isoformat()
         values = []
         for job in jobs:
@@ -86,14 +80,11 @@ class PriorityQueue:
                     now,
                 )
             )
-
         inserted_ids: list[int] = []
-        # Insert rows immediately to reflect in tests (simpler than deferred batch for now)
         with self._lock:
             for value_tuple in values:
                 cur = self.conn.execute(
-                    "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, "
-                    "priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    "INSERT INTO ingest_job (tenant, workspace, source_type, external_id, url, tags, visibility, priority, status, attempts, scheduled_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                     value_tuple,
                 )
                 rid = cur.lastrowid
@@ -102,26 +93,14 @@ class PriorityQueue:
             self.conn.commit()
         return inserted_ids
 
-    # --------------------------------------------------------------- dequeue
     def dequeue(self) -> QueuedJob | None:
         with self._lock:
             row = self.conn.execute(
-                "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts "
-                "FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
+                "SELECT id, tenant, workspace, source_type, external_id, url, tags, visibility, attempts FROM ingest_job WHERE status='pending' ORDER BY priority DESC, id ASC LIMIT 1"
             ).fetchone()
             if not row:
                 return None
-            (
-                job_id,
-                tenant,
-                workspace,
-                source,
-                external_id,
-                url,
-                tags,
-                visibility,
-                attempts,
-            ) = row
+            job_id, tenant, workspace, source, external_id, url, tags, visibility, attempts = row
             self.conn.execute(
                 "UPDATE ingest_job SET status='running', picked_at=? WHERE id=?",
                 (default_utc_now().isoformat(), job_id),
@@ -138,12 +117,10 @@ class PriorityQueue:
         )
         return QueuedJob(id=job_id, job=job, attempts=attempts)
 
-    # --------------------------------------------------------------- mark
     def mark_done(self, job_id: int) -> None:
         with self._lock:
             self.conn.execute(
-                "UPDATE ingest_job SET status='done', finished_at=? WHERE id=?",
-                (default_utc_now().isoformat(), job_id),
+                "UPDATE ingest_job SET status='done', finished_at=? WHERE id=?", (default_utc_now().isoformat(), job_id)
             )
             self.conn.commit()
 
@@ -183,7 +160,6 @@ class PriorityQueue:
                     params=(error, now, job_id),
                 )
 
-    # --------------------------------------------------------------- stats
     def pending_count(self) -> int:
         with self._lock:
             row = self.conn.execute("SELECT COUNT(*) FROM ingest_job WHERE status='pending'").fetchone()

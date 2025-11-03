@@ -5,13 +5,16 @@ and enabling dynamic service discovery within the OpenRouter service ecosystem.
 """
 
 from __future__ import annotations
+
 import logging
 import threading
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from .facade import OpenRouterServiceFacade
     from .service import OpenRouterService
 log = logging.getLogger(__name__)
@@ -254,7 +257,7 @@ class OpenRouterServiceRegistry:
                 health_status["facade"] = "healthy" if facade_health.success else "unhealthy"
             else:
                 health_status["facade"] = "not_registered"
-            all_healthy = all((status in ("registered", "healthy") for status in health_status.values()))
+            all_healthy = all(status in ("registered", "healthy") for status in health_status.values())
             if all_healthy:
                 return StepResult.ok(data={"status": "healthy", "services": health_status})
             else:

@@ -5,12 +5,14 @@ generating charts, and exporting results to documentation.
 """
 
 from __future__ import annotations
+
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.features.crew_analytics import CrewAnalytics
@@ -243,8 +245,8 @@ class CrewDashboard:
         fastest = min(metrics, key=lambda m: m.avg_execution_time)
         most_efficient = min(metrics, key=lambda m: m.avg_memory_usage)
         best_performance = max(metrics, key=lambda m: m.performance_score)
-        total_executions = sum((m.total_executions for m in metrics))
-        total_successful = sum((m.successful_executions for m in metrics))
+        total_executions = sum(m.total_executions for m in metrics)
+        total_successful = sum(m.successful_executions for m in metrics)
         overall_success_rate = total_successful / total_executions if total_executions > 0 else 0
         return {
             "total_crews": len(metrics),

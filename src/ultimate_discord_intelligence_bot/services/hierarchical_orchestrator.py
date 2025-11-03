@@ -6,16 +6,19 @@ supervisor-worker patterns, dynamic load balancing, and failure recovery.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ..agents.executive_supervisor import ExecutiveSupervisorAgent
 from ..agents.workflow_manager import WorkflowManagerAgent
+
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +192,7 @@ class HierarchicalOrchestrator:
             if not routing_result.success:
                 return StepResult.fail(f"Task routing failed: {routing_result.error}")
             execution_results = await self._execute_tasks_with_monitoring(session, routing_result.data)
-            if all((result.get("status") == "completed" for result in execution_results)):
+            if all(result.get("status") == "completed" for result in execution_results):
                 session.status = OrchestrationStatus.COMPLETED
                 session.completed_at = datetime.utcnow()
                 self.performance_metrics["completed_sessions"] += 1
@@ -446,13 +449,13 @@ class HierarchicalOrchestrator:
         """Get agent utilization metrics."""
         if not self.agent_registry:
             return {"average_utilization": 0.0, "total_agents": 0}
-        total_load = sum((agent.current_load for agent in self.agent_registry.values()))
+        total_load = sum(agent.current_load for agent in self.agent_registry.values())
         average_utilization = total_load / len(self.agent_registry)
         return {
             "average_utilization": average_utilization,
             "total_agents": len(self.agent_registry),
-            "idle_agents": sum((1 for agent in self.agent_registry.values() if agent.current_load < 0.1)),
-            "busy_agents": sum((1 for agent in self.agent_registry.values() if agent.current_load >= 0.1)),
+            "idle_agents": sum(1 for agent in self.agent_registry.values() if agent.current_load < 0.1),
+            "busy_agents": sum(1 for agent in self.agent_registry.values() if agent.current_load >= 0.1),
         }
 
     def _get_session_performance_metrics(self, session: OrchestrationSession) -> dict[str, Any]:
@@ -461,7 +464,7 @@ class HierarchicalOrchestrator:
             return {"status": "not_started"}
         current_time = datetime.utcnow()
         duration = (current_time - session.started_at).total_seconds()
-        completed_tasks = sum((1 for task in session.tasks if task.status == "completed"))
+        completed_tasks = sum(1 for task in session.tasks if task.status == "completed")
         total_tasks = len(session.tasks)
         completion_rate = completed_tasks / total_tasks if total_tasks > 0 else 0
         return {
@@ -469,7 +472,7 @@ class HierarchicalOrchestrator:
             "completion_rate": completion_rate,
             "completed_tasks": completed_tasks,
             "total_tasks": total_tasks,
-            "failed_tasks": sum((1 for task in session.tasks if task.status == "failed")),
+            "failed_tasks": sum(1 for task in session.tasks if task.status == "failed"),
         }
 
     async def _perform_health_checks(self, session: OrchestrationSession) -> dict[str, Any]:
@@ -498,7 +501,7 @@ class HierarchicalOrchestrator:
         if stale_agents:
             health_checks["agent_health"] = "degraded"
             health_checks["stale_agents"] = stale_agents
-        if any((status != "healthy" for status in health_checks.values() if isinstance(status, str))):
+        if any(status != "healthy" for status in health_checks.values() if isinstance(status, str)):
             health_checks["overall_health"] = "degraded"
         return health_checks
 
@@ -511,7 +514,7 @@ class HierarchicalOrchestrator:
                 incomplete_deps = [
                     dep
                     for dep in task.dependencies
-                    if not any((t.id == dep and t.status == "completed" for t in session.tasks))
+                    if not any(t.id == dep and t.status == "completed" for t in session.tasks)
                 ]
                 if incomplete_deps:
                     waiting_tasks.append({"task_id": task.id, "waiting_for": incomplete_deps})
@@ -537,7 +540,7 @@ class HierarchicalOrchestrator:
     def _generate_monitoring_recommendations(self, session: OrchestrationSession) -> list[dict[str, Any]]:
         """Generate monitoring recommendations."""
         recommendations = []
-        completed_tasks = sum((1 for task in session.tasks if task.status == "completed"))
+        completed_tasks = sum(1 for task in session.tasks if task.status == "completed")
         total_tasks = len(session.tasks)
         completion_rate = completed_tasks / total_tasks if total_tasks > 0 else 0
         if completion_rate < 0.5 and session.started_at:
@@ -577,9 +580,9 @@ class HierarchicalOrchestrator:
     def _assess_session_impact(self, failure_context: dict[str, Any], session: OrchestrationSession) -> str:
         """Assess impact of failure on session."""
         affected_components = failure_context.get("affected_components", [])
-        if any(("critical" in comp.lower() for comp in affected_components)):
+        if any("critical" in comp.lower() for comp in affected_components):
             return "critical"
-        elif any(("agent" in comp.lower() for comp in affected_components)):
+        elif any("agent" in comp.lower() for comp in affected_components):
             return "high"
         else:
             return "medium"
@@ -676,7 +679,7 @@ class HierarchicalOrchestrator:
                 current_avg * (total_sessions - 1) + duration
             ) / total_sessions
         if self.agent_registry:
-            total_load = sum((agent.current_load for agent in self.agent_registry.values()))
+            total_load = sum(agent.current_load for agent in self.agent_registry.values())
             self.performance_metrics["agent_utilization"] = total_load / len(self.agent_registry)
 
     def _assess_system_health(self) -> dict[str, Any]:

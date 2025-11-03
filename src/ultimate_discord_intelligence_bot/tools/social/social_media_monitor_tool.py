@@ -11,8 +11,9 @@ Instrumentation:
     * No latency histogram (pure in-memory filtering, negligible cost)
 """
 
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from .._base import BaseTool
 
 

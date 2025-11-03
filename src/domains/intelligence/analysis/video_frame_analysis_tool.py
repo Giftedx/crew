@@ -13,16 +13,19 @@ Uses state-of-the-art computer vision models and techniques for robust analysis.
 """
 
 from __future__ import annotations
+
 import base64
 import importlib
 import logging
 import os
 import time
 from functools import cached_property
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
+
 
 cv2: Any | None = None
 PIL: Any | None = None
@@ -131,7 +134,7 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             if tenant and workspace:
                 self.note(f"Starting video frame analysis for {os.path.basename(video_path)}")
             video_extensions = [".mp4", ".avi", ".mov", ".mkv", ".webm", ".flv", ".wmv"]
-            if not any((video_path.lower().endswith(ext) for ext in video_extensions)):
+            if not any(video_path.lower().endswith(ext) for ext in video_extensions):
                 return StepResult.fail("Unsupported video format")
             key_frames = self._extract_key_frames(video_path, analysis_depth)
             if not key_frames:

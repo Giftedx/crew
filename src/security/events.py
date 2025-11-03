@@ -6,9 +6,8 @@ security relevant actions are recorded in a consistent JSON format.
 
 from __future__ import annotations
 
+from platform.observability.logging import logger
 from typing import Any
-
-from obs.logging import logger
 
 
 def log_security_event(
@@ -41,12 +40,7 @@ def log_security_event(
     extra:
         Additional key-value pairs to include in the log payload.
     """
-    payload: dict[str, Any] = {
-        "actor": actor,
-        "action": action,
-        "resource": resource,
-        "decision": decision,
-    }
+    payload: dict[str, Any] = {"actor": actor, "action": action, "resource": resource, "decision": decision}
     if reason is not None:
         payload["reason"] = reason
     if tenant is not None:

@@ -17,9 +17,8 @@ from platform.cache.bounded_cache import BoundedLRUCache
 from platform.cache.unified_config import get_unified_cache_config
 from platform.config.configuration import get_config
 from platform.observability import metrics
-
-from ai.litellm_router import LLMRouterSingleton
-from core.learning_engine import LearningEngine
+from platform.rl.learning_engine import LearningEngine
+from platform.rl.litellm_router import LLMRouterSingleton
 
 from .adaptive_routing import AdaptiveRoutingManager
 from .tenant_semantic_cache import TenantSemanticCache
@@ -29,7 +28,7 @@ try:
     from platform.core.settings import get_settings
 except Exception:
     try:
-        from ultimate_discord_intelligence_bot.settings import Settings
+        from app.config.settings import Settings
 
         def get_settings():
             return Settings()
@@ -49,8 +48,8 @@ except Exception:
             return _S()
 
         get_settings = _get_settings_fallback
+from app.config.settings import ENABLE_RL_MODEL_ROUTING
 from ultimate_discord_intelligence_bot.cache import ENABLE_CACHE_V2, UnifiedCache, get_unified_cache
-from ultimate_discord_intelligence_bot.settings import ENABLE_RL_MODEL_ROUTING
 
 from ..openrouter_helpers import choose_model_from_map as _choose_model_from_map_helper
 from ..openrouter_helpers import ctx_or_fallback as _ctx_or_fallback_helper

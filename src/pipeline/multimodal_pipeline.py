@@ -10,10 +10,10 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
+from platform.core.step_result import StepResult
 from typing import Any
 
 from kg.creator_kg_store import CreatorKGStore
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 class PipelineConfig:
     """Configuration for the multimodal pipeline."""
 
-    # Processing stages
     enable_download: bool = True
     enable_diarization: bool = True
     enable_transcription: bool = True
@@ -31,18 +30,12 @@ class PipelineConfig:
     enable_content_analysis: bool = True
     enable_claim_extraction: bool = True
     enable_kg_ingestion: bool = True
-
-    # Quality thresholds
     min_transcription_confidence: float = 0.7
     min_diarization_confidence: float = 0.6
     min_visual_analysis_confidence: float = 0.5
-
-    # Performance limits
-    max_processing_time: int = 600  # 10 minutes
+    max_processing_time: int = 600
     max_file_size_mb: int = 500
     max_audio_duration_hours: int = 3
-
-    # Output settings
     save_intermediate_results: bool = True
     cleanup_temp_files: bool = True
 
@@ -54,7 +47,7 @@ class PipelineStage:
     name: str
     description: str
     required: bool
-    estimated_duration: int  # seconds
+    estimated_duration: int
     dependencies: list[str]
 
 
@@ -77,16 +70,10 @@ class PipelineResult:
 class MultimodalContentPipeline:
     """Orchestrates multimodal content processing pipeline."""
 
-    def __init__(
-        self,
-        config: PipelineConfig | None = None,
-        kg_store: CreatorKGStore | None = None,
-    ):
+    def __init__(self, config: PipelineConfig | None = None, kg_store: CreatorKGStore | None = None):
         """Initialize pipeline with configuration and KG store."""
         self.config = config or PipelineConfig()
         self.kg_store = kg_store or CreatorKGStore(":memory:")
-
-        # Define pipeline stages
         self.stages = [
             PipelineStage(
                 name="download",
@@ -140,12 +127,7 @@ class MultimodalContentPipeline:
         ]
 
     async def process_content(
-        self,
-        url: str,
-        tenant: str,
-        workspace: str,
-        creator_name: str | None = None,
-        episode_title: str | None = None,
+        self, url: str, tenant: str, workspace: str, creator_name: str | None = None, episode_title: str | None = None
     ) -> StepResult:
         """Process content through the complete pipeline."""
         start_time = time.time()
@@ -160,36 +142,23 @@ class MultimodalContentPipeline:
             errors=[],
             warnings=[],
         )
-
         try:
             logger.info(f"Starting pipeline processing for URL: {url}")
-
-            # Validate inputs
             validation_result = await self._validate_inputs(url, tenant, workspace)
             if not validation_result.success:
                 result.errors.append(f"Input validation failed: {validation_result.error}")
                 return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
-
-            # Execute pipeline stages
             stage_results = await self._execute_stages(url, tenant, workspace, creator_name, episode_title, result)
-
-            # Set stage results in the pipeline result
             result.stage_results = stage_results
-
-            # Calculate final duration
             result.total_duration = time.time() - start_time
-
-            # Determine success
             required_stages = [stage.name for stage in self.stages if stage.required]
             result.success = all(stage in result.stages_completed for stage in required_stages)
-
             if result.success:
                 logger.info(f"Pipeline completed successfully in {result.total_duration:.2f}s")
                 return StepResult.ok(data=result)
             else:
                 logger.error(f"Pipeline failed after {result.total_duration:.2f}s")
                 return StepResult.fail(f"Pipeline failed: {', '.join(result.errors)}")
-
         except Exception as e:
             result.total_duration = time.time() - start_time
             result.errors.append(f"Pipeline exception: {e!s}")
@@ -199,24 +168,11 @@ class MultimodalContentPipeline:
     async def _validate_inputs(self, url: str, tenant: str, workspace: str) -> StepResult:
         """Validate pipeline inputs."""
         try:
-            # Validate URL format
             if not url or not url.startswith(("http://", "https://")):
                 return StepResult.fail("Invalid URL format")
-
-            # Validate tenant and workspace
             if not tenant or not workspace:
                 return StepResult.fail("Tenant and workspace are required")
-
-            # Check if URL is already processed (by checking for episodes with this URL in attrs)
-            # For now, skip this check in the mock implementation
-            # existing_episodes = self.kg_store.query_nodes(
-            #     tenant=tenant, type="episode", name=url
-            # )
-            # if existing_episodes:
-            #     return StepResult.fail("Content already processed")
-
             return StepResult.ok(data={"validated": True})
-
         except Exception as e:
             return StepResult.fail(f"Validation failed: {e!s}")
 
@@ -231,40 +187,24 @@ class MultimodalContentPipeline:
     ) -> dict[str, Any]:
         """Execute all pipeline stages."""
         stage_results = {}
-
         for stage in self.stages:
-            # Check if stage is enabled
             if not self._is_stage_enabled(stage.name):
                 logger.info(f"Skipping disabled stage: {stage.name}")
                 continue
-
-            # Check dependencies
             if not self._check_dependencies(stage, result.stages_completed):
                 result.errors.append(f"Stage {stage.name} dependencies not met")
                 result.stages_failed.append(stage.name)
                 continue
-
-            # Execute stage
             try:
                 logger.info(f"Executing stage: {stage.name}")
                 stage_start = time.time()
-
                 stage_result = await self._execute_stage(
-                    stage,
-                    url,
-                    tenant,
-                    workspace,
-                    creator_name,
-                    episode_title,
-                    stage_results,
+                    stage, url, tenant, workspace, creator_name, episode_title, stage_results
                 )
-
                 stage_duration = time.time() - stage_start
                 logger.info(f"Stage {stage.name} completed in {stage_duration:.2f}s")
-
                 if stage_result.success:
                     result.stages_completed.append(stage.name)
-                    # Extract the actual data from StepResult
                     actual_data = (
                         stage_result.data["data"]
                         if isinstance(stage_result.data, dict) and "data" in stage_result.data
@@ -275,20 +215,14 @@ class MultimodalContentPipeline:
                 else:
                     result.stages_failed.append(stage.name)
                     result.errors.append(f"Stage {stage.name} failed: {stage_result.error}")
-
-                    # If required stage failed, stop pipeline
                     if stage.required:
                         break
-
             except Exception as e:
                 result.stages_failed.append(stage.name)
                 result.errors.append(f"Stage {stage.name} exception: {e!s}")
                 logger.exception(f"Stage {stage.name} failed with exception")
-
-                # If required stage failed, stop pipeline
                 if stage.required:
                     break
-
         return stage_results
 
     def _is_stage_enabled(self, stage_name: str) -> bool:
@@ -310,51 +244,35 @@ class MultimodalContentPipeline:
         stage_results: dict[str, Any],
     ) -> StepResult:
         """Execute a specific pipeline stage."""
-
         if stage.name == "download":
             return await self._stage_download(url, tenant, workspace)
-
         elif stage.name == "diarization":
             return await self._stage_diarization(stage_results["download"], tenant, workspace)
-
         elif stage.name == "transcription":
             return await self._stage_transcription(stage_results["diarization"], tenant, workspace)
-
         elif stage.name == "visual_analysis":
             return await self._stage_visual_analysis(stage_results["download"], tenant, workspace)
-
         elif stage.name == "content_analysis":
             return await self._stage_content_analysis(
-                stage_results["transcription"],
-                stage_results.get("visual_analysis"),
-                tenant,
-                workspace,
+                stage_results["transcription"], stage_results.get("visual_analysis"), tenant, workspace
             )
-
         elif stage.name == "claim_extraction":
             return await self._stage_claim_extraction(stage_results["content_analysis"], tenant, workspace)
-
         elif stage.name == "kg_ingestion":
             return await self._stage_kg_ingestion(stage_results, url, tenant, workspace, creator_name, episode_title)
-
         else:
             return StepResult.fail(f"Unknown stage: {stage.name}")
 
     async def _stage_download(self, url: str, tenant: str, workspace: str) -> StepResult:
         """Download content from platform."""
         try:
-            # Mock implementation - in real system, this would use MultiPlatformDownloadTool
             logger.info(f"Downloading content from: {url}")
-
-            # Simulate download
             await asyncio.sleep(1)
-
-            # Mock download result
             download_result = {
                 "url": url,
                 "file_path": f"/tmp/downloaded_content_{int(time.time())}.mp4",
                 "format": "mp4",
-                "duration": 3600,  # 1 hour
+                "duration": 3600,
                 "file_size_mb": 250,
                 "platform": "youtube",
                 "title": "Sample Content",
@@ -364,9 +282,7 @@ class MultimodalContentPipeline:
                 "like_count": 5000,
                 "comment_count": 500,
             }
-
             return StepResult.ok(data=download_result)
-
         except Exception as e:
             return StepResult.fail(f"Download failed: {e!s}")
 
@@ -374,11 +290,7 @@ class MultimodalContentPipeline:
         """Perform speaker diarization."""
         try:
             logger.info("Performing speaker diarization")
-
-            # Simulate diarization
             await asyncio.sleep(2)
-
-            # Mock diarization result
             diarization_result = {
                 "speakers": [
                     {"id": "speaker_1", "name": "Host", "confidence": 0.9},
@@ -386,25 +298,13 @@ class MultimodalContentPipeline:
                 ],
                 "segments": [
                     {"start": 0, "end": 300, "speaker": "speaker_1", "confidence": 0.9},
-                    {
-                        "start": 300,
-                        "end": 600,
-                        "speaker": "speaker_2",
-                        "confidence": 0.8,
-                    },
-                    {
-                        "start": 600,
-                        "end": 900,
-                        "speaker": "speaker_1",
-                        "confidence": 0.9,
-                    },
+                    {"start": 300, "end": 600, "speaker": "speaker_2", "confidence": 0.8},
+                    {"start": 600, "end": 900, "speaker": "speaker_1", "confidence": 0.9},
                 ],
                 "total_speakers": 2,
                 "average_confidence": 0.85,
             }
-
             return StepResult.ok(data=diarization_result)
-
         except Exception as e:
             return StepResult.fail(f"Diarization failed: {e!s}")
 
@@ -412,11 +312,7 @@ class MultimodalContentPipeline:
         """Perform audio transcription."""
         try:
             logger.info("Performing audio transcription")
-
-            # Simulate transcription
             await asyncio.sleep(3)
-
-            # Mock transcription result
             transcription_result = {
                 "segments": [
                     {
@@ -446,9 +342,7 @@ class MultimodalContentPipeline:
                 "average_confidence": 0.87,
                 "word_count": 45,
             }
-
             return StepResult.ok(data=transcription_result)
-
         except Exception as e:
             return StepResult.fail(f"Transcription failed: {e!s}")
 
@@ -456,11 +350,7 @@ class MultimodalContentPipeline:
         """Perform visual content analysis."""
         try:
             logger.info("Performing visual analysis")
-
-            # Simulate visual analysis
             await asyncio.sleep(1.5)
-
-            # Mock visual analysis result
             visual_result = {
                 "frames_analyzed": 100,
                 "objects_detected": [
@@ -470,36 +360,21 @@ class MultimodalContentPipeline:
                 ],
                 "scenes": [
                     {"start": 0, "end": 1800, "type": "interview", "confidence": 0.9},
-                    {
-                        "start": 1800,
-                        "end": 3600,
-                        "type": "discussion",
-                        "confidence": 0.8,
-                    },
+                    {"start": 1800, "end": 3600, "type": "discussion", "confidence": 0.8},
                 ],
                 "average_confidence": 0.8,
             }
-
             return StepResult.ok(data=visual_result)
-
         except Exception as e:
             return StepResult.fail(f"Visual analysis failed: {e!s}")
 
     async def _stage_content_analysis(
-        self,
-        transcription_result: dict[str, Any],
-        visual_result: dict[str, Any] | None,
-        tenant: str,
-        workspace: str,
+        self, transcription_result: dict[str, Any], visual_result: dict[str, Any] | None, tenant: str, workspace: str
     ) -> StepResult:
         """Perform content analysis and topic extraction."""
         try:
             logger.info("Performing content analysis")
-
-            # Simulate content analysis
             await asyncio.sleep(1)
-
-            # Mock content analysis result
             content_result = {
                 "topics": [
                     {"name": "Politics", "confidence": 0.9, "mentions": 5},
@@ -510,37 +385,15 @@ class MultimodalContentPipeline:
                     "overall": "neutral",
                     "confidence": 0.8,
                     "by_segment": [
-                        {
-                            "start": 0,
-                            "end": 300,
-                            "sentiment": "positive",
-                            "confidence": 0.7,
-                        },
-                        {
-                            "start": 300,
-                            "end": 600,
-                            "sentiment": "neutral",
-                            "confidence": 0.8,
-                        },
-                        {
-                            "start": 600,
-                            "end": 900,
-                            "sentiment": "neutral",
-                            "confidence": 0.9,
-                        },
+                        {"start": 0, "end": 300, "sentiment": "positive", "confidence": 0.7},
+                        {"start": 300, "end": 600, "sentiment": "neutral", "confidence": 0.8},
+                        {"start": 600, "end": 900, "sentiment": "neutral", "confidence": 0.9},
                     ],
                 },
-                "key_phrases": [
-                    "politics",
-                    "current events",
-                    "election results",
-                    "political climate",
-                ],
+                "key_phrases": ["politics", "current events", "election results", "political climate"],
                 "summary": "Discussion about politics and current events, focusing on recent election results and the political climate.",
             }
-
             return StepResult.ok(data=content_result)
-
         except Exception as e:
             return StepResult.fail(f"Content analysis failed: {e!s}")
 
@@ -548,11 +401,7 @@ class MultimodalContentPipeline:
         """Extract and validate claims."""
         try:
             logger.info("Extracting claims")
-
-            # Simulate claim extraction
             await asyncio.sleep(0.75)
-
-            # Mock claim extraction result
             claims_result = {
                 "claims": [
                     {
@@ -591,9 +440,7 @@ class MultimodalContentPipeline:
                     }
                 ],
             }
-
             return StepResult.ok(data=claims_result)
-
         except Exception as e:
             return StepResult.fail(f"Claim extraction failed: {e!s}")
 
@@ -609,11 +456,7 @@ class MultimodalContentPipeline:
         """Ingest results into knowledge graph."""
         try:
             logger.info("Ingesting results into knowledge graph")
-
-            # Simulate KG ingestion
             await asyncio.sleep(0.5)
-
-            # Create episode node
             download_result = stage_results["download"]
             episode_id = self.kg_store.add_creator_node(
                 tenant=tenant,
@@ -630,26 +473,16 @@ class MultimodalContentPipeline:
                     "url": url,
                 },
             )
-
-            # Create creator node if provided
             creator_id = None
             if creator_name:
                 creator_id = self.kg_store.add_creator_node(
                     tenant=tenant,
                     node_type="creator",
                     name=creator_name,
-                    attrs={
-                        "platform": download_result["platform"],
-                        "channel_id": "unknown",
-                        "subscriber_count": 0,
-                    },
+                    attrs={"platform": download_result["platform"], "channel_id": "unknown", "subscriber_count": 0},
                 )
-
-                # Create hosts edge
                 if creator_id:
                     self.kg_store.add_creator_edge(creator_id, episode_id, "hosts")
-
-            # Create topic nodes
             content_result = stage_results["content_analysis"]
             topic_ids = []
             for topic in content_result["topics"]:
@@ -665,11 +498,7 @@ class MultimodalContentPipeline:
                     },
                 )
                 topic_ids.append(topic_id)
-
-                # Create discusses edge
                 self.kg_store.add_creator_edge(episode_id, topic_id, "discusses")
-
-            # Create claim nodes
             claims_result = stage_results["claim_extraction"]
             claim_ids = []
             for claim in claims_result["claims"]:
@@ -686,12 +515,8 @@ class MultimodalContentPipeline:
                     },
                 )
                 claim_ids.append(claim_id)
-
-                # Create makes_claim edge
                 if creator_id:
                     self.kg_store.add_creator_edge(creator_id, claim_id, "makes_claim")
-
-            # Create highlight nodes
             highlight_ids = []
             for highlight in claims_result["highlights"]:
                 highlight_id = self.kg_store.add_creator_node(
@@ -707,10 +532,7 @@ class MultimodalContentPipeline:
                     },
                 )
                 highlight_ids.append(highlight_id)
-
-                # Create contains_highlight edge
                 self.kg_store.add_creator_edge(episode_id, highlight_id, "contains_highlight")
-
             ingestion_result = {
                 "episode_id": episode_id,
                 "creator_id": creator_id,
@@ -724,9 +546,7 @@ class MultimodalContentPipeline:
                 + (1 if creator_id else 0),
                 "total_edges_created": len(topic_ids) + len(claim_ids) + len(highlight_ids) + (1 if creator_id else 0),
             }
-
             return StepResult.ok(data=ingestion_result)
-
         except Exception as e:
             return StepResult.fail(f"KG ingestion failed: {e!s}")
 

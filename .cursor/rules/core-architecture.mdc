@@ -4,14 +4,14 @@ description: Core architecture patterns and mandatory StepResult/tenancy/type hi
 ---
 ### Core Architecture
 
-- Main entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
-- Crew config: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
-- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
-- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
+- Main entry: [main.py](mdc:src/app/main.py)
+- Crew config: [crew_executor.py](mdc:src/app/crew_executor.py)
+- Agents: [config/agents.yaml](mdc:src/app/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/app/config/tasks.yaml)
 
 ### Mandatory Patterns
 
-- StepResult everywhere: [step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py)
+- StepResult everywhere: [step_result.py](mdc:src/platform/core/step_result.py)
 
 ```python
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -25,27 +25,28 @@ def my_tool_function() -> StepResult:
 ```
 
 - Type hints (required) for all public APIs
-- Tenant-aware design using [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py); pass `(tenant, workspace)`
+- Tenant-aware design using [tenancy/context.py](mdc:src/app/tenancy/context.py); pass `(tenant, workspace)`
 
 ### Pipeline
 
-- Content flow: [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py)
+- Content flow: [pipeline.py](mdc:src/app/pipeline.py)
   - Multi-Platform → Download → Transcription → Analysis → Discord
 
 ### Services
 
-- Prompting: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
-- Memory: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py)
-- LLM routing: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
+- Prompting: [prompts/engine/](mdc:src/platform/prompts/engine/)
+- Memory: [domains/memory/](mdc:src/domains/memory/)
+- LLM routing: [llm/providers/](mdc:src/platform/llm/providers/)
 
 ### Tools
 
 - Inherit from [tools/_base.py](mdc:src/ultimate_discord_intelligence_bot/tools/_base.py)
-- One tool per file under `tools/`, return `StepResult`
+- Domain tools in [domains/intelligence/](mdc:src/domains/intelligence/), [domains/ingestion/](mdc:src/domains/ingestion/), [domains/memory/](mdc:src/domains/memory/)
+- One tool per file under `tools/` or domain directories, return `StepResult`
 
 ### Configuration
 
-- Global settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
+- Global settings: [config/settings.py](mdc:src/app/config/settings.py)
 - Feature flags: `ENABLE_<AREA>_<FEATURE>`; document updates in [docs/configuration.md](mdc:docs/configuration.md)
 
 ### Do / Don't

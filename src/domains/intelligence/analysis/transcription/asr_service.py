@@ -17,14 +17,16 @@ Features:
 """
 
 from __future__ import annotations
+
 import hashlib
 import logging
 import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -265,7 +267,7 @@ class ASRService:
             transcription_segments.append(seg)
             full_text += segment.text + " "
         avg_confidence = (
-            sum((s.confidence for s in transcription_segments)) / len(transcription_segments)
+            sum(s.confidence for s in transcription_segments) / len(transcription_segments)
             if transcription_segments
             else 0.0
         )

@@ -12,9 +12,8 @@ from dataclasses import dataclass
 from enum import Enum
 from platform.core.step_result import StepResult
 from platform.observability.metrics import get_metrics
+from platform.rl.thompson_sampling import ThompsonSamplingBandit
 from typing import Any
-
-from core.rl.thompson_sampling import ThompsonSamplingBandit
 
 from .llm_provider_registry import ModelInfo, get_provider_allowlist_from_config, list_models
 

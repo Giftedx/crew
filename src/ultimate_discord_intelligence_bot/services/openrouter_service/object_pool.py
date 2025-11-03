@@ -5,12 +5,15 @@ allocation overhead and improve performance for frequently created objects.
 """
 
 from __future__ import annotations
+
 import logging
 import threading
 import time
 from collections import deque
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+
+from app.config.feature_flags import FeatureFlags
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

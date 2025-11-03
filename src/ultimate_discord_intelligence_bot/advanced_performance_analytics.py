@@ -8,9 +8,7 @@ maintainable without breaking imports.
 
 from __future__ import annotations
 
-from core.time import (
-    default_utc_now,
-)  # ensure utc timestamps usage is visible in this facade
+from platform.time import default_utc_now
 
 from .advanced_performance_analytics_impl.engine import (
     AdvancedPerformanceAnalytics,
@@ -34,6 +32,4 @@ __all__ = [
     "generate_optimization_report",
     "run_comprehensive_analytics",
 ]
-
-# Ensure at least one reference to default_utc_now so tests confirm UTC-safe usage
 _ANALYTICS_FACADE_INIT_TS = default_utc_now()

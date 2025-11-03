@@ -1,13 +1,16 @@
 """Offline evaluation harness for golden datasets."""
 
 from __future__ import annotations
+
 import argparse
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
 import jsonschema
 import yaml
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,7 +37,7 @@ def score_must_include(output: str, expected: dict[str, Any]) -> StepResult:
     phrases = expected.get("must_include", [])
     if not phrases:
         return 1.0
-    hits = sum((1 for p in phrases if p.lower() in output.lower()))
+    hits = sum(1 for p in phrases if p.lower() in output.lower())
     return hits / len(phrases)
 
 
@@ -42,13 +45,13 @@ def score_must_link(output: str, expected: dict[str, Any]) -> StepResult:
     links = expected.get("must_link", [])
     if not links:
         return 1.0
-    hits = sum((1 for link in links if link in output))
+    hits = sum(1 for link in links if link in output)
     return hits / len(links)
 
 
 def score_forbidden(output: str, expected: dict[str, Any]) -> StepResult:
     bad = expected.get("forbidden", [])
-    return 1.0 if all((b.lower() not in output.lower() for b in bad)) else 0.0
+    return 1.0 if all(b.lower() not in output.lower() for b in bad) else 0.0
 
 
 def score_coverage(output: str, expected: dict[str, Any]) -> StepResult:
@@ -62,7 +65,7 @@ def score_grounded(output: str, record: dict[str, Any]) -> StepResult:
     refs = record.get("input", {}).get("context_refs", [])
     if not refs:
         return 1.0
-    hits = sum((1 for r in refs if r.get("id") and r["id"] in output))
+    hits = sum(1 for r in refs if r.get("id") and r["id"] in output)
     return hits / len(refs)
 
 
@@ -97,9 +100,9 @@ def run_dataset(dataset_path: Path, runner: Callable[[dict[str, Any]], dict[str,
             )
         )
     if samples:
-        quality_avg = sum((s.quality for s in samples)) / len(samples)
-        cost_sum = sum((s.cost_usd for s in samples))
-        latency_avg = sum((s.latency_ms for s in samples)) / len(samples)
+        quality_avg = sum(s.quality for s in samples) / len(samples)
+        cost_sum = sum(s.cost_usd for s in samples)
+        latency_avg = sum(s.latency_ms for s in samples) / len(samples)
     else:
         quality_avg = cost_sum = latency_avg = 0.0
     aggregates = {"quality": quality_avg, "cost_usd": cost_sum, "latency_ms": latency_avg, "lambda": 0.0, "mu": 0.0}

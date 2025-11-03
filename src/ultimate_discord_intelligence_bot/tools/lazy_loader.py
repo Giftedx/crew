@@ -5,9 +5,10 @@ startup time and memory usage by only loading tools when they are actually neede
 """
 
 from __future__ import annotations
+
 import time
-from functools import lru_cache
 from typing import Any
+
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

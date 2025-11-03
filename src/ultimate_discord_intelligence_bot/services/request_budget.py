@@ -25,10 +25,12 @@ Design Notes
 """
 
 from __future__ import annotations
+
 import threading
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

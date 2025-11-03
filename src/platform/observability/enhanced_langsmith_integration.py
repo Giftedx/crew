@@ -10,9 +10,9 @@ import logging
 import time
 import uuid
 from platform.config.configuration import get_config
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
-from core.time import default_utc_now
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

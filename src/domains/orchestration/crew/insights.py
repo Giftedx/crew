@@ -5,8 +5,11 @@ and provides utilities for extracting insights from crew execution results.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 import structlog
+
 
 if TYPE_CHECKING:
     from domains.orchestration.crew.interfaces import CrewExecutionResult

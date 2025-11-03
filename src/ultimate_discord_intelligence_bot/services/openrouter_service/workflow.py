@@ -1,10 +1,12 @@
 """High-level orchestration for OpenRouterService routing."""
 
 from __future__ import annotations
+
 import logging
 import time
-from typing import TYPE_CHECKING, Any
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 
 try:
     from ..prompt_compression_tool import PromptCompressionTool
@@ -15,6 +17,7 @@ from .cache_layer import check_caches
 from .context import prepare_route_state
 from .execution import execute_offline, execute_online, handle_failure
 from .service import get_settings
+
 
 if TYPE_CHECKING:
     from .service import OpenRouterService

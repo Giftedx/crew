@@ -1,10 +1,14 @@
 """Integration tests for the core content pipeline workflow."""
+
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-import pytest
-from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from platform.core.step_result import StepResult
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
+
 
 class TestContentPipelineIntegration:
     """Integration tests for the core content pipeline."""
@@ -13,37 +17,111 @@ class TestContentPipelineIntegration:
     def mock_services(self):
         """Create mock services for testing."""
         downloader = MagicMock()
-        downloader.run = AsyncMock(return_value=StepResult.ok(data={'local_path': '/tmp/test_video.mp4', 'title': 'Test Video', 'platform': 'youtube', 'video_id': 'test123', 'duration': 120.0, 'file_size': 1024000}))
+        downloader.run = AsyncMock(
+            return_value=StepResult.ok(
+                data={
+                    "local_path": "/tmp/test_video.mp4",
+                    "title": "Test Video",
+                    "platform": "youtube",
+                    "video_id": "test123",
+                    "duration": 120.0,
+                    "file_size": 1024000,
+                }
+            )
+        )
         transcriber = MagicMock()
-        transcriber.run = AsyncMock(return_value=StepResult.ok(data={'transcript': 'This is a test transcript about artificial intelligence and machine learning.', 'confidence': 0.95, 'segments': [{'start': 0.0, 'end': 5.0, 'text': 'This is a test transcript'}, {'start': 5.0, 'end': 10.0, 'text': 'about artificial intelligence and machine learning'}]}))
+        transcriber.run = AsyncMock(
+            return_value=StepResult.ok(
+                data={
+                    "transcript": "This is a test transcript about artificial intelligence and machine learning.",
+                    "confidence": 0.95,
+                    "segments": [
+                        {"start": 0.0, "end": 5.0, "text": "This is a test transcript"},
+                        {"start": 5.0, "end": 10.0, "text": "about artificial intelligence and machine learning"},
+                    ],
+                }
+            )
+        )
         analyzer = MagicMock()
-        analyzer.run = AsyncMock(return_value=StepResult.ok(data={'sentiment': {'overall': 'positive', 'score': 0.8}, 'keywords': ['artificial intelligence', 'machine learning', 'technology'], 'themes': ['AI', 'Technology', 'Innovation'], 'summary': 'Discussion about AI and machine learning technologies'}))
+        analyzer.run = AsyncMock(
+            return_value=StepResult.ok(
+                data={
+                    "sentiment": {"overall": "positive", "score": 0.8},
+                    "keywords": ["artificial intelligence", "machine learning", "technology"],
+                    "themes": ["AI", "Technology", "Innovation"],
+                    "summary": "Discussion about AI and machine learning technologies",
+                }
+            )
+        )
         fallacy_detector = MagicMock()
-        fallacy_detector.run = AsyncMock(return_value=StepResult.ok(data={'fallacies': [], 'logical_consistency': 0.9, 'argument_quality': 'high'}))
+        fallacy_detector.run = AsyncMock(
+            return_value=StepResult.ok(data={"fallacies": [], "logical_consistency": 0.9, "argument_quality": "high"})
+        )
         perspective = MagicMock()
-        perspective.run = AsyncMock(return_value=StepResult.ok(data={'summary': 'Comprehensive analysis of AI technologies', 'perspectives': ['technical', 'business', 'ethical'], 'bias_indicators': []}))
+        perspective.run = AsyncMock(
+            return_value=StepResult.ok(
+                data={
+                    "summary": "Comprehensive analysis of AI technologies",
+                    "perspectives": ["technical", "business", "ethical"],
+                    "bias_indicators": [],
+                }
+            )
+        )
         memory = MagicMock()
-        memory.run = AsyncMock(return_value=StepResult.ok(data={'memory_id': 'mem_123', 'stored': True, 'vector_count': 5}))
+        memory.run = AsyncMock(
+            return_value=StepResult.ok(data={"memory_id": "mem_123", "stored": True, "vector_count": 5})
+        )
         drive = MagicMock()
-        drive.run = AsyncMock(return_value=StepResult.ok(data={'links': {'preview_link': 'https://drive.google.com/preview/123', 'download_link': 'https://drive.google.com/download/123'}, 'file_id': 'drive_123'}))
+        drive.run = AsyncMock(
+            return_value=StepResult.ok(
+                data={
+                    "links": {
+                        "preview_link": "https://drive.google.com/preview/123",
+                        "download_link": "https://drive.google.com/download/123",
+                    },
+                    "file_id": "drive_123",
+                }
+            )
+        )
         discord = MagicMock()
-        discord.run = AsyncMock(return_value=StepResult.ok(data={'message_id': 'discord_123', 'posted': True, 'channel': 'test_channel'}))
-        return {'downloader': downloader, 'transcriber': transcriber, 'analyzer': analyzer, 'fallacy_detector': fallacy_detector, 'perspective': perspective, 'memory': memory, 'drive': drive, 'discord': discord}
+        discord.run = AsyncMock(
+            return_value=StepResult.ok(data={"message_id": "discord_123", "posted": True, "channel": "test_channel"})
+        )
+        return {
+            "downloader": downloader,
+            "transcriber": transcriber,
+            "analyzer": analyzer,
+            "fallacy_detector": fallacy_detector,
+            "perspective": perspective,
+            "memory": memory,
+            "drive": drive,
+            "discord": discord,
+        }
 
     @pytest.fixture
     def pipeline(self, mock_services):
         """Create a ContentPipeline instance with mocked services."""
-        return ContentPipeline(webhook_url='https://discord.com/api/webhooks/test', downloader=mock_services['downloader'], transcriber=mock_services['transcriber'], analyzer=mock_services['analyzer'], fallacy_detector=mock_services['fallacy_detector'], perspective=mock_services['perspective'], memory=mock_services['memory'], drive=mock_services['drive'], discord=mock_services['discord'])
+        return ContentPipeline(
+            webhook_url="https://discord.com/api/webhooks/test",
+            downloader=mock_services["downloader"],
+            transcriber=mock_services["transcriber"],
+            analyzer=mock_services["analyzer"],
+            fallacy_detector=mock_services["fallacy_detector"],
+            perspective=mock_services["perspective"],
+            memory=mock_services["memory"],
+            drive=mock_services["drive"],
+            discord=mock_services["discord"],
+        )
 
     @pytest.mark.asyncio
     async def test_full_pipeline_workflow(self, pipeline):
         """Test the complete content pipeline workflow."""
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert result is not None
-        assert hasattr(result, 'success')
-        assert hasattr(result, 'data')
+        assert hasattr(result, "success")
+        assert hasattr(result, "data")
         pipeline.downloader.run.assert_called_once()
         pipeline.transcriber.run.assert_called_once()
         pipeline.analyzer.run.assert_called_once()
@@ -56,9 +134,9 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_with_download_failure(self, pipeline):
         """Test pipeline behavior when download fails."""
-        pipeline.downloader.run = AsyncMock(return_value=StepResult.fail('Download failed'))
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        pipeline.downloader.run = AsyncMock(return_value=StepResult.fail("Download failed"))
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert not result.success
         pipeline.transcriber.run.assert_not_called()
@@ -67,9 +145,9 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_with_transcription_failure(self, pipeline):
         """Test pipeline behavior when transcription fails."""
-        pipeline.transcriber.run = AsyncMock(return_value=StepResult.fail('Transcription failed'))
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        pipeline.transcriber.run = AsyncMock(return_value=StepResult.fail("Transcription failed"))
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert not result.success
         pipeline.analyzer.run.assert_not_called()
@@ -78,9 +156,9 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_with_analysis_failure(self, pipeline):
         """Test pipeline behavior when analysis fails."""
-        pipeline.analyzer.run = AsyncMock(return_value=StepResult.fail('Analysis failed'))
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        pipeline.analyzer.run = AsyncMock(return_value=StepResult.fail("Analysis failed"))
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert not result.success
         pipeline.memory.run.assert_not_called()
@@ -89,40 +167,40 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_with_memory_failure(self, pipeline):
         """Test pipeline behavior when memory storage fails."""
-        pipeline.memory.run = AsyncMock(return_value=StepResult.fail('Memory storage failed'))
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        pipeline.memory.run = AsyncMock(return_value=StepResult.fail("Memory storage failed"))
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert result.success
 
     @pytest.mark.asyncio
     async def test_pipeline_with_discord_failure(self, pipeline):
         """Test pipeline behavior when Discord posting fails."""
-        pipeline.discord.run = AsyncMock(return_value=StepResult.fail('Discord posting failed'))
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        pipeline.discord.run = AsyncMock(return_value=StepResult.fail("Discord posting failed"))
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert result.success
 
     @pytest.mark.asyncio
     async def test_pipeline_data_flow(self, pipeline):
         """Test that data flows correctly between pipeline stages."""
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         result = await pipeline.process_video(url, quality)
         assert result.success
         download_call = pipeline.downloader.run.call_args
         assert download_call[0][0] == url
         transcribe_call = pipeline.transcriber.run.call_args
-        assert 'local_path' in transcribe_call[0][0]
+        assert "local_path" in transcribe_call[0][0]
 
     @pytest.mark.asyncio
     async def test_pipeline_with_different_qualities(self, pipeline):
         """Test pipeline with different quality settings."""
-        url = 'https://youtube.com/watch?v=test123'
-        for quality in ['720p', '1080p', '1440p']:
+        url = "https://youtube.com/watch?v=test123"
+        for quality in ["720p", "1080p", "1440p"]:
             for service in pipeline.__dict__.values():
-                if hasattr(service, 'run'):
+                if hasattr(service, "run"):
                     service.run.reset_mock()
             result = await pipeline.process_video(url, quality)
             assert result.success
@@ -130,27 +208,31 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_performance_metrics(self, pipeline):
         """Test that pipeline tracks performance metrics."""
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
-        with patch('time.monotonic', side_effect=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
+        with patch("time.monotonic", side_effect=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]):
             result = await pipeline.process_video(url, quality)
         assert result.success
 
     @pytest.mark.asyncio
     async def test_pipeline_with_tenant_context(self, pipeline):
         """Test pipeline with tenant context."""
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
-        with patch('ultimate_discord_intelligence_bot.tenancy.current_tenant') as mock_tenant:
-            mock_tenant.return_value = TenantContext(tenant='test_tenant', workspace='test_workspace')
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
+        with patch("ultimate_discord_intelligence_bot.tenancy.current_tenant") as mock_tenant:
+            mock_tenant.return_value = TenantContext(tenant="test_tenant", workspace="test_workspace")
             result = await pipeline.process_video(url, quality)
             assert result.success
 
     @pytest.mark.asyncio
     async def test_pipeline_concurrent_execution(self, pipeline):
         """Test pipeline with concurrent execution."""
-        urls = ['https://youtube.com/watch?v=test1', 'https://youtube.com/watch?v=test2', 'https://youtube.com/watch?v=test3']
-        tasks = [pipeline.process_video(url, '1080p') for url in urls]
+        urls = [
+            "https://youtube.com/watch?v=test1",
+            "https://youtube.com/watch?v=test2",
+            "https://youtube.com/watch?v=test3",
+        ]
+        tasks = [pipeline.process_video(url, "1080p") for url in urls]
         results = await asyncio.gather(*tasks)
         for result in results:
             assert result.success
@@ -158,17 +240,18 @@ class TestContentPipelineIntegration:
     @pytest.mark.asyncio
     async def test_pipeline_error_recovery(self, pipeline):
         """Test pipeline error recovery mechanisms."""
-        url = 'https://youtube.com/watch?v=test123'
-        quality = '1080p'
+        url = "https://youtube.com/watch?v=test123"
+        quality = "1080p"
         call_count = 0
 
         async def mock_transcriber(*args, **kwargs):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                return StepResult.fail('Transcription failed')
+                return StepResult.fail("Transcription failed")
             else:
-                return StepResult.ok(data={'transcript': 'Recovered transcript', 'confidence': 0.9})
+                return StepResult.ok(data={"transcript": "Recovered transcript", "confidence": 0.9})
+
         pipeline.transcriber.run = mock_transcriber
         result = await pipeline.process_video(url, quality)
         assert result is not None

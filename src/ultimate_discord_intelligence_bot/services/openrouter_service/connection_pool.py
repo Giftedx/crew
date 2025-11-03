@@ -8,13 +8,17 @@ http_utils wrappers, which is compliant with HTTP wrapper policy.
 """
 
 from __future__ import annotations
+
 import logging
 import threading
-from typing import Any
-import requests
-from core import http_utils
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+from platform import http_utils
 from platform.observability.metrics import get_metrics
+from typing import Any
+
+import requests
+
+from app.config.feature_flags import FeatureFlags
+
 
 log = logging.getLogger(__name__)
 

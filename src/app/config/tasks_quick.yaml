@@ -1,0 +1,25 @@
+# Quick Depth Tasks - Minimal Processing
+#
+# Use case: Fast preview analysis for time-sensitive content
+# Tasks: Download → Transcribe (2 tasks only)
+# Processing time: ~30-60 seconds
+
+capture_source_media:
+  description: >-
+    Quickly resolve and download media for {url} using fastest available quality settings.
+  expected_output: Basic download manifest with file paths and formats.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/quick_download_{url_hash}.json
+
+transcribe_and_index_media:
+  description: >-
+    Generate basic transcript without deep indexing or quality enhancements.
+  expected_output: Raw transcript with minimal metadata.
+  agent: transcription_engineer
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: false
+  output_file: output/quick_transcript_{url_hash}.json

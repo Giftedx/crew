@@ -1,17 +1,21 @@
-import pytest
-from graphs.langgraph_pilot import run_ingest_analysis_pilot
 from platform.observability import metrics
 
+import pytest
+
+from graphs.langgraph_pilot import run_ingest_analysis_pilot
+
+
 def test_pilot_inflight_metric_present(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv('ENABLE_LANGGRAPH_PILOT', '1')
+    monkeypatch.setenv("ENABLE_LANGGRAPH_PILOT", "1")
     metrics.reset()
 
     def _ingest(job: dict):
-        return {'ok': True}
+        return {"ok": True}
 
     def _analyze(ctx: dict):
-        return {'analysis': 1}
+        return {"analysis": 1}
+
     out = run_ingest_analysis_pilot({}, _ingest, _analyze)
-    assert out['analysis']['analysis'] == 1
-    rendered = metrics.render().decode('utf-8') if metrics.PROMETHEUS_AVAILABLE else ''
-    assert 'pipeline_inflight' in rendered or not metrics.PROMETHEUS_AVAILABLE
+    assert out["analysis"]["analysis"] == 1
+    rendered = metrics.render().decode("utf-8") if metrics.PROMETHEUS_AVAILABLE else ""
+    assert "pipeline_inflight" in rendered or not metrics.PROMETHEUS_AVAILABLE

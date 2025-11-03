@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import contextlib
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Any, Literal
 from platform.observability.metrics import get_metrics
+from typing import Any, Literal
+
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
+
 
 MessageType = Literal["note", "ask", "answer", "evidence", "warning"]
 

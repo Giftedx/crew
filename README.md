@@ -22,6 +22,30 @@ The Ultimate Discord Intelligence Bot is a sophisticated multi-agent system that
 
 ## 🏗️ Architecture
 
+### 3-Layer Architecture
+
+The Ultimate Discord Intelligence Bot uses a clean 3-layer architecture:
+
+1. **Platform Layer** (`src/platform/`): Infrastructure and foundational services
+   - Core protocols (`core/step_result.py`)
+   - HTTP utilities, caching, resilience (`http/`, `cache/`)
+   - LLM providers and routing (`llm/`)
+   - Reinforcement learning (`rl/`)
+   - Observability (`observability/`)
+   - Security and privacy (`security/`)
+
+2. **Domain Layer** (`src/domains/`): Business logic and domain-specific functionality
+   - Orchestration: CrewAI agents, tasks, and crew management
+   - Ingestion: Multi-platform content ingestion and providers
+   - Intelligence: Analysis, verification, and content processing
+   - Memory: Vector storage, graph memory, and continual learning
+
+3. **App Layer** (`src/app/`): Application-specific code
+   - Discord bot integration (`discord/`)
+   - Crew execution (`crew_executor.py`)
+   - Application configuration (`config/`)
+   - Entry point (`main.py`)
+
 ### Core Components
 
 - **CrewAI Framework**: Orchestrates 20+ specialized agents
@@ -131,7 +155,7 @@ For detailed documentation, see [OpenAI Integration Features](docs/openai_integr
 5. **Run the bot**
 
    ```bash
-   python -m ultimate_discord_intelligence_bot.main
+   python -m app.main
    ```
 
 ## ⚙️ Configuration
@@ -250,7 +274,7 @@ RATE_LIMIT_BURST_SIZE=10
 #### Content Analysis
 
 ```python
-from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
+from app.crew_executor import UltimateDiscordIntelligenceBotCrew
 
 crew = UltimateDiscordIntelligenceBotCrew()
 result = crew.crew().kickoff(inputs={"url": "https://youtube.com/watch?v=example"})
@@ -383,15 +407,43 @@ kubectl get pods -l app=discord-intelligence-bot
 ### Project Structure
 
 ```text
-src/ultimate_discord_intelligence_bot/
-├── main.py                 # Application entry point
-├── crew.py                 # CrewAI crew definition
-├── settings.py             # Global configuration
-├── step_result.py          # Standard result format
-├── tools/                  # CrewAI tools (123+ tools)
-├── services/               # Core services
-├── tenancy/                # Multi-tenancy support
-└── config/                 # YAML configurations
+src/
+├── platform/               # Platform layer: Infrastructure & foundational services
+│   ├── core/               # Core protocols (StepResult, etc.)
+│   ├── http/               # HTTP utilities, resilience, circuit breakers
+│   ├── cache/               # Caching infrastructure
+│   ├── llm/                 # LLM providers, routing, structured outputs
+│   ├── rl/                  # Reinforcement learning & bandits
+│   ├── observability/       # Metrics, tracing, logging
+│   ├── security/            # Security, privacy, rate limiting
+│   ├── prompts/             # Prompt engineering (DSPy)
+│   └── rag/                 # RAG capabilities (LlamaIndex)
+│
+├── domains/                # Domain layer: Business logic
+│   ├── orchestration/       # CrewAI agents, tasks, crew
+│   │   ├── crewai/          # CrewAI-specific components
+│   │   └── legacy/          # Legacy orchestration code
+│   ├── ingestion/           # Multi-platform content ingestion
+│   │   ├── pipeline/        # Ingestion pipeline
+│   │   └── providers/       # Platform-specific providers
+│   ├── intelligence/        # Analysis & verification
+│   │   ├── analysis/        # Content analysis tools
+│   │   └── verification/    # Fact-checking & verification
+│   └── memory/              # Memory systems
+│       ├── vector/           # Vector storage (Qdrant)
+│       ├── graph/            # Graph memory
+│       └── continual/        # Continual learning (Mem0, HippoRAG)
+│
+└── app/                     # App layer: Application-specific code
+    ├── main.py              # Application entry point
+    ├── crew_executor.py     # CrewAI crew execution
+    ├── discord/              # Discord bot integration
+    │   ├── bot.py            # Bot implementation
+    │   ├── commands/         # Discord commands
+    │   └── events/           # Event handlers
+    └── config/               # Application configuration
+        ├── settings.py        # Global settings
+        └── agents.yaml        # Agent definitions
 ```
 
 ### Adding New Tools

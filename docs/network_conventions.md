@@ -5,7 +5,7 @@ and testability.
 
 ## URL Validation
 
-Use `src/ultimate_discord_intelligence_bot/core/http_utils.py:validate_public_https_url(url)` to ensure:
+Use `platform.http.http_utils:validate_public_https_url(url)` to ensure:
 
 - HTTPS scheme is enforced.
 - Host is present.
@@ -15,7 +15,7 @@ Rationale: Prevent accidental posting to insecure or internal addresses.
 
 ## Resilient POST Requests
 
-`src/ultimate_discord_intelligence_bot/core/http_utils.py:resilient_post` wraps `requests.post` adding:
+`platform.http.http_utils:resilient_post` wraps `requests.post` adding:
 
 - Standard timeout (`REQUEST_TIMEOUT_SECONDS`).
 - Optional fallback for legacy / monkeypatched test doubles that omit the
@@ -38,7 +38,7 @@ resilient_post(
 
 ## Resilient GET Requests & Streaming
 
-`src/ultimate_discord_intelligence_bot/core/http_utils.py:resilient_get` mirrors the POST helper (lazy binding + legacy
+`platform.http.http_utils:resilient_get` mirrors the POST helper (lazy binding + legacy
 TypeError fallback) and adds optional streaming support for large downloads
 like Discord CDN attachments. Pass `stream=True` and iterate over
 `response.iter_content(chunk_size=...)` to process data incrementally.
@@ -53,7 +53,7 @@ Guidelines:
 
 ## Retry & Backoff (Feature-Flagged)
 
-Use `src/ultimate_discord_intelligence_bot/core/http_utils.py:http_request_with_retry` for transient failures (5xx, 429, selected network
+Use `platform.http.http_utils:http_request_with_retry` for transient failures (5xx, 429, selected network
 errors). Enable globally via `ENABLE_HTTP_RETRY=1`. The deprecated legacy flag
 `ENABLE_ANALYSIS_HTTP_RETRY` remains supported until 2025‑12‑31; the unified flag
 takes precedence when both are set.
@@ -61,7 +61,7 @@ takes precedence when both are set.
 Example wrapping a GET:
 
 ```python
-from ultimate_discord_intelligence_bot.core.http_utils import http_request_with_retry, resilient_get, REQUEST_TIMEOUT_SECONDS
+from platform.http.http_utils import http_request_with_retry, resilient_get, REQUEST_TIMEOUT_SECONDS
 
 resp = http_request_with_retry(
     "GET",
@@ -76,7 +76,7 @@ resp = http_request_with_retry(
 When integrating into a higher-level service (e.g. model gateway) keep original helper usage so semantics remain identical when the flag is off:
 
 ```python
-from ultimate_discord_intelligence_bot.core.http_utils import (
+from platform.http.http_utils import (
     REQUEST_TIMEOUT_SECONDS,
     resilient_post,
     http_request_with_retry,

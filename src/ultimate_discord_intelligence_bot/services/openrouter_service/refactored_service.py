@@ -5,12 +5,14 @@ by breaking down the monolithic route method into focused, composable components
 """
 
 from __future__ import annotations
+
 import copy
 import logging
-from typing import TYPE_CHECKING, Any
-from core.learning_engine import LearningEngine
 from platform.config.configuration import get_config
 from platform.core.step_result import StepResult
+from platform.rl.learning_engine import LearningEngine
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
@@ -26,6 +28,7 @@ from .route_components import (
     RouteResult,
     TenantResolver,
 )
+
 
 log = logging.getLogger(__name__)
 
@@ -255,9 +258,9 @@ class RefactoredOpenRouterService:
 
         def _sig(obj: Any) -> str:
             if isinstance(obj, dict):
-                return "{" + ",".join((f"{k}:{_sig(obj[k])}" for k in sorted(obj))) + "}"
+                return "{" + ",".join(f"{k}:{_sig(obj[k])}" for k in sorted(obj)) + "}"
             if isinstance(obj, list):
-                return "[" + ",".join((_sig(x) for x in obj)) + "]"
+                return "[" + ",".join(_sig(x) for x in obj) + "]"
             return str(obj)
 
         provider_sig = _sig(provider) if provider else "{}"

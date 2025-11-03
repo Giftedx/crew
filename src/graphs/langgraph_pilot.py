@@ -5,12 +5,14 @@ langgraph at runtime when the flag is off or the library isn't installed.
 """
 
 from __future__ import annotations
+
 import os
 import time
 from contextlib import nullcontext, suppress
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
 from platform.observability import metrics, tracing
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

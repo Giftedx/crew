@@ -17,11 +17,13 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -207,7 +209,7 @@ class ClaimQuoteExtractionService:
                         all_quotes.append(quote)
             total_items = len(all_claims) + len(all_quotes)
             avg_confidence = (
-                (sum((c["confidence"] for c in all_claims)) + sum((q["confidence"] for q in all_quotes))) / total_items
+                (sum(c["confidence"] for c in all_claims) + sum(q["confidence"] for q in all_quotes)) / total_items
                 if total_items > 0
                 else 0.0
             )
@@ -303,7 +305,7 @@ class ClaimQuoteExtractionService:
                 quotes.append(quote)
         total_items = len(claims) + len(quotes)
         avg_confidence = (
-            (sum((c.confidence for c in claims)) + sum((q.confidence for q in quotes))) / total_items
+            (sum(c.confidence for c in claims) + sum(q.confidence for q in quotes)) / total_items
             if total_items > 0
             else 0.0
         )
@@ -374,7 +376,7 @@ class ClaimQuoteExtractionService:
                         break
         total_items = len(claims) + len(quotes)
         avg_confidence = (
-            (sum((c.confidence for c in claims)) + sum((q.confidence for q in quotes))) / total_items
+            (sum(c.confidence for c in claims) + sum(q.confidence for q in quotes)) / total_items
             if total_items > 0
             else 0.0
         )
@@ -410,7 +412,7 @@ class ClaimQuoteExtractionService:
             "obviously",
         ]
         sentence_lower = sentence.lower()
-        if any((indicator in sentence_lower for indicator in factual_indicators)):
+        if any(indicator in sentence_lower for indicator in factual_indicators):
             return ExtractedClaim(text=sentence, timestamp_seconds=timestamp, confidence=0.7, claim_type="statement")
         return None
 

@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -204,7 +207,7 @@ class TaskRoutingTool(BaseTool):
 
     def _agent_has_capabilities(self, agent: AgentCapability, required_capabilities: list[str]) -> bool:
         """Check if agent has all required capabilities."""
-        return all((capability in agent.capabilities for capability in required_capabilities))
+        return all(capability in agent.capabilities for capability in required_capabilities)
 
     def _select_best_agent(self, task: TaskRequirement, suitable_agents: list[AgentCapability]) -> AgentCapability:
         """Select the best agent using scoring algorithm."""
@@ -278,15 +281,15 @@ class TaskRoutingTool(BaseTool):
         if not assignments:
             return {"total_assignments": 0, "average_confidence": 0.0, "routing_efficiency": 0.0}
         total_assignments = len(assignments)
-        average_confidence = sum((assignment.routing_confidence for assignment in assignments)) / total_assignments
+        average_confidence = sum(assignment.routing_confidence for assignment in assignments) / total_assignments
         agent_utilization = self._calculate_agent_utilization(assignments, agent_capabilities)
         routing_efficiency = sum(agent_utilization.values()) / len(agent_utilization) if agent_utilization else 0.0
         return {
             "total_assignments": total_assignments,
             "average_confidence": average_confidence,
             "routing_efficiency": routing_efficiency,
-            "high_confidence_assignments": sum((1 for a in assignments if a.routing_confidence > 0.8)),
-            "low_confidence_assignments": sum((1 for a in assignments if a.routing_confidence < 0.6)),
+            "high_confidence_assignments": sum(1 for a in assignments if a.routing_confidence > 0.8),
+            "low_confidence_assignments": sum(1 for a in assignments if a.routing_confidence < 0.6),
         }
 
     def _calculate_agent_utilization(
@@ -316,7 +319,7 @@ class TaskRoutingTool(BaseTool):
         mean_util = sum(utilizations) / len(utilizations)
         if mean_util == 0:
             return 1.0
-        variance = sum(((util - mean_util) ** 2 for util in utilizations)) / len(utilizations)
+        variance = sum((util - mean_util) ** 2 for util in utilizations) / len(utilizations)
         std_dev = variance**0.5
         coefficient_of_variation = std_dev / mean_util
         balance_score = max(0.0, 1.0 - coefficient_of_variation)

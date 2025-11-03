@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -124,8 +127,8 @@ class WorkflowOptimizationTool(BaseTool):
         """Analyze current workflow performance metrics."""
         tasks = workflow_execution.get("tasks", [])
         assignments = workflow_execution.get("assignments", [])
-        current_execution_time = sum((task.get("estimated_duration_minutes", 60) for task in tasks))
-        current_cost = sum((assignment.get("cost_usd", 0.1) for assignment in assignments))
+        current_execution_time = sum(task.get("estimated_duration_minutes", 60) for task in tasks)
+        current_cost = sum(assignment.get("cost_usd", 0.1) for assignment in assignments)
         total_resources = len(assignments)
         utilized_resources = len([a for a in assignments if a.get("status") != "pending"])
         current_resource_utilization = utilized_resources / total_resources if total_resources > 0 else 0.0
@@ -310,7 +313,7 @@ class WorkflowOptimizationTool(BaseTool):
                         priority=2,
                     )
                 )
-        total_cost = sum((a.get("cost_usd", 0.1) for a in assignments))
+        total_cost = sum(a.get("cost_usd", 0.1) for a in assignments)
         if total_cost > 1.0:
             recommendations.append(
                 OptimizationRecommendation(
@@ -389,22 +392,22 @@ class WorkflowOptimizationTool(BaseTool):
             "implementation_phases": {
                 "immediate": {
                     "actions": [r.__dict__ for r in immediate_actions],
-                    "estimated_effort_hours": sum((r.effort_score * 8 for r in immediate_actions)),
-                    "expected_impact": sum((r.impact_score for r in immediate_actions)) / len(immediate_actions)
+                    "estimated_effort_hours": sum(r.effort_score * 8 for r in immediate_actions),
+                    "expected_impact": sum(r.impact_score for r in immediate_actions) / len(immediate_actions)
                     if immediate_actions
                     else 0.0,
                 },
                 "short_term": {
                     "actions": [r.__dict__ for r in short_term_actions],
-                    "estimated_effort_hours": sum((r.effort_score * 16 for r in short_term_actions)),
-                    "expected_impact": sum((r.impact_score for r in short_term_actions)) / len(short_term_actions)
+                    "estimated_effort_hours": sum(r.effort_score * 16 for r in short_term_actions),
+                    "expected_impact": sum(r.impact_score for r in short_term_actions) / len(short_term_actions)
                     if short_term_actions
                     else 0.0,
                 },
                 "long_term": {
                     "actions": [r.__dict__ for r in long_term_actions],
-                    "estimated_effort_hours": sum((r.effort_score * 32 for r in long_term_actions)),
-                    "expected_impact": sum((r.impact_score for r in long_term_actions)) / len(long_term_actions)
+                    "estimated_effort_hours": sum(r.effort_score * 32 for r in long_term_actions),
+                    "expected_impact": sum(r.impact_score for r in long_term_actions) / len(long_term_actions)
                     if long_term_actions
                     else 0.0,
                 },

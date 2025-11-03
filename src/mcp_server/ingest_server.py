@@ -15,7 +15,9 @@ Notes:
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -176,7 +178,7 @@ def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int 
             return {"error": "remote_not_supported", "detail": "Provide a local file path."}
         if not os.path.exists(path):
             return {"error": "file_not_found"}
-        from analysis.transcribe import run_whisper
+        from domains.intelligence.analysis.transcribe import run_whisper
 
         tx = run_whisper(path, model=model)
         texts: list[str] = []
@@ -188,7 +190,7 @@ def _fetch_transcript_local_impl(path: str, model: str = "tiny", max_chars: int 
                 t = str(getattr(seg, "text", "")).strip()
                 seg_items.append({"start": s, "end": e, "text": t})
                 texts.append(t)
-                if sum((len(x) for x in texts)) >= max(0, int(max_chars)):
+                if sum(len(x) for x in texts) >= max(0, int(max_chars)):
                     break
             except Exception:
                 continue

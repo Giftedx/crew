@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
+from platform.time import default_utc_now
 from typing import Any
-
-from core.time import default_utc_now  # type: ignore[import-not-found]
 
 from .models import PerformanceMetric, ToolUsagePattern
 
@@ -14,7 +13,7 @@ def ensure_utc(dt: datetime) -> datetime:
 
     If the provided datetime is naive, assume it is UTC and attach UTC tzinfo.
     """
-    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:  # naive
+    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
@@ -73,13 +72,7 @@ def calculate_tool_efficiency(interactions: list[dict[str, Any]]) -> float:
 
 def analyze_tool_usage(interactions: list[dict[str, Any]]) -> list[ToolUsagePattern]:
     tool_stats: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {
-            "usage_count": 0,
-            "success_count": 0,
-            "quality_scores": [],
-            "sequences": [],
-            "errors": [],
-        }
+        lambda: {"usage_count": 0, "success_count": 0, "quality_scores": [], "sequences": [], "errors": []}
     )
     for interaction in interactions:
         tools_used = interaction.get("tools_used", [])
@@ -88,7 +81,7 @@ def analyze_tool_usage(interactions: list[dict[str, Any]]) -> list[ToolUsagePatt
         for tool in tools_used:
             stats = tool_stats[tool]
             stats["usage_count"] += 1
-            if quality > 0.7 and not interaction.get("error_occurred", False):
+            if quality > 0.7 and (not interaction.get("error_occurred", False)):
                 stats["success_count"] += 1
             stats["quality_scores"].append(quality)
             if sequence:
@@ -132,7 +125,7 @@ def calculate_performance_metrics_for_interactions(
             metric_name="accuracy_target",
             target_value=thresholds.get("accuracy_target", 0.9),
             actual_value=avg_quality,
-            trend="stable",  # placeholder; caller will override with real trend
+            trend="stable",
             confidence=0.9 if len(quality_scores) > 10 else 0.7,
             last_updated=default_utc_now().isoformat(),
         )
@@ -144,7 +137,7 @@ def calculate_performance_metrics_for_interactions(
             metric_name="response_time",
             target_value=thresholds.get("response_time", 30.0),
             actual_value=avg_response_time,
-            trend="stable",  # placeholder; caller will override
+            trend="stable",
             confidence=0.9,
             last_updated=default_utc_now().isoformat(),
         )

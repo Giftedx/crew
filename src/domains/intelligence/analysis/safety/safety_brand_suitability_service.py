@@ -15,10 +15,12 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -377,11 +379,11 @@ class SafetyBrandSuitabilityService:
         """
         content_lower = content.lower()
         brand_friendly_words = ["professional", "educational", "informative", "helpful", "positive"]
-        brand_friendly_score = sum((1 for word in brand_friendly_words if word in content_lower)) / len(
+        brand_friendly_score = sum(1 for word in brand_friendly_words if word in content_lower) / len(
             brand_friendly_words
         )
         brand_risky_words = ["controversial", "political", "religious", "adult", "violent"]
-        brand_risky_score = sum((1 for word in brand_risky_words if word in content_lower)) / len(brand_risky_words)
+        brand_risky_score = sum(1 for word in brand_risky_words if word in content_lower) / len(brand_risky_words)
         suitability_score = max(0.0, brand_friendly_score - brand_risky_score)
         if suitability_score > 0.7:
             brand_alignment = "excellent"
@@ -391,9 +393,9 @@ class SafetyBrandSuitabilityService:
             brand_alignment = "fair"
         else:
             brand_alignment = "poor"
-        if any((word in content_lower for word in ["family", "kids", "children"])):
+        if any(word in content_lower for word in ["family", "kids", "children"]):
             target_audience = "family"
-        elif any((word in content_lower for word in ["adult", "mature"])):
+        elif any(word in content_lower for word in ["adult", "mature"]):
             target_audience = "adult"
         else:
             target_audience = "general"
@@ -464,7 +466,7 @@ class SafetyBrandSuitabilityService:
             "illegal_activity": ["drugs", "steal", "illegal", "crime"],
         }
         indicators = policy_indicators.get(policy, [])
-        return any((indicator in content_lower for indicator in indicators))
+        return any(indicator in content_lower for indicator in indicators)
 
     def _analyze_safety_rules(self, content: str) -> SafetyClassification:
         """Rule-based safety analysis fallback.
@@ -484,7 +486,7 @@ class SafetyBrandSuitabilityService:
         risk_factors = []
         max_risk_score = 0.0
         for category, indicators in unsafe_indicators.items():
-            category_score = sum((1 for indicator in indicators if indicator in content_lower))
+            category_score = sum(1 for indicator in indicators if indicator in content_lower)
             if category_score > 0:
                 risk_factors.append(category)
                 max_risk_score = max(max_risk_score, category_score * 0.2)

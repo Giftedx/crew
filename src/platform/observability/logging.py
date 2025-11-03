@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+from platform.security.privacy import privacy_filter
 from typing import Any
 
-from core.privacy import privacy_filter
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 
@@ -27,10 +27,9 @@ class JsonLogger(logging.Logger):
             payload.setdefault("workspace", ctx.workspace_id)
         return json.dumps(payload, ensure_ascii=False)
 
-    def info(self, message: str, **fields: Any) -> None:  # type: ignore[override]
+    def info(self, message: str, **fields: Any) -> None:
         super().info(self._serialize(message, **fields))
 
 
 logger = JsonLogger("obs")
-
 __all__ = ["JsonLogger", "logger"]

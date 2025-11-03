@@ -5,10 +5,11 @@ service availability, and performance indicators.
 """
 
 from __future__ import annotations
+
 import time
-from typing import Any
 from platform.observability.performance_monitor import get_performance_summary
 from platform.observability.resource_monitor import get_current_resource_usage, get_resource_monitor
+from typing import Any
 
 
 class HealthCheckService:
@@ -60,7 +61,7 @@ class HealthCheckService:
             qdrant_url = self._get_qdrant_url()
             if qdrant_url == ":memory:":
                 return {"status": "healthy", "type": "memory", "message": "Using in-memory Qdrant for testing"}
-            from memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.qdrant import get_qdrant_client
 
             client = get_qdrant_client()
             collections = client.get_collections()
@@ -126,7 +127,7 @@ class HealthCheckService:
     def _check_discord_bot(self) -> dict[str, Any]:
         """Check Discord bot health."""
         try:
-            from ultimate_discord_intelligence_bot.discord_bot.bot import DiscordBot
+            from app.discord.bot import DiscordBot
 
             _ = DiscordBot()
             return {"status": "healthy", "message": "Discord bot operational"}
@@ -208,7 +209,7 @@ def health_check_endpoint() -> dict[str, Any]:
 def check_circuit_breakers() -> dict[str, Any]:
     """Check circuit breaker status for health monitoring."""
     try:
-        from core.http.retry import get_circuit_breaker_status
+        from platform.http.retry import get_circuit_breaker_status
 
         breaker_status = get_circuit_breaker_status()
         open_breakers = [name for name, status in breaker_status.items() if status.get("state") == "open"]

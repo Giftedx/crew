@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from ultimate_discord_intelligence_bot.settings import Settings
+from app.config.settings import Settings
 
 
 @dataclass

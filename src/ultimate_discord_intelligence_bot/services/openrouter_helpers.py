@@ -1,12 +1,15 @@
 from __future__ import annotations
+
 import contextlib
 import copy
 import logging
 from collections.abc import Mapping
-from typing import Any
-from core.flags import enabled
+from platform.flags import enabled
 from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
+
 
 log = logging.getLogger(__name__)
 

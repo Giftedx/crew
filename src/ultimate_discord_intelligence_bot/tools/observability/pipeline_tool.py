@@ -1,16 +1,20 @@
 """Pipeline tool for orchestrating multi-step operations per Copilot instructions."""
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import time
-from typing import Any, TypedDict
-from core.circuit_breaker_canonical import CircuitBreaker
-from ultimate_discord_intelligence_bot.settings import Settings
+from platform.circuit_breaker_canonical import CircuitBreaker
 from platform.core.step_result import StepResult
-from ..platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
+from app.config.settings import Settings
+
 from ..pipeline import ContentPipeline
+from ..platform.observability.metrics import get_metrics
 from ._base import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,7 @@ class PipelineTool(BaseTool[StepResult]):
             failure_threshold = getattr(settings, "pipeline_circuit_failure_threshold", 5)
             recovery_timeout = getattr(settings, "pipeline_circuit_recovery_timeout", 60.0)
             success_threshold = getattr(settings, "pipeline_circuit_success_threshold", 2)
-            from core.circuit_breaker_canonical import CircuitConfig
+            from platform.circuit_breaker_canonical import CircuitConfig
 
             circuit_config = CircuitConfig(
                 failure_threshold=failure_threshold,

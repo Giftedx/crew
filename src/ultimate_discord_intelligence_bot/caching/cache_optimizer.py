@@ -5,11 +5,13 @@ values and cache level selection to maximize hit rates and minimize costs.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +201,7 @@ class RLCacheOptimizer:
                     "recommendations": recommendations,
                     "total_patterns": len(self._cache_patterns),
                     "optimizable_patterns": len(recommendations),
-                    "q_table_size": sum((len(buckets) for buckets in self._q_table.values())),
+                    "q_table_size": sum(len(buckets) for buckets in self._q_table.values()),
                 }
             )
         except Exception as e:
@@ -212,8 +214,8 @@ class RLCacheOptimizer:
             if not self._performance_history:
                 return {"error": "No performance history available"}
             recent_history = self._performance_history[-100:]
-            avg_reward = sum((h["actual_reward"] for h in recent_history)) / len(recent_history)
-            avg_q_value = sum((h["new_q_value"] for h in recent_history)) / len(recent_history)
+            avg_reward = sum(h["actual_reward"] for h in recent_history) / len(recent_history)
+            avg_q_value = sum(h["new_q_value"] for h in recent_history) / len(recent_history)
             if len(self._performance_history) >= 50:
                 early_rewards = [h["actual_reward"] for h in self._performance_history[:50]]
                 recent_rewards = [h["actual_reward"] for h in recent_history]
@@ -225,7 +227,7 @@ class RLCacheOptimizer:
                 "avg_reward": avg_reward,
                 "avg_q_value": avg_q_value,
                 "learning_progress": learning_progress,
-                "q_table_size": sum((len(buckets) for buckets in self._q_table.values())),
+                "q_table_size": sum(len(buckets) for buckets in self._q_table.values()),
                 "pattern_types": len(self._q_table),
                 "last_update": self._performance_history[-1]["timestamp"].isoformat()
                 if self._performance_history
@@ -248,7 +250,7 @@ class RLCacheOptimizer:
                 intervals.append(interval)
             if intervals:
                 mean_interval = sum(intervals) / len(intervals)
-                variance = sum(((i - mean_interval) ** 2 for i in intervals)) / len(intervals)
+                variance = sum((i - mean_interval) ** 2 for i in intervals) / len(intervals)
                 burstiness = variance**0.5 / max(mean_interval, 1.0)
             else:
                 burstiness = 0.0

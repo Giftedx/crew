@@ -5,13 +5,16 @@ enabling comprehensive monitoring and performance analysis.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import TYPE_CHECKING, Any
 from platform.core.step_result import StepResult
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 if TYPE_CHECKING:
     import asyncio
@@ -588,7 +591,7 @@ class UnifiedMetricsCollector:
         return {
             "initialized": self._initialized,
             "total_metric_keys": len(self._metrics_store),
-            "total_metrics": sum((len(metrics) for metrics in self._metrics_store.values())),
+            "total_metrics": sum(len(metrics) for metrics in self._metrics_store.values()),
             "config": {
                 "enable_collection": self.config.enable_collection,
                 "enable_real_time": self.config.enable_real_time,

@@ -6,11 +6,14 @@ and other sensitive configuration data with encryption and audit logging.
 """
 
 from __future__ import annotations
+
 import logging
 import os
-from typing import Any
-from cryptography.fernet import Fernet
 from platform.core.step_result import StepResult
+from typing import Any
+
+from cryptography.fernet import Fernet
+
 
 logger = logging.getLogger(__name__)
 

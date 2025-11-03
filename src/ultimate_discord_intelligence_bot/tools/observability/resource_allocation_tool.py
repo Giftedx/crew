@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any
-from crewai.tools import BaseTool
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
+from crewai.tools import BaseTool
+
 
 logger = logging.getLogger(__name__)
 
@@ -266,11 +269,11 @@ class ResourceAllocationTool(BaseTool):
     ) -> dict[str, Any]:
         """Calculate summary of resource allocations."""
         total_allocated = {
-            "cpu_units": sum((alloc.cpu_units for alloc in allocations)),
-            "memory_mb": sum((alloc.memory_mb for alloc in allocations)),
-            "gpu_hours": sum((alloc.gpu_hours for alloc in allocations)),
-            "storage_gb": sum((alloc.storage_gb for alloc in allocations)),
-            "network_bandwidth_mbps": sum((alloc.network_bandwidth_mbps for alloc in allocations)),
+            "cpu_units": sum(alloc.cpu_units for alloc in allocations),
+            "memory_mb": sum(alloc.memory_mb for alloc in allocations),
+            "gpu_hours": sum(alloc.gpu_hours for alloc in allocations),
+            "storage_gb": sum(alloc.storage_gb for alloc in allocations),
+            "network_bandwidth_mbps": sum(alloc.network_bandwidth_mbps for alloc in allocations),
         }
         return {
             "total_allocations": len(allocations),
@@ -326,7 +329,7 @@ class ResourceAllocationTool(BaseTool):
         """Calculate overall resource allocation efficiency."""
         if not allocations:
             return 0.0
-        high_priority_count = sum((1 for alloc in allocations if alloc.priority >= 3))
+        high_priority_count = sum(1 for alloc in allocations if alloc.priority >= 3)
         total_count = len(allocations)
         return high_priority_count / total_count if total_count > 0 else 0.0
 

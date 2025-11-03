@@ -1,30 +1,34 @@
 """Primary OpenRouterService class with modular workflow delegation."""
 
 from __future__ import annotations
+
 import copy
 import logging
 import os as _os
 import sys
 from typing import TYPE_CHECKING, Any
 
+
 try:
     from platform.cache.enhanced_redis_cache import DistributedLLMCache
 except Exception:
     DistributedLLMCache = None
-from ai.litellm_router import LLMRouterSingleton
 from platform.cache.bounded_cache import BoundedLRUCache
 from platform.cache.unified_config import get_unified_cache_config
-from core.learning_engine import LearningEngine
 from platform.config.configuration import get_config
 from platform.observability import metrics
+from platform.rl.learning_engine import LearningEngine
+from platform.rl.litellm_router import LLMRouterSingleton
+
 from .adaptive_routing import AdaptiveRoutingManager
 from .tenant_semantic_cache import TenantSemanticCache
+
 
 try:
     from platform.core.settings import get_settings
 except Exception:
     try:
-        from ultimate_discord_intelligence_bot.settings import Settings
+        from app.config.settings import Settings
 
         def get_settings():
             return Settings()
@@ -44,8 +48,9 @@ except Exception:
             return _S()
 
         get_settings = _get_settings_fallback
+from app.config.settings import ENABLE_RL_MODEL_ROUTING
 from ultimate_discord_intelligence_bot.cache import ENABLE_CACHE_V2, UnifiedCache, get_unified_cache
-from ultimate_discord_intelligence_bot.settings import ENABLE_RL_MODEL_ROUTING
+
 from ..openrouter_helpers import choose_model_from_map as _choose_model_from_map_helper
 from ..openrouter_helpers import ctx_or_fallback as _ctx_or_fallback_helper
 from ..openrouter_helpers import deep_merge as _deep_merge_helper
@@ -53,6 +58,7 @@ from ..openrouter_helpers import update_shadow_hit_ratio as _update_shadow_hit_r
 from ..prompt_engine import PromptEngine
 from ..rl_model_router import RLModelRouter
 from ..token_meter import TokenMeter
+
 
 _MODULE_NAMES = (
     "ultimate_discord_intelligence_bot.services.openrouter_service",
@@ -82,8 +88,10 @@ def _resolve_semantic_cache_factory() -> Any | None:
 log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from collections.abc import Mapping
+
     from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
     from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
+
     from ..logging_utils import AnalyticsStore
     from .state import RouteState
 

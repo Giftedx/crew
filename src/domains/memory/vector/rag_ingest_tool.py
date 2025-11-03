@@ -9,9 +9,11 @@ Contract:
 """
 
 from __future__ import annotations
+
 import contextlib
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ._base import BaseTool
 
 
@@ -42,7 +44,7 @@ class RagIngestTool(BaseTool[StepResult]):
         self._metrics = get_metrics()
 
     def run(self, *, texts: list[str], index: str = "memory", chunk_size: int = 400, overlap: int = 50) -> StepResult:
-        if not isinstance(texts, list) or any((not isinstance(t, str) for t in texts)):
+        if not isinstance(texts, list) or any(not isinstance(t, str) for t in texts):
             return StepResult.fail("Invalid params: texts must be a list of strings")
         inserted = 0
         chunks_total = 0
@@ -57,8 +59,8 @@ class RagIngestTool(BaseTool[StepResult]):
             except Exception:
                 namespace = index
                 tenant_scoped = False
-            from memory import embeddings
-            from memory.vector_store import VectorRecord, VectorStore
+            from domains.memory import embeddings
+            from domains.memory.vector_store import VectorRecord, VectorStore
 
             vstore = VectorStore()
             to_upsert: list[VectorRecord] = []

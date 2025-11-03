@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from platform.config.configuration import get_config
+from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
 from typing import Any
 
-from core.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
-from core.secure_config import get_config
 from fastapi import APIRouter, HTTPException, Request
 from security.net_guard import SecurityError
 from security.webhook_guard import verify_incoming
@@ -41,7 +41,6 @@ def health() -> dict[str, str]:
 
 @alert_router.post("/alert")
 async def receive_alert(request: Request) -> dict[str, str]:
-    # Validate webhook signature for security
     try:
         body = await request.body()
         ctx = current_tenant()
@@ -55,17 +54,13 @@ async def receive_alert(request: Request) -> dict[str, str]:
         )
     except SecurityError as e:
         raise HTTPException(status_code=401, detail=f"Webhook validation failed: {e}") from e
-
-    # Parse the JSON payload after validation
     import json
 
     try:
         payload = json.loads(body.decode("utf-8")) if body else {}
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail="Invalid JSON payload") from exc
-
     config = get_config()
-    # Try to get the specific alert webhook first, fall back to private, then general
     try:
         webhook = config.get_webhook("discord_alert")
     except ValueError:
@@ -85,7 +80,7 @@ async def _send_alert_payload(webhook: str, payload: dict[str, Any]) -> dict[str
     content = _format_alert_text(payload)
     resp = resilient_post(
         webhook,
-        json_payload={"content": content[:1900]},  # Discord content limit ~2000 chars
+        json_payload={"content": content[:1900]},
         headers={"Content-Type": "application/json"},
         timeout_seconds=REQUEST_TIMEOUT_SECONDS,
     )

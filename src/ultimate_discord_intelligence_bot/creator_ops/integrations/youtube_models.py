@@ -6,11 +6,12 @@ ensuring type safety and proper validation of API data.
 """
 
 from __future__ import annotations
+
 import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 @dataclass

@@ -5,18 +5,22 @@ to improve maintainability, testability, and performance.
 """
 
 from __future__ import annotations
+
 import copy
 import logging
 import os as _os
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled, resilient_post
 from platform.observability import metrics
+from typing import TYPE_CHECKING, Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
+
 if TYPE_CHECKING:
-    from core.learning_engine import LearningEngine
+    from platform.rl.learning_engine import LearningEngine
+
     from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 log = logging.getLogger(__name__)
 
@@ -68,7 +72,7 @@ class TenantResolver:
             ctx = current_tenant()
             if ctx is not None:
                 return ctx
-            from core.flags import enabled
+            from platform.flags import enabled
 
             if enabled("ENABLE_TENANCY_STRICT", False):
                 raise RuntimeError(f"TenantContext required for {component} but not set (strict mode)")
@@ -316,7 +320,7 @@ class RewardCalculator:
             from platform.core.settings import get_settings
         except Exception:
             try:
-                from ultimate_discord_intelligence_bot.settings import Settings
+                from app.config.settings import Settings
 
                 def get_settings():
                     return Settings()

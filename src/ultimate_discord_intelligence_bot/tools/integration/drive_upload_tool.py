@@ -1,10 +1,12 @@
 import logging
 import os
-from typing import Any, ClassVar
 from platform.config.configuration import get_config
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, ClassVar
+
 from .._base import BaseTool
+
 
 try:
     from google.auth.transport.requests import Request as GoogleRequest
@@ -29,7 +31,8 @@ except Exception:
 
     _GOOGLE_LIBS_AVAILABLE = False
 import contextlib
-from ultimate_discord_intelligence_bot.settings import get_settings
+
+from app.config.settings import get_settings
 
 
 class DriveUploadTool(BaseTool[StepResult]):

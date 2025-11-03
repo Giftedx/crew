@@ -6,12 +6,14 @@ production-ready queries), NetworkX (in-memory, fast testing), and Qdrant
 """
 
 from __future__ import annotations
+
 import contextlib
 import logging
 from enum import Enum
-from typing import TYPE_CHECKING, Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any
+
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -83,7 +85,7 @@ class UnifiedGraphStore:
                     self.default_backend = GraphBackend.NETWORKX
         if (default_backend == GraphBackend.QDRANT or enable_multi_backend) and self._qdrant_client is None:
             try:
-                from memory.qdrant_provider import get_qdrant_client
+                from domains.memory.vector.qdrant import get_qdrant_client
 
                 self._qdrant_client = get_qdrant_client()
             except Exception as e:
@@ -401,6 +403,7 @@ class UnifiedGraphStore:
             return StepResult.fail("Qdrant client not initialized")
         collection_name = f"graph_memory_{namespace}"
         from collections import deque
+
         from qdrant_client.models import FieldCondition, Filter, MatchValue
 
         visited: set[str] = {start_node}

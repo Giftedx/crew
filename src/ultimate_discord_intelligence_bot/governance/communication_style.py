@@ -7,11 +7,12 @@ disagreement, and clear and direct communication.
 """
 
 from __future__ import annotations
+
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
 
 
 @dataclass

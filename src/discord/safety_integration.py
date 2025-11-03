@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import time
+from platform.core.step_result import StepResult
 from typing import Any
-
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .safety import (
     AlertConfig,
@@ -50,7 +49,6 @@ class DiscordSafetyIntegration:
             auto_warn_users=True,
             log_moderation_actions=True,
         )
-
         rate_limit_config = RateLimitConfig(
             enable_default_rules=True,
             user_messages_per_minute=10,
@@ -69,7 +67,6 @@ class DiscordSafetyIntegration:
             cleanup_interval_seconds=300,
             max_storage_time_seconds=86400,
         )
-
         alert_config = AlertConfig(
             enable_alerts=True,
             auto_escalate_threshold=3,
@@ -88,7 +85,6 @@ class DiscordSafetyIntegration:
             webhook_url=None,
             webhook_timeout=10,
         )
-
         return create_safety_manager(content_filter_config, rate_limit_config, alert_config)
 
     async def initialize(self) -> StepResult:
@@ -113,34 +109,19 @@ class DiscordSafetyIntegration:
         try:
             if not self._initialized:
                 return StepResult.fail("Safety integration not initialized")
-
             start_time = time.time()
-
-            # Process through safety manager
             safety_result = await self.safety_manager.process_message(
-                content=content,
-                user_id=user_id,
-                guild_id=guild_id,
-                channel_id=channel_id,
-                message_id=message_id,
+                content=content, user_id=user_id, guild_id=guild_id, channel_id=channel_id, message_id=message_id
             )
-
-            # Update statistics
             self._stats["total_messages_processed"] += 1
-
             if not safety_result.success:
                 self._stats["messages_blocked"] += 1
-
-                # Extract alert information if available
                 if "filter_result" in safety_result.data:
                     filter_result = safety_result.data["filter_result"]
                     if hasattr(filter_result, "severity"):
                         self._stats["alerts_generated"] += 1
-
-                # Update processing time
                 processing_time = (time.time() - start_time) * 1000
                 self._update_avg_processing_time(processing_time)
-
                 return StepResult.fail(
                     safety_result.error,
                     data={
@@ -150,11 +131,8 @@ class DiscordSafetyIntegration:
                         "safety_data": safety_result.data,
                     },
                 )
-
-            # Message passed safety checks
             processing_time = (time.time() - start_time) * 1000
             self._update_avg_processing_time(processing_time)
-
             return StepResult.ok(
                 data={
                     "safety_check": "passed",
@@ -162,7 +140,6 @@ class DiscordSafetyIntegration:
                     "safety_data": safety_result.data,
                 }
             )
-
         except Exception as e:
             return StepResult.fail(f"Discord message safety processing failed: {e!s}")
 
@@ -171,16 +148,10 @@ class DiscordSafetyIntegration:
         try:
             if not self._initialized:
                 return StepResult.fail("Safety integration not initialized")
-
-            # Get safety status from safety manager
             safety_status_result = await self.safety_manager.get_user_safety_status(user_id)
-
             if not safety_status_result.success:
                 return StepResult.fail(f"Failed to get user safety status: {safety_status_result.error}")
-
             safety_status = safety_status_result.data
-
-            # Enhance with additional Discord-specific information
             profile = {
                 "user_id": user_id,
                 "safety_score": safety_status["safety_score"],
@@ -190,9 +161,7 @@ class DiscordSafetyIntegration:
                 "recommendations": self._generate_user_recommendations(safety_status),
                 "risk_level": self._determine_risk_level(safety_status["safety_score"]),
             }
-
             return StepResult.ok(data={"user_safety_profile": profile})
-
         except Exception as e:
             return StepResult.fail(f"Failed to get user safety profile: {e!s}")
 
@@ -201,16 +170,10 @@ class DiscordSafetyIntegration:
         try:
             if not self._initialized:
                 return StepResult.fail("Safety integration not initialized")
-
-            # Get safety overview from safety manager
             safety_overview_result = await self.safety_manager.get_guild_safety_overview(guild_id)
-
             if not safety_overview_result.success:
                 return StepResult.fail(f"Failed to get guild safety overview: {safety_overview_result.error}")
-
             safety_overview = safety_overview_result.data
-
-            # Enhance with dashboard-specific information
             dashboard = {
                 "guild_id": guild_id,
                 "safety_metrics": safety_overview["safety_metrics"],
@@ -223,9 +186,7 @@ class DiscordSafetyIntegration:
                 "alert_trends": await self._get_alert_trends(guild_id),
                 "recommendations": self._generate_guild_recommendations(safety_overview),
             }
-
             return StepResult.ok(data={"moderation_dashboard": dashboard})
-
         except Exception as e:
             return StepResult.fail(f"Failed to get guild moderation dashboard: {e!s}")
 
@@ -242,11 +203,8 @@ class DiscordSafetyIntegration:
         try:
             if not self._initialized:
                 return StepResult.fail("Safety integration not initialized")
-
-            # Create alert for the moderation action
             alert_type = self._map_action_to_alert_type(action_type)
             severity = AlertSeverity.HIGH if action_type in ["ban", "kick"] else AlertSeverity.MEDIUM
-
             alert_result = await self.safety_manager.alert_manager.create_alert(
                 alert_type=alert_type,
                 severity=severity,
@@ -261,18 +219,13 @@ class DiscordSafetyIntegration:
                     "manual_action": True,
                 },
             )
-
             if alert_result.success:
                 self._stats["auto_actions_taken"] += 1
                 return StepResult.ok(
-                    data={
-                        "moderation_action_recorded": True,
-                        "alert_id": alert_result.data.get("alert_id"),
-                    }
+                    data={"moderation_action_recorded": True, "alert_id": alert_result.data.get("alert_id")}
                 )
             else:
                 return StepResult.fail(f"Failed to record moderation action: {alert_result.error}")
-
         except Exception as e:
             return StepResult.fail(f"Failed to handle moderation action: {e!s}")
 
@@ -280,7 +233,6 @@ class DiscordSafetyIntegration:
         """Generate safety recommendations for a user."""
         recommendations = []
         safety_score = safety_status.get("safety_score", 100)
-
         if safety_score < 30:
             recommendations.append("User has significant safety violations. Consider temporary restrictions.")
         elif safety_score < 60:
@@ -289,16 +241,12 @@ class DiscordSafetyIntegration:
             recommendations.append("User has minor safety violations. Provide gentle guidance.")
         else:
             recommendations.append("User maintains good safety standards.")
-
-        # Check for specific issues
         recent_alerts = safety_status.get("recent_alerts", [])
         if len(recent_alerts) > 5:
             recommendations.append("High number of recent alerts. Consider intervention.")
-
         rate_limit_status = safety_status.get("rate_limit_status", {})
         if rate_limit_status.get("in_cooldown", False):
             recommendations.append("User currently in rate limit cooldown.")
-
         return recommendations
 
     def _determine_risk_level(self, safety_score: float) -> str:
@@ -317,46 +265,32 @@ class DiscordSafetyIntegration:
         recommendations = []
         safety_metrics = safety_overview.get("safety_metrics", {})
         safety_score = safety_metrics.get("safety_score", 100)
-
         if safety_score < 50:
             recommendations.append("Guild has significant moderation issues. Consider stricter policies.")
         elif safety_score < 75:
             recommendations.append("Guild has moderate moderation issues. Monitor activity closely.")
         else:
             recommendations.append("Guild maintains good moderation standards.")
-
         pending_alerts = safety_overview.get("pending_alerts", 0)
         if pending_alerts > 10:
             recommendations.append("High number of pending alerts. Increase moderation capacity.")
-
         most_common = safety_metrics.get("most_common_issues", [])
         if most_common:
             top_issue = most_common[0]["type"]
             recommendations.append(f"Most common issue: {top_issue}. Consider targeted policies.")
-
         return recommendations
 
     async def _get_recent_moderation_actions(self, guild_id: str) -> list[dict[str, Any]]:
         """Get recent moderation actions for a guild."""
-        # This would integrate with Discord API to get actual moderation actions
-        # For now, return placeholder data
         return []
 
     async def _get_top_offenders(self, guild_id: str) -> list[dict[str, Any]]:
         """Get top safety offenders in a guild."""
-        # This would analyze alert data to find users with most violations
-        # For now, return placeholder data
         return []
 
     async def _get_alert_trends(self, guild_id: str) -> dict[str, Any]:
         """Get alert trends for a guild."""
-        # This would analyze alert patterns over time
-        # For now, return placeholder data
-        return {
-            "trend": "stable",
-            "period": "last_7_days",
-            "change_percentage": 0.0,
-        }
+        return {"trend": "stable", "period": "last_7_days", "change_percentage": 0.0}
 
     def _map_action_to_alert_type(self, action_type: str) -> AlertType:
         """Map moderation action type to alert type."""
@@ -373,7 +307,6 @@ class DiscordSafetyIntegration:
         """Update average processing time statistics."""
         total_messages = self._stats["total_messages_processed"]
         current_avg = self._stats["avg_processing_time_ms"]
-
         if total_messages > 0:
             self._stats["avg_processing_time_ms"] = (
                 current_avg * (total_messages - 1) + processing_time
@@ -383,10 +316,7 @@ class DiscordSafetyIntegration:
 
     def get_integration_statistics(self) -> dict[str, Any]:
         """Get safety integration statistics."""
-        return {
-            "safety_integration": self._stats.copy(),
-            "safety_manager": self.safety_manager.get_safety_statistics(),
-        }
+        return {"safety_integration": self._stats.copy(), "safety_manager": self.safety_manager.get_safety_statistics()}
 
     async def close(self):
         """Clean up resources."""

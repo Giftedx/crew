@@ -1,11 +1,13 @@
 """Enhanced content analysis tool with multiple analysis modes."""
 
 from __future__ import annotations
+
 import re
 import time
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import AnalysisTool
 
 
@@ -129,7 +131,7 @@ class EnhancedAnalysisTool(AnalysisTool):
         }
         detected_topics = []
         for topic, keywords in political_indicators.items():
-            if any((keyword in text_lower for keyword in keywords)):
+            if any(keyword in text_lower for keyword in keywords):
                 detected_topics.append(topic)
         bias_indicators = {
             "left_leaning": ["progressive", "liberal", "socialist", "tax the rich"],
@@ -138,7 +140,7 @@ class EnhancedAnalysisTool(AnalysisTool):
         }
         bias_detected = []
         for bias_type, indicators in bias_indicators.items():
-            if any((indicator in text_lower for indicator in indicators)):
+            if any(indicator in text_lower for indicator in indicators):
                 bias_detected.append(bias_type)
         return {
             "political_topics": detected_topics,
@@ -152,9 +154,9 @@ class EnhancedAnalysisTool(AnalysisTool):
         positive_words = ["good", "great", "excellent", "amazing", "wonderful", "love", "best"]
         negative_words = ["bad", "terrible", "awful", "hate", "worst", "horrible", "disgusting"]
         neutral_words = ["okay", "fine", "average", "normal", "standard"]
-        pos_count = sum((1 for word in positive_words if word in text_lower))
-        neg_count = sum((1 for word in negative_words if word in text_lower))
-        neu_count = sum((1 for word in neutral_words if word in text_lower))
+        pos_count = sum(1 for word in positive_words if word in text_lower)
+        neg_count = sum(1 for word in negative_words if word in text_lower)
+        neu_count = sum(1 for word in neutral_words if word in text_lower)
         total = pos_count + neg_count + neu_count
         if total == 0:
             sentiment = "neutral"

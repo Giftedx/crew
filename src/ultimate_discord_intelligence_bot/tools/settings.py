@@ -5,18 +5,20 @@ in the main settings module but are needed by various tools.
 """
 
 from __future__ import annotations
+
 import contextlib
 import os
 import warnings
 from pathlib import Path
 from typing import Any
 
+
 try:
     from platform.cache.unified_config import get_cache_ttl as _unified_get_cache_ttl
 except Exception:
     _unified_get_cache_ttl = None
 try:
-    from ultimate_discord_intelligence_bot.settings import BASE_DIR as _BASE_DIR
+    from app.config.settings import BASE_DIR as _BASE_DIR
 except Exception:
     _BASE_DIR = Path.cwd()
 BASE_DIR: Path = _BASE_DIR

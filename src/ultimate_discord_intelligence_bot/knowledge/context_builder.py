@@ -6,12 +6,15 @@ decision-making and response generation.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
 from platform.core.step_result import StepResult
+from typing import Any
+
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
+
 
 logger = logging.getLogger(__name__)
 
@@ -328,8 +331,8 @@ class UnifiedContextBuilder:
                 primary_context = request.query or ""
             if self.config.context_compression_enabled:
                 primary_context = self._compress_context(primary_context, request.max_context_length)
-            total_tokens = len(primary_context.split()) + sum((len(seg.content.split()) for seg in supporting_segments))
-            relevance_score = sum((seg.relevance_score for seg in segments)) / len(segments) if segments else 0.0
+            total_tokens = len(primary_context.split()) + sum(len(seg.content.split()) for seg in supporting_segments)
+            relevance_score = sum(seg.relevance_score for seg in segments) / len(segments) if segments else 0.0
             return UnifiedContext(
                 agent_id=request.agent_id,
                 task_type=request.task_type,
@@ -391,6 +394,6 @@ class UnifiedContextBuilder:
         """Get cache statistics"""
         return {
             "context_cache_size": len(self.context_cache),
-            "agent_history_size": sum((len(history) for history in self.agent_context_history.values())),
+            "agent_history_size": sum(len(history) for history in self.agent_context_history.values()),
             "agents_with_history": len(self.agent_context_history),
         }

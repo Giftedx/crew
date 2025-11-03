@@ -25,7 +25,6 @@ class MetricsAPI:
         """Initialize the metrics API."""
         if not FLASK_AVAILABLE:
             raise ImportError("Flask is required for metrics API")
-
         self.app = app or Flask(__name__)
         self.setup_routes()
 
@@ -43,7 +42,7 @@ class MetricsAPI:
         def get_system_metrics():
             """Get system-wide metrics."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_system_metrics
+                from platform.observability.metrics_collector import get_system_metrics
 
                 metrics = get_system_metrics()
                 return jsonify(
@@ -61,13 +60,13 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/tools")
         def get_all_tool_metrics():
             """Get metrics for all tools."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_all_tool_metrics
+                from platform.observability.metrics_collector import get_all_tool_metrics
 
                 metrics = get_all_tool_metrics()
                 return jsonify(
@@ -94,19 +93,17 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/tools/<tool_name>")
         def get_tool_metrics(tool_name: str):
             """Get metrics for a specific tool."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_tool_metrics
+                from platform.observability.metrics_collector import get_tool_metrics
 
                 metrics = get_tool_metrics(tool_name)
-
                 if not metrics:
-                    return jsonify({"status": "error", "error": f"Tool '{tool_name}' not found"}), 404
-
+                    return (jsonify({"status": "error", "error": f"Tool '{tool_name}' not found"}), 404)
                 return jsonify(
                     {
                         "status": "success",
@@ -127,18 +124,17 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/top-tools")
         def get_top_tools():
             """Get top tools by usage."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from platform.observability.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
                 top_tools = collector.get_top_tools(limit)
-
                 return jsonify(
                     {
                         "status": "success",
@@ -157,18 +153,17 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/slowest-tools")
         def get_slowest_tools():
             """Get slowest tools by execution time."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from platform.observability.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
                 slowest_tools = collector.get_slowest_tools(limit)
-
                 return jsonify(
                     {
                         "status": "success",
@@ -187,18 +182,17 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/error-prone-tools")
         def get_error_prone_tools():
             """Get tools with highest error rates."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from platform.observability.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
                 error_prone_tools = collector.get_most_error_prone_tools(limit)
-
                 return jsonify(
                     {
                         "status": "success",
@@ -218,28 +212,27 @@ class MetricsAPI:
                     }
                 )
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/report")
         def get_metrics_report():
             """Get comprehensive metrics report."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import generate_metrics_report
+                from platform.observability.metrics_collector import generate_metrics_report
 
                 report = generate_metrics_report()
                 return jsonify({"status": "success", "data": report})
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/export")
         def export_metrics():
             """Export metrics to file."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from platform.observability.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 export_file = f"metrics_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-
                 if collector.export_metrics(export_file):
                     return jsonify(
                         {
@@ -249,29 +242,26 @@ class MetricsAPI:
                         }
                     )
                 else:
-                    return jsonify({"status": "error", "error": "Failed to export metrics"}), 500
-
+                    return (jsonify({"status": "error", "error": "Failed to export metrics"}), 500)
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
         @self.app.route("/api/metrics/reset", methods=["POST"])
         def reset_metrics():
             """Reset all metrics."""
             try:
-                from ultimate_discord_intelligence_bot.observability.metrics_collector import get_metrics_collector
+                from platform.observability.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 collector.reset_metrics()
-
                 return jsonify({"status": "success", "message": "All metrics have been reset"})
             except Exception as e:
-                return jsonify({"status": "error", "error": str(e)}), 500
+                return (jsonify({"status": "error", "error": str(e)}), 500)
 
     def run(self, host: str = "127.0.0.1", port: int = 5001, debug: bool = False):
         """Run the metrics API server."""
         if not FLASK_AVAILABLE:
             raise ImportError("Flask is required to run the metrics API")
-
         print(f"🚀 Starting Metrics API on http://{host}:{port}")
         print("📊 Available endpoints:")
         print("  • GET  /api/metrics/health - Health check")
@@ -284,7 +274,6 @@ class MetricsAPI:
         print("  • GET  /api/metrics/report - Comprehensive report")
         print("  • GET  /api/metrics/export - Export metrics")
         print("  • POST /api/metrics/reset - Reset metrics")
-
         self.app.run(host=host, port=port, debug=debug)
 
 

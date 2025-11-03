@@ -4,7 +4,9 @@ This agent preserves mission intelligence across memory systems.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 from domains.orchestration.agents.base import BaseAgent
 from domains.orchestration.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.tools import (
@@ -18,6 +20,7 @@ from ultimate_discord_intelligence_bot.tools import (
     RagIngestUrlTool,
     VectorSearchTool,
 )
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool
@@ -54,7 +57,7 @@ class KnowledgeIntegratorAgent(BaseAgent):
 
     def _get_memory_tools(self) -> list[BaseTool]:
         """Get memory tools for knowledge management."""
-        from memory.embeddings import embed
+        from domains.memory.embeddings import embed
 
         def embedding_function(text: str) -> list[float]:
             """Convert text to embedding vector using the core embeddings module."""

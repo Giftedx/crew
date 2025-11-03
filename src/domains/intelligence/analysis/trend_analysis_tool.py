@@ -11,12 +11,14 @@ This tool provides comprehensive trend analysis including:
 """
 
 from __future__ import annotations
+
 import logging
 import time
 from collections import Counter, defaultdict
-from typing import Any, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, TypedDict
+
 from ._base import BaseTool
 
 
@@ -481,7 +483,7 @@ class TrendAnalysisTool(BaseTool[StepResult]):
                 "growth_rate": 0.6,
                 "platforms": list({data.get("platform", "") for data in high_engagement_content}),
                 "peak_engagement": max(
-                    (data.get("engagement_metrics", {}).get("total_engagement", 0) for data in high_engagement_content)
+                    data.get("engagement_metrics", {}).get("total_engagement", 0) for data in high_engagement_content
                 ),
             }
         return patterns

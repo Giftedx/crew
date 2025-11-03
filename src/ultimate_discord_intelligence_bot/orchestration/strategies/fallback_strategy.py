@@ -5,12 +5,14 @@ ensuring the /autointel command can still function with reduced capabilities.
 """
 
 from __future__ import annotations
+
 import logging
 import uuid
-from typing import Any
-from core.orchestration import OrchestrationContext, get_orchestration_facade
-from core.orchestration.domain import FallbackAutonomousOrchestrator
 from platform.core.step_result import StepResult
+from platform.orchestration import OrchestrationContext, get_orchestration_facade
+from platform.orchestration.domain import FallbackAutonomousOrchestrator
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 

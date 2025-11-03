@@ -1,43 +1,56 @@
 """
-Compatibility wrapper for core/resilience/circuit_breaker.py
+Compatibility wrapper for circuit breaker functionality.
 
 This module provides backward compatibility for the old circuit breaker implementation.
-All functionality has been migrated to the canonical implementation.
+All functionality has been migrated to the canonical implementation at
+platform.http.circuit_breaker_canonical.
 """
 
-from core.circuit_breaker_canonical import (
+from platform.http.circuit_breaker_canonical import (
     CircuitBreaker,
+    CircuitBreakerOpenError,
+    CircuitBreakerRegistry,
+    CircuitConfig,
     CircuitState,
+    CircuitStats,
     circuit_breaker,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerConfig as CircuitConfig,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerError as CircuitBreakerOpenError,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerManager as CircuitBreakerRegistry,
-)
-from core.circuit_breaker_canonical import (
-    CircuitBreakerMetrics as CircuitStats,
-)
-from core.circuit_breaker_canonical import (
-    get_circuit_breaker as get_circuit_breaker_sync,
-)
-from core.circuit_breaker_canonical import (
-    get_circuit_breaker_manager as get_circuit_breaker_registry,
+    get_circuit_breaker_registry,
 )
 
+
+# Aliases for backward compatibility
+CircuitBreakerConfig = CircuitConfig
+CircuitBreakerError = CircuitBreakerOpenError
+CircuitBreakerManager = CircuitBreakerRegistry
+CircuitBreakerMetrics = CircuitStats
+
+
+def get_circuit_breaker_sync(name: str, config: CircuitConfig | None = None):
+    """Get a circuit breaker synchronously."""
+    return get_circuit_breaker_registry().get_circuit_breaker_sync(name, config)
+
+
+def get_circuit_breaker(name: str, config: CircuitConfig | None = None):
+    """Get a circuit breaker (alias for get_circuit_breaker_sync)."""
+    return get_circuit_breaker_sync(name, config)
+
+
+get_circuit_breaker_manager = get_circuit_breaker_registry
 
 __all__ = [
     "CircuitBreaker",
+    "CircuitBreakerConfig",
+    "CircuitBreakerError",
+    "CircuitBreakerManager",
+    "CircuitBreakerMetrics",
     "CircuitBreakerOpenError",
     "CircuitBreakerRegistry",
     "CircuitConfig",
     "CircuitState",
     "CircuitStats",
     "circuit_breaker",
+    "get_circuit_breaker",
+    "get_circuit_breaker_manager",
     "get_circuit_breaker_registry",
     "get_circuit_breaker_sync",
 ]

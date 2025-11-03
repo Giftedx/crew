@@ -1,0 +1,19 @@
+{
+  "source_directory": "src/core/observability",
+  "target_directory": "src/platform/observability",
+  "total_matching_names": 1,
+  "identical_files": 0,
+  "different_implementations": 1,
+  "duplicates": [
+    {
+      "filename": "metrics_collector.py",
+      "source_path": "core/observability/metrics_collector.py",
+      "target_path": "platform/observability/metrics_collector.py",
+      "md5_hash": "46ece80f32dc06a19b6bd6ef6083a258",
+      "target_hash": "8274b205d4e228c03c370808e509f85c",
+      "file_size": 22638,
+      "target_size": 9489,
+      "verified_identical": false
+    }
+  ]
+}

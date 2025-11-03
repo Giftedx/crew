@@ -1,10 +1,12 @@
 """OpenAI multimodal analysis service combining text, images, and audio."""
 
 from __future__ import annotations
+
 import base64
+from platform.core.step_result import StepResult
+
 from ultimate_discord_intelligence_bot.services.openai_service import OpenAIService
 from ultimate_discord_intelligence_bot.services.openai_vision import OpenAIVisionService
-from platform.core.step_result import StepResult
 
 
 class MultimodalAnalysisService(OpenAIService):

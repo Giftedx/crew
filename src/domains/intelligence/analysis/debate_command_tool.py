@@ -1,10 +1,12 @@
 """Discord-facing commands for debate analysis."""
 
 from __future__ import annotations
+
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
+
 from ..debate_analysis_pipeline import DebateAnalysisPipeline
 from ..profiles.schema import CreatorProfile, Platforms, load_seeds
 from ..profiles.store import ProfileStore
@@ -15,6 +17,7 @@ from ..tools.platform_resolver import (
     resolve_youtube_handle,
 )
 from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

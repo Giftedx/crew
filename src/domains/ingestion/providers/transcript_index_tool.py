@@ -1,8 +1,10 @@
 """Index transcripts into timestamped chunks and retrieve context."""
 
 from __future__ import annotations
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+
 from ._base import BaseTool
 
 

@@ -6,14 +6,17 @@ and Discord publishing.
 """
 
 from __future__ import annotations
+
 import asyncio
-from core.privacy import privacy_filter
+from platform.core.step_result import StepResult
 from platform.observability import metrics
+from platform.security.privacy import privacy_filter
+
 from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
 from ultimate_discord_intelligence_bot.pipeline_components.types import PipelineRunResult
 from ultimate_discord_intelligence_bot.services.request_budget import track_request_budget
 from ultimate_discord_intelligence_bot.services.unified_pipeline import PipelineConfig, UnifiedPipeline
-from platform.core.step_result import StepResult
+
 
 __all__ = [
     "ContentPipeline",

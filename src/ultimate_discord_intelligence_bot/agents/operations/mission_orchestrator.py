@@ -4,10 +4,12 @@ This agent coordinates end-to-end missions, sequencing depth, specialists, and b
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
-from domains.orchestration.agents.base import BaseAgent
-from domains.orchestration.agents.registry import register_agent
-from ultimate_discord_intelligence_bot.settings import (
+
+from domains.memory.tools.unified_memory_tool import UnifiedContextTool, UnifiedMemoryStoreTool, UnifiedMemoryTool
+
+from app.config.settings import (
     ENABLE_AGENT_BRIDGE,
     ENABLE_DASHBOARD_INTEGRATION,
     ENABLE_INTELLIGENT_ALERTING,
@@ -17,6 +19,8 @@ from ultimate_discord_intelligence_bot.settings import (
     ENABLE_UNIFIED_ORCHESTRATION,
     ENABLE_UNIFIED_ROUTER,
 )
+from domains.orchestration.agents.base import BaseAgent
+from domains.orchestration.agents.registry import register_agent
 from ultimate_discord_intelligence_bot.tools import (
     AdvancedPerformanceAnalyticsTool,
     CheckpointManagementTool,
@@ -26,11 +30,6 @@ from ultimate_discord_intelligence_bot.tools import (
     PerspectiveSynthesizerTool,
     PipelineTool,
     TimelineTool,
-)
-from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import (
-    UnifiedContextTool,
-    UnifiedMemoryStoreTool,
-    UnifiedMemoryTool,
 )
 from ultimate_discord_intelligence_bot.tools.observability.agent_bridge_tool import (
     AgentBridgeTool,
@@ -57,6 +56,7 @@ from ultimate_discord_intelligence_bot.tools.observability.unified_router_tool i
     RouterStatusTool,
     UnifiedRouterTool,
 )
+
 
 if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.tools._base import BaseTool

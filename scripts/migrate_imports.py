@@ -18,71 +18,138 @@ class ImportRewriter(ast.NodeTransformer):
         self.changes: list[str] = []
 
         # Comprehensive mapping: old_module -> new_module
+        # Updated for Phase 1-6 consolidations
         self.IMPORT_MAPPINGS: dict[str, str] = {
-            # StepResult - YES, moved to platform
-            "ultimate_discord_intelligence_bot.step_result": "platform.core.step_result",
-            # Settings - NO, stays in app layer (not migrated yet)
-            "ultimate_discord_intelligence_bot.settings": "ultimate_discord_intelligence_bot.settings",
-            "ultimate_discord_intelligence_bot.config": "ultimate_discord_intelligence_bot.config",
-            "ultimate_discord_intelligence_bot.config_schema": "ultimate_discord_intelligence_bot.config_schema",
-            "ultimate_discord_intelligence_bot.config_types": "ultimate_discord_intelligence_bot.config_types",
-            # Services migrations
-            "ultimate_discord_intelligence_bot.services.openrouter_service": "platform.llm.providers.openrouter",
-            "ultimate_discord_intelligence_bot.services.prompt_engine": "platform.prompts.engine",
-            "ultimate_discord_intelligence_bot.services.memory_service": "domains.memory.vector_store",
-            # Tools and analysis
-            "ultimate_discord_intelligence_bot.tools.analysis": "domains.intelligence.analysis",
-            "ultimate_discord_intelligence_bot.tools.verification": "domains.intelligence.verification",
-            "ultimate_discord_intelligence_bot.tools.acquisition": "domains.ingestion.providers",
-            # Orchestration
-            "ultimate_discord_intelligence_bot.agents": "domains.orchestration.agents",
-            "ultimate_discord_intelligence_bot.crew": "domains.orchestration.crew",
-            "ultimate_discord_intelligence_bot.crew_core": "domains.orchestration.crew",
-            # Observability
-            "ultimate_discord_intelligence_bot.obs": "platform.observability",
-            # HTTP and caching
-            "ultimate_discord_intelligence_bot.core.http_utils": "platform.http.http_utils",
-            "ultimate_discord_intelligence_bot.core.cache": "platform.cache",
-            "ultimate_discord_intelligence_bot.core": "platform.core",
-            # AI and RL
-            "ultimate_discord_intelligence_bot.ai.rl": "platform.rl",
-            "ultimate_discord_intelligence_bot.ai.routing": "platform.llm.routing",
-            "ultimate_discord_intelligence_bot.ai": "platform.rl",
-            # Security and policy
-            "ultimate_discord_intelligence_bot.security": "platform.security",
-            "ultimate_discord_intelligence_bot.policy": "platform.security.policy",
-            # src.* imports (platform)
-            "src.core": "platform.core",
-            "src.ai": "platform.rl",
-            "src.obs": "platform.observability",
-            "src.http": "platform.http",
-            "src.cache": "platform.cache",
-            "src.config": "platform.config",
-            "src.security": "platform.security",
-            # src.* imports (domains - more complex mapping)
-            "src.services.rag": "domains.memory.vector",
-            "src.services": "domains",  # Will need suffix matching
-            "src.ingest": "domains.ingestion",
-            "src.analysis": "domains.intelligence.analysis",
-            "src.verification": "domains.intelligence.verification",
-            "src.memory": "domains.memory",
-            "src.graphs": "graphs",  # Preserved module
-            "src.eval": "eval",  # Preserved module
-            # Legacy patterns
-            "core.settings": "platform.config.settings",
-            "core.secure_config": "platform.config.configuration",
+            # === Platform Layer Migrations ===
+            # Core infrastructure
             "core.step_result": "platform.core.step_result",
             "core.http_utils": "platform.http.http_utils",
+            "core.http": "platform.http",
             "core.cache": "platform.cache",
+            "core.rl": "platform.rl",
+            "core.observability": "platform.observability",
+            "core.security": "platform.security",
+            "core.realtime": "platform.realtime",
+            "core.configuration": "platform.config.configuration",
+            "core.dependencies": "platform.config.dependencies",
+            "core.memory": "platform.cache.memory",
+            "core.multimodal": "platform.llm.multimodal",
+            "core.privacy": "platform.security.privacy",
+            "core.rate_limiting": "platform.security.rate_limiting",
+            "core.resilience": "platform.http.resilience",
+            "core.routing": "platform.llm.routing",
+            "core.structured_llm": "platform.llm.structured",
+            "core.vector_search": "domains.memory.vector.search",
+            "core.learning_engine": "platform.rl.learning_engine",
+            "core.secure_config": "platform.config.configuration",
+            "core.settings": "platform.config.settings",
+            "core": "platform",
+            
+            # AI/RL migrations
+            "ai": "platform.rl",
+            "ai.rl": "platform.rl",
+            "ai.routing": "platform.llm.routing",
+            "ai.bandits": "platform.rl.bandits",
+            "ai.meta_learning": "platform.rl.meta_learning",
+            "ai.feature_engineering": "platform.rl.feature_engineering",
+            
+            # Observability migrations
             "obs": "platform.observability",
             "obs.metrics": "platform.observability.metrics",
-            # Ultimate app package config - keep in old location for now
-            "ultimate_discord_intelligence_bot.config.feature_flags": "ultimate_discord_intelligence_bot.config.feature_flags",
-            "ultimate_discord_intelligence_bot.config.base": "ultimate_discord_intelligence_bot.config.base",
-            "ultimate_discord_intelligence_bot.config.paths": "ultimate_discord_intelligence_bot.config.paths",
-            # Preserved modules (no change)
+            "obs.tracing": "platform.observability.tracing",
+            "obs.logging": "platform.observability.logging",
+            
+            # === Domain Layer Migrations ===
+            # Ingestion
+            "ingest": "domains.ingestion.pipeline",
+            "ingest.pipeline": "domains.ingestion.pipeline",
+            "ingest.providers": "domains.ingestion.providers",
+            "ingest.sources": "domains.ingestion.pipeline.sources",
+            "ingest.models": "domains.ingestion.pipeline.models",
+            
+            # Analysis
+            "analysis": "domains.intelligence.analysis",
+            "analysis.deduplication": "domains.intelligence.analysis.deduplication",
+            "analysis.highlight": "domains.intelligence.analysis.highlight",
+            "analysis.nlp": "domains.intelligence.analysis.nlp",
+            "analysis.safety": "domains.intelligence.analysis.safety",
+            "analysis.sentiment": "domains.intelligence.analysis.sentiment",
+            "analysis.topic": "domains.intelligence.analysis.topic",
+            "analysis.transcription": "domains.intelligence.analysis.transcription",
+            "analysis.vision": "domains.intelligence.analysis.vision",
+            "analysis.rerank": "domains.intelligence.analysis.rerank",
+            
+            # Memory
+            "memory": "domains.memory",
+            "memory.api": "domains.memory.api",
+            "memory.store": "domains.memory.store",
+            "memory.embeddings": "domains.memory.embeddings",
+            "memory.vector_store": "domains.memory.vector_store",
+            "memory.vector": "domains.memory.vector",
+            "memory.graph": "domains.memory.graph",
+            "memory.continual": "domains.memory.continual",
+            "memory.qdrant_provider": "domains.memory.vector.qdrant",
+            
+            # === App Layer Migrations ===
+            # Discord bot
+            "ultimate_discord_intelligence_bot.discord": "app.discord",
+            "ultimate_discord_intelligence_bot.discord_bot": "app.discord",
+            "ultimate_discord_intelligence_bot.crew": "app.crew_executor",
+            "ultimate_discord_intelligence_bot.config": "app.config",
+            "ultimate_discord_intelligence_bot.main": "app.main",
+            "ultimate_discord_intelligence_bot.step_result": "platform.core.step_result",
+            "ultimate_discord_intelligence_bot.settings": "app.config.settings",
+            
+            # Orchestration
+            "ultimate_discord_intelligence_bot.orchestrator": "domains.orchestration",
+            "ultimate_discord_intelligence_bot.agents": "domains.orchestration.crewai.agents",
+            "ultimate_discord_intelligence_bot.crew_core": "domains.orchestration.crew",
+            "ultimate_discord_intelligence_bot.crew_components": "domains.orchestration.crewai",
+            
+            # Services
+            "ultimate_discord_intelligence_bot.services.openrouter_service": "platform.llm.providers.openrouter",
+            "ultimate_discord_intelligence_bot.services.prompt_engine": "platform.prompts.engine",
+            "ultimate_discord_intelligence_bot.services.memory_service": "domains.memory",
+            
+            # Tools (moved to domains)
+            "ultimate_discord_intelligence_bot.tools.analysis": "domains.intelligence.analysis.tools",
+            "ultimate_discord_intelligence_bot.tools.verification": "domains.intelligence.verification.tools",
+            "ultimate_discord_intelligence_bot.tools.acquisition": "domains.ingestion.providers.tools",
+            "ultimate_discord_intelligence_bot.tools.memory": "domains.memory.tools",
+            
+            # Observability
+            "ultimate_discord_intelligence_bot.observability": "platform.observability",
+            "ultimate_discord_intelligence_bot.obs": "platform.observability",
+            
+            # Memory (app layer)
+            "ultimate_discord_intelligence_bot.memory": "domains.memory",
+            
+            # === Framework Consolidations ===
+            # CrewAI
+            "domains.orchestration.crewai.agents": "domains.orchestration.crewai.agents",
+            "domains.orchestration.crewai.tasks": "domains.orchestration.crewai.tasks",
+            "domains.orchestration.crewai.crew": "domains.orchestration.crewai.crew",
+            
+            # Qdrant
+            "domains.memory.vector.qdrant": "domains.memory.vector.qdrant",
+            
+            # DSPy
+            "platform.prompts.dspy": "platform.prompts.dspy",
+            
+            # LlamaIndex
+            "platform.rag.llamaindex": "platform.rag.llamaindex",
+            
+            # Mem0
+            "domains.memory.continual.mem0": "domains.memory.continual.mem0",
+            
+            # HippoRAG
+            "domains.memory.continual.hipporag": "domains.memory.continual.hipporag",
+            
+            # === Preserved Modules ===
             "server": "server",
             "mcp_server": "mcp_server",
+            "graphs": "graphs",
+            "eval": "eval",
         }
 
     def visit_Import(self, node: ast.Import) -> ast.Import:
@@ -141,12 +208,13 @@ class ImportRewriter(ast.NodeTransformer):
         return None
 
 
-def rewrite_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str]]:
+def rewrite_file(file_path: Path, dry_run: bool = False, backup: bool = True) -> tuple[bool, list[str]]:
     """Rewrite imports in a single file using AST.
 
     Args:
         file_path: Path to Python file to rewrite
         dry_run: If True, don't actually write changes
+        backup: If True, create .bak backup file
 
     Returns:
         Tuple of (changed?, list of change descriptions)
@@ -167,6 +235,11 @@ def rewrite_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str
         # Preserve original file if no changes were made to content
         # (AST might format slightly differently)
         if not dry_run:
+            # Create backup if requested
+            if backup:
+                backup_path = file_path.with_suffix(file_path.suffix + ".bak")
+                backup_path.write_text(source, encoding="utf-8")
+            
             file_path.write_text(new_source, encoding="utf-8")
 
         return True, rewriter.changes
@@ -177,13 +250,15 @@ def rewrite_file(file_path: Path, dry_run: bool = False) -> tuple[bool, list[str
         return False, [f"ERROR: {e}"]
 
 
-def main(target_dirs: list[Path], dry_run: bool = True, verbose: bool = False):
+def main(target_dirs: list[Path], dry_run: bool = True, verbose: bool = False, backup: bool = True, pattern_filter: str | None = None):
     """Run migration across all Python files.
 
     Args:
         target_dirs: List of directories to process
         dry_run: If True, don't actually write changes
         verbose: If True, show all changes, not just summary
+        backup: If True, create .bak backup files
+        pattern_filter: Optional pattern to filter files (e.g., "core", "ai", "obs")
     """
     files: list[Path] = []
     for target_dir in target_dirs:
@@ -195,16 +270,27 @@ def main(target_dirs: list[Path], dry_run: bool = True, verbose: bool = False):
             print(f"Warning: {target_dir} is not a file or directory, skipping")
             continue
 
+    # Filter files by pattern if specified
+    if pattern_filter:
+        files = [f for f in files if pattern_filter in str(f) or pattern_filter in f.read_text()]
+    
+    # Exclude backup files
+    files = [f for f in files if not f.name.endswith(".bak")]
+
     total = len(files)
     modified = 0
     errors = 0
 
     print(f"Scanning {total} Python files in {len(target_dirs)} locations...")
+    if pattern_filter:
+        print(f"Pattern filter: {pattern_filter}")
     print(f"Mode: {'DRY RUN' if dry_run else 'LIVE'}")
+    if backup and not dry_run:
+        print("Backup: Enabled (creating .bak files)")
     print()
 
     for i, file_path in enumerate(files, 1):
-        changed, changes = rewrite_file(file_path, dry_run=dry_run)
+        changed, changes = rewrite_file(file_path, dry_run=dry_run, backup=backup)
 
         if changed:
             modified += 1
@@ -253,6 +339,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Show detailed output for all files",
     )
+    parser.add_argument(
+        "--no-backup",
+        action="store_true",
+        help="Don't create .bak backup files",
+    )
+    parser.add_argument(
+        "--pattern",
+        type=str,
+        help="Filter files by pattern (e.g., 'core', 'ai', 'obs')",
+    )
 
     args = parser.parse_args()
 
@@ -263,4 +359,4 @@ if __name__ == "__main__":
         print("⚠️  Executing import migration - files will be modified")
         # Auto-confirm when called from automation
 
-    main(args.targets, dry_run=dry_run, verbose=args.verbose)
+    main(args.targets, dry_run=dry_run, verbose=args.verbose, backup=not args.no_backup, pattern_filter=args.pattern)

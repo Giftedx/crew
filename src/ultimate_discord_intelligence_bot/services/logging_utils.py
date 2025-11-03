@@ -6,12 +6,14 @@ records can be queried for offline analysis or reinforcement learning feedback.
 """
 
 from __future__ import annotations
+
 import json
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
+from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
-from core.time import default_utc_now
+
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -23,7 +25,7 @@ def _as_list(value: Iterable[str] | None) -> StepResult:
     """Return a comma separated list or empty string."""
     if not value:
         return ""
-    return ",".join((str(v) for v in value))
+    return ",".join(str(v) for v in value)
 
 
 @dataclass

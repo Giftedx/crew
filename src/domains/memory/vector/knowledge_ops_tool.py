@@ -1,13 +1,17 @@
 from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from platform.core.step_result import StepResult
 from typing import Any
+
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
+
 from kg.creator_kg_store import CreatorKGStore
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +162,7 @@ class KnowledgeOpsTool(BaseTool):
         user_team_permissions = self.user_permissions.get(user_id, {}).get(team_id, [])
         if "admin" in user_team_permissions:
             return True
-        return all((perm in user_team_permissions for perm in required_permissions))
+        return all(perm in user_team_permissions for perm in required_permissions)
 
     def _search_knowledge(self, query: str, team_id: str, user_id: str) -> StepResult:
         """Search the knowledge base."""

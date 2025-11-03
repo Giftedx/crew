@@ -1,8 +1,12 @@
 """Basic tests for AudioTranscriptionTool."""
-from unittest.mock import patch
-import pytest
+
 from platform.core.step_result import StepResult
+from unittest.mock import patch
+
+import pytest
+
 from domains.ingestion.providers.audio_transcription_tool import AudioTranscriptionTool
+
 
 class TestAudioTranscriptionTool:
     """Test cases for AudioTranscriptionTool."""
@@ -14,20 +18,20 @@ class TestAudioTranscriptionTool:
 
     def test_tool_initialization(self, tool):
         """Test tool initializes correctly."""
-        assert tool.name == 'Enhanced Whisper Audio Transcription'
-        assert 'transcribe' in tool.description.lower()
+        assert tool.name == "Enhanced Whisper Audio Transcription"
+        assert "transcribe" in tool.description.lower()
 
     def test_run_with_missing_file(self, tool):
         """Test transcription with missing file."""
-        with patch('os.path.exists', return_value=False):
-            result = tool._run('nonexistent.mp4')
+        with patch("os.path.exists", return_value=False):
+            result = tool._run("nonexistent.mp4")
             assert not result.success
-            assert 'not found' in result.error.lower()
+            assert "not found" in result.error.lower()
 
     def test_run_with_valid_file_basic(self, tool):
         """Test basic transcription functionality."""
-        with patch('os.path.exists', return_value=True):
-            result = tool._run('test_audio.mp4')
+        with patch("os.path.exists", return_value=True):
+            result = tool._run("test_audio.mp4")
             assert isinstance(result, StepResult)
 
     def test_cache_initialization(self, tool):
@@ -39,15 +43,15 @@ class TestAudioTranscriptionTool:
 
     def test_model_id_configuration(self, tool):
         """Test model ID configuration."""
-        assert 'distil-whisper' in tool._model_id
-        custom_tool = AudioTranscriptionTool(model_id='custom-model')
-        assert custom_tool._model_id == 'custom-model'
+        assert "distil-whisper" in tool._model_id
+        custom_tool = AudioTranscriptionTool(model_id="custom-model")
+        assert custom_tool._model_id == "custom-model"
 
     def test_device_configuration(self, tool):
         """Test device configuration."""
-        assert tool._device in ['cpu', 'cuda:0']
-        custom_tool = AudioTranscriptionTool(device='cpu')
-        assert custom_tool._device == 'cpu'
+        assert tool._device in ["cpu", "cuda:0"]
+        custom_tool = AudioTranscriptionTool(device="cpu")
+        assert custom_tool._device == "cpu"
 
     def test_chunk_length_configuration(self, tool):
         """Test chunk length configuration."""

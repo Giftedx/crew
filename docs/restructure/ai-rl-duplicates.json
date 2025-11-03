@@ -1,0 +1,59 @@
+{
+  "source_directory": "src/ai",
+  "target_directory": "src/platform/rl",
+  "total_matching_names": 5,
+  "identical_files": 0,
+  "different_implementations": 5,
+  "duplicates": [
+    {
+      "filename": "tool_routing_bandit.py",
+      "source_path": "src/ai/rl/tool_routing_bandit.py",
+      "target_path": "platform/rl/tool_routing_bandit.py",
+      "md5_hash": "d9edd89c6c0543c3cd67b664b571d960",
+      "target_hash": "316c36149e54bfbeaabd15e4d5f4cd16",
+      "file_size": 15807,
+      "target_size": 14084,
+      "verified_identical": false
+    },
+    {
+      "filename": "meta_learning_aggregator.py",
+      "source_path": "src/ai/rl/meta_learning_aggregator.py",
+      "target_path": "platform/rl/meta_learning_aggregator.py",
+      "md5_hash": "18f5d487994caf69fdeba6fcde8cfb3d",
+      "target_hash": "5c39e25f04e94e9370190659d7665583",
+      "file_size": 17663,
+      "target_size": 16132,
+      "verified_identical": false
+    },
+    {
+      "filename": "langsmith_trajectory_evaluator.py",
+      "source_path": "src/ai/rl/langsmith_trajectory_evaluator.py",
+      "target_path": "platform/rl/langsmith_trajectory_evaluator.py",
+      "md5_hash": "d611816bd1d1278d6250f83c4cd02533",
+      "target_hash": "4a2c5a59afe2b17fab728f29e3efc0a9",
+      "file_size": 7450,
+      "target_size": 7109,
+      "verified_identical": false
+    },
+    {
+      "filename": "threshold_tuning_bandit.py",
+      "source_path": "src/ai/rl/threshold_tuning_bandit.py",
+      "target_path": "platform/rl/threshold_tuning_bandit.py",
+      "md5_hash": "3edfd295150dba4b02528b578435c801",
+      "target_hash": "256a847ca68dbc0f3324306feb574ba4",
+      "file_size": 14206,
+      "target_size": 13052,
+      "verified_identical": false
+    },
+    {
+      "filename": "agent_routing_bandit.py",
+      "source_path": "src/ai/rl/agent_routing_bandit.py",
+      "target_path": "platform/rl/agent_routing_bandit.py",
+      "md5_hash": "aab9435a754d529d03230b109b52ddce",
+      "target_hash": "43be094990da7dc2af8f8c78f0d6b62e",
+      "file_size": 17358,
+      "target_size": 15990,
+      "verified_identical": false
+    }
+  ]
+}

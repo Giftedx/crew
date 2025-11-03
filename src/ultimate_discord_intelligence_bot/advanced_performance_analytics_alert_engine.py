@@ -22,13 +22,10 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
+from platform.time import default_utc_now
 from typing import Any
 
-from core.time import default_utc_now
-
-from .advanced_performance_analytics_integration import (
-    AdvancedPerformanceAnalyticsSystem,
-)
+from .advanced_performance_analytics_integration import AdvancedPerformanceAnalyticsSystem
 
 
 logger = logging.getLogger(__name__)
@@ -72,14 +69,7 @@ class PerformanceAlert:
 
     def to_discord_format(self) -> dict[str, Any]:
         """Convert alert to Discord-friendly format."""
-        # Choose emoji based on severity
-        severity_emojis = {
-            AlertSeverity.CRITICAL: "🚨",
-            AlertSeverity.WARNING: "⚠️",
-            AlertSeverity.INFO: "i",
-        }
-
-        # Category emojis for better visual identification
+        severity_emojis = {AlertSeverity.CRITICAL: "🚨", AlertSeverity.WARNING: "⚠️", AlertSeverity.INFO: "i"}
         category_emojis = {
             AlertCategory.PERFORMANCE_DEGRADATION: "📉",
             AlertCategory.RESOURCE_EXHAUSTION: "💾",
@@ -88,11 +78,8 @@ class PerformanceAlert:
             AlertCategory.OPTIMIZATION_OPPORTUNITY: "⚡",
             AlertCategory.SYSTEM_HEALTH: "🏥",
         }
-
         severity_emoji = severity_emojis.get(self.severity, "🔔")
         category_emoji = category_emojis.get(self.category, "📊")
-
-        # Format metrics section
         metrics_text = ""
         if self.metrics:
             metrics_lines = []
@@ -104,37 +91,14 @@ class PerformanceAlert:
                 else:
                     metrics_lines.append(f"📊 {metric}: {value:.2f}")
             metrics_text = "\n".join(metrics_lines)
-
-        # Format recommendations
         recommendations_text = ""
         if self.recommendations:
             recommendations_text = "\n**Recommendations:**\n" + "\n".join(f"• {rec}" for rec in self.recommendations)
-
-        # Format tags
         tags_text = ""
         if self.tags:
             tags_text = f"\n**Tags:** {', '.join(self.tags)}"
-
-        # Create main message content
-        content = f"""{severity_emoji} **{self.severity.value.upper()} ALERT** {category_emoji}
-
-**{self.title}**
-
-{self.description}
-
-**Metrics:**
-{metrics_text}
-{recommendations_text}
-{tags_text}
-
-**Source:** {self.source} | **Time:** {self.timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")}
-**Alert ID:** `{self.alert_id}`"""
-
-        return {
-            "content": content,
-            "username": "Performance Analytics",
-            "allowed_mentions": {"users": []},
-        }
+        content = f"{severity_emoji} **{self.severity.value.upper()} ALERT** {category_emoji}\n\n**{self.title}**\n\n{self.description}\n\n**Metrics:**\n{metrics_text}\n{recommendations_text}\n{tags_text}\n\n**Source:** {self.source} | **Time:** {self.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC')}\n**Alert ID:** `{self.alert_id}`"
+        return {"content": content, "username": "Performance Analytics", "allowed_mentions": {"users": []}}
 
 
 @dataclass
@@ -168,8 +132,6 @@ class AdvancedPerformanceAnalyticsAlertEngine:
         self.alert_rules: dict[str, AlertRule] = {}
         self.alert_history: list[PerformanceAlert] = []
         self.last_alert_times: dict[str, datetime] = {}
-
-        # Initialize default alert rules
         self._initialize_default_rules()
 
     def _initialize_default_rules(self) -> None:
@@ -181,11 +143,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 description="Detect critical performance degradation across system components",
                 category=AlertCategory.PERFORMANCE_DEGRADATION,
                 severity=AlertSeverity.CRITICAL,
-                metric_thresholds={
-                    "overall_performance_score": 0.5,
-                    "response_time": 5.0,
-                    "error_rate": 0.1,
-                },
+                metric_thresholds={"overall_performance_score": 0.5, "response_time": 5.0, "error_rate": 0.1},
                 cooldown_minutes=15,
                 tags=["critical", "performance", "degradation"],
             ),
@@ -195,11 +153,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 description="Monitor for resource exhaustion indicators",
                 category=AlertCategory.RESOURCE_EXHAUSTION,
                 severity=AlertSeverity.WARNING,
-                metric_thresholds={
-                    "memory_usage": 0.85,
-                    "cpu_usage": 0.8,
-                    "disk_usage": 0.9,
-                },
+                metric_thresholds={"memory_usage": 0.85, "cpu_usage": 0.8, "disk_usage": 0.9},
                 cooldown_minutes=30,
                 tags=["resources", "capacity", "warning"],
             ),
@@ -209,10 +163,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 description="Statistical anomalies in performance metrics",
                 category=AlertCategory.ANOMALY_DETECTION,
                 severity=AlertSeverity.INFO,
-                metric_thresholds={
-                    "anomaly_score": 0.7,
-                    "deviation_threshold": 2.0,
-                },
+                metric_thresholds={"anomaly_score": 0.7, "deviation_threshold": 2.0},
                 cooldown_minutes=60,
                 tags=["anomaly", "statistics", "detection"],
             ),
@@ -222,10 +173,7 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 description="Early warning based on predictive analytics",
                 category=AlertCategory.PREDICTIVE_WARNING,
                 severity=AlertSeverity.WARNING,
-                metric_thresholds={
-                    "forecast_degradation": 0.3,
-                    "prediction_confidence": 0.8,
-                },
+                metric_thresholds={"forecast_degradation": 0.3, "prediction_confidence": 0.8},
                 cooldown_minutes=120,
                 tags=["predictive", "forecast", "early-warning"],
             ),
@@ -235,15 +183,11 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 description="Identify opportunities for performance optimization",
                 category=AlertCategory.OPTIMIZATION_OPPORTUNITY,
                 severity=AlertSeverity.INFO,
-                metric_thresholds={
-                    "optimization_potential": 0.2,
-                    "efficiency_score": 0.7,
-                },
+                metric_thresholds={"optimization_potential": 0.2, "efficiency_score": 0.7},
                 cooldown_minutes=240,
                 tags=["optimization", "efficiency", "opportunity"],
             ),
         ]
-
         for rule in default_rules:
             self.alert_rules[rule.rule_id] = rule
 
@@ -282,11 +226,9 @@ class AdvancedPerformanceAnalyticsAlertEngine:
         """
         if rule_id not in self.last_alert_times:
             return False
-
         rule = self.alert_rules.get(rule_id)
         if not rule:
             return False
-
         cooldown_period = timedelta(minutes=rule.cooldown_minutes)
         time_since_last = default_utc_now() - self.last_alert_times[rule_id]
         return time_since_last < cooldown_period
@@ -302,42 +244,28 @@ class AdvancedPerformanceAnalyticsAlertEngine:
         """
         try:
             logger.info(f"Evaluating analytics data for alerts (lookback: {lookback_hours}h)")
-
-            # Get comprehensive analytics results
             analytics_results = await self.analytics_system.run_comprehensive_performance_analysis(
                 lookback_hours=lookback_hours, include_optimization=False
             )
-
             if "error" in analytics_results:
                 logger.error(f"Failed to get analytics results: {analytics_results['error']}")
                 return []
-
             alerts: list[PerformanceAlert] = []
-
-            # Evaluate each alert rule
             for rule_id, rule in self.alert_rules.items():
                 if not rule.enabled:
                     continue
-
                 if self._is_rule_in_cooldown(rule_id):
                     logger.debug(f"Rule {rule_id} is in cooldown, skipping")
                     continue
-
                 alert = await self._evaluate_rule_against_analytics(rule, analytics_results)
                 if alert:
                     alerts.append(alert)
                     self.last_alert_times[rule_id] = default_utc_now()
-
-            # Store alerts in history
             self.alert_history.extend(alerts)
-
-            # Keep only recent history (last 1000 alerts)
             if len(self.alert_history) > 1000:
                 self.alert_history = self.alert_history[-1000:]
-
             logger.info(f"Generated {len(alerts)} alerts from analytics evaluation")
             return alerts
-
         except Exception as e:
             logger.error(f"Error evaluating analytics for alerts: {e}")
             return []
@@ -355,12 +283,9 @@ class AdvancedPerformanceAnalyticsAlertEngine:
             Alert if rule conditions are met, None otherwise
         """
         try:
-            # Extract relevant metrics from analytics results
             executive_summary = analytics_results.get("executive_summary", {})
             component_results = analytics_results.get("component_results", {})
             priority_recommendations = analytics_results.get("priority_recommendations", [])
-
-            # Build metrics dictionary from analytics results
             metrics = {
                 "overall_performance_score": executive_summary.get("overall_performance_score", 1.0),
                 "system_health_score": component_results.get("analytics", {}).get("health_score", 1.0),
@@ -369,51 +294,36 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 "early_warnings": component_results.get("predictive", {}).get("early_warnings", 0),
                 "optimization_potential": component_results.get("optimization", {}).get("success_rate", 0),
             }
-
-            # Check threshold violations
             violated_thresholds = []
             violated_metrics = {}
-
             for metric_name, threshold in rule.metric_thresholds.items():
                 metric_value = metrics.get(metric_name, 0)
                 if metric_value > threshold:
                     violated_thresholds.append(metric_name)
                     violated_metrics[metric_name] = metric_value
-
-            # Only generate alert if thresholds are violated
             if not violated_thresholds:
                 return None
-
-            # Generate alert
             alert_id = f"{rule.rule_id}_{default_utc_now().strftime('%Y%m%d_%H%M%S')}"
-
-            # Extract relevant recommendations
             relevant_recommendations = []
-            for rec in priority_recommendations[:3]:  # Take top 3 recommendations
+            for rec in priority_recommendations[:3]:
                 if isinstance(rec, dict) and "title" in rec:
                     relevant_recommendations.append(rec["title"])
                 elif isinstance(rec, str):
                     relevant_recommendations.append(rec)
-
-            # Add rule-specific recommendations
             if rule.category == AlertCategory.PERFORMANCE_DEGRADATION:
                 relevant_recommendations.append("Review system performance metrics and identify bottlenecks")
             elif rule.category == AlertCategory.RESOURCE_EXHAUSTION:
                 relevant_recommendations.append("Scale resources or optimize resource usage")
             elif rule.category == AlertCategory.ANOMALY_DETECTION:
                 relevant_recommendations.append("Investigate anomalous behavior patterns")
-
-            # Create detailed description
             violated_details = []
             for metric in violated_thresholds:
                 value = violated_metrics[metric]
                 threshold = rule.metric_thresholds[metric]
                 violated_details.append(f"{metric}: {value:.3f} > {threshold:.3f}")
-
             description = f"{rule.description}\n\nViolated thresholds:\n" + "\n".join(
                 f"• {detail}" for detail in violated_details
             )
-
             alert = PerformanceAlert(
                 alert_id=alert_id,
                 severity=rule.severity,
@@ -430,10 +340,8 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                     "analytics_timestamp": analytics_results.get("analysis_metadata", {}).get("timestamp"),
                 },
             )
-
             logger.info(f"Generated alert: {alert.title} (ID: {alert_id})")
             return alert
-
         except Exception as e:
             logger.error(f"Error evaluating rule {rule.rule_id}: {e}")
             return None
@@ -450,23 +358,16 @@ class AdvancedPerformanceAnalyticsAlertEngine:
         try:
             cutoff_time = default_utc_now() - timedelta(hours=hours)
             recent_alerts = [alert for alert in self.alert_history if alert.timestamp >= cutoff_time]
-
-            # Count by severity
             severity_counts = {}
             for severity in AlertSeverity:
                 severity_counts[severity.value] = len([a for a in recent_alerts if a.severity == severity])
-
-            # Count by category
             category_counts = {}
             for category in AlertCategory:
                 category_counts[category.value] = len([a for a in recent_alerts if a.category == category])
-
-            # Most common metrics
             metric_violations: dict[str, Any] = {}
             for alert in recent_alerts:
                 for metric in alert.metrics:
                     metric_violations[metric] = metric_violations.get(metric, 0) + 1
-
             return {
                 "total_alerts": len(recent_alerts),
                 "time_period_hours": hours,
@@ -476,7 +377,6 @@ class AdvancedPerformanceAnalyticsAlertEngine:
                 "active_rules": len([r for r in self.alert_rules.values() if r.enabled]),
                 "rules_in_cooldown": len([r for r in self.alert_rules if self._is_rule_in_cooldown(r)]),
             }
-
         except Exception as e:
             logger.error(f"Error generating alert summary: {e}")
             return {"error": str(e)}
@@ -488,18 +388,15 @@ class AdvancedPerformanceAnalyticsAlertEngine:
             interval_minutes: Minutes between evaluation cycles
         """
         logger.info(f"Starting continuous monitoring (interval: {interval_minutes} minutes)")
-
         while True:
             try:
                 alerts = await self.evaluate_analytics_for_alerts(lookback_hours=2)
                 if alerts:
                     logger.info(f"Continuous monitoring generated {len(alerts)} alerts")
-
                 await asyncio.sleep(interval_minutes * 60)
-
             except asyncio.CancelledError:
                 logger.info("Continuous monitoring cancelled")
                 break
             except Exception as e:
                 logger.error(f"Error in continuous monitoring cycle: {e}")
-                await asyncio.sleep(60)  # Short delay before retry
+                await asyncio.sleep(60)

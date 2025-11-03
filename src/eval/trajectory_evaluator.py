@@ -5,24 +5,28 @@ but built on the existing StepResult contract and infrastructure.
 """
 
 from __future__ import annotations
+
 import json
 import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-from core import settings as core_settings
-from eval.langsmith_adapter import LangSmithEvaluationAdapter
-from platform.observability import metrics, tracing
-from ultimate_discord_intelligence_bot.services.rl_model_router import TrajectoryFeedback
+from platform import settings as core_settings
 from platform.core.step_result import StepResult
+from platform.observability import metrics, tracing
+from typing import TYPE_CHECKING, Any
+
+from eval.langsmith_adapter import LangSmithEvaluationAdapter
+from ultimate_discord_intelligence_bot.services.rl_model_router import TrajectoryFeedback
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
+
 
 logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
-    from ai.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
-    from core.learning_engine import LearningEngine
-    from core.router import Router
+    from platform.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
+    from platform.rl.learning_engine import LearningEngine
+    from platform.router import Router
+
     from ultimate_discord_intelligence_bot.services.rl_model_router import RLModelRouter
 _AGENTEVALS_AVAILABLE = False
 _agentevals_create_judge = None
@@ -110,7 +114,7 @@ class TrajectoryEvaluator:
                 self.langsmith_adapter = None
             if self.langsmith_adapter is not None:
                 try:
-                    from ai.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
+                    from platform.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
 
                     self.langsmith_feedback = LangSmithTrajectoryEvaluator(
                         settings=self._settings, adapter=self.langsmith_adapter
@@ -450,7 +454,7 @@ class TrajectoryEvaluator:
         """Simulate LLM evaluation (replace with actual LLM call)."""
         accuracy_score = 0.8 if trajectory.success else 0.3
         efficiency_score = max(0.1, 1.0 - len(trajectory.steps) / 20)
-        error_handling_score = 0.9 if not any((step.error for step in trajectory.steps)) else 0.6
+        error_handling_score = 0.9 if not any(step.error for step in trajectory.steps) else 0.6
         overall_score = (accuracy_score + efficiency_score + error_handling_score) / 3 > 0.7
         return {
             "score": overall_score,

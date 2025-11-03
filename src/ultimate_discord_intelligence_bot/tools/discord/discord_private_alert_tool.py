@@ -7,12 +7,13 @@ Instrumentation:
 """
 
 from __future__ import annotations
+
 import ipaddress
 import os
-from urllib.parse import urlparse
+from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_post
 from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+from urllib.parse import urlparse
 
 
 class DiscordPrivateAlertTool:

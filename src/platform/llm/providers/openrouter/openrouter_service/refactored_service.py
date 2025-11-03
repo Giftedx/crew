@@ -10,9 +10,8 @@ import copy
 import logging
 from platform.config.configuration import get_config
 from platform.core.step_result import StepResult
+from platform.rl.learning_engine import LearningEngine
 from typing import TYPE_CHECKING, Any
-
-from core.learning_engine import LearningEngine
 
 
 if TYPE_CHECKING:

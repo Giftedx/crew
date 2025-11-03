@@ -6,17 +6,23 @@ database queries, semantic search, and cross-platform aggregation.
 """
 
 from __future__ import annotations
+
 import logging
 from typing import TYPE_CHECKING, Any
+
 from sqlalchemy import and_, desc
+
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+
 
 try:
     from ultimate_discord_intelligence_bot.creator_ops.media.embeddings import EmbeddingsGenerator
 except ImportError:
     EmbeddingsGenerator = None
-from ultimate_discord_intelligence_bot.creator_ops.models import Account, Claim, Interaction, Media, Person, Topic, Unit
 from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.creator_ops.models import Account, Claim, Interaction, Media, Person, Topic, Unit
+
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session

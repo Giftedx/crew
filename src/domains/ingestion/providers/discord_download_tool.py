@@ -13,11 +13,14 @@ Test Compatibility:
 import os
 import tempfile
 from pathlib import Path
-from pydantic import AnyHttpUrl, BaseModel
+from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_get
 from platform.observability.metrics import get_metrics
-from platform.core.step_result import StepResult
+
+from pydantic import AnyHttpUrl, BaseModel
+
 from ._base import BaseTool
+
 
 HTTP_OK = 200
 _ENV_VAR = "DISCORD_DOWNLOAD_DIR"

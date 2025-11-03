@@ -13,9 +13,11 @@ usage in a single location.
 """
 
 from __future__ import annotations
+
 import contextlib
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, runtime_checkable
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import ErrorContext, StepResult
@@ -150,7 +152,7 @@ class BaseTool(StepResultHelperMixin, Generic[R_co]):
 
             config = get_config()
             if getattr(config, "enable_agent_message_bus", False):
-                from ai.agent_messaging.redis_bus import AgentMessage, MessagePriority, MessageType
+                from platform.rl.agent_messaging.redis_bus import AgentMessage, MessagePriority, MessageType
 
                 type_mapping = {
                     "note": MessageType.NOTE,
@@ -165,7 +167,7 @@ class BaseTool(StepResultHelperMixin, Generic[R_co]):
                 ctx = current_tenant()
                 tenant_id = ctx.tenant_id if ctx else "default"
                 import asyncio
-                from ai.agent_messaging import AgentMessageBus
+                from platform.rl.agent_messaging import AgentMessageBus
 
                 try:
                     asyncio.get_running_loop()
@@ -193,6 +195,7 @@ class BaseTool(StepResultHelperMixin, Generic[R_co]):
                 return
         with contextlib.suppress(Exception):
             from typing import cast
+
             from ultimate_discord_intelligence_bot.tenancy.shared_context import (
                 AgentMessage,
                 MessageType,

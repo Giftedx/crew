@@ -19,12 +19,14 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 try:
@@ -260,9 +262,7 @@ class VisualParsingService:
                     "text": full_text.strip(),
                     "ocr_results": [r.__dict__ for r in ocr_results],
                     "num_detections": len(ocr_results),
-                    "avg_confidence": sum((r.confidence for r in ocr_results)) / len(ocr_results)
-                    if ocr_results
-                    else 0.0,
+                    "avg_confidence": sum(r.confidence for r in ocr_results) / len(ocr_results) if ocr_results else 0.0,
                 }
             )
         except Exception as e:

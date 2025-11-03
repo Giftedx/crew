@@ -12,9 +12,9 @@ import logging
 from platform.config.configuration import SecureConfig, get_config
 from platform.core.step_result import StepResult
 from platform.observability import metrics
+from platform.orchestration.application import UnifiedFeedbackOrchestrator, get_orchestrator
 from typing import TYPE_CHECKING, Any
 
-from core.orchestration.application import UnifiedFeedbackOrchestrator, get_orchestrator
 from eval.langsmith_adapter import LangSmithEvaluationAdapter
 
 

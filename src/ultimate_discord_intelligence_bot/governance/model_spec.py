@@ -5,11 +5,12 @@ hierarchy, instruction evaluation, and compliance checking.
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
 
 
 class ComplianceLevel(Enum):
@@ -238,14 +239,14 @@ class ModelSpecEnforcer:
         """Evaluate an instruction against a specific rule."""
         instruction_lower = instruction.lower()
         if rule.level == "root" and any(
-            (term in instruction_lower for term in ["harm", "violence", "illegal", "dangerous"])
+            term in instruction_lower for term in ["harm", "violence", "illegal", "dangerous"]
         ):
             return {
                 "violation": True,
                 "warning": False,
                 "reason": f"Potential violation of root principle: {rule.principle}",
             }
-        if any((term in instruction_lower for term in ["personal", "private", "confidential"])):
+        if any(term in instruction_lower for term in ["personal", "private", "confidential"]):
             return {"violation": False, "warning": True, "reason": f"Warning for rule: {rule.principle}"}
         return {"violation": False, "warning": False, "reason": "No issues detected"}
 
@@ -317,7 +318,7 @@ class ModelSpecEnforcer:
     def _check_response_against_rule(self, response: str, rule: ChainOfCommand) -> dict[str, Any]:
         """Check a response against a specific rule."""
         response_lower = response.lower()
-        if rule.level == "root" and any((term in response_lower for term in ["harmful", "dangerous", "illegal"])):
+        if rule.level == "root" and any(term in response_lower for term in ["harmful", "dangerous", "illegal"]):
             return {
                 "violation": True,
                 "warning": False,

@@ -1,0 +1,46 @@
+# Standard Depth Tasks - Balanced Analysis
+#
+# Use case: General-purpose intelligence gathering
+# Tasks: Download → Transcribe → Analyze (3 tasks)
+# Processing time: ~2-5 minutes
+
+plan_autonomy_mission:
+  description: >-
+    Launch standard intelligence mission for {request}. Coordinate acquisition,
+    transcription, and analysis stages with budget tracking.
+  expected_output: Mission plan with tool usage and routing decisions.
+  agent: mission_orchestrator
+  human_input: false
+  async_execution: false
+  output_file: output/standard_mission_{timestamp}.md
+
+capture_source_media:
+  description: >-
+    Resolve and download high-quality media for {url} across supported platforms.
+  expected_output: Download manifest with file paths, formats, and metadata.
+  agent: acquisition_specialist
+  human_input: false
+  async_execution: true
+  output_file: output/download_manifest_{url_hash}.json
+
+transcribe_and_index_media:
+  description: >-
+    Produce accurate transcripts with timestamps and searchable indices.
+  expected_output: Transcript bundle with quality indicators and index references.
+  agent: transcription_engineer
+  context:
+    - capture_source_media
+  human_input: false
+  async_execution: false
+  output_file: output/transcript_{url_hash}.json
+
+map_transcript_insights:
+  description: >-
+    Analyze transcripts for sentiment, topics, and noteworthy excerpts.
+  expected_output: Insight report with themes, sentiment summary, and highlights.
+  agent: analysis_cartographer
+  context:
+    - transcribe_and_index_media
+  human_input: false
+  async_execution: false
+  output_file: output/insight_map_{url_hash}.json

@@ -1,12 +1,16 @@
 """Search Qdrant memory for relevant documents."""
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
-from memory.qdrant_provider import get_qdrant_client
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
+
+from domains.memory.vector.qdrant import get_qdrant_client
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant, mem_ns
+
 from .._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence

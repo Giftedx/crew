@@ -13,10 +13,12 @@ Contract:
 """
 
 from __future__ import annotations
+
 import contextlib
-from typing import Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any
+
 from ._base import BaseTool
 
 
@@ -29,8 +31,8 @@ class RagQueryVectorStoreTool(BaseTool[StepResult]):
         self._metrics = get_metrics()
 
     def _vector_search(self, namespace: str, query_text: str, top_k: int) -> list[dict[str, Any]]:
-        from memory import embeddings
-        from memory.vector_store import VectorStore
+        from domains.memory import embeddings
+        from domains.memory.vector_store import VectorStore
 
         store = VectorStore()
         vec = embeddings.embed([query_text])[0]

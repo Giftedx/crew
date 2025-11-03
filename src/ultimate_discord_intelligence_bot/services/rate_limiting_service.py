@@ -1,19 +1,22 @@
 """Rate limiting service for the Ultimate Discord Intelligence Bot."""
 
 from __future__ import annotations
+
 import logging
-from ultimate_discord_intelligence_bot.settings import (
+from platform.core.step_result import StepResult
+
+from app.config.settings import (
     ENABLE_DISTRIBUTED_RATE_LIMITING,
     RATE_LIMIT_FALLBACK_TO_LOCAL,
     RATE_LIMIT_GLOBAL_CAPACITY,
     RATE_LIMIT_GLOBAL_REFILL_PER_SEC,
     RATE_LIMIT_REDIS_URL,
 )
-from platform.core.step_result import StepResult
+
 
 logger = logging.getLogger(__name__)
 try:
-    from core.rate_limiting import DistributedRateLimiter
+    from platform.security.rate_limiting import DistributedRateLimiter
 
     RATE_LIMITING_AVAILABLE = True
 except ImportError:

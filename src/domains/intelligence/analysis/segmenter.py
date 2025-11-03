@@ -1,11 +1,14 @@
 """Transcript chunking utilities for retrieval augmented generation."""
 
 from __future__ import annotations
+
 import contextlib
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 from platform.observability import metrics
-from ultimate_discord_intelligence_bot.settings import Settings
+from typing import TYPE_CHECKING
+
+from app.config.settings import Settings
+
 
 if TYPE_CHECKING:
     from .transcribe import Transcript
@@ -45,10 +48,10 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
     for seg in transcript.segments:
         if not buf:
             start = seg.start
-        candidate_len = sum((len(t) for t in buf)) + len(seg.text) + len(buf)
+        candidate_len = sum(len(t) for t in buf) + len(seg.text) + len(buf)
         candidate_tokens = int(candidate_len * approx_tokens_per_char) if token_mode else 0
         flush = False
-        if token_mode and candidate_tokens > target_tokens and buf or (candidate_len > max_chars and buf):
+        if (token_mode and candidate_tokens > target_tokens and buf) or (candidate_len > max_chars and buf):
             flush = True
         if flush:
             text = " ".join(buf)

@@ -38,16 +38,15 @@ import time
 from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from platform.llm.routing.bandit_router import ThompsonBanditRouter
+from platform.llm.routing.linucb_router import LinUCBRouter
+from platform.llm.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
+from platform.llm.routing.vw_bandit_router import VWBanditRouter
 from typing import TYPE_CHECKING, Any
-
-from ai.routing.bandit_router import ThompsonBanditRouter
-from ai.routing.linucb_router import LinUCBRouter
-from ai.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
-from ai.routing.vw_bandit_router import VWBanditRouter
 
 
 if TYPE_CHECKING:
-    from core.llm_client import LLMCallResult, LLMClient
+    from platform.llm_client import LLMCallResult, LLMClient
 logger = logging.getLogger(__name__)
 try:
     from platform.observability.metrics import get_metrics as _gm

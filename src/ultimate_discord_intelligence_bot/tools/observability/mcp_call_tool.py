@@ -6,11 +6,14 @@ from each MCP module are exposed.
 """
 
 from __future__ import annotations
+
 import contextlib
-from typing import TYPE_CHECKING, Any
-from platform.observability.metrics import get_metrics
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import TYPE_CHECKING, Any
+
 from ._base import BaseTool
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable

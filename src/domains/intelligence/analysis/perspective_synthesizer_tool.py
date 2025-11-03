@@ -6,9 +6,11 @@ the routing layer.
 """
 
 from __future__ import annotations
-from typing import Any, ClassVar, TypedDict
-from platform.observability.metrics import get_metrics
+
 from platform.core.step_result import StepResult
+from platform.observability.metrics import get_metrics
+from typing import Any, ClassVar, TypedDict
+
 from ..services import MemoryService, OpenRouterService, PromptEngine
 from ._base import BaseTool
 
@@ -42,7 +44,7 @@ class PerspectiveSynthesizerTool(BaseTool[StepResult]):
             seq = list(search_results[0])
         else:
             seq = list(search_results)
-        combined = "\n".join((str(r) for r in seq if r)).strip()
+        combined = "\n".join(str(r) for r in seq if r).strip()
         if not combined:
             self._metrics.counter(
                 "tool_runs_total", labels={"tool": "perspective_synthesizer", "outcome": "success"}

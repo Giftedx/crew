@@ -14,7 +14,9 @@ Safe defaults only; integrates lightly with existing core/settings.
 """
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -179,7 +181,7 @@ def main(argv: list[str] | None = None) -> int:
     Use environment variables FASTMCP_HOST/PORT and transport args for HTTP/SSE if desired.
     """
     argv = argv or []
-    if any((arg in {"-h", "--help"} for arg in argv)):
+    if any(arg in {"-h", "--help"} for arg in argv):
         print("Usage: python -m mcp_server.server [--transport stdio|http]")
         return 0
     try:

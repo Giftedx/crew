@@ -1,9 +1,12 @@
 """Maintenance utilities (memory compaction, housekeeping)."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
+
 from ..tenancy import current_tenant
 from ..tools.memory.memory_compaction_tool import MemoryCompactionTool
+
 
 if TYPE_CHECKING:
     from platform.core.step_result import StepResult

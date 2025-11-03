@@ -41,8 +41,8 @@ import logging
 from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.config.base import BaseConfig
-from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+from app.config.base import BaseConfig
+from app.config.feature_flags import FeatureFlags
 
 from .openai_cost_monitoring import OpenAICostMonitoringService
 from .openai_function_calling import OpenAIFunctionCallingService

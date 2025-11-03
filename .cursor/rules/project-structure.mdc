@@ -4,15 +4,17 @@ description: Project structure and key file index
 ---
 ### Project Structure Overview
 
-- Entry: [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)
-- Crew: [crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)
-- Agents: [config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)
-- Tasks: [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)
-- Tools: [tools/](mdc:src/ultimate_discord_intelligence_bot/tools/)
-- Services: [services/](mdc:src/ultimate_discord_intelligence_bot/services/)
-- Settings: [settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)
-- Pipeline: [pipeline.py](mdc:src/ultimate_discord_intelligence_bot/pipeline.py)
-- Tenancy: [tenancy/context.py](mdc:src/ultimate_discord_intelligence_bot/tenancy/context.py)
+- Entry: [main.py](mdc:src/app/main.py)
+- Crew: [crew_executor.py](mdc:src/app/crew_executor.py)
+- Agents: [config/agents.yaml](mdc:src/app/config/agents.yaml)
+- Tasks: [config/tasks.yaml](mdc:src/app/config/tasks.yaml)
+- Tools: [tools/](mdc:src/ultimate_discord_intelligence_bot/tools/) and domain-specific tools
+- Platform: [platform/](mdc:src/platform/) - Infrastructure (HTTP, cache, observability, RL, LLM)
+- Domains: [domains/](mdc:src/domains/) - Business logic (intelligence, ingestion, memory, orchestration)
+- App: [app/](mdc:src/app/) - Application layer (Discord bot, API)
+- Settings: [config/settings.py](mdc:src/app/config/settings.py)
+- Pipeline: [domains/ingestion/pipeline/](mdc:src/domains/ingestion/pipeline/)
+- Tenancy: [tenancy/context.py](mdc:src/app/tenancy/context.py)
 - Docs: [docs/](mdc:docs/)
 - Top-level: [README.md](mdc:README.md), [pyproject.toml](mdc:pyproject.toml), [requirements.lock](mdc:requirements.lock)
 
@@ -32,59 +34,59 @@ description: Project structure and organization overview for the Ultimate Discor
 
 ## Core Architecture
 
-The main entry point is [main.py](mdc:src/ultimate_discord_intelligence_bot/main.py), which orchestrates the CrewAI-based debate analysis system. Configuration is managed through [pyproject.toml](mdc:pyproject.toml) and YAML files in the [config/](mdc:config/) directory.
+The main entry point is [main.py](mdc:src/app/main.py), which orchestrates the CrewAI-based debate analysis system. Configuration is managed through [pyproject.toml](mdc:pyproject.toml) and YAML files in the [app/config/](mdc:src/app/config/) directory.
+
+The repository uses a **3-layer architecture**:
+- **Platform** (`src/platform/`) - Infrastructure (HTTP, cache, observability, RL, LLM)
+- **Domains** (`src/domains/`) - Business logic (intelligence, ingestion, memory, orchestration)
+- **App** (`src/app/`) - Application layer (Discord bot, API)
 
 ## Directory Structure
 
 ```
 ultimate-discord-intelligence-bot/
 ├── src/
-│   ├── ultimate_discord_intelligence_bot/   # Main application package
-│   │   ├── __init__.py
-│   │   ├── main.py                         # Entry point
-│   │   ├── crew.py                         # CrewAI crew definition
-│   │   ├── settings.py                     # Global settings
-│   │   ├── step_result.py                  # Standard result format
-│   │   ├── pipeline.py                     # Content processing pipeline
-│   │   ├── tools/                          # CrewAI tools
-│   │   │   ├── _base.py                    # Base tool class
-│   │   │   ├── content_ingestion.py
-│   │   │   ├── debate_analysis.py
-│   │   │   ├── fact_checking.py
-│   │   │   └── ...
-│   │   ├── services/                       # Core services
-│   │   │   ├── prompt_engine.py
-│   │   │   ├── memory_service.py
-│   │   │   ├── openrouter_service.py
-│   │   │   └── ...
-│   │   ├── tenancy/                        # Multi-tenancy support
-│   │   │   ├── context.py
-│   │   │   └── ...
-│   │   └── config/                         # YAML configurations
-│   │       ├── agents.yaml
-│   │       └── tasks.yaml
-│   ├── ingest/                             # Content ingestion
-│   │   ├── youtube/
-│   │   ├── twitch/
-│   │   ├── tiktok/
-│   │   ├── reddit/
+│   ├── platform/                           # Infrastructure layer
+│   │   ├── core/                           # Core utilities (step_result, etc.)
+│   │   ├── http/                           # HTTP client, retries, circuit breakers
+│   │   ├── cache/                           # Multi-level caching
+│   │   ├── observability/                  # Metrics, tracing, logging
+│   │   ├── security/                       # Auth, secrets, rate limiting
+│   │   ├── llm/                            # LLM abstractions (providers, routing, structured)
+│   │   ├── rl/                             # Reinforcement learning policies
+│   │   ├── prompts/                        # Prompt engineering (engine, dspy)
+│   │   ├── config/                         # Configuration management
 │   │   └── ...
-│   ├── analysis/                           # Analysis logic
-│   │   ├── debate/
-│   │   ├── fact_check/
-│   │   └── scoring/
-│   ├── memory/                             # Vector storage
-│   │   ├── qdrant/
-│   │   └── embeddings/
-│   ├── grounding/                          # Fact verification
-│   │   └── backends/
-│   ├── discord/                            # Discord integration
-│   │   ├── bot.py
-│   │   ├── commands/
-│   │   └── events/
-│   └── policy/                             # Privacy & security
-│       ├── privacy/
-│       └── security/
+│   ├── domains/                            # Business logic layer
+│   │   ├── intelligence/                   # Content analysis and insights
+│   │   │   ├── analysis/                  # Debate scoring, sentiment, safety
+│   │   │   └── verification/              # Fact-checking, claim verification
+│   │   ├── ingestion/                      # Multi-platform content acquisition
+│   │   │   ├── providers/                 # YouTube, TikTok, Twitter, Reddit
+│   │   │   └── pipeline/                  # Ingestion orchestration
+│   │   ├── memory/                         # Knowledge storage and retrieval
+│   │   │   ├── vector/                    # Qdrant, embeddings, hybrid search
+│   │   │   ├── graph/                      # Neo4j knowledge graphs
+│   │   │   └── continual/                 # HippoRAG, Mem0, continual learning
+│   │   └── orchestration/                  # Agent and workflow management
+│   │       └── crewai/                    # CrewAI core integration
+│   ├── app/                                # Application layer
+│   │   ├── discord/                        # Discord.py integration
+│   │   │   ├── bot.py                      # Bot instance
+│   │   │   ├── commands/                   # Command handlers
+│   │   │   └── events/                     # Event handlers
+│   │   ├── config/                         # App-level configuration
+│   │   │   ├── agents.yaml                 # Agent definitions
+│   │   │   ├── tasks.yaml                  # Task definitions
+│   │   │   └── settings.py                 # App settings
+│   │   ├── crew_executor.py                # CrewAI execution wrapper
+│   │   └── main.py                         # Application entry point
+│   ├── ultimate_discord_intelligence_bot/   # Legacy compatibility layer
+│   │   └── tools/                          # Tool registry (backward compatibility)
+│   ├── mcp_server/                         # Model Context Protocol servers
+│   ├── eval/                               # Evaluation harness
+│   ├── graphs/                             # LangGraph implementations
+│   └── scripts/                             # Utility scripts
 ├── config/                                 # Global configs
 ├── tests/                                  # Test suite
 │   ├── conftest.py                         # Test fixtures
@@ -97,10 +99,6 @@ ultimate-discord-intelligence-bot/
 │   ├── configuration.md
 │   ├── tools_reference.md
 │   └── ...
-├── scripts/                                # Utility scripts
-│   ├── dev.sh
-│   ├── check_deprecations.py
-│   └── ...
 ├── docker/                                 # Docker configs
 ├── .env.example                            # Environment template
 ├── pyproject.toml                          # Project config
@@ -112,20 +110,37 @@ ultimate-discord-intelligence-bot/
 
 ### Application Core
 
-- **[main.py](mdc:src/ultimate_discord_intelligence_bot/main.py)**: Orchestrates the crew execution
-- **[crew.py](mdc:src/ultimate_discord_intelligence_bot/crew.py)**: Defines agents and their relationships
-- **[settings.py](mdc:src/ultimate_discord_intelligence_bot/settings.py)**: Centralized configuration management
-- **[step_result.py](mdc:src/ultimate_discord_intelligence_bot/step_result.py)**: Standardized return format
+- **[main.py](mdc:src/app/main.py)**: Orchestrates the crew execution
+- **[crew_executor.py](mdc:src/app/crew_executor.py)**: CrewAI execution wrapper
+- **[config/settings.py](mdc:src/app/config/settings.py)**: Centralized configuration management
+- **[platform/core/step_result.py](mdc:src/platform/core/step_result.py)**: Standardized return format
 
 ### CrewAI Configuration
 
-- **[config/agents.yaml](mdc:src/ultimate_discord_intelligence_bot/config/agents.yaml)**: Agent definitions with roles and goals
-- **[config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml)**: Task definitions and dependencies
+- **[app/config/agents.yaml](mdc:src/app/config/agents.yaml)**: Agent definitions with roles and goals
+- **[app/config/tasks.yaml](mdc:src/app/config/tasks.yaml)**: Task definitions and dependencies
+
+### Platform Layer
+
+- **platform/http/**: HTTP client, retries, circuit breakers
+- **platform/cache/**: Multi-level caching (Redis, semantic, LRU)
+- **platform/observability/**: Metrics, tracing, logging
+- **platform/llm/**: LLM abstractions (providers, routing, structured)
+- **platform/rl/**: Reinforcement learning policies
+
+### Domain Layer
+
+- **domains/intelligence/**: Content analysis and insights
+- **domains/ingestion/**: Multi-platform content acquisition
+- **domains/memory/**: Knowledge storage and retrieval
+- **domains/orchestration/**: Agent and workflow management
 
 ### Tools & Services
 
-- **tools/**: CrewAI tools for content processing, analysis, and integration
-- **services/**: Shared services like prompt engine, memory, and LLM interfaces
+- **ultimate_discord_intelligence_bot/tools/**: Tool registry (backward compatibility)
+- **domains/*/tools/**: Domain-specific tools
+- **platform/prompts/engine/**: Prompt engine
+- **domains/memory/**: Memory services
 
 ### Content Pipeline
 

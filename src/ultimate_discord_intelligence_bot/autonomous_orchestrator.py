@@ -6,12 +6,14 @@ self-orchestrated command interface.
 """
 
 from __future__ import annotations
+
 import asyncio
 import logging
 import os
 import time
 from textwrap import dedent
 from typing import TYPE_CHECKING, Any
+
 
 try:
     from pydantic import BaseModel, Field, ValidationError, field_validator
@@ -57,13 +59,13 @@ except Exception:
                 return {"status": "ok"}
 
 
-from ultimate_discord_intelligence_bot.settings import Settings
+from app.config.settings import Settings
+
 from .config import prompts as prompt_config
 from .crew_core import UltimateDiscordIntelligenceBotCrew
 from .crew_error_handler import CrewErrorHandler
 from .crew_insight_helpers import CrewInsightExtractor
 from .multi_modal_synthesizer import MultiModalSynthesizer
-from .platform.observability.metrics import get_metrics
 from .orchestrator import (
     analytics_calculators,
     crew_builders,
@@ -77,6 +79,8 @@ from .orchestrator import (
     system_validators,
     workflow_planners,
 )
+from .platform.observability.metrics import get_metrics
+
 
 try:
     from .services.semantic_router_service import SemanticRouterService
@@ -86,6 +90,7 @@ except ImportError:
     SEMANTIC_ROUTER_AVAILABLE = False
     SemanticRouterService = None
 import contextlib
+
 from .step_result import StepResult
 from .tools import (
     AdvancedPerformanceAnalyticsTool,
@@ -104,6 +109,7 @@ from .tools import (
     TruthScoringTool,
     XMonitorTool,
 )
+
 
 if TYPE_CHECKING:
     from crewai import CrewOutput
@@ -467,7 +473,7 @@ class AutonomousIntelligenceOrchestrator:
 
         Delegates to orchestrator.pipeline_result_builders.merge_threat_payload.
         """
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import merge_threat_payload
+        from domains.orchestration.pipeline_result_builders import merge_threat_payload
 
         return merge_threat_payload(threat_payload, verification_data, fact_data)
 
@@ -483,7 +489,7 @@ class AutonomousIntelligenceOrchestrator:
         fallback_url: str | None = None,
     ) -> dict[str, Any]:
         """Delegate to pipeline_result_builders.build_knowledge_payload."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import build_knowledge_payload
+        from domains.orchestration.pipeline_result_builders import build_knowledge_payload
 
         return build_knowledge_payload(
             acquisition_data,
@@ -569,7 +575,8 @@ class AutonomousIntelligenceOrchestrator:
         await self._send_progress_update(interaction, f"🚀 Starting {depth} intelligence analysis for: {url}", 0, 5)
         budget_limits = self._get_budget_limits(depth)
         try:
-            from core.cost_tracker import initialize_cost_tracking
+            from platform.cost_tracker import initialize_cost_tracking
+
             from ultimate_discord_intelligence_bot.services.request_budget import (
                 current_request_tracker,
                 track_request_budget,
@@ -611,6 +618,7 @@ class AutonomousIntelligenceOrchestrator:
         Tasks use context=[previous_task] for data flow, not embedded f-strings.
         """
         import asyncio
+
         import agentops
 
         try:
@@ -1269,7 +1277,7 @@ class AutonomousIntelligenceOrchestrator:
                     duration = media_info.get("duration", "Unknown Duration")
                     analysis_task = Task(
                         description=dedent(
-                            f"""\n                            Analyze content from {platform} video: '{title}' (URL: {source_url})\n\n                            Duration: {duration}\n\n                            ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:\n\n                            The complete transcript ({len(transcript)} characters) and ALL media metadata are\n                            ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.\n\n                            ❌ WRONG - DO NOT DO THIS:\n                            - TextAnalysisTool(text="transcript content here...")  # NEVER pass text parameter!\n                            - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!\n\n                            ✅ CORRECT - DO THIS INSTEAD:\n                            - TextAnalysisTool()  # Tools auto-access data from shared context\n                            - FactCheckTool()  # No parameters needed - data is pre-loaded\n\n                            When calling ANY tool, OMIT the text/transcript/content/claim parameters.\n                            The tools have DIRECT ACCESS to:\n                            - Full transcript ({len(transcript)} chars) - accessible as 'text' parameter internally\n                            - Media metadata (title, platform, duration, uploader)\n                            - Timeline anchors: {len(transcription_data.get("timeline_anchors", []))} available\n                            - Quality score: {transcription_data.get("quality_score", 0)}\n\n                            YOUR TASK:\n                            Use TextAnalysisTool (WITH NO PARAMETERS) to analyze linguistic patterns, sentiment,\n                            and thematic insights. The tool will automatically access the transcript from shared context.\n\n                            Provide comprehensive analysis including:\n                            - Sentiment analysis\n                            - Key themes and topics\n                            - Important contextual insights\n                            - Linguistic patterns\n                            """
+                            f"""\n                            Analyze content from {platform} video: '{title}' (URL: {source_url})\n\n                            Duration: {duration}\n\n                            ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:\n\n                            The complete transcript ({len(transcript)} characters) and ALL media metadata are\n                            ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.\n\n                            ❌ WRONG - DO NOT DO THIS:\n                            - TextAnalysisTool(text="transcript content here...")  # NEVER pass text parameter!\n                            - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!\n\n                            ✅ CORRECT - DO THIS INSTEAD:\n                            - TextAnalysisTool()  # Tools auto-access data from shared context\n                            - FactCheckTool()  # No parameters needed - data is pre-loaded\n\n                            When calling ANY tool, OMIT the text/transcript/content/claim parameters.\n                            The tools have DIRECT ACCESS to:\n                            - Full transcript ({len(transcript)} chars) - accessible as 'text' parameter internally\n                            - Media metadata (title, platform, duration, uploader)\n                            - Timeline anchors: {len(transcription_data.get('timeline_anchors', []))} available\n                            - Quality score: {transcription_data.get('quality_score', 0)}\n\n                            YOUR TASK:\n                            Use TextAnalysisTool (WITH NO PARAMETERS) to analyze linguistic patterns, sentiment,\n                            and thematic insights. The tool will automatically access the transcript from shared context.\n\n                            Provide comprehensive analysis including:\n                            - Sentiment analysis\n                            - Key themes and topics\n                            - Important contextual insights\n                            - Linguistic patterns\n                            """
                         ).strip(),
                         expected_output="Comprehensive content analysis with linguistic mapping, sentiment analysis, thematic insights, and structured annotations for the specified video content",
                         agent=analysis_agent,
@@ -1353,9 +1361,7 @@ class AutonomousIntelligenceOrchestrator:
 
         Delegates to orchestrator.pipeline_result_builders module.
         """
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
-            build_pipeline_content_analysis_result,
-        )
+        from domains.orchestration.pipeline_result_builders import build_pipeline_content_analysis_result
 
         return build_pipeline_content_analysis_result(
             transcript=transcript,
@@ -2487,8 +2493,8 @@ class AutonomousIntelligenceOrchestrator:
                     if isinstance(score, (int, float)):
                         verdict_bool = bool(score >= 0.55)
                 if verdict_bool is None:
-                    true_ct = sum((1 for b in truth_verdicts if b is True))
-                    false_ct = sum((1 for b in truth_verdicts if b is False))
+                    true_ct = sum(1 for b in truth_verdicts if b is True)
+                    false_ct = sum(1 for b in truth_verdicts if b is False)
                     if true_ct + false_ct > 0:
                         verdict_bool = true_ct >= false_ct
                 if verdict_bool is None:
@@ -2551,7 +2557,7 @@ class AutonomousIntelligenceOrchestrator:
                     text=knowledge_payload.get("analysis_summary", ""),
                     metadata=knowledge_payload,
                     index="autointel_analysis",
-                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"],
+                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"]
                 )
             )
             hipporag_task = asyncio.create_task(
@@ -2785,9 +2791,7 @@ class AutonomousIntelligenceOrchestrator:
 
     def _extract_system_status_from_crew(self, crew_result: Any) -> dict[str, Any]:
         """Delegate to pipeline_result_builders.extract_system_status_from_crew."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import (
-            extract_system_status_from_crew,
-        )
+        from domains.orchestration.pipeline_result_builders import extract_system_status_from_crew
 
         return extract_system_status_from_crew(crew_result)
 
@@ -2797,7 +2801,7 @@ class AutonomousIntelligenceOrchestrator:
 
     def _create_executive_summary(self, analysis_data: dict[str, Any], threat_data: dict[str, Any]) -> str:
         """Delegate to pipeline_result_builders.create_executive_summary."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import create_executive_summary
+        from domains.orchestration.pipeline_result_builders import create_executive_summary
 
         return create_executive_summary(analysis_data, threat_data)
 
@@ -2805,7 +2809,7 @@ class AutonomousIntelligenceOrchestrator:
         self, analysis_data: dict[str, Any], verification_data: dict[str, Any], threat_data: dict[str, Any]
     ) -> list[str]:
         """Delegate to pipeline_result_builders.extract_key_findings."""
-        from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders import extract_key_findings
+        from domains.orchestration.pipeline_result_builders import extract_key_findings
 
         return extract_key_findings(analysis_data, verification_data, threat_data)
 

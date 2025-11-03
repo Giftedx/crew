@@ -19,10 +19,12 @@ Dependencies:
 """
 
 from __future__ import annotations
+
 import logging
 from dataclasses import dataclass
-from typing import Any, Literal
 from platform.core.step_result import StepResult
+from typing import Any, Literal
+
 
 logger = logging.getLogger(__name__)
 
@@ -322,14 +324,12 @@ class RightsReuseIntelligenceService:
         source_url = segment.get("source_url", "").lower()
         license_type = "unknown"
         if any(
-            (pattern in description or pattern in source_url for pattern in self._license_patterns["creative_commons"])
+            pattern in description or pattern in source_url for pattern in self._license_patterns["creative_commons"]
         ):
             license_type = "creative_commons"
-        elif any((pattern in description for pattern in self._license_patterns["fair_use"])):
+        elif any(pattern in description for pattern in self._license_patterns["fair_use"]):
             license_type = "fair_use"
-        elif any(
-            (pattern in description or pattern in source_url for pattern in self._license_patterns["copyrighted"])
-        ):
+        elif any(pattern in description or pattern in source_url for pattern in self._license_patterns["copyrighted"]):
             license_type = "copyrighted"
         else:
             license_type = "unknown"
@@ -388,7 +388,7 @@ class RightsReuseIntelligenceService:
         if segment.get("source_url", "") == "":
             risk_score += self._risk_factors["unknown_source"]
         description = segment.get("description", "").lower()
-        if any((word in description for word in ["violence", "adult", "political", "controversial"])):
+        if any(word in description for word in ["violence", "adult", "political", "controversial"]):
             risk_score += self._risk_factors["sensitive_content"]
         return min(risk_score, 1.0)
 
@@ -413,9 +413,9 @@ class RightsReuseIntelligenceService:
         Returns:
             ReuseAnalysis
         """
-        total_risk = sum((f.risk_score for f in fragments))
+        total_risk = sum(f.risk_score for f in fragments)
         avg_risk = total_risk / len(fragments) if fragments else 0.0
-        can_reuse = avg_risk < 0.7 and all((f.license_info.commercial_use_allowed for f in fragments))
+        can_reuse = avg_risk < 0.7 and all(f.license_info.commercial_use_allowed for f in fragments)
         if avg_risk < 0.3:
             risk_level = "low"
         elif avg_risk < 0.7:
@@ -425,7 +425,7 @@ class RightsReuseIntelligenceService:
         required_actions = []
         if not can_reuse:
             required_actions.append("Obtain explicit permission from rights holders")
-        if any((not f.license_info.attribution_required for f in fragments)):
+        if any(not f.license_info.attribution_required for f in fragments):
             required_actions.append("Provide proper attribution")
         if intended_use == "commercial":
             required_actions.append("Ensure commercial use compliance")
@@ -461,9 +461,9 @@ class RightsReuseIntelligenceService:
             "overall_risk": avg_risk,
             "max_risk": max(risk_scores),
             "min_risk": min(risk_scores),
-            "high_risk_fragments": sum((1 for f in fragments if f.risk_score > 0.7)),
-            "medium_risk_fragments": sum((1 for f in fragments if 0.4 <= f.risk_score <= 0.7)),
-            "low_risk_fragments": sum((1 for f in fragments if f.risk_score < 0.4)),
+            "high_risk_fragments": sum(1 for f in fragments if f.risk_score > 0.7),
+            "medium_risk_fragments": sum(1 for f in fragments if 0.4 <= f.risk_score <= 0.7),
+            "low_risk_fragments": sum(1 for f in fragments if f.risk_score < 0.4),
         }
 
     def _generate_recommendations(self, fragments: list[ContentFragment], reuse_analysis: ReuseAnalysis) -> list[str]:
@@ -530,9 +530,9 @@ class RightsReuseIntelligenceService:
             Score for amount used (0.0 to 1.0)
         """
         description_lower = content_description.lower()
-        if any((word in description_lower for word in ["brief", "short", "excerpt", "clip"])):
+        if any(word in description_lower for word in ["brief", "short", "excerpt", "clip"]):
             return 0.8
-        elif any((word in description_lower for word in ["significant", "large", "major"])):
+        elif any(word in description_lower for word in ["significant", "large", "major"]):
             return 0.3
         else:
             return 0.5
@@ -633,7 +633,7 @@ class RightsReuseIntelligenceService:
             Risk score (0.0 to 1.0)
         """
         low_risk_alternatives = ["Public domain", "Creative Commons", "Royalty-free", "Self-created", "Synthetic"]
-        if any((term in alternative for term in low_risk_alternatives)):
+        if any(term in alternative for term in low_risk_alternatives):
             return 0.1
         else:
             return 0.3
