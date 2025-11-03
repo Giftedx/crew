@@ -94,6 +94,7 @@ def populate_agent_tool_context(
     else:
         _logger.error(f"❌ CONTEXT POPULATION FAILED: 0 tools updated for agent {getattr(agent, 'role', 'unknown')}")
 
+
 def get_or_create_agent(
     agent_name: str,
     agent_coordinators: dict[str, Any],

@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, get_type_hints
 
 
 @dataclass
@@ -108,6 +108,9 @@ class UnifiedConfig:
         """Create configuration from environment variables with precedence."""
         config = cls()
 
+        # Resolve real type hints (handles postponed annotations)
+        type_hints = get_type_hints(cls)
+
         # Load from environment variables
         for field_name, field_info in config.__dataclass_fields__.items():
             if field_name == "custom_settings":
@@ -119,17 +122,30 @@ class UnifiedConfig:
             # Get value from environment
             env_value = os.getenv(env_var)
             if env_value is not None:
-                # Convert to appropriate type
-                field_type = field_info.type
-                if field_type is bool:
-                    value = env_value.lower() in ("true", "1", "yes", "on")
-                elif field_type is int:
-                    value = int(env_value)
-                elif field_type is str:
-                    value = env_value
-                elif hasattr(field_type, "__origin__") and field_type.__origin__ is type(None):  # Optional type
-                    value = env_value or None
-                else:
+                # Convert to appropriate type (use resolved type hints where available)
+                field_type = type_hints.get(field_name, field_info.type)
+                value: Any
+                try:
+                    if field_type is bool:
+                        value = env_value.lower() in ("true", "1", "yes", "on")
+                    elif field_type is int:
+                        value = int(env_value)
+                    elif field_type is float:
+                        value = float(env_value)
+                    elif field_type is Path:
+                        value = Path(env_value)
+                    elif field_type is str:
+                        value = env_value
+                    else:
+                        # Handle Optional[...] and other typing constructs
+                        origin = getattr(field_type, "__origin__", None)
+                        args = getattr(field_type, "__args__", ())
+                        if origin is type(None) or (origin is list and len(args) == 1 and args[0] is str):
+                            value = env_value or None
+                        else:
+                            value = env_value
+                except Exception:
+                    # Fallback to raw string on casting issues
                     value = env_value
 
                 setattr(config, field_name, value)
