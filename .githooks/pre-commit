@@ -44,10 +44,9 @@ fi
 
 echo "🔧 Running compliance checks..."
 if command -v "$PYTHON" >/dev/null 2>&1; then
-    # Check for direct requests usage
-    if grep -r "import requests" src/ --include="*.py" | grep -v "http_utils.py" | grep -v "# type: ignore" >/dev/null 2>&1; then
-        echo "❌ Found direct requests import (use core.http_utils)"
-        grep -r "import requests" src/ --include="*.py" | grep -v "http_utils.py" | grep -v "# type: ignore"
+    # Use the robust Python compliance validator for requests usage
+    if ! "$PYTHON" scripts/validate_http_wrappers_usage.py; then
+        echo "❌ Direct 'requests' usage detected by validator (use core.http_utils)"
         exit 1
     fi
 

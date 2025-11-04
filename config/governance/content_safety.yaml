@@ -14,7 +14,7 @@ tiers:
       action: "immediate_block"
       review_required: false
       appeal_process: false
-      
+
   restricted:
     name: "Restricted"
     description: "Context-dependent, requires strict controls"
@@ -30,7 +30,7 @@ tiers:
         - "academic_research"
         - "security_analysis"
         - "policy_development"
-        
+
   sensitive:
     name: "Sensitive"
     description: "Appropriate context only, requires consent/warning"
@@ -46,7 +46,7 @@ tiers:
         - "user_consent"
         - "appropriate_context"
         - "age_verification"
-        
+
   regulated:
     name: "Regulated"
     description: "Guidance without advice, requires disclaimers"
@@ -77,7 +77,7 @@ classification:
       - "child.*sexual"
       - "terrorist.*attack"
       - "genocide.*plan"
-      
+
   # Restricted content patterns
   restricted_patterns:
     keywords:
@@ -89,7 +89,7 @@ classification:
       - "hack.*system"
       - "manipulate.*election"
       - "develop.*weapon"
-      
+
   # Sensitive content patterns
   sensitive_patterns:
     keywords:
@@ -101,7 +101,7 @@ classification:
       - "explicit.*content"
       - "graphic.*violence"
       - "hate.*speech"
-      
+
   # Regulated content patterns
   regulated_patterns:
     keywords:
@@ -125,7 +125,7 @@ context_assessment:
     tier_overrides:
       restricted: "sensitive"
       sensitive: "regulated"
-      
+
   moderation_research:
     description: "Content moderation research"
     indicators:
@@ -135,7 +135,7 @@ context_assessment:
     tier_overrides:
       prohibited: "restricted"
       restricted: "sensitive"
-      
+
   security_analysis:
     description: "Security or threat analysis"
     indicators:
@@ -152,17 +152,17 @@ mitigation:
     - "immediate_block"
     - "admin_notification"
     - "audit_log"
-    
+
   restricted:
     - "context_verification"
     - "expert_review"
     - "controlled_access"
-    
+
   sensitive:
     - "user_warning"
     - "consent_verification"
     - "age_verification"
-    
+
   regulated:
     - "disclaimer_add"
     - "professional_caveat"
@@ -173,15 +173,15 @@ monitoring:
   classification_accuracy:
     target: 0.95
     measurement: "human_review_comparison"
-    
+
   false_positive_rate:
     target: 0.05
     measurement: "appeal_success_rate"
-    
+
   context_appropriateness:
     target: 0.90
     measurement: "context_override_accuracy"
-    
+
   metrics:
       - "classification_distribution"
       - "context_override_rate"

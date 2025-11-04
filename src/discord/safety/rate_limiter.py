@@ -102,7 +102,13 @@ class RateLimiter:
             "cooldowns_activated": 0,
             "avg_check_time_ms": 0.0,
         }
-        self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+        # Start background cleanup loop only if an event loop is running; otherwise, defer until first use
+        try:
+            loop = asyncio.get_running_loop()
+            self._cleanup_task = loop.create_task(self._cleanup_loop())
+        except RuntimeError:
+            # No running loop (e.g., during object construction in sync context/tests)
+            self._cleanup_task = None
         if config.enable_default_rules:
             self._setup_default_rules()
 
@@ -111,6 +117,14 @@ class RateLimiter:
     ) -> StepResult:
         """Check if request is within rate limits."""
         try:
+            # Ensure cleanup loop is started when an event loop is available
+            if getattr(self, "_cleanup_task", None) is None:
+                try:
+                    loop = asyncio.get_running_loop()
+                    self._cleanup_task = loop.create_task(self._cleanup_loop())
+                except RuntimeError:
+                    # Still no running loop; proceed without background cleanup
+                    pass
             start_time = time.time()
             await self._cleanup_old_data()
             cooldown_check = await self._check_cooldowns(user_id, guild_id, channel_id)
@@ -421,10 +435,11 @@ class RateLimiter:
 
     async def close(self):
         """Clean up resources."""
-        if hasattr(self, "_cleanup_task"):
-            self._cleanup_task.cancel()
+        task = getattr(self, "_cleanup_task", None)
+        if task is not None:
+            task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await self._cleanup_task
+                await task
 
 
 def create_rate_limiter(config: RateLimitConfig | None = None) -> RateLimiter:

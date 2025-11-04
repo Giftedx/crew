@@ -13,7 +13,7 @@ import time
 from contextlib import contextmanager, suppress
 from typing import TYPE_CHECKING, Any
 
-from .crew_core import UltimateDiscordIntelligenceBotCrew
+from .crew_core import UltimateDiscordIntelligenceBotCrew, get_crew
 from .enhanced_performance_monitor import EnhancedPerformanceMonitor
 from .performance_integration import PerformanceIntegrationManager
 from .services.enterprise_auth_service import get_auth_service
@@ -42,6 +42,8 @@ class EnhancedCrewExecutor:
         Args:
             crew_instance: Optional existing crew instance. If None, creates new one.
         """
+        # Prefer provided instance; otherwise construct the default crew adapter
+        # from crew_core (which currently aliases the compatibility adapter).
         self.crew_instance = crew_instance or UltimateDiscordIntelligenceBotCrew()
         self.enhanced_monitor = EnhancedPerformanceMonitor()
         self.integration_manager = PerformanceIntegrationManager()
@@ -186,12 +188,14 @@ class EnhancedCrewExecutor:
             # Execute crew with enhanced tracking
             logger.info(f"Starting enhanced crew execution {execution_id}")
 
-            # Override the crew's step callback for enhanced tracking
-            original_log_step = self.crew_instance._log_step
-            # Store the original method for restoration later
-            self.crew_instance._original_log_step = original_log_step
-            # Replace with enhanced callback
-            self.crew_instance._log_step = lambda step: self._enhanced_step_callback(step, original_log_step)
+            # NOTE: Legacy step callback override disabled - incompatible with adapter pattern
+            # The adapter-based crew system doesn't expose _log_step for interception.
+            # Step tracking should be re-implemented using adapter-compatible hooks if needed.
+            # Legacy code commented out below:
+            # if hasattr(self.crew_instance, "_log_step"):
+            #     original_log_step = self.crew_instance._log_step
+            #     self.crew_instance._original_log_step = original_log_step
+            #     self.crew_instance._log_step = lambda step: self._enhanced_step_callback(step, original_log_step)
 
             # Execute the crew with optional hierarchical orchestration
             if self.orchestrator:
@@ -213,7 +217,7 @@ class EnhancedCrewExecutor:
                 logger.info(f"Hierarchical orchestration session {session.session_id} completed")
             else:
                 # Standard crew execution without orchestration
-                result = self.crew_instance.kickoff_with_performance_tracking(inputs)
+                result = await self._kickoff_crew(inputs)
 
             end_time = time.time()
             total_execution_time = end_time - start_time
@@ -268,7 +272,7 @@ class EnhancedCrewExecutor:
             # Record failure
             await self._record_execution_failure(execution_id, str(e), execution_time)
 
-            logger.error(f"Enhanced crew execution {execution_id} failed: {e}")
+            logger.exception(f"Enhanced crew execution {execution_id} failed")
 
             return {
                 "result": None,
@@ -743,7 +747,7 @@ class EnhancedCrewExecutor:
     async def _execute_with_hierarchical_orchestration(self, session, inputs: dict[str, Any]) -> Any:
         """Execute crew with hierarchical orchestration coordination."""
         if not self.orchestrator:
-            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+            return await self._kickoff_crew(inputs)
 
         logger.info(f"Executing crew with hierarchical orchestration - session {session.session_id}")
 
@@ -774,7 +778,7 @@ class EnhancedCrewExecutor:
         except Exception as e:
             logger.error(f"Hierarchical orchestration execution failed: {e}")
             # Fall back to standard execution
-            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+            return await self._kickoff_crew(inputs)
 
     async def _execute_hierarchical_tasks(self, orchestration_tasks, inputs):
         """Execute tasks hierarchically based on dependencies.
@@ -813,12 +817,43 @@ class EnhancedCrewExecutor:
 
             # Execute final crew kickoff with all results
             final_inputs = {**inputs, "hierarchical_results": level_results}
-            return self.crew_instance.kickoff_with_performance_tracking(final_inputs)
+            return await self._kickoff_crew(final_inputs)
 
         except Exception as e:
             logger.error(f"Hierarchical task execution failed: {e}")
             # Fall back to standard execution
-            return self.crew_instance.kickoff_with_performance_tracking(inputs)
+            return await self._kickoff_crew(inputs)
+
+    async def _kickoff_crew(self, inputs: dict[str, Any] | None = None) -> Any:
+        """Kick off the crew execution across legacy or adapter implementations.
+
+        This helper provides compatibility across:
+        - Legacy crew classes exposing `kickoff_with_performance_tracking`
+        - New adapter-based crews exposing `.crew().kickoff(inputs)`
+        """
+        # Legacy path
+        if hasattr(self.crew_instance, "kickoff_with_performance_tracking"):
+            try:
+                return self.crew_instance.kickoff_with_performance_tracking(inputs)
+            except TypeError:
+                # Some variants may require positional-only arg handling
+                return self.crew_instance.kickoff_with_performance_tracking(inputs or {})
+
+        # Adapter path (current default): `.crew()` returns a CrewAdapter with `.kickoff()`
+        if hasattr(self.crew_instance, "crew"):
+            crew_obj = self.crew_instance.crew()
+            # Prefer async kickoff when available to avoid nested event loop issues
+            if hasattr(crew_obj, "kickoff_async"):
+                return await crew_obj.kickoff_async(inputs=inputs or {})
+            if hasattr(crew_obj, "kickoff"):
+                return crew_obj.kickoff(inputs=inputs or {})
+
+        # As a last resort, try using the public factory to obtain a crew adapter
+        adapter = get_crew()
+        crew_obj = adapter.crew()
+        if hasattr(crew_obj, "kickoff_async"):
+            return await crew_obj.kickoff_async(inputs=inputs or {})
+        return crew_obj.kickoff(inputs=inputs or {})
 
     def _organize_tasks_by_level(self, tasks):
         """Organize tasks by dependency level.

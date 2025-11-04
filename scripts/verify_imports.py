@@ -7,10 +7,9 @@ import ast
 import importlib
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 
-def verify_file_imports(file_path: Path) -> List[Tuple[str, str]]:
+def verify_file_imports(file_path: Path) -> list[tuple[str, str]]:
     """Verify imports in a single file.
 
     Args:
@@ -19,7 +18,7 @@ def verify_file_imports(file_path: Path) -> List[Tuple[str, str]]:
     Returns:
         List of (error_type, message) tuples
     """
-    errors: List[Tuple[str, str]] = []
+    errors: list[tuple[str, str]] = []
 
     try:
         source = file_path.read_text(encoding="utf-8")
@@ -31,22 +30,35 @@ def verify_file_imports(file_path: Path) -> List[Tuple[str, str]]:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     imports.append(alias.name)
-            elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    imports.append(node.module)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imports.append(node.module)
 
         # Try importing each module
         for module_name in imports:
             # Skip stdlib modules
-            if module_name.split(".")[0] in ["os", "sys", "logging", "typing", "pathlib", "collections", "dataclasses",
-                                            "enum", "asyncio", "json", "time", "datetime", "math", "random"]:
+            if module_name.split(".")[0] in [
+                "os",
+                "sys",
+                "logging",
+                "typing",
+                "pathlib",
+                "collections",
+                "dataclasses",
+                "enum",
+                "asyncio",
+                "json",
+                "time",
+                "datetime",
+                "math",
+                "random",
+            ]:
                 continue
 
             try:
                 importlib.import_module(module_name)
             except ImportError as e:
                 errors.append(("IMPORT_ERROR", f"{file_path}: Cannot import '{module_name}' - {e}"))
-            except Exception as e:
+            except Exception:
                 # Other errors (circular imports, etc.) are not critical
                 pass
 
@@ -67,7 +79,7 @@ def main(target_dir: Path = Path("src"), verbose: bool = False):
     """
     files = list(target_dir.rglob("*.py"))
     total = len(files)
-    all_errors: List[Tuple[str, str]] = []
+    all_errors: list[tuple[str, str]] = []
 
     print(f"Verifying imports in {total} Python files...")
     print()
@@ -95,7 +107,7 @@ def main(target_dir: Path = Path("src"), verbose: bool = False):
         print()
         return 1
     else:
-        print(f"✅ All imports verified successfully!")
+        print("✅ All imports verified successfully!")
         return 0
 
 
@@ -103,12 +115,9 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Verify imports resolve correctly")
-    parser.add_argument("target", nargs="?", type=Path, default=Path("src"),
-                        help="Directory to scan (default: src)")
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help="Show detailed output for all files")
+    parser.add_argument("target", nargs="?", type=Path, default=Path("src"), help="Directory to scan (default: src)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Show detailed output for all files")
 
     args = parser.parse_args()
 
     sys.exit(main(args.target, verbose=args.verbose))
-

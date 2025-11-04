@@ -1,5 +1,12 @@
 # Setup Docs
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Tools**: 111 across 9 categories
+- **Agents**: 18 specialized agents
+- **Pipeline**: 7-phase orchestration
+- **Services**: Discord bot, FastAPI server, CrewAI, MCP server
+
 *This document consolidates multiple related files for better organization.*
 
 ## Setup Cli
@@ -38,7 +45,6 @@ Make shortcuts: `make setup`, `make doctor`, `make run-discord`, `make run-crew`
 - Verifies `ffmpeg` is installed (required). Warns if `yt-dlp` is missing (optional).
 
 The wizard is safe to re-run; it merges updates without discarding existing values.
-
 
 ---
 
@@ -268,7 +274,6 @@ Once the minimal configuration is working:
 **Priority**: Critical
 **Estimated Time**: 2-4 hours for minimal setup
 
-
 ---
 
 ## Monitoring Setup Report
@@ -322,10 +327,9 @@ Once the minimal configuration is working:
 ## Next Steps
 
 1. Start monitoring stack: `docker-compose -f ops/monitoring/docker-compose.yml up -d`
-2. Access Grafana: http://localhost:3000 (admin/admin)
-3. Access Prometheus: http://localhost:9090
+2. Access Grafana: <http://localhost:3000> (admin/admin)
+3. Access Prometheus: <http://localhost:9090>
 4. Start metrics server: `python3 -m obs.metrics_endpoint`
-
 
 ---
 
@@ -421,7 +425,7 @@ Includes: MkDocs, MkDocs-Material, Mkdocstrings
    ```bash
    # Minimal installation
    pip install ultimate-discord-intelligence-bot
-   
+
    # Or full installation
    pip install ultimate-discord-intelligence-bot[all]
    ```
@@ -474,25 +478,31 @@ docker build -t ultimate-discord-bot:full --target full .
 - Review [Troubleshooting Guide](troubleshooting.md)
 - Join our Discord server for support
 
-
 ---
 
 ## Development Mode Setup Report
 
 # Development Mode Setup Report
+
 Generated: 2025-10-18 02:53:31 UTC
 
 ## Environment File
+
 Status: healthy
+
 - File exists: ✅
 - File size: 2211 bytes
 
 ## Environment Variables
+
 Status: healthy
+
 - All required variables set: ✅
 
 ## Feature Flags
+
 Status: healthy
+
 - Enabled flags: 4
   - ENABLE_DISCORD_COMMANDS
   - ENABLE_CONTENT_MODERATION
@@ -500,12 +510,13 @@ Status: healthy
   - ENABLE_LLM_CACHE
 
 ## Mock Services
+
 Status: healthy
+
 - Enabled mocks: 4
   - MOCK_LLM_RESPONSES
   - MOCK_VECTOR_STORE
   - MOCK_OAUTH_FLOWS
   - MOCK_DISCORD_API
-
 
 ---

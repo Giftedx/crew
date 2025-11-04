@@ -1,7 +1,7 @@
 # /autointel Command Data Flow Analysis - Critical Findings
 
-**Status**: 🔴 CRITICAL - 50% of CrewAI stages missing data flow  
-**Date**: 2025-10-02  
+**Status**: 🔴 CRITICAL - 50% of CrewAI stages missing data flow
+**Date**: 2025-10-02
 **Affected Command**: `/autointel url:... depth:experimental`
 
 ## Executive Summary
@@ -221,12 +221,12 @@ def update_context(self, context: dict[str, Any]) -> None:
 def _run(self, *args, **kwargs) -> Any:
     """Execute the wrapped tool with shared context merge."""
     # ... argument handling ...
-    
+
     # Line 228: Merge shared context with current kwargs
     if isinstance(self._shared_context, dict) and self._shared_context:
         merged_kwargs = {**self._shared_context, **final_kwargs}  # ✅ Merges data
         final_kwargs = merged_kwargs
-    
+
     # Execute wrapped tool with merged data
     result = self._wrapped_tool.run(**final_kwargs)  # ✅ Tool gets full data
     return result
@@ -251,7 +251,7 @@ Stage 4:   ✅ Transcription → WORKS (context populated)
 Stage 5:   ❌ Analysis → FAILS (missing context)
            Impact: No thematic insights, sentiment analysis empty
 
-Stage 6:   ✅ Verification → WORKS (context populated)  
+Stage 6:   ✅ Verification → WORKS (context populated)
 Stage 7:   ❌ Threat → FAILS (missing context)
            Impact: No deception scoring, threat level unknown
 
@@ -358,14 +358,14 @@ self._populate_agent_tool_context(threat_agent, context_data)
 async def test_autointel_data_flow_validation():
     """Validate that ALL crew stages receive proper context data."""
     orchestrator = AutonomousIntelligenceOrchestrator()
-    
+
     # Mock interaction
     interaction = MockInteraction()
-    
+
     # Track context population calls
     context_calls = []
     original_populate = orchestrator._populate_agent_tool_context
-    
+
     def tracked_populate(agent, context):
         context_calls.append({
             "agent": getattr(agent, "role", "unknown"),
@@ -373,19 +373,19 @@ async def test_autointel_data_flow_validation():
             "has_transcript": "transcript" in context or "text" in context,
         })
         return original_populate(agent, context)
-    
+
     orchestrator._populate_agent_tool_context = tracked_populate
-    
+
     # Execute full workflow
     await orchestrator.execute_autonomous_intelligence_workflow(
         interaction,
         url="https://www.youtube.com/watch?v=test",
         depth="experimental"
     )
-    
+
     # Validate ALL stages received context
     assert len(context_calls) >= 20, f"Only {len(context_calls)}/20 stages got context!"
-    
+
     # Validate critical stages have transcript
     critical_stages = ["analysis_cartographer", "verification_director", "risk_intelligence_analyst"]
     for stage in critical_stages:

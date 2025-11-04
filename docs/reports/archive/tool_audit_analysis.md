@@ -3,7 +3,7 @@
 ## Summary
 
 - **Total tools in **all****: 102 tools
-- **Total tools imported in crew.py**: 90 tools  
+- **Total tools imported in crew.py**: 90 tools
 - **Unregistered tools**: 12 tools
 
 ## Unregistered Tools Analysis
@@ -14,7 +14,7 @@
 - `ContentTypeRoutingTool` - Content type classification and routing
 - `EarlyExitConditionsTool` - Early exit condition detection
 
-### 2. Performance & Optimization Tools  
+### 2. Performance & Optimization Tools
 
 - `PromptCompressionTool` - Prompt optimization and compression
 - `DSPyOptimizationTool` - DSPy model optimization
@@ -65,7 +65,7 @@
 ### Quality Assurance Specialist
 
 - ContentQualityAssessmentTool
-- ContentTypeRoutingTool  
+- ContentTypeRoutingTool
 - EarlyExitConditionsTool
 - ConfidenceScoringTool
 - ConsistencyCheckTool

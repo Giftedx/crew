@@ -65,7 +65,6 @@
 
 - **complete_workflow:** ✅ Working
 
-
 ---
 
 ## Test Coverage Report
@@ -79,10 +78,11 @@ This report provides a comprehensive analysis of the current test coverage for t
 ## Current Test Structure
 
 ### Test Organization
+
 The project has a well-organized test structure with the following directories:
 
 - **`tests/tools/`** - Tool-specific tests
-- **`tests/agents/`** - Agent tests  
+- **`tests/agents/`** - Agent tests
 - **`tests/services/`** - Service tests
 - **`tests/integration/`** - Integration tests
 - **`tests/e2e/`** - End-to-end tests
@@ -93,15 +93,28 @@ The project has a well-organized test structure with the following directories:
 ### Existing Test Files
 
 #### Tools Tests
+
 - `test_base_tool.py` - Base tool functionality
 - `test_content_quality_assessment_tool.py` - Content quality assessment
 - `test_error_handling.py` - Error handling patterns
 - `test_tool_template.py` - Tool template testing
 - `test_tools.py` - General tools testing
 
+---
+
+**Test Infrastructure** (verified November 3, 2025):
+
+- **Test Framework**: pytest with `.config/pytest.ini`
+- **Fast Test Suite**: `make test-fast` (HTTP utils, guards, vector store)
+- **Full Test Suite**: `make test` (all tests with PYTHONPATH=src)
+- **A2A Test Suite**: `make test-a2a` (router + client tests)
+- **Agent Evals**: `make agent-evals-ci` (via scripts/run_agentevals_ci.py)
+- **Coverage Target**: 111 tools require comprehensive test coverage
+
 ## Tool Coverage Analysis
 
 ### Tools Directory Structure
+
 The tools are organized into the following categories:
 
 1. **Analysis Tools** (`tools/analysis/`)
@@ -185,17 +198,18 @@ The tools are organized into the following categories:
 ### Immediate Actions (High Priority)
 
 1. **Create Tool Test Templates**
+
    ```python
    # Template for tool testing
    class TestToolName:
        def test_successful_operation(self):
            """Test successful tool operation."""
            pass
-       
+
        def test_error_handling(self):
            """Test error handling."""
            pass
-       
+
        def test_input_validation(self):
            """Test input validation."""
            pass
@@ -232,12 +246,14 @@ The tools are organized into the following categories:
 ## Test Coverage Metrics
 
 ### Current Coverage Estimate
+
 - **Tools**: ~5% (5 out of 110+ tools tested)
 - **Services**: ~30% (basic service testing)
 - **Agents**: ~20% (basic agent testing)
 - **Integration**: ~10% (limited integration testing)
 
 ### Target Coverage Goals
+
 - **Tools**: 80% (90+ tools with comprehensive tests)
 - **Services**: 90% (all services with full test coverage)
 - **Agents**: 85% (agent behavior and interaction testing)
@@ -246,16 +262,19 @@ The tools are organized into the following categories:
 ## Implementation Plan
 
 ### Phase 1: Foundation (Week 1-2)
+
 1. Create test templates for all tool categories
 2. Implement unit tests for top 20 most critical tools
 3. Set up test coverage reporting
 
 ### Phase 2: Expansion (Week 3-4)
+
 1. Add unit tests for remaining 70+ tools
 2. Create integration test suite
 3. Implement performance testing
 
 ### Phase 3: Optimization (Week 5-6)
+
 1. Add security testing
 2. Implement load testing
 3. Create monitoring and observability tests
@@ -263,6 +282,7 @@ The tools are organized into the following categories:
 ## Tools Requiring Immediate Testing
 
 ### Critical Tools (High Priority)
+
 1. **Analysis Tools**
    - `enhanced_analysis_tool.py`
    - `text_analysis_tool.py`
@@ -285,6 +305,7 @@ The tools are organized into the following categories:
    - `consistency_check_tool.py`
 
 ### Medium Priority Tools
+
 1. **Discord Integration Tools**
 2. **Observability Tools**
 3. **Integration Tools**
@@ -307,7 +328,6 @@ This will significantly improve code quality, reduce bugs, and increase confiden
 3. **Implement CI/CD integration** - Ensure tests run automatically
 4. **Monitor coverage metrics** - Track progress and identify gaps
 5. **Regular review and updates** - Keep test coverage current with code changes
-
 
 ---
 
@@ -367,7 +387,6 @@ This will significantly improve code quality, reduce bugs, and increase confiden
 - **cache_performance:** ✅ 0.000s for 100 operations
 - **routing_performance:** ✅ 0.001s for 50 operations
 - **optimization_performance:** ✅ 0.000s for 25 operations
-
 
 ---
 
@@ -444,7 +463,6 @@ This will significantly improve code quality, reduce bugs, and increase confiden
 - **Failed:** 0
 
 - **content_processing:** ✅ Working
-
 
 ---
 
@@ -688,12 +706,11 @@ The main blockers are missing tool dependencies and incomplete integration workf
 
 ---
 
-**Report Generated**: 2025-01-18 20:15:41 UTC  
-**Test Environment**: Development  
-**Test Duration**: ~30 seconds  
-**Components Tested**: 3/6 (50%)  
+**Report Generated**: 2025-01-18 20:15:41 UTC
+**Test Environment**: Development
+**Test Duration**: ~30 seconds
+**Components Tested**: 3/6 (50%)
 **Success Rate**: 100% (of tested components)
-
 
 ---
 
@@ -712,7 +729,7 @@ This report documents the test coverage improvements implemented as part of the 
 - **Total Test Files**: 327 test files
 - **Test Categories**:
   - Unit tests: 250+ files
-  - Integration tests: 50+ files  
+  - Integration tests: 50+ files
   - Performance tests: 15+ files
   - Security tests: 12+ files
 
@@ -947,6 +964,5 @@ The test coverage improvements implemented provide a solid foundation for:
 The adaptive semantic cache tests alone provide 5% coverage improvement and establish patterns for future test development. Combined with the existing 327 test files, this brings the overall test coverage to 85% with a clear path to 95% coverage in the next phase.
 
 **Recommendation**: Continue with Phase 1 critical path enhancement to achieve 90% coverage target.
-
 
 ---

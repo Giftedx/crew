@@ -220,7 +220,7 @@ class AnalyticsService:
                 error_occurred=error_occurred,
                 error_details=context.get("error_details"),
             )
-            return StepResult.ok({"recorded": True, "agent_name": agent_name}, step="record_agent_performance")
+            return StepResult.ok(recorded=True, agent_name=agent_name)
         except Exception as exc:
             logger.error(f"Failed to record agent performance: {exc}", exc_info=True)
             return StepResult.fail(f"Recording failed: {exc}", step="record_agent_performance")
@@ -243,24 +243,21 @@ class AnalyticsService:
         try:
             report = monitor.generate_performance_report(agent_name, days)
             return StepResult.ok(
-                {
-                    "agent_name": report.agent_name,
-                    "overall_score": report.overall_score,
-                    "reporting_period": report.reporting_period,
-                    "metrics": [
-                        {
-                            "metric_name": m.metric_name,
-                            "target_value": m.target_value,
-                            "actual_value": m.actual_value,
-                            "trend": m.trend,
-                            "confidence": m.confidence,
-                        }
-                        for m in report.metrics
-                    ],
-                    "recommendations": report.recommendations,
-                    "training_suggestions": report.training_suggestions,
-                },
-                step="get_agent_performance_report",
+                agent_name=report.agent_name,
+                overall_score=report.overall_score,
+                reporting_period=report.reporting_period,
+                metrics=[
+                    {
+                        "metric_name": m.metric_name,
+                        "target_value": m.target_value,
+                        "actual_value": m.actual_value,
+                        "trend": m.trend,
+                        "confidence": m.confidence,
+                    }
+                    for m in report.metrics
+                ],
+                recommendations=report.recommendations,
+                training_suggestions=report.training_suggestions,
             )
         except Exception as exc:
             logger.error(f"Failed to generate agent report: {exc}", exc_info=True)
@@ -295,14 +292,11 @@ class AnalyticsService:
             best_agent = max(agent_scores, key=agent_scores.get)
             worst_agent = min(agent_scores, key=agent_scores.get)
             return StepResult.ok(
-                {
-                    "total_agents": len(reports),
-                    "average_score": avg_score,
-                    "best_agent": {"name": best_agent, "score": agent_scores[best_agent]},
-                    "worst_agent": {"name": worst_agent, "score": agent_scores[worst_agent]},
-                    "agent_scores": agent_scores,
-                },
-                step="get_comparative_agent_analysis",
+                total_agents=len(reports),
+                average_score=avg_score,
+                best_agent={"name": best_agent, "score": agent_scores[best_agent]},
+                worst_agent={"name": worst_agent, "score": agent_scores[worst_agent]},
+                agent_scores=agent_scores,
             )
         except Exception as exc:
             logger.error(f"Comparative analysis failed: {exc}", exc_info=True)

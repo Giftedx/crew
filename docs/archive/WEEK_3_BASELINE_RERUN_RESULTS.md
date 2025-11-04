@@ -1,7 +1,7 @@
 # Week 3 Baseline Re-run Results
 
-**Date:** October 4, 2025  
-**Status:** ✅ **COMPLETE** - New baseline established  
+**Date:** October 4, 2025
+**Status:** ✅ **COMPLETE** - New baseline established
 **Video:** "Twitch Has a Major Problem" (5:26 duration)
 
 ---
@@ -82,8 +82,8 @@ Successfully re-ran baseline with a longer video, achieving a **5.12-minute mean
 
 ### ⚠️ Still Not Ideal Baseline
 
-**Original Target:** 10.5 minutes (629 seconds)  
-**Current Baseline:** 5.12 minutes (307 seconds)  
+**Original Target:** 10.5 minutes (629 seconds)
+**Current Baseline:** 5.12 minutes (307 seconds)
 **Gap:** Still 5.4 minutes (51%) shorter than ideal
 
 **Why This Matters:**

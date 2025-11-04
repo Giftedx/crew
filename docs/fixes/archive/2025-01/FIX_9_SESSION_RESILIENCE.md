@@ -72,7 +72,7 @@ def _is_session_valid(self, interaction: Any) -> bool:
     try:
         if not hasattr(interaction, "followup"):
             return False
-        
+
         # Check webhook adapter session
         if hasattr(interaction.followup, "_adapter"):
             adapter = interaction.followup._adapter
@@ -83,7 +83,7 @@ def _is_session_valid(self, interaction: Any) -> bool:
                     if not is_open:
                         self.logger.warning("Discord session detected as closed")
                     return is_open
-        
+
         # Additional check: try to access interaction properties
         _ = interaction.id  # Will fail if interaction is invalid
         return True
@@ -96,8 +96,8 @@ def _is_session_valid(self, interaction: Any) -> bool:
 
 ```python
 async def _persist_workflow_results(
-    self, 
-    workflow_id: str, 
+    self,
+    workflow_id: str,
     results: dict[str, Any],
     url: str,
     depth: str
@@ -106,12 +106,12 @@ async def _persist_workflow_results(
     try:
         import json
         from pathlib import Path
-        
+
         results_dir = Path("data/orphaned_results")
         results_dir.mkdir(parents=True, exist_ok=True)
-        
+
         result_file = results_dir / f"{workflow_id}.json"
-        
+
         result_data = {
             "workflow_id": workflow_id,
             "timestamp": time.time(),
@@ -120,10 +120,10 @@ async def _persist_workflow_results(
             "results": results,
             "retrieval_command": f"/retrieve_results workflow_id:{workflow_id}"
         }
-        
+
         with open(result_file, "w") as f:
             json.dump(result_data, f, indent=2, default=str)
-        
+
         self.logger.info(f"Results persisted to {result_file}")
         return str(result_file)
     except Exception as e:
@@ -180,7 +180,7 @@ async def _execute_specialized_communication_reporting(
                 f"Use /retrieve_results workflow_id:{workflow_id}"
             )
             return
-        
+
         # Create and send embeds (existing code)
         main_embed = await self._create_specialized_main_results_embed(
             synthesis_result, depth
@@ -188,10 +188,10 @@ async def _execute_specialized_communication_reporting(
         details_embed = await self._create_specialized_details_embed(
             synthesis_result
         )
-        
+
         try:
             await interaction.followup.send(
-                embeds=[main_embed, details_embed], 
+                embeds=[main_embed, details_embed],
                 ephemeral=False
             )
         except RuntimeError as e:
@@ -210,14 +210,14 @@ async def _execute_specialized_communication_reporting(
                 return
             else:
                 raise
-        
+
         # Continue with knowledge integration (existing code)
         # ...
-        
+
     except Exception as e:
         if "Session is closed" not in str(e):
             self.logger.error(
-                f"Communication/reporting failed: {e}", 
+                f"Communication/reporting failed: {e}",
                 exc_info=True
             )
 ```

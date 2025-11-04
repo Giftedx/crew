@@ -18,32 +18,32 @@ on:
 jobs:
   tool-health-check:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.11'
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.lock
-        
+
     - name: Run tool health monitoring
       run: |
         python scripts/tool_health_monitor.py
-        
+
     - name: Upload health report
       uses: actions/upload-artifact@v3
       if: always()
       with:
         name: tool-health-report
         path: tool_health_report.json
-        
+
     - name: Comment PR with health report
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
@@ -51,43 +51,43 @@ jobs:
         script: |
           const fs = require('fs');
           const path = require('path');
-          
+
           try {
             const reportPath = 'tool_health_report.json';
             if (fs.existsSync(reportPath)) {
               const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-              
+
               const comment = `## 🔍 Tool Health Check Report
-              
+
               **Health Score:** ${report.health_score}/100
               **Status:** ${report.health_status.toUpperCase()}
               **Checks Passed:** ${report.passed_checks}/${report.total_checks}
               **Duration:** ${report.check_duration?.toFixed(4)}s
-              
+
               ### 📊 Summary
               - **Healthy Tools:** ${report.healthy_tools?.length || 0}
               - **Errors:** ${report.errors?.length || 0}
               - **Warnings:** ${report.warnings?.length || 0}
-              
+
               ${report.errors?.length > 0 ? `
               ### ❌ Errors
               ${report.errors.slice(0, 5).map(error => `- ${error}`).join('\n')}
               ${report.errors.length > 5 ? `- ... and ${report.errors.length - 5} more errors` : ''}
               ` : ''}
-              
+
               ${report.warnings?.length > 0 ? `
               ### ⚠️ Warnings
               ${report.warnings.slice(0, 5).map(warning => `- ${warning}`).join('\n')}
               ${report.warnings.length > 5 ? `- ... and ${report.warnings.length - 5} more warnings` : ''}
               ` : ''}
-              
+
               ${report.healthy_tools?.length > 0 ? `
               ### ✅ Healthy Tools
               ${report.healthy_tools.slice(0, 5).map(tool => `- ${tool}`).join('\n')}
               ${report.healthy_tools.length > 5 ? `- ... and ${report.healthy_tools.length - 5} more tools` : ''}
               ` : ''}
               `;
-              
+
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
@@ -98,7 +98,7 @@ jobs:
           } catch (error) {
             console.log('Failed to create health report comment:', error);
           }
-          
+
     - name: Fail on health issues
       if: failure()
       run: |

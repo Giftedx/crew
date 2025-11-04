@@ -19,7 +19,7 @@
 ```
 Tool Usage Failed
 Name: MCP Call Tool
-Error: Arguments validation failed: `MCPCallToolArgs` is not fully defined; 
+Error: Arguments validation failed: `MCPCallToolArgs` is not fully defined;
 you should define `Any`, then call `MCPCallToolArgs.model_rebuild()`.
 ```
 
@@ -156,7 +156,7 @@ The types need to be **available in the module's global scope** when Pydantic ev
 ```bash
 # Schema generation test
 ✅ MCPCallTool schema: MCPCallToolArgs
-✅ RagIngestTool schema: RagIngestToolArgs  
+✅ RagIngestTool schema: RagIngestToolArgs
 ✅ MultiPlatformMonitorTool schema: MultiPlatformMonitorToolArgs
 
 # Schema instantiation test (ForwardRef resolution)
@@ -344,7 +344,7 @@ Monitor these metrics in production:
 ## Success Criteria (All Met ✅)
 
 - [x] All memory tools (Graph, HippoRAG, Qdrant) validate successfully
-- [x] All RAG tools (Ingest, Ingest URL, Hybrid) validate successfully  
+- [x] All RAG tools (Ingest, Ingest URL, Hybrid) validate successfully
 - [x] MCP Call Tool validates with complex parameters
 - [x] Multi-Platform Monitor Tool validates with Iterable types
 - [x] Fast test suite passes without regressions

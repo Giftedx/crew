@@ -35,8 +35,15 @@ ALLOWED_FILES = {
 # Match an opening parenthesis with optional whitespace (no string literal required)
 # so calls like `requests.get(url)` are detected.
 # ALSO catch session.get/post and client.get/post patterns to prevent Session/httpx.Client bypass
+# Match either direct `requests.get(...)` style calls or calls on variables named
+# `session`/`client` (common escape hatches). The tokenized/cleaned source may
+# remove whitespace, so we allow optional spaces around dots.
 PATTERN = re.compile(
-    r"\b(?:requests\.|session\.|client\.)[_a-z]*\s*\.\s*(?:get|post|put|delete|patch|head)\s*\(", re.IGNORECASE
+    r"\b(?:"
+    r"requests\s*\.\s*(?:get|post|put|delete|patch|head)"
+    r"|(?:session|client)\s*\.\s*(?:get|post|put|delete|patch|head)"
+    r")\s*\(",
+    re.IGNORECASE,
 )
 
 

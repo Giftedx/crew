@@ -204,11 +204,11 @@ Phase 4 completed the migration of all remaining core cache modules and performe
 
 ### Validation Results
 
-✅ **HTTP cache tests**: 3/3 passed  
-✅ **Module imports**: All 10 migrated modules load successfully  
-✅ **Unified config**: Correctly returns domain-specific TTLs  
-✅ **Lint check**: No new errors introduced  
-✅ **Backward compatibility**: All fallback mechanisms functional  
+✅ **HTTP cache tests**: 3/3 passed
+✅ **Module imports**: All 10 migrated modules load successfully
+✅ **Unified config**: Correctly returns domain-specific TTLs
+✅ **Lint check**: No new errors introduced
+✅ **Backward compatibility**: All fallback mechanisms functional
 
 ### TTL Resolution Pattern (Standardized)
 
@@ -222,7 +222,7 @@ def _get_cache_ttl() -> int:
         return int(get_unified_cache_config().get_ttl_for_domain("domain"))
     except Exception:
         pass
-    
+
     # 2. Secure config fallback
     try:
         from core.secure_config import get_config
@@ -231,7 +231,7 @@ def _get_cache_ttl() -> int:
             return int(val)
     except Exception:
         pass
-    
+
     # 3. Environment variable fallback
     try:
         return int(os.getenv("ENV_VAR_NAME", "default"))

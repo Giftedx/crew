@@ -1,5 +1,12 @@
 # Unified Memory Layer
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Vector Store**: `src/domains/memory/vector_store.py` (Qdrant)
+- **Graph Store**: `src/domains/memory/unified_graph_store.py` (Neo4j)
+- **Continual Learning**: Mem0 (`domains/memory/continual/mem0/`), HippoRAG (`domains/memory/continual/hipporag/`)
+- **Memory Tools**: 23 tools in Memory category (21% of 111 total tools)
+
 The unified memory layer normalises short and long term data into a single
 SQLite/Qdrant backed store.  Items are recorded with retention policies and
 optionally pinned or archived to the Discord CDN.

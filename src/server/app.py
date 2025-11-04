@@ -16,6 +16,18 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+
+# Early bootstrap to avoid stdlib/platform name clash
+try:
+    from ultimate_discord_intelligence_bot.core.bootstrap import ensure_platform_proxy  # type: ignore
+except Exception:
+    ensure_platform_proxy = None  # type: ignore
+if callable(ensure_platform_proxy):  # type: ignore
+    try:
+        ensure_platform_proxy()  # type: ignore
+    except Exception:
+        pass
+
 from platform.observability.logfire_config import setup_logfire
 
 from fastapi import FastAPI

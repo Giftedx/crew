@@ -9,7 +9,7 @@ archive/
 ├── historical/
 │   ├── 2024/
 │   │   ├── weeks/          # WEEK_X completion reports
-│   │   ├── phases/         # PHASE_X completion reports  
+│   │   ├── phases/         # PHASE_X completion reports
 │   │   └── sessions/       # SESSION_X reports
 │   └── 2025/
 │       ├── weeks/          # WEEK_X completion reports

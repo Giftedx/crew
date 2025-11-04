@@ -4,9 +4,9 @@
 
 ---
 
-**Date:** 2025-01-03  
-**Analysis Scope:** Configuration system, tool implementations, core infrastructure, server/API layer  
-**Files Analyzed:** 15+ critical files across 220+ previously untouched files  
+**Date:** 2025-01-03
+**Analysis Scope:** Configuration system, tool implementations, core infrastructure, server/API layer
+**Files Analyzed:** 15+ critical files across 220+ previously untouched files
 **Completion Status:** ~15% of second pass complete (foundation established)
 
 ---
@@ -61,7 +61,7 @@ plan_autonomy_mission:
   async_execution: false
   human_input: false
 
-# 2. Acquisition Specialist  
+# 2. Acquisition Specialist
 capture_source_media:
   description: "Multi-platform download"
   expected_output: "Downloaded media with metadata"
@@ -177,24 +177,24 @@ def _run(self, url: str, quality: str = "1080p", **kwargs) -> StepResult:
     # 1. Parse URL to determine platform
     parsed = urlparse(url)
     domain = parsed.netloc.lower().replace("www.", "")
-    
+
     # 2. Find dispatcher
     dispatcher = None
     for platform_domain, tool in self.dispatchers.items():
         if platform_domain in domain:
             dispatcher = tool
             break
-    
+
     # 3. Dispatch to platform-specific tool
     result = dispatcher.run(url, quality=quality, **kwargs)
-    
+
     # 4. Handle legacy dict returns (StepResult.from_dict)
     step = StepResult.from_dict(result) if isinstance(result, dict) else result
-    
+
     # 5. Ensure dispatcher identity surfaced
     step.data.setdefault("tool", dispatcher.__class__.__name__)
     step.data.setdefault("platform", dispatcher.__class__.__name__.replace("DownloadTool", ""))
-    
+
     return step
 ```
 
@@ -242,7 +242,7 @@ def _load_corrections(self) -> dict[str, str]:
     """Load optional transcript corrections from config file."""
     path = os.path.join(str(CONFIG_DIR), "transcript_corrections.json")
     # Format: {"sobra": "sabra", "teh": "the"}
-    
+
 def _apply_corrections(self, text: str, corrections: dict[str, str]) -> str:
     for wrong, right in corrections.items():
         pattern = re.compile(rf"\b{re.escape(wrong)}\b", flags=re.IGNORECASE)
@@ -303,7 +303,7 @@ result = self.model.transcribe(video_path, **opts)
    absolute_words = ["all", "every", "always", "never", "everyone", "nobody"]
    if absolute_count >= 3:  # THRESHOLD
        fallacies.append(("hasty generalization", 0.6))
-   
+
    # Excessive emotional language → appeal to emotion
    emotional_words = ["terrible", "horrible", "wonderful", "amazing"]
    if emotional_count >= 2:  # THRESHOLD
@@ -411,13 +411,13 @@ def _ensure_collection(self, name: str) -> None:
         return  # Collection exists
     except Exception:
         pass
-    
+
     # Create collection with lazy imports (version compatibility)
     try:
         from qdrant_client.http.models import Distance, VectorParams
     except:
         from qdrant_client.models import Distance, VectorParams
-    
+
     vp_obj = VectorParams(size=1, distance=Distance.COSINE)
     self.client.recreate_collection(physical, vectors_config=vp_obj)
 ```
@@ -553,7 +553,7 @@ def _is_feature_enabled() -> bool:
         "ENABLE_HIPPORAG_CONTINUAL_MEMORY",  # legacy
     ))
     cfg_enabled = bool(
-        getattr(config, "enable_hipporag_memory", False) or 
+        getattr(config, "enable_hipporag_memory", False) or
         getattr(config, "enable_hipporag_continual_memory", False)
     )
     return env_enabled or cfg_enabled
@@ -567,10 +567,10 @@ def _is_feature_enabled() -> bool:
 def _get_model_config() -> tuple[str, str, str | None, str | None]:
     llm_model = os.getenv("HIPPORAG_LLM_MODEL") or "gpt-4o-mini"
     llm_base_url = os.getenv("HIPPORAG_LLM_BASE_URL") or None
-    
+
     embedding_model = os.getenv("HIPPORAG_EMBEDDING_MODEL") or "nvidia/NV-Embed-v2"
     embedding_base_url = os.getenv("HIPPORAG_EMBEDDING_BASE_URL") or None
-    
+
     return llm_model, embedding_model, llm_base_url, embedding_base_url
 ```
 
@@ -661,20 +661,20 @@ def _get_tenant_params(self, tenant_id: str) -> dict:
 ```python
 def _assess_feature_quality(self, features: list[float]) -> float:
     """Score 0-1 (higher = better features)."""
-    
+
     # 1. Dimension check
     if len(features) != self.feature_dim:
         quality -= 0.3
-    
+
     # 2. NaN/Inf check
     if any(np.isnan(f) or np.isinf(f) for f in features):
         quality -= 0.3
-    
+
     # 3. L2 norm check (min_norm to max_norm range)
     norm = np.linalg.norm(features)
     if norm < self.min_norm or norm > self.max_norm:
         quality -= min(0.5, abs(norm - optimal_norm) / optimal_norm)
-    
+
     return max(0.0, quality)
 ```
 
@@ -689,7 +689,7 @@ def _assess_feature_quality(self, features: list[float]) -> float:
 ```python
 def chat_with_features(self, messages, features):
     quality = self._assess_feature_quality(features)
-    
+
     if quality >= self.feature_quality_min:  # default 0.5
         # High-quality features → LinUCB contextual routing
         model = self._linucb_select(models, features)
@@ -710,17 +710,17 @@ def update(self, model_name, reward):
     quality_score = reward.get("quality", 0.5)  # 0-1
     latency_ms = reward.get("latency_ms", 1000)
     cost = reward.get("cost", 0.01)
-    
+
     # Combine into normalized reward [0-1]
     latency_score = max(0, 1 - (latency_ms / 10000))  # 10s = poor
     cost_score = max(0, 1 - (cost / 1.0))  # $1 = expensive
-    
+
     combined_reward = (
         0.5 * quality_score +
         0.3 * latency_score +
         0.2 * cost_score
     )
-    
+
     # Update bandit posterior
     self._update_bandit(model_name, combined_reward)
 ```
@@ -763,11 +763,11 @@ def _update_aggregated_costs(self, metrics: CostMetrics):
     # Daily costs
     date_key = time.strftime("%Y-%m-%d", time.localtime(metrics.timestamp))
     self.daily_costs[date_key] += metrics.cost_usd
-    
+
     # Monthly costs
     month_key = time.strftime("%Y-%m", time.localtime(metrics.timestamp))
     self.monthly_costs[month_key] += metrics.cost_usd
-    
+
     # Hourly costs
     hour_key = time.strftime("%Y-%m-%d-%H", time.localtime(metrics.timestamp))
     self.hourly_costs[hour_key] += metrics.cost_usd
@@ -914,7 +914,7 @@ class BatchOperation:
 ```python
 def add_operation(self, config: BatchConfig):
     self._operations.append(operation)
-    
+
     # Auto-flush if batch size exceeded
     if len(self._operations) >= self.batch_size:
         try:
@@ -939,7 +939,7 @@ class BatchMetrics:
     batches_executed: int = 0
     total_execution_time: float = 0.0
     round_trips_saved: int = 0  # (batch_size - 1) per batch
-    
+
     @property
     def efficiency_score(self) -> float:
         avg_batch_size = self.operations_batched / self.batches_executed
@@ -969,13 +969,13 @@ def execute_plan(
     policy_registry: rl_registry.PolicyRegistry | None = None
 ) -> list[Mapping[str, float]]:
     """Choose and execute a tool plan via reinforcement learning."""
-    
+
     def act(label: str):
         outputs = []
         total_cost = 0.0
         total_latency = 0.0
         success = 1.0
-        
+
         for tool in plans[label]:
             outcome, signals = tool()  # Execute tool
             outputs.append(outcome)
@@ -983,12 +983,12 @@ def execute_plan(
             total_latency += outcome.get("latency_ms", 0.0)
             if signals.get("success", 1.0) <= 0.0:
                 success = 0.0
-        
+
         # Aggregate metrics
         outcome = {"cost_usd": total_cost, "latency_ms": total_latency}
         signals = {"quality": success}
         return outcome, signals
-    
+
     # Delegate to RL core
     learn.learn("tool_planning", context, list(plans.keys()), act, policy_registry=policy_registry)
     return outputs
@@ -1026,15 +1026,15 @@ def build_prompt(
     tools: Sequence[str] | None = None
 ) -> str:
     pieces = [SAFETY_PREAMBLE, template]
-    
+
     if context:
         pieces.append(f"Context:\n{context}")
-    
+
     if tools:
         pieces.append("Available tools:\n" + ", ".join(tools))
-    
+
     prompt = "\n\n".join(pieces)
-    
+
     # Apply PII filtering
     clean, _ = privacy_filter.filter_text(prompt, {})
     return clean
@@ -1073,7 +1073,7 @@ class AgentPerformanceMetrics:
     user_satisfaction: float
     cost_efficiency: float
     context_adherence: float
-    
+
     def get_overall_score(self) -> float:
         weights = {
             "success_rate": 0.25,
@@ -1091,7 +1091,7 @@ class AgentPerformanceMetrics:
 ```python
 def select_optimal_model(self, task_type, context, tenant_id):
     available_models = self._get_available_models_for_task(task_type)
-    
+
     # Epsilon-greedy strategy
     if random.random() < self.exploration_rate:  # Explore
         selected_model = random.choice(available_models)
@@ -1099,7 +1099,7 @@ def select_optimal_model(self, task_type, context, tenant_id):
     else:  # Exploit
         selected_model = self._select_best_model(available_models, task_type, context)
         reasoning = "Exploitation: selected best performer"
-    
+
     return {
         "model": selected_model["model_name"],
         "provider": selected_model["provider"],
@@ -1135,23 +1135,23 @@ async def _lifespan(app: FastAPI):
         tracing.init_tracing(service_name)
     except:
         pass
-    
+
     try:
         from obs.enhanced_monitoring import EnhancedMonitoringSystem
         monitoring = EnhancedMonitoringSystem()
         await monitoring.start()
     except:
         pass
-    
+
     # Pre-initialize Qdrant client
     try:
         from memory.qdrant_provider import get_qdrant_client
         _ = get_qdrant_client()
     except:
         pass
-    
+
     yield
-    
+
     # Shutdown
     try:
         await monitoring.stop()
@@ -1175,7 +1175,7 @@ def create_app(settings) -> FastAPI:
         title=settings.service_name,
         lifespan=_lifespan
     )
-    
+
     # Register routers
     register_archive_routes(app, settings)
     register_alert_routes(app, settings)
@@ -1184,13 +1184,13 @@ def create_app(settings) -> FastAPI:
     register_pilot_route(app, settings)  # LangGraph demo
     register_health_routes(app, settings)
     register_activities_echo(app, settings)
-    
+
     # Middleware (order matters!)
     install_cors_middleware(app, settings)  # Early for preflight
     install_metrics_middleware(app, settings)
     install_api_cache_middleware(app, settings)
     install_rate_limiting(app, settings)  # After metrics route
-    
+
     return app
 ```
 
@@ -1228,21 +1228,21 @@ def create_app(settings) -> FastAPI:
 @router.post("/run")
 async def run_pipeline(request: PipelineRunRequest):
     """Execute pipeline via PipelineTool."""
-    
+
     # Feature flag check
     if not os.getenv("ENABLE_PIPELINE_RUN_API", "0").lower() in ("1", "true"):
         raise HTTPException(status_code=404, detail="Pipeline API disabled")
-    
+
     # Extract parameters
     url = request.url
     quality = request.quality or "720p"
     tenant_id = request.tenant_id or "default"
     workspace_id = request.workspace_id or "main"
-    
+
     # Execute via PipelineTool
     tool = PipelineTool()
     result = tool.run(url=url, quality=quality, tenant_id=tenant_id, workspace_id=workspace_id)
-    
+
     # Map to HTTP status
     if result.success:
         return JSONResponse(status_code=200, content=result.to_dict())
@@ -1267,7 +1267,7 @@ async def run_pipeline(request: PipelineRunRequest):
       job_id = uuid4().hex
       asyncio.create_task(execute_pipeline_background(job_id, request))
       return {"job_id": job_id, "status": "queued"}
-  
+
   @router.get("/status/{job_id}")
   async def get_job_status(job_id: str):
       return job_queue.get_status(job_id)
@@ -1292,9 +1292,9 @@ async def jsonrpc_endpoint(
     # API key auth
     if not _api_key_ok(x_api_key):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    
+
     body = await request.json()
-    
+
     # Batch mode
     if isinstance(body, list):
         results = []
@@ -1302,7 +1302,7 @@ async def jsonrpc_endpoint(
             result = _dispatch_single(req, x_tenant_id, x_workspace_id)
             results.append(result)
         return results
-    
+
     # Single request
     return _dispatch_single(body, x_tenant_id, x_workspace_id)
 ```
@@ -1323,7 +1323,7 @@ def _dispatch(method: str, params: dict[str, Any] | None) -> StepResult:
         skill = params.get("skill") or params.get("method") or params.get("tool")
         args = params.get("args") or params.get("params") or params.get("arguments")
         return _call_tool(skill, args)
-    
+
     # Direct tool call
     return _call_tool(method, params)
 ```
@@ -1380,7 +1380,7 @@ def register_a2a_router(app: FastAPI, settings: Any) -> None:
 ```python
 TOPIC_CATEGORIES = {
     "technology": {
-        "ai", "machine learning", "blockchain", "crypto", 
+        "ai", "machine learning", "blockchain", "crypto",
         "software", "programming", "cloud", "database"
     },
     "politics": {
@@ -1431,22 +1431,22 @@ def chunk_transcript(transcript: Transcript, *, max_chars: int = 800, overlap: i
     buf = []
     start = 0.0
     end = 0.0
-    
+
     for seg in transcript.segments:
         candidate_len = sum(len(t) for t in buf) + len(seg.text) + len(buf)
-        
+
         if candidate_len > max_chars and buf:
             # Flush chunk
             text = " ".join(buf)
             chunks.append(Chunk(text=text, start=start, end=end))
-            
+
             # Start new buffer with overlap
             overflow = text[-overlap:]
             buf = [overflow, seg.text]
             start = end - (len(overflow) / max_chars)
         else:
             buf.append(seg.text)
-        
+
         end = seg.end
 ```
 
@@ -1533,13 +1533,13 @@ if token_mode:
 
 ### Architectural Strengths
 
-✅ **Multi-Platform Download Dispatcher:** Clean pattern, 11 platforms supported  
-✅ **Lazy Whisper Loading:** Avoids import-time overhead, test-friendly  
-✅ **Tenant-Aware Memory:** Proper namespace isolation in Qdrant  
-✅ **Graceful Degradation:** HippoRAG fallback, Qdrant fallback, version compatibility  
-✅ **Comprehensive Metrics:** All tools instrumented with `tool_runs_total`  
-✅ **A2A Protocol:** JSON-RPC 2.0 for agent interoperability  
-✅ **Feature Flag Control:** 80+ flags for fine-grained control  
+✅ **Multi-Platform Download Dispatcher:** Clean pattern, 11 platforms supported
+✅ **Lazy Whisper Loading:** Avoids import-time overhead, test-friendly
+✅ **Tenant-Aware Memory:** Proper namespace isolation in Qdrant
+✅ **Graceful Degradation:** HippoRAG fallback, Qdrant fallback, version compatibility
+✅ **Comprehensive Metrics:** All tools instrumented with `tool_runs_total`
+✅ **A2A Protocol:** JSON-RPC 2.0 for agent interoperability
+✅ **Feature Flag Control:** 80+ flags for fine-grained control
 
 ### Implementation Patterns
 
@@ -1571,7 +1571,7 @@ if token_mode:
 - [ ] Configuration loading mechanism (`secure_config` integration)
 - [ ] Future tasks analysis (if `future_tasks.yaml` exists)
 
-**Phase 8 Completion: Tool Implementations**  
+**Phase 8 Completion: Tool Implementations**
 111 tools remaining (15-20 high-priority):
 
 - [ ] EnhancedAnalysisTool
@@ -1584,7 +1584,7 @@ if token_mode:
 - [ ] MCPCallTool
 - [ ] And 8+ more critical tools
 
-**Phase 9 Completion: Core Infrastructure**  
+**Phase 9 Completion: Core Infrastructure**
 49 modules remaining (20 high-priority):
 
 - [ ] learning_engine.py (RL systems)
@@ -1597,7 +1597,7 @@ if token_mode:
 - [ ] structured_llm_service.py (structured output)
 - [ ] And 12+ more
 
-**Phase 10 Completion: Server & API Layer**  
+**Phase 10 Completion: Server & API Layer**
 35+ files remaining (15 high-priority):
 
 - [ ] a2a_streaming.py (streaming responses)
@@ -1648,5 +1648,5 @@ if token_mode:
 
 ---
 
-**Report Status:** Phase 7-10 foundations established (15% complete)  
+**Report Status:** Phase 7-10 foundations established (15% complete)
 **Next Action:** Continue analyzing remaining 215+ files across tool implementations, core infrastructure, and server/API layer to achieve complete codebase coverage.

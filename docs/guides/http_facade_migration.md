@@ -202,7 +202,7 @@ from core import http_utils
 @responses.activate
 def test_api_call():
     responses.add(responses.POST, "https://api.example.com/endpoint", json={"result": "ok"}, status=200)
-    
+
     # http_utils wrappers are testable
     response = http_utils.resilient_post("https://api.example.com/endpoint", json={})
     assert response.json() == {"result": "ok"}
@@ -218,7 +218,7 @@ def test_with_monkeypatch(monkeypatch):
             def json(self): return {"mock": "data"}
             def raise_for_status(self): pass
         return MockResponse()
-    
+
     monkeypatch.setattr("core.http_utils.resilient_post", mock_post)
     # ... test code
 ```
@@ -339,6 +339,6 @@ For questions, contact the Backend team.
 
 ---
 
-**Document Version**: 1.0  
-**Created**: 2025-01-23  
+**Document Version**: 1.0
+**Created**: 2025-01-23
 **Last Updated**: 2025-01-23

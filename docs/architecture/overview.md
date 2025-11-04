@@ -1,5 +1,13 @@
 # Ultimate Discord Intelligence Bot - Architecture Overview
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Architecture**: 3-layer design (Platform/Domains/App)
+- **Tools**: 111 across 9 categories (tools/**init**.py::**all**)
+- **Agents**: 18 specialized agents (crew_components/tool_registry.py)
+- **Pipeline**: 7 phases (pipeline_components/orchestrator.py: 1637 lines)
+- **Entry Point**: app/main.py with CLI orchestration
+
 ## System Architecture
 
 The Ultimate Discord Intelligence Bot is a sophisticated AI-powered content analysis system built on CrewAI that processes multi-platform content through a structured pipeline. The system is designed with tenant-aware isolation, comprehensive observability, and modular tool architecture.
@@ -58,10 +66,10 @@ The Ultimate Discord Intelligence Bot uses a clean 3-layer architecture:
 ### 5. Tools Architecture (`domains/*/tools/`)
 
 - **Structure**: Domain-specific tool categories organized by functionality
-   - Ingestion tools: `domains/ingestion/providers/tools/`
-   - Analysis tools: `domains/intelligence/analysis/tools/`
-   - Verification tools: `domains/intelligence/verification/tools/`
-   - Memory tools: `domains/memory/tools/`
+  - Ingestion tools: `domains/ingestion/providers/tools/`
+  - Analysis tools: `domains/intelligence/analysis/tools/`
+  - Verification tools: `domains/intelligence/verification/tools/`
+  - Memory tools: `domains/memory/tools/`
 - **Base Classes**: Specialized base classes per domain
 - **Features**: Lazy loading, tenancy support, observability hooks
 

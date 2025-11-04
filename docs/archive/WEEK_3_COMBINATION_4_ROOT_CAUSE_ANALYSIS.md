@@ -2,9 +2,9 @@
 
 ## Parallel Fact-Checking Catastrophic Failure Investigation
 
-**Generated:** 2025-01-04 23:30 UTC  
-**Status:** 🚨 ROOT CAUSE IDENTIFIED  
-**Issue:** Combination 4 execution time: 36.91 minutes (7.2× baseline)  
+**Generated:** 2025-01-04 23:30 UTC
+**Status:** 🚨 ROOT CAUSE IDENTIFIED
+**Issue:** Combination 4 execution time: 36.91 minutes (7.2× baseline)
 **Expected:** 4.1-4.6 minutes (0.5-1.0 min faster than baseline)
 
 ---
@@ -77,7 +77,7 @@ verification_integration_task = Task(
 backends = [
     ("duckduckgo", self._search_duckduckgo),     # Free, no auth
     ("serply", self._search_serply),              # API key required
-    ("exa", self._search_exa),                    # API key required  
+    ("exa", self._search_exa),                    # API key required
     ("perplexity", self._search_perplexity),      # API key required
     ("wolfram", self._search_wolfram),            # App ID required
 ]
@@ -293,15 +293,15 @@ async def _call_backend_with_timeout(name, fn, claim, timeout=10):
 
 async def run_async(self, claim: str) -> StepResult:
     # ... (same validation) ...
-    
+
     # Call all backends in parallel with timeout
     tasks = [
         _call_backend_with_timeout(name, fn, claim)
         for name, fn in backends
     ]
-    
+
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     # Aggregate evidence from successful backends
     for name, result in zip([b[0] for b in backends], results):
         if isinstance(result, list):
@@ -339,11 +339,11 @@ class FactCheckTool:
             "exa": RateLimiter(max_calls=20, window=60),
             "serply": RateLimiter(max_calls=20, window=60),
         }
-    
+
     async def _call_backend_with_timeout(self, name, fn, claim, timeout=10):
         # Wait for rate limiter token
         await self._backend_rate_limiters[name].acquire()
-        
+
         try:
             return await asyncio.wait_for(...)
 ```
@@ -356,18 +356,18 @@ class RateLimiter:
         self.max_calls = max_calls
         self.window = window  # seconds
         self.calls = []
-    
+
     async def acquire(self):
         now = time()
         # Remove calls outside window
         self.calls = [t for t in self.calls if now - t < self.window]
-        
+
         if len(self.calls) >= self.max_calls:
             # Wait until oldest call expires
             wait_time = self.window - (now - self.calls[0]) + 0.1
             await asyncio.sleep(wait_time)
             await self.acquire()  # Recursive retry
-        
+
         self.calls.append(now)
 ```
 
@@ -386,18 +386,18 @@ class CircuitBreaker:
         self.failure_threshold = failure_threshold
         self.timeout = timeout  # seconds
         self.opened_at = None
-    
+
     def is_open(self):
         if self.opened_at and time() - self.opened_at > self.timeout:
             self.failure_count = 0
             self.opened_at = None
         return self.opened_at is not None
-    
+
     def record_failure(self):
         self.failure_count += 1
         if self.failure_count >= self.failure_threshold:
             self.opened_at = time()
-    
+
     def record_success(self):
         self.failure_count = 0
         self.opened_at = None
@@ -412,12 +412,12 @@ class FactCheckTool:
             backend: CircuitBreaker()
             for backend in ["duckduckgo", "serply", ...]
         }
-    
+
     async def _call_backend_with_timeout(self, name, fn, claim, timeout=10):
         # Skip if circuit breaker open
         if self._circuit_breakers[name].is_open():
             return []
-        
+
         try:
             result = await asyncio.wait_for(...)
             self._circuit_breakers[name].record_success()
@@ -441,17 +441,17 @@ start = time()
 try:
     result = await asyncio.wait_for(...)
     duration = time() - start
-    
+
     self._metrics.histogram(
         "fact_check_backend_duration_seconds",
         labels={"backend": name, "outcome": "success"}
     ).observe(duration)
-    
+
     self._metrics.counter(
         "fact_check_backend_calls_total",
         labels={"backend": name, "outcome": "success"}
     ).inc()
-    
+
     return result
 except asyncio.TimeoutError:
     duration = time() - start
@@ -459,12 +459,12 @@ except asyncio.TimeoutError:
         "fact_check_backend_duration_seconds",
         labels={"backend": name, "outcome": "timeout"}
     ).observe(duration)
-    
+
     self._metrics.counter(
         "fact_check_backend_calls_total",
         labels={"backend": name, "outcome": "timeout"}
     ).inc()
-    
+
     return []
 except RequestException:
     # Similar metrics for rate_limit, error, etc.
@@ -626,12 +626,12 @@ async def _call_backend_with_timeout(self, name, fn, claim, timeout=10):
 ```python
 async def test_rate_limiter_enforces_limits():
     limiter = RateLimiter(max_calls=3, window=1)
-    
+
     start = time()
     for i in range 5:
         await limiter.acquire()
     duration = time() - start
-    
+
     assert duration >= 1.0  # Had to wait for window to reset
 ```
 
@@ -641,25 +641,25 @@ async def test_rate_limiter_enforces_limits():
 async def test_fact_check_parallel_backends(monkeypatch):
     slow_backend_called = False
     fast_backend_called = False
-    
+
     async def slow_backend(claim):
         nonlocal slow_backend_called
         await asyncio.sleep(15)  # Exceeds timeout
         slow_backend_called = True
         return [{"title": "slow"}]
-    
+
     async def fast_backend(claim):
         nonlocal fast_backend_called
         await asyncio.sleep(0.1)
         fast_backend_called = True
         return [{"title": "fast"}]
-    
+
     tool = FactCheckTool()
     monkeypatch.setattr(tool, "_search_duckduckgo", slow_backend)
     monkeypatch.setattr(tool, "_search_serply", fast_backend)
-    
+
     result = await tool.run_async("test claim")
-    
+
     assert fast_backend_called
     # Slow backend should time out, not block fast backend
     assert len(result["evidence"]) >= 1  # Got fast results
@@ -694,7 +694,7 @@ python scripts/analyze_benchmark_results.py \
 
 ```
 Iteration 1: 4.23 minutes ✅
-Iteration 2: 3.95 minutes ✅  
+Iteration 2: 3.95 minutes ✅
 Iteration 3: 4.67 minutes ✅
 
 Mean: 4.28 minutes (baseline: 5.12 min, improvement: 16%)
@@ -868,7 +868,7 @@ python scripts/benchmark_autointel_flags.py \
 **Estimated Time to Fix & Validate:** 8-12 hours total
 
 - Phase 1: 2-3 hours
-- Phase 2: 3-4 hours  
+- Phase 2: 3-4 hours
 - Phase 3: 2-3 hours
 - Testing: 2-3 hours
 
@@ -909,5 +909,5 @@ python scripts/benchmark_autointel_flags.py \
 
 ---
 
-**Document Status:** 🚨 READY FOR IMPLEMENTATION  
+**Document Status:** 🚨 READY FOR IMPLEMENTATION
 **Next Action:** Begin Phase 1 implementation (reduce parallel tasks to 2)

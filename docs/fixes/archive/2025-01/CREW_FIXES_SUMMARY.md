@@ -16,7 +16,7 @@
 - Created minimal `.env` configuration with dummy keys for testing
 - Added comprehensive dependency validation
 
-### 2. Poor Tool Error Handling ✅ FIXED  
+### 2. Poor Tool Error Handling ✅ FIXED
 
 **Problem**: CrewAI tool wrappers failed silently, leaving agents confused about tool status
 
@@ -73,7 +73,7 @@ Testing with `/autointel url:https://www.youtube.com/watch?v=xtFiJ8AVdW0 depth:E
 ```
 System Health Check Results:
 ✅ yt-dlp: Available in virtual environment
-✅ ffmpeg: Available at /usr/bin/ffmpeg  
+✅ ffmpeg: Available at /usr/bin/ffmpeg
 ❌ LLM API: No valid API keys configured
 ❌ Discord Integration: No valid credentials
 ⚠️  Qdrant: Not configured (fallback to in-memory)

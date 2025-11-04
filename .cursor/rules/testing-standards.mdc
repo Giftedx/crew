@@ -24,10 +24,10 @@ def test_function_success(mock_dependencies):
     # Arrange
     tool = YourTool()
     input_data = "test input"
-    
+
     # Act
     result = tool._run(input_data, tenant="test", workspace="ws1")
-    
+
     # Assert
     assert result.status == "success"
     assert result.data is not None
@@ -38,10 +38,10 @@ def test_function_error_handling(mock_dependencies):
     # Arrange
     tool = YourTool()
     mock_dependencies.side_effect = Exception("Test error")
-    
+
     # Act
     result = tool._run("", tenant="test", workspace="ws1")
-    
+
     # Assert
     assert result.status in ["error", "bad_request"]
     assert "error" in result.error.lower()
@@ -57,7 +57,7 @@ All tool tests must verify StepResult returns:
 def test_tool_returns_step_result():
     """Ensure tool returns StepResult."""
     result = tool._run(content="test", tenant="t1", workspace="w1")
-    
+
     assert isinstance(result, StepResult)
     assert hasattr(result, "status")
     assert hasattr(result, "data") or hasattr(result, "error")
@@ -72,7 +72,7 @@ def test_tenant_isolation():
     """Test tenant context is properly handled."""
     result1 = tool._run("data", tenant="tenant1", workspace="ws1")
     result2 = tool._run("data", tenant="tenant2", workspace="ws1")
-    
+
     # Verify data isolation
     assert result1.data["namespace"] == "tenant1:ws1"
     assert result2.data["namespace"] == "tenant2:ws1"
@@ -185,16 +185,16 @@ Each test should have:
 ```python
 def test_complex_scenario():
     """Test handling of edge case X when Y occurs.
-    
+
     This tests the specific scenario where multiple
     debate segments overlap and require merging.
     """
     # Arrange: Create overlapping segments
     segments = create_overlapping_segments()
-    
+
     # Act: Process with merge logic
     result = merge_tool._run(segments, "t1", "w1")
-    
+
     # Assert: Verify correct merge
     assert result.status == "success", "Merge should succeed"
     assert len(result.data["merged"]) == 2, "Should merge to 2 segments"

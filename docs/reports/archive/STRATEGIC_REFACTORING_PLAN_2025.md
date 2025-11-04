@@ -4,8 +4,8 @@
 
 This document outlines a comprehensive strategy to transform the Ultimate Discord Intelligence Bot from its current state into a **next-generation, multi-framework, modular AI platform** that seamlessly integrates multiple agent frameworks, learns continuously, and scales efficiently.
 
-**Status Date**: October 31, 2025  
-**Planning Horizon**: Q4 2025 - Q2 2026  
+**Status Date**: October 31, 2025
+**Planning Horizon**: Q4 2025 - Q2 2026
 **Estimated Impact**: 40% code reduction, 60% better framework interoperability, 3x faster feature development
 
 ---
@@ -212,8 +212,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
 - [ ] Mark old files as `*.DEPRECATED` and add warnings
 - [ ] Update documentation and imports
 
-**Estimated Effort**: 1.5 weeks  
-**Risk**: Medium (touches core execution path)  
+**Estimated Effort**: 1.5 weeks
+**Risk**: Medium (touches core execution path)
 **Success Criteria**: Single entry point for crew execution, <5% performance regression
 
 #### 1.2 Orchestrator Unification - ✅ COMPLETE (100%)
@@ -234,8 +234,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
 - [x] Create comprehensive usage guide (1,500+ lines) ✅
 - [x] Full validation (15/16 tests passing) ✅
 
-**Actual Effort**: ~15 hours over 1 day  
-**Risk**: Successfully mitigated - zero production impact  
+**Actual Effort**: ~15 hours over 1 day
+**Risk**: Successfully mitigated - zero production impact
 **Success Criteria**: ✅ ACHIEVED - Phase 3 unblocked
 
 **Key Achievements**:
@@ -266,8 +266,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
 - [ ] Migrate existing orchestrators to new hierarchy
 - [ ] Update dependency injection and initialization
 
-**Estimated Effort**: 2 weeks  
-**Risk**: High (affects entire system architecture)  
+**Estimated Effort**: 2 weeks
+**Risk**: High (affects entire system architecture)
 **Success Criteria**: Clear orchestrator hierarchy, improved maintainability
 
 #### 1.3 Performance Analytics Consolidation
@@ -288,8 +288,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
 - [ ] Update imports across codebase
 - [ ] Remove deprecated files from main directory
 
-**Estimated Effort**: 3 days  
-**Risk**: Low (mostly moving files)  
+**Estimated Effort**: 3 days
+**Risk**: Low (mostly moving files)
 **Success Criteria**: Clean main directory, organized observability structure
 
 **Phase 1 Deliverables**:
@@ -316,16 +316,16 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class FrameworkAdapter(Protocol):
       """Universal interface for agent frameworks."""
-      
+
       async def execute_task(
-          self, 
-          task: TaskDefinition, 
+          self,
+          task: TaskDefinition,
           tools: list[UniversalTool],
           context: ExecutionContext
       ) -> TaskResult:
           """Execute a task using this framework."""
           ...
-      
+
       async def create_agent(
           self,
           role: AgentRole,
@@ -333,7 +333,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
       ) -> Agent:
           """Create an agent with specified capabilities."""
           ...
-      
+
       def supports_feature(self, feature: FrameworkFeature) -> bool:
           """Check if framework supports a specific feature."""
           ...
@@ -345,8 +345,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - `frameworks/autogen_adapter.py` - AutoGen integration
   - `frameworks/llamaindex_adapter.py` - LlamaIndex agent integration
 
-**Estimated Effort**: 2 weeks  
-**Risk**: Medium (new abstraction layer)  
+**Estimated Effort**: 2 weeks
+**Risk**: Medium (new abstraction layer)
 **Success Criteria**: All frameworks accessible via unified interface
 
 #### 2.2 Framework-Agnostic Tool System
@@ -359,20 +359,20 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class UniversalTool(ABC):
       """Base class for framework-agnostic tools."""
-      
+
       @abstractmethod
       async def execute(self, **kwargs) -> StepResult:
           """Execute tool logic."""
           ...
-      
+
       def to_crewai_tool(self) -> CrewAITool:
           """Convert to CrewAI tool format."""
           ...
-      
+
       def to_langgraph_tool(self) -> LangGraphTool:
           """Convert to LangGraph tool format."""
           ...
-      
+
       def to_autogen_tool(self) -> AutoGenTool:
           """Convert to AutoGen function."""
           ...
@@ -391,8 +391,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Start with 10 high-value tools
   - Create migration guide for remaining tools
 
-**Estimated Effort**: 1.5 weeks  
-**Risk**: Medium (requires tool refactoring)  
+**Estimated Effort**: 1.5 weeks
+**Risk**: Medium (requires tool refactoring)
 **Success Criteria**: Tools work across CrewAI, LangGraph, and AutoGen
 
 #### 2.3 Unified State Management
@@ -405,20 +405,20 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class UnifiedWorkflowState:
       """Framework-agnostic workflow state."""
-      
+
       messages: list[Message]
       context: dict[str, Any]
       checkpoints: list[Checkpoint]
       metadata: dict[str, Any]
-      
+
       def to_langgraph_state(self) -> LangGraphState:
           """Convert to LangGraph state format."""
           ...
-      
+
       def to_crewai_context(self) -> CrewContext:
           """Convert to CrewAI context format."""
           ...
-      
+
       def persist(self, backend: str = "sqlite") -> None:
           """Persist state to storage."""
           ...
@@ -429,8 +429,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Redis (for distributed state)
   - PostgreSQL (for production persistence)
 
-**Estimated Effort**: 1 week  
-**Risk**: Medium (state synchronization complexity)  
+**Estimated Effort**: 1 week
+**Risk**: Medium (state synchronization complexity)
 **Success Criteria**: State persists across framework switches
 
 **Phase 2 Deliverables**:
@@ -469,7 +469,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class FrameworkSelector:
       """Intelligently route tasks to optimal framework."""
-      
+
       async def select_framework(
           self,
           task: TaskDefinition,
@@ -479,8 +479,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
           ...
   ```
 
-**Estimated Effort**: 1.5 weeks  
-**Risk**: Medium (new ML component)  
+**Estimated Effort**: 1.5 weeks
+**Risk**: Medium (new ML component)
 **Success Criteria**: >15% improvement in average task success rate
 
 #### 3.2 LangGraph Production Integration
@@ -506,8 +506,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Parallel execution branches
   - Sub-graph composition
 
-**Estimated Effort**: 2 weeks  
-**Risk**: Medium (complex state machine logic)  
+**Estimated Effort**: 2 weeks
+**Risk**: Medium (complex state machine logic)
 **Success Criteria**: LangGraph handles 30%+ of deterministic workflows
 
 #### 3.3 AutoGen Deep Integration
@@ -532,8 +532,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Debate simulation
   - Code generation & review
 
-**Estimated Effort**: 1.5 weeks  
-**Risk**: Medium (multi-agent coordination)  
+**Estimated Effort**: 1.5 weeks
+**Risk**: Medium (multi-agent coordination)
 **Success Criteria**: AutoGen handles 20%+ of collaborative tasks
 
 #### 3.4 Hybrid Framework Execution
@@ -546,7 +546,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class HybridFrameworkExecutor:
       """Execute workflows across multiple frameworks."""
-      
+
       async def execute_hybrid_workflow(
           self,
           workflow: HybridWorkflowDefinition
@@ -579,8 +579,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
         conversation_style: "iterative"
   ```
 
-**Estimated Effort**: 2 weeks  
-**Risk**: High (complex coordination logic)  
+**Estimated Effort**: 2 weeks
+**Risk**: High (complex coordination logic)
 **Success Criteria**: Hybrid workflows outperform single-framework by >20%
 
 **Phase 3 Deliverables**:
@@ -618,7 +618,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
 
 - [ ] Identify common patterns and duplicates
 
-**Estimated Effort**: 3 days  
+**Estimated Effort**: 3 days
 **Success Criteria**: Complete routing inventory and categorization
 
 #### 4.2 Unified Routing Framework
@@ -631,7 +631,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class UnifiedRouter(Generic[T]):
       """Generic routing framework."""
-      
+
       def __init__(
           self,
           strategy: RoutingStrategy,
@@ -639,7 +639,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
           selector: Optional[BackendSelector] = None
       ):
           ...
-      
+
       async def route(
           self,
           request: RoutingRequest,
@@ -665,8 +665,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - `routers/framework_router.py` - Framework routing (new)
   - `routers/cache_router.py` - Cache backend routing
 
-**Estimated Effort**: 2 weeks  
-**Risk**: Medium (large refactoring)  
+**Estimated Effort**: 2 weeks
+**Risk**: Medium (large refactoring)
 **Success Criteria**: <50 routing functions (from 158), unified interface
 
 #### 4.3 Intelligent Request Routing
@@ -679,14 +679,14 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class MultiObjectiveRouter:
       """Route based on multiple objectives."""
-      
+
       objectives = [
           "minimize_cost",
           "maximize_quality",
           "minimize_latency",
           "maximize_reliability"
       ]
-      
+
       async def route_optimal(
           self,
           request: Request,
@@ -702,8 +702,8 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Performance prediction
   - A/B testing framework
 
-**Estimated Effort**: 1.5 weeks  
-**Risk**: Medium (ML complexity)  
+**Estimated Effort**: 1.5 weeks
+**Risk**: Medium (ML complexity)
 **Success Criteria**: 20% improvement in routing decisions
 
 **Phase 4 Deliverables**:
@@ -730,7 +730,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class FrameworkMetrics:
       """Track per-framework performance."""
-      
+
       framework_name: str
       task_type: str
       success_rate: float
@@ -747,7 +747,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Latency distribution comparisons
   - Success rate by complexity
 
-**Estimated Effort**: 1 week  
+**Estimated Effort**: 1 week
 **Success Criteria**: Comprehensive framework performance dashboard
 
 #### 5.2 Unified Feedback Loops
@@ -765,7 +765,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class FrameworkFeedback:
       """Collect feedback from any framework."""
-      
+
       async def record_execution(
           self,
           framework: str,
@@ -782,7 +782,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Meta-learning for quick adaptation
   - Few-shot framework selection
 
-**Estimated Effort**: 1.5 weeks  
+**Estimated Effort**: 1.5 weeks
 **Success Criteria**: Feedback collected from all frameworks
 
 #### 5.3 Automated Framework Optimization
@@ -795,7 +795,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   ```python
   class FrameworkAutoTuner:
       """Automatically optimize framework configurations."""
-      
+
       async def tune_framework_params(
           self,
           framework: str,
@@ -812,7 +812,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Retry policies
   - Timeout configurations
 
-**Estimated Effort**: 1 week  
+**Estimated Effort**: 1 week
 **Success Criteria**: 15% improvement via auto-tuning
 
 **Phase 5 Deliverables**:
@@ -848,7 +848,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - Database migrations
   - Configuration rollback
 
-**Estimated Effort**: 1 week  
+**Estimated Effort**: 1 week
 **Success Criteria**: Zero-downtime migration possible
 
 #### 6.2 Testing & Validation
@@ -874,7 +874,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - State management overhead
   - End-to-end latency tracking
 
-**Estimated Effort**: 1.5 weeks  
+**Estimated Effort**: 1.5 weeks
 **Success Criteria**: >85% test coverage, <5% performance regression
 
 #### 6.3 Documentation & Knowledge Transfer
@@ -901,7 +901,7 @@ This document outlines a comprehensive strategy to transform the Ultimate Discor
   - State recovery procedures
   - Rollback procedures
 
-**Estimated Effort**: 1 week  
+**Estimated Effort**: 1 week
 **Success Criteria**: Complete documentation coverage
 
 **Phase 6 Deliverables**:
@@ -1111,25 +1111,25 @@ class AgentRole:
 @runtime_checkable
 class FrameworkAdapter(Protocol):
     """Universal interface for agent frameworks."""
-    
+
     @property
     def name(self) -> str:
         """Framework name."""
         ...
-    
+
     @property
     def version(self) -> str:
         """Framework version."""
         ...
-    
+
     def supports_feature(self, feature: FrameworkFeature) -> bool:
         """Check if framework supports a specific feature."""
         ...
-    
+
     async def initialize(self, config: dict[str, Any]) -> None:
         """Initialize framework with configuration."""
         ...
-    
+
     async def create_agent(
         self,
         role: AgentRole,
@@ -1137,7 +1137,7 @@ class FrameworkAdapter(Protocol):
     ) -> Any:
         """Create an agent with specified role and tools."""
         ...
-    
+
     async def execute_task(
         self,
         task: TaskDefinition,
@@ -1145,7 +1145,7 @@ class FrameworkAdapter(Protocol):
     ) -> TaskResult:
         """Execute a task using this framework."""
         ...
-    
+
     async def execute_multi_agent(
         self,
         tasks: list[TaskDefinition],
@@ -1153,7 +1153,7 @@ class FrameworkAdapter(Protocol):
     ) -> list[TaskResult]:
         """Execute tasks with multiple agents."""
         ...
-    
+
     async def shutdown(self) -> None:
         """Cleanup framework resources."""
         ...
@@ -1191,18 +1191,18 @@ class ToolMetadata:
 
 class UniversalTool(ABC):
     """Base class for framework-agnostic tools."""
-    
+
     @property
     @abstractmethod
     def metadata(self) -> ToolMetadata:
         """Tool metadata."""
         ...
-    
+
     @abstractmethod
     async def execute(self, **kwargs) -> StepResult:
         """Execute tool logic."""
         ...
-    
+
     def to_crewai_tool(self) -> Any:
         """Convert to CrewAI tool format."""
         from crewai.tools import Tool
@@ -1211,7 +1211,7 @@ class UniversalTool(ABC):
             description=self.metadata.description,
             func=lambda **kw: asyncio.run(self.execute(**kw))
         )
-    
+
     def to_langgraph_tool(self) -> Any:
         """Convert to LangGraph tool format."""
         from langgraph.prebuilt import Tool
@@ -1220,7 +1220,7 @@ class UniversalTool(ABC):
             description=self.metadata.description,
             func=lambda **kw: asyncio.run(self.execute(**kw))
         )
-    
+
     def to_autogen_function(self) -> dict:
         """Convert to AutoGen function definition."""
         return {
@@ -1228,7 +1228,7 @@ class UniversalTool(ABC):
             "description": self.metadata.description,
             "parameters": self.metadata.input_schema
         }
-    
+
     async def __call__(self, **kwargs) -> StepResult:
         """Allow direct calling."""
         return await self.execute(**kwargs)
@@ -1267,7 +1267,7 @@ class Checkpoint:
 
 class UnifiedWorkflowState:
     """Framework-agnostic workflow state."""
-    
+
     def __init__(
         self,
         workflow_id: str,
@@ -1279,15 +1279,15 @@ class UnifiedWorkflowState:
         self.context: dict[str, Any] = {}
         self.checkpoints: list[Checkpoint] = []
         self.metadata: dict[str, Any] = {}
-    
+
     def add_message(self, role: str, content: str, **metadata):
         """Add a message to the conversation."""
         self.messages.append(Message(role, content, metadata=metadata))
-    
+
     def update_context(self, updates: dict[str, Any]):
         """Update workflow context."""
         self.context.update(updates)
-    
+
     def create_checkpoint(self, framework: str) -> Checkpoint:
         """Create a checkpoint of current state."""
         checkpoint = Checkpoint(
@@ -1298,7 +1298,7 @@ class UnifiedWorkflowState:
         )
         self.checkpoints.append(checkpoint)
         return checkpoint
-    
+
     def restore_checkpoint(self, checkpoint_id: str):
         """Restore state from checkpoint."""
         checkpoint = next(
@@ -1307,14 +1307,14 @@ class UnifiedWorkflowState:
         )
         if checkpoint:
             self.from_dict(checkpoint.state_snapshot)
-    
+
     def to_langgraph_state(self) -> dict:
         """Convert to LangGraph state format."""
         return {
             "messages": [{"role": m.role, "content": m.content} for m in self.messages],
             "context": self.context
         }
-    
+
     def to_crewai_context(self) -> dict:
         """Convert to CrewAI context format."""
         return {
@@ -1323,14 +1323,14 @@ class UnifiedWorkflowState:
             ),
             **self.context
         }
-    
+
     def to_autogen_messages(self) -> list[dict]:
         """Convert to AutoGen message format."""
         return [
             {"role": m.role, "content": m.content}
             for m in self.messages
         ]
-    
+
     async def persist(self):
         """Persist state to configured backend."""
         if self.backend == StateBackend.SQLITE:
@@ -1339,7 +1339,7 @@ class UnifiedWorkflowState:
             await self._persist_redis()
         elif self.backend == StateBackend.POSTGRESQL:
             await self._persist_postgresql()
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
@@ -1348,7 +1348,7 @@ class UnifiedWorkflowState:
             "context": self.context,
             "metadata": self.metadata
         }
-    
+
     def from_dict(self, data: dict):
         """Restore from dictionary."""
         self.messages = [Message(**m) for m in data["messages"]]
@@ -1437,7 +1437,7 @@ class UnifiedWorkflowState:
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: October 31, 2025  
-**Status**: Draft for Review  
+**Document Version**: 1.0
+**Last Updated**: October 31, 2025
+**Status**: Draft for Review
 **Next Review**: Weekly during implementation

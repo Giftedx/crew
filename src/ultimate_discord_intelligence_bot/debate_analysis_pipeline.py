@@ -4,21 +4,25 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypedDict
 
-from .tools.acquisition.multi_platform_download_tool import MultiPlatformDownloadTool
-from .tools.audio_transcription_tool import AudioTranscriptionTool
-from .tools.character_profile_tool import CharacterProfileTool
-from .tools.context_verification_tool import ContextVerificationTool
-from .tools.fact_check_tool import FactCheckTool
-from .tools.leaderboard_tool import LeaderboardTool
-from .tools.timeline_tool import TimelineTool
-from .tools.transcript_index_tool import TranscriptIndexTool
-from .tools.trustworthiness_tracker_tool import TrustworthinessTrackerTool
+# Import tools via the package aggregator to honor the canonical module mapping
+from .tools import (
+    AudioTranscriptionTool,
+    CharacterProfileTool,
+    ContextVerificationTool,
+    FactCheckTool,
+    LeaderboardTool,
+    MultiPlatformDownloadTool,
+    TimelineTool,
+    TranscriptIndexTool,
+    TrustworthinessTrackerTool,
+)
 
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from .tools.memory_storage_tool import MemoryStorageTool
+    # Type-only import via aggregator; resolves to domains.memory.vector.memory_storage_tool
+    from .tools import MemoryStorageTool
 
 
 class DebateAnalysisPipeline:

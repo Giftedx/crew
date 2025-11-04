@@ -1,7 +1,7 @@
 # AI Evaluation & Enhancement Roadmap 2025
 
-**Date:** October 28, 2025  
-**Author:** GitHub Copilot (GPT-5-Codex Preview)  
+**Date:** October 28, 2025
+**Author:** GitHub Copilot (GPT-5-Codex Preview)
 **Scope:** Phased observability, evaluation, reinforcement learning, and memory enhancements aligned with the comprehensive review protocol.
 
 ---
@@ -49,13 +49,13 @@
 
 ### LangSmith Evaluate API
 
-**Category:** Observability & Evaluation  
-**Source:** /langchain-ai/langsmith (Evaluate API)  
-**Impact Score:** 9/10  
-**Feasibility Score:** 8/10  
-**Innovation Score:** 6/10  
-**Stability Score:** 8/10  
-**Weighted Score:** 8.0  
+**Category:** Observability & Evaluation
+**Source:** /langchain-ai/langsmith (Evaluate API)
+**Impact Score:** 9/10
+**Feasibility Score:** 8/10
+**Innovation Score:** 6/10
+**Stability Score:** 8/10
+**Weighted Score:** 8.0
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -102,13 +102,13 @@ def run_langsmith_eval(trajectory: AgentTrajectory) -> StepResult:
 
 ### Langfuse 2.0
 
-**Category:** Observability & Evaluation  
-**Source:** /langfuse/langfuse (Cloud & OSS)  
-**Impact Score:** 8/10  
-**Feasibility Score:** 8/10  
-**Innovation Score:** 7/10  
-**Stability Score:** 7/10  
-**Weighted Score:** 7.7  
+**Category:** Observability & Evaluation
+**Source:** /langfuse/langfuse (Cloud & OSS)
+**Impact Score:** 8/10
+**Feasibility Score:** 8/10
+**Innovation Score:** 7/10
+**Stability Score:** 7/10
+**Weighted Score:** 7.7
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -145,13 +145,13 @@ def record_stepresult(result: StepResult) -> None:
 
 ### AgentOps Platform
 
-**Category:** Operational Observability  
-**Source:** agentops.ai platform  
-**Impact Score:** 7/10  
-**Feasibility Score:** 7/10  
-**Innovation Score:** 6/10  
-**Stability Score:** 7/10  
-**Weighted Score:** 6.8  
+**Category:** Operational Observability
+**Source:** agentops.ai platform
+**Impact Score:** 7/10
+**Feasibility Score:** 7/10
+**Innovation Score:** 6/10
+**Stability Score:** 7/10
+**Weighted Score:** 6.8
 **Integration Effort:** Low
 
 **Key Benefits:**
@@ -185,13 +185,13 @@ def emit_agentops_event(step: str, result: StepResult) -> None:
 
 ### Arize Phoenix
 
-**Category:** Observability & Analytics  
-**Source:** /Arize-ai/phoenix  
-**Impact Score:** 8/10  
-**Feasibility Score:** 6/10  
-**Innovation Score:** 7/10  
-**Stability Score:** 6/10  
-**Weighted Score:** 7.0  
+**Category:** Observability & Analytics
+**Source:** /Arize-ai/phoenix
+**Impact Score:** 8/10
+**Feasibility Score:** 6/10
+**Innovation Score:** 7/10
+**Stability Score:** 6/10
+**Weighted Score:** 7.0
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -226,13 +226,13 @@ def log_to_phoenix(result: StepResult) -> None:
 
 ### RD-Agent (Microsoft)
 
-**Category:** Agent Framework  
-**Source:** /microsoft/rd-agent  
-**Impact Score:** 7/10  
-**Feasibility Score:** 5/10  
-**Innovation Score:** 8/10  
-**Stability Score:** 5/10  
-**Weighted Score:** 6.4  
+**Category:** Agent Framework
+**Source:** /microsoft/rd-agent
+**Impact Score:** 7/10
+**Feasibility Score:** 5/10
+**Innovation Score:** 8/10
+**Stability Score:** 5/10
+**Weighted Score:** 6.4
 **Integration Effort:** High
 
 **Key Benefits:**
@@ -266,13 +266,13 @@ def run_rd_agent(graph_payload: dict) -> StepResult:
 
 ### Agent Zero
 
-**Category:** Agent Framework  
-**Source:** /frdel/agent-zero  
-**Impact Score:** 6/10  
-**Feasibility Score:** 6/10  
-**Innovation Score:** 7/10  
-**Stability Score:** 6/10  
-**Weighted Score:** 6.2  
+**Category:** Agent Framework
+**Source:** /frdel/agent-zero
+**Impact Score:** 6/10
+**Feasibility Score:** 6/10
+**Innovation Score:** 7/10
+**Stability Score:** 6/10
+**Weighted Score:** 6.2
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -306,13 +306,13 @@ def execute_agent_zero(task: str) -> StepResult:
 
 ### Builder.io Micro Agent
 
-**Category:** Test-First Agent Harness  
-**Source:** /BuilderIO/micro-agent  
-**Impact Score:** 5/10  
-**Feasibility Score:** 7/10  
-**Innovation Score:** 6/10  
-**Stability Score:** 7/10  
-**Weighted Score:** 6.0  
+**Category:** Test-First Agent Harness
+**Source:** /BuilderIO/micro-agent
+**Impact Score:** 5/10
+**Feasibility Score:** 7/10
+**Innovation Score:** 6/10
+**Stability Score:** 7/10
+**Weighted Score:** 6.0
 **Integration Effort:** Low
 
 **Key Benefits:**
@@ -342,13 +342,13 @@ def verify_tool_prompt(prompt: str) -> StepResult:
 
 ### Vowpal Wabbit
 
-**Category:** Reinforcement Learning System  
-**Source:** /VowpalWabbit/vowpal_wabbit  
-**Impact Score:** 9/10  
-**Feasibility Score:** 6/10  
-**Innovation Score:** 8/10  
-**Stability Score:** 6/10  
-**Weighted Score:** 7.6  
+**Category:** Reinforcement Learning System
+**Source:** /VowpalWabbit/vowpal_wabbit
+**Impact Score:** 9/10
+**Feasibility Score:** 6/10
+**Innovation Score:** 8/10
+**Stability Score:** 6/10
+**Weighted Score:** 7.6
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -382,13 +382,13 @@ def select_model(context: RoutingContext) -> StepResult:
 
 ### MABWiser
 
-**Category:** Reinforcement Learning System  
-**Source:** /fmr-llc/mabwiser  
-**Impact Score:** 7/10  
-**Feasibility Score:** 8/10  
-**Innovation Score:** 6/10  
-**Stability Score:** 7/10  
-**Weighted Score:** 7.1  
+**Category:** Reinforcement Learning System
+**Source:** /fmr-llc/mabwiser
+**Impact Score:** 7/10
+**Feasibility Score:** 8/10
+**Innovation Score:** 6/10
+**Stability Score:** 7/10
+**Weighted Score:** 7.1
 **Integration Effort:** Low
 
 **Key Benefits:**
@@ -422,13 +422,13 @@ def choose_arm(context_vec) -> StepResult:
 
 ### Letta (MemGPT)
 
-**Category:** Memory Layer  
-**Source:** /memgpt-corp/letta  
-**Impact Score:** 8/10  
-**Feasibility Score:** 6/10  
-**Innovation Score:** 8/10  
-**Stability Score:** 5/10  
-**Weighted Score:** 7.1  
+**Category:** Memory Layer
+**Source:** /memgpt-corp/letta
+**Impact Score:** 8/10
+**Feasibility Score:** 6/10
+**Innovation Score:** 8/10
+**Stability Score:** 5/10
+**Weighted Score:** 7.1
 **Integration Effort:** Medium
 
 **Key Benefits:**
@@ -460,13 +460,13 @@ def store_memory(payload: dict) -> StepResult:
 
 ### LLMLingua 2
 
-**Category:** LLM Optimization  
-**Source:** /microsoft/LLMLingua  
-**Impact Score:** 7/10  
-**Feasibility Score:** 8/10  
-**Innovation Score:** 7/10  
-**Stability Score:** 7/10  
-**Weighted Score:** 7.3  
+**Category:** LLM Optimization
+**Source:** /microsoft/LLMLingua
+**Impact Score:** 7/10
+**Feasibility Score:** 8/10
+**Innovation Score:** 7/10
+**Stability Score:** 7/10
+**Weighted Score:** 7.3
 **Integration Effort:** Low
 
 **Key Benefits:**

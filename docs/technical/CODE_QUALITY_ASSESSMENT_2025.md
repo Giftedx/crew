@@ -1,7 +1,7 @@
 # Code Quality & Technical Debt Assessment - Ultimate Discord Intelligence Bot
 
-**Generated:** 2025-01-27  
-**Repository:** Giftedx/crew  
+**Generated:** 2025-01-27
+**Repository:** Giftedx/crew
 **Analysis Scope:** Code quality, type safety, testing infrastructure, and technical debt
 
 ## Executive Summary

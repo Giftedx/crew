@@ -1,8 +1,10 @@
 ---
 adr: 0001
 title: Standardize Cache Platform on Multi-Level Cache Facade
-status: Proposed
+status: Accepted
 date: 2025-10-18
+implementation_date: 2025-10-22
+implementation_status: Partially Complete
 authors:
   - Ultimate Discord Intelligence Bot Architecture Group
 ---
@@ -20,15 +22,15 @@ resulted in:
 - Inability to measure aggregate hit rate or cost savings
 
 The canonical implementation that already satisfies most requirements lives in
-`core/cache/multi_level_cache.py`, but numerous services bypass it.
+`src/platform/cache/multi_level_cache.py`, but numerous services bypass it.
 
 ## Decision
 
 Adopt the following principles for cache usage:
 
 1. **Canonical API** – All cache consumers must call through a thin adapter exported from
-   `ultimate_discord_intelligence_bot/cache/__init__.py`. The adapter will be backed by the
-   `core.cache.multi_level_cache.MultiLevelCache` implementation.
+   `src/ultimate_discord_intelligence_bot/cache/__init__.py`. The adapter will be backed by the
+   `platform.cache.multi_level_cache.MultiLevelCache` implementation.
 2. **Tenant Awareness** – Adapters must require `(tenant, workspace)` to avoid cross-tenant data
    leakage.
 3. **Feature Flag Control** – Introduce `ENABLE_CACHE_V2` to gate the unified cache in production
@@ -47,3 +49,23 @@ Adopt the following principles for cache usage:
   legacy vs. unified hit/miss metrics.
 - Adds a new mandatory feature flag documented in `docs/configuration.md`.
 - Deprecation guard scripts must prevent new modules being added to the deprecated cache directories.
+
+## Implementation Status (Updated November 3, 2025)
+
+**Canonical Implementation**: ✅ Complete
+
+- `src/platform/cache/multi_level_cache.py` - Production-ready multi-level cache
+- Cache API exported from platform layer
+- Tenant-aware caching with namespace isolation
+
+**Migration Status**: 🔄 In Progress
+
+- Deprecated modules still exist (`services/cache.py`, `performance/cache_optimizer.py`)
+- New code uses platform cache layer
+- Legacy code migration ongoing
+
+**Next Steps**:
+
+- Complete migration of remaining cache consumers
+- Remove deprecated cache modules
+- Update deprecation guard scripts

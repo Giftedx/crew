@@ -169,6 +169,6 @@ See [Tenancy Guide](../tenancy.md) for multi-tenant setup.
 
 ---
 
-**Last Updated**: 2025-01-05  
-**Version**: 1.0  
+**Last Updated**: 2025-01-05
+**Version**: 1.0
 **Maintainer**: Ultimate Discord Intelligence Bot Team

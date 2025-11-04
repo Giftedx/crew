@@ -1,7 +1,7 @@
 # LangSmith Evaluation Onboarding Playbook
 
-**Updated:** October 28, 2025  
-**Owner:** Observability & Reinforcement Learning Guild  
+**Updated:** October 28, 2025
+**Owner:** Observability & Reinforcement Learning Guild
 **Audience:** Tenant onboarding engineers, SRE rotations, evaluation operators
 
 ---

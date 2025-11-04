@@ -41,7 +41,7 @@ ENABLE_CONTENT_YOUTUBE=true
 ENABLE_CONTENT_TWITCH=true
 ENABLE_CONTENT_TIKTOK=false
 
-# Analysis features  
+# Analysis features
 ENABLE_ANALYSIS_SENTIMENT=true
 ENABLE_ANALYSIS_FACTCHECK=true
 ENABLE_ANALYSIS_CLUSTERING=false
@@ -76,32 +76,32 @@ from typing import Optional
 
 class Settings(BaseSettings):
     """Application settings with validation."""
-    
+
     # Discord Configuration
     discord_bot_token: str = Field(..., env="DISCORD_BOT_TOKEN")
     discord_command_prefix: str = Field("!", env="DISCORD_COMMAND_PREFIX")
-    
+
     # AI Service Configuration
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     openrouter_api_key: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
-    
+
     # Vector Database
     qdrant_url: str = Field("http://localhost:6333", env="QDRANT_URL")
     qdrant_collection_name: str = Field("content_vectors", env="QDRANT_COLLECTION")
-    
+
     # Feature Flags
     enable_content_youtube: bool = Field(True, env="ENABLE_CONTENT_YOUTUBE")
     enable_analysis_factcheck: bool = Field(True, env="ENABLE_ANALYSIS_FACTCHECK")
-    
+
     # Performance
     max_workers: int = Field(4, env="MAX_WORKERS")
     rate_limit_rpm: int = Field(60, env="RATE_LIMIT_RPM")
-    
+
     class Config:
         env_file = ".env"
         env_file_encoding = 'utf-8'
         case_sensitive = False
-    
+
     def validate_api_keys(self) -> bool:
         """Validate at least one AI service API key is provided."""
         return bool(self.openai_api_key or self.openrouter_api_key)
@@ -130,16 +130,16 @@ content_analyst:
   system_template: |
     You are {role}.
     Your goal is: {goal}
-    
+
     Guidelines:
     - Always maintain objectivity and neutrality
     - Cite sources when making factual claims
     - Identify potential biases in content
-    
+
     Context: {context}
 ```
 
-### Task Configuration  
+### Task Configuration
 
 [config/tasks.yaml](mdc:src/ultimate_discord_intelligence_bot/config/tasks.yaml):
 
@@ -151,9 +151,9 @@ content_analysis:
     2. Factual claims that need verification
     3. Logical structure and reasoning patterns
     4. Emotional appeals and rhetorical devices used
-    
+
     Focus on objectivity and comprehensive coverage.
-  
+
   expected_output: |
     A comprehensive analysis report containing:
     - Executive summary of main arguments
@@ -161,7 +161,7 @@ content_analysis:
     - Assessment of argument strength and logic
     - Identification of potential biases
     - Key quotes and timestamps
-    
+
     Format: Structured markdown with clear sections
 ```
 
@@ -174,19 +174,19 @@ Implement comprehensive validation in startup scripts:
 ```python
 def validate_configuration() -> bool:
     """Validate all configuration before startup."""
-    
+
     # Environment validation
     if not check_environment_variables():
         return False
-    
+
     # Service connectivity validation
     if not validate_external_services():
         return False
-    
+
     # Configuration file validation
     if not validate_yaml_configs():
         return False
-    
+
     return True
 
 def check_environment_variables() -> bool:
@@ -195,24 +195,24 @@ def check_environment_variables() -> bool:
         "DISCORD_BOT_TOKEN": "Discord bot token",
         "QDRANT_URL": "Qdrant vector database URL",
     }
-    
+
     # Check for at least one AI service key
     ai_keys = ["OPENAI_API_KEY", "OPENROUTER_API_KEY"]
     if not any(os.getenv(key) for key in ai_keys):
         print(f"❌ Missing AI service key. Required: {' or '.join(ai_keys)}")
         return False
-    
+
     missing = []
     for var, description in required_vars.items():
         if not os.getenv(var):
             missing.append(f"{var}: {description}")
-    
+
     if missing:
         print("❌ Missing required environment variables:")
         for var in missing:
             print(f"   - {var}")
         return False
-    
+
     return True
 ```
 
@@ -227,13 +227,13 @@ def load_config(config_path: str) -> dict:
     try:
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
-        
+
         # Validate required sections
         if 'agents' not in config and config_path.endswith('agents.yaml'):
             raise ValueError("agents.yaml must contain 'agents' section")
-        
+
         return config
-        
+
     except FileNotFoundError:
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
     except yaml.YAMLError as e:
@@ -377,12 +377,12 @@ cp .env .env.example
 ```python
 def migrate_config(config: dict, from_version: str, to_version: str) -> dict:
     """Migrate configuration between versions."""
-    
+
     if from_version == "1.0" and to_version == "1.1":
         # Migrate deprecated settings
         if 'old_setting' in config:
             config['new_setting'] = config.pop('old_setting')
-    
+
     return config
 ```
 
@@ -400,6 +400,6 @@ def load_deprecated_setting(config: dict) -> str:
             stacklevel=2
         )
         return config['deprecated_setting']
-    
+
     return config.get('new_setting', 'default_value')
 ```

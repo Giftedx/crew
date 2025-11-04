@@ -8,7 +8,7 @@ import time
 from functools import wraps
 from typing import Any
 
-import aiohttp
+from platform.http.http_utils import retrying_get
 
 
 class ParallelDownloadManager:
@@ -19,12 +19,11 @@ class ParallelDownloadManager:
         self.session = None
 
     async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
+        # No persistent aiohttp session; HTTP routed through http_utils wrappers
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        if self.session:
-            await self.session.close()
+        return None
 
     async def download_parallel(self, urls: list[str]) -> list[dict[str, Any]]:
         """Download multiple URLs in parallel."""
@@ -40,13 +39,12 @@ class ParallelDownloadManager:
         return successful_downloads
 
     async def _download_single(self, url: str) -> str:
-        """Download a single URL."""
+        """Download a single URL via resilient HTTP wrapper."""
         try:
-            async with self.session.get(url) as response:
-                if response.status == 200:
-                    return await response.text()
-                else:
-                    raise Exception(f"HTTP {response.status}")
+            resp = await asyncio.to_thread(retrying_get, url)
+            if 200 <= getattr(resp, "status_code", 0) < 300:
+                return getattr(resp, "text", "")
+            raise Exception(f"HTTP {getattr(resp, 'status_code', 0)}")
         except Exception as e:
             raise Exception(f"Download failed for {url}: {e!s}") from e
 

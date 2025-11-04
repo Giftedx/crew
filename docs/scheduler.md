@@ -1,5 +1,12 @@
 # Scheduler
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Scheduler Module**: `src/scheduler/` (watchlist and priority queue management)
+- **Connectors**: Platform-specific discovery (YouTube, Twitch, etc.)
+- **Database**: SQLite-backed watchlist and job queue
+- **Metrics**: `scheduler_enqueued_total`, `scheduler_processed_total`, `scheduler_errors_total`
+
 The scheduler watches external sources for new content and enqueues ingest jobs.
 It uses `watchlist` entries stored in the ingestion SQLite database and a
 priority queue stored in the same database.

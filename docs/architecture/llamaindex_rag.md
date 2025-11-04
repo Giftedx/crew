@@ -1,5 +1,12 @@
 # LlamaIndex RAG Integration
 
+**Current Implementation** (verified November 3, 2025):
+
+- **RAG Service**: `src/services/rag/llamaindex_service.py`
+- **Vector Store**: Qdrant integration for embeddings
+- **Embeddings**: OpenAI embeddings (configurable)
+- **Feature Flag**: `ENABLE_LLAMAINDEX_RAG`
+
 LlamaIndex provides advanced Retrieval-Augmented Generation (RAG) capabilities for intelligent document retrieval and context-aware generation.
 
 ## Overview
@@ -131,7 +138,7 @@ batch_size = 100
 for i in range(0, len(all_texts), batch_size):
     batch = all_texts[i:i + batch_size]
     batch_metadata = all_metadata[i:i + batch_size]
-    
+
     result = rag_service.ingest_documents(batch, batch_metadata)
     print(f"Processed batch {i // batch_size + 1}")
 ```

@@ -1,8 +1,8 @@
 # /autointel Command - Critical Fixes V2
 
-**Status**: 🔴 CRITICAL - Multiple data flow and tool invocation issues  
-**Date**: 2025-10-02  
-**Affected Command**: `/autointel url:... depth:experimental`  
+**Status**: 🔴 CRITICAL - Multiple data flow and tool invocation issues
+**Date**: 2025-10-02
+**Affected Command**: `/autointel url:... depth:experimental`
 **User Report**: Command executed: `/autointel url:https://www.youtube.com/watch?v=xtFiJ8AVdW0 depth:Experimental - Cutting-Edge AI`
 
 ## Executive Summary
@@ -87,7 +87,7 @@ def _create_args_schema(wrapped_tool: Any) -> type[BaseModel] | None:
 # Lines 244-333: Aliasing logic
 def _run(self, *args, **kwargs) -> Any:
     # ... complex aliasing logic ...
-    
+
     # ✅ This logic is GOOD but runs TOO LATE
     if isinstance(self._shared_context, dict) and self._shared_context:
         transcript_data = (
@@ -207,17 +207,17 @@ if tool_cls in ("TextAnalysisTool", "LogicalFallacyTool", "PerspectiveSynthesize
 def _create_args_schema(wrapped_tool: Any) -> type[BaseModel] | None:
     """Create a Pydantic schema from the wrapped tool's run() signature."""
     # ... existing code ...
-    
+
     # NEW: Identify parameters that can come from shared_context
     SHARED_CONTEXT_PARAMS = {
         "text", "transcript", "content", "claim", "claims",
         "url", "source_url", "metadata", "media_info",
         "query", "question"
     }
-    
+
     for param_name, param in sig.parameters.items():
         # ... existing code ...
-        
+
         # NEW: Make shared-context parameters optional with helpful description
         if param_name in SHARED_CONTEXT_PARAMS:
             field_desc = f"{param_name} (automatically provided from shared context if not specified)"
@@ -228,7 +228,7 @@ def _create_args_schema(wrapped_tool: Any) -> type[BaseModel] | None:
                 field_type = Union[param.annotation, None]
             else:
                 field_type = Any
-            
+
             schema_fields[param_name] = (field_type, Field(None, description=field_desc))
         elif param.default != inspect.Parameter.empty:
             schema_fields[param_name] = (field_type, param.default)
@@ -296,7 +296,7 @@ if tool_cls in DATA_DEPENDENT_TOOLS:
             )
             print(error_msg)
             self.logger.error(error_msg)
-            
+
             # Return StepResult.fail instead of allowing tool to run with empty data
             return StepResult.fail(
                 error=f"Missing required data: {param}",
@@ -318,14 +318,14 @@ analysis_task = Task(
         Analyze content from {platform} video: '{title}' (URL: {source_url})
 
         Duration: {duration}
-        
-        IMPORTANT: The complete transcript ({len(transcript)} characters) and all media metadata 
-        are available in the shared tool context. DO NOT pass the transcript as a parameter - 
+
+        IMPORTANT: The complete transcript ({len(transcript)} characters) and all media metadata
+        are available in the shared tool context. DO NOT pass the transcript as a parameter -
         tools will automatically access it from shared context.
-        
-        Task: Use TextAnalysisTool to map linguistic patterns, sentiment signals, and thematic 
+
+        Task: Use TextAnalysisTool to map linguistic patterns, sentiment signals, and thematic
         insights. The tool has direct access to the transcript via shared context.
-        
+
         Quality Score: {transcription_data.get("quality_score", 0)}
         Timeline anchors: {len(transcription_data.get("timeline_anchors", []))} available
         """
@@ -345,7 +345,7 @@ analysis_task = Task(
 def update_context(self, context: dict[str, Any]) -> None:
     """Update shared context for data flow between tools."""
     # ... existing code ...
-    
+
     # NEW: Track context updates for debugging
     try:
         from obs.metrics import get_metrics
@@ -379,16 +379,16 @@ def test_shared_context_prevents_empty_parameters():
     """Test that shared context prevents LLM from passing empty parameters."""
     from ultimate_discord_intelligence_bot.tools import TextAnalysisTool
     from ultimate_discord_intelligence_bot.crewai_tool_wrappers import wrap_tool_for_crewai
-    
+
     tool = TextAnalysisTool()
     wrapper = wrap_tool_for_crewai(tool)
-    
+
     # Populate context
     wrapper.update_context({"text": "Test transcript content"})
-    
+
     # Simulate LLM calling with empty parameter
     result = wrapper._run(text="")
-    
+
     # Should use shared context, not empty string
     assert result.success
     assert "Test transcript content" in str(result.data)
@@ -401,10 +401,10 @@ def test_args_schema_marks_shared_context_params_optional():
     """Test that parameters available from shared_context are marked optional."""
     from ultimate_discord_intelligence_bot.tools import TextAnalysisTool
     from ultimate_discord_intelligence_bot.crewai_tool_wrappers import CrewAIToolWrapper
-    
+
     tool = TextAnalysisTool()
     wrapper = CrewAIToolWrapper(tool)
-    
+
     schema = wrapper.args_schema
     if schema:
         # Check that 'text' field is optional (has default None)

@@ -1,55 +1,63 @@
 # Ultimate Discord Intelligence Bot
 
-[![CI Pipeline](https://github.com/your-org/ultimate-discord-intelligence-bot/workflows/CI%20Pipeline/badge.svg)](https://github.com/your-org/ultimate-discord-intelligence-bot/actions)
-[![Test Coverage](https://codecov.io/gh/your-org/ultimate-discord-intelligence-bot/branch/main/graph/badge.svg)](https://codecov.io/gh/your-org/ultimate-discord-intelligence-bot)
-[![MyPy](https://img.shields.io/badge/MyPy-58%20import%20stubs-yellow "Missing type stubs for optional dependencies (crewai, httpx, torch, scipy) - not code errors")](https://github.com/your-org/ultimate-discord-intelligence-bot)
+[![CI Pipeline](https://github.com/Giftedx/crew/workflows/CI%20Pipeline/badge.svg)](https://github.com/Giftedx/crew/actions)
+[![Test Coverage](https://codecov.io/gh/Giftedx/crew/branch/main/graph/badge.svg)](https://codecov.io/gh/Giftedx/crew)
+[![MyPy](https://img.shields.io/badge/MyPy-type--checked-blue "Production-ready type safety")](https://github.com/Giftedx/crew)
 
-A comprehensive, production-ready Discord bot system powered by CrewAI agents for autonomous content analysis, fact-checking, and intelligence gathering across multiple platforms.
+A production-ready, multi-tenant intelligence system powered by autonomous AI agents for content analysis, fact-checking, and cross-platform monitoring. Built with CrewAI orchestration, 31 specialized agents, 111 specialized tools, and a modern 3-layer architecture.
 
 ## 🚀 Overview
 
-The Ultimate Discord Intelligence Bot is a sophisticated multi-agent system that provides:
+The Ultimate Discord Intelligence Bot provides:
 
-- **Autonomous Content Analysis**: AI-powered analysis of videos, articles, and social media content
-- **Fact-Checking & Verification**: Advanced claim verification and truth assessment
-- **Multi-Platform Intelligence**: Comprehensive monitoring across YouTube, TikTok, Twitter, Reddit, and more
+- **Autonomous Content Analysis**: AI-powered deep analysis of videos, articles, and social media content
+- **Fact-Checking & Verification**: Multi-source claim verification with confidence scoring
+- **Multi-Platform Intelligence**: Monitors YouTube, TikTok, Twitter/X, Reddit, Instagram, and Discord
 - **Real-Time Processing**: Live stream analysis and real-time content monitoring
-- **Advanced Memory Systems**: Vector storage, graph databases, and traditional storage integration
-- **Quality Assurance**: Comprehensive content quality assessment and validation
-- **Trajectory Evaluation & Feedback**: LangSmith-powered scoring with reinforcement learning feedback loops
-- **Performance Optimization**: Intelligent caching, model routing, and system optimization
-- **OpenAI Integration**: Advanced AI capabilities including structured outputs, function calling, streaming, voice, vision, and multimodal analysis
+- **Advanced Memory Systems**: Qdrant vector storage, Neo4j graph memory, Mem0/HippoRAG continual learning
+- **Quality Assurance**: Content validation, consistency checking, and quality gates
+- **Trajectory Evaluation**: LangSmith-powered scoring with RL feedback loops for model routing
+- **Performance Optimization**: Multi-level caching, intelligent model routing, prompt compression
+- **OpenAI Integration**: Structured outputs, function calling, streaming, multimodal analysis
+- **Multi-Tenant Architecture**: Complete workspace and resource isolation
 
 ## 🏗️ Architecture
 
 ### 3-Layer Architecture
 
-The Ultimate Discord Intelligence Bot uses a clean 3-layer architecture:
+The system employs a clean 3-layer architecture following domain-driven design principles:
 
-1. **Platform Layer** (`src/platform/`): Infrastructure and foundational services
-   - Core protocols (`core/step_result.py`)
-   - HTTP utilities, caching, resilience (`http/`, `cache/`)
-   - LLM providers and routing (`llm/`)
-   - Reinforcement learning (`rl/`)
-   - Observability (`observability/`)
-   - Security and privacy (`security/`)
+1. **Platform Layer** (`src/platform/`): Infrastructure and cross-cutting concerns
+   - **Core protocols**: `StepResult` pattern for unified error handling
+   - **HTTP layer**: Resilient HTTP client with circuit breakers, retries, and timeout management
+   - **Cache layer**: Multi-level caching (L1 in-memory, L2 Redis, L3 semantic)
+   - **LLM layer**: Provider-agnostic routing with quality/cost/latency policies
+   - **RL layer**: Reinforcement learning (contextual bandits) for adaptive model selection
+   - **Observability**: Prometheus metrics, Langfuse tracing, structured logging
+   - **Security**: Rate limiting, privacy controls, policy enforcement
 
-2. **Domain Layer** (`src/domains/`): Business logic and domain-specific functionality
-   - Orchestration: CrewAI agents, tasks, and crew management
-   - Ingestion: Multi-platform content ingestion and providers
-   - Intelligence: Analysis, verification, and content processing
-   - Memory: Vector storage, graph memory, and continual learning
+2. **Domain Layer** (`src/domains/`): Business logic organized by bounded contexts
+   - **Orchestration** (`orchestration/`): CrewAI agents, tasks, and crew management
+   - **Ingestion** (`ingestion/`): Multi-platform content providers
+     - YouTube, TikTok, Twitter/X, Reddit, Instagram, Discord, Twitch
+   - **Intelligence** (`intelligence/`): Analysis and verification
+     - Analysis: Content processing, sentiment, fallacy detection, timeline construction
+     - Verification: Fact-checking, claim extraction, confidence scoring
+   - **Memory** (`memory/`): Storage and retrieval systems
+     - Vector: Qdrant integration for semantic search
+     - Graph: Neo4j knowledge graphs
+     - Continual: Mem0, HippoRAG for long-term learning
 
-3. **App Layer** (`src/app/`): Application-specific code
-   - Discord bot integration (`discord/`)
-   - Crew execution (`crew_executor.py`)
-   - Application configuration (`config/`)
-   - Entry point (`main.py`)
+3. **App Layer** (`src/app/`): Application entry points and interfaces
+   - **Discord bot** (`discord/`): Commands, events, and bot lifecycle management
+   - **Crew executor**: Agent orchestration and task execution
+   - **Configuration**: Agent definitions (YAML), feature flags, runtime settings
+   - **Main entry point** (`main.py`)
 
 ### Core Components
 
-- **CrewAI Framework**: Orchestrates 20+ specialized agents
-- **110+ Tools**: Comprehensive tool ecosystem for all operations
+- **CrewAI Framework**: Orchestrates 31 specialized agents with role-based tool access across strategic, operational, and specialized domains
+- **111 Tools**: Comprehensive tool ecosystem organized across 9 categories
 - **Multi-Tenant Support**: Complete tenant isolation and workspace management
 - **Advanced Memory**: Vector stores, graph databases, and traditional storage
 - **Performance Optimization**: Intelligent caching and model routing
@@ -58,20 +66,69 @@ The Ultimate Discord Intelligence Bot uses a clean 3-layer architecture:
 
 ### Agent Specialists
 
-1. **Mission Orchestrator**: End-to-end mission coordination
-2. **Executive Supervisor**: Strategic oversight and quality control
-3. **Acquisition Specialist**: Content acquisition and ingestion
-4. **Analysis Specialist**: Content analysis and insights
-5. **Verification Specialist**: Fact-checking and claim verification
-6. **Quality Assurance Specialist**: Content quality and validation
-7. **Performance Optimization Engineer**: System performance optimization
-8. **Enhanced MCP Integration Specialist**: Advanced MCP client management
-9. **Next-Gen Cache & Memory Architect**: Advanced memory systems
-10. **Content Production Manager**: Smart content creation
-11. **Enhanced Social Media Archivist**: Advanced social media management
-12. **Advanced Verification Specialist**: Enhanced claim verification
-13. **Reinforcement Learning Optimization Specialist**: RL-based optimization
-14. **Compliance & Regulatory Officer**: Policy and regulatory compliance
+#### Executive & Strategic Layer (2 agents)
+
+1. **Executive Supervisor**: Strategic oversight, resource allocation, and mission success
+1. **Workflow Manager**: Task routing, dependency management, and load balancing across agent hierarchies
+
+#### Coordination & Mission Control (1 agent)
+
+1. **Mission Orchestrator**: End-to-end mission coordination, depth sequencing, and budget management
+
+#### Content Acquisition & Processing (3 agents)
+
+1. **Acquisition Specialist**: Multi-platform content download with rate-limit handling and quality fallbacks
+1. **Transcription Engineer**: Audio/video transcription and searchable indexing
+1. **Analysis Cartographer**: Linguistic, sentiment, and thematic signal mapping
+
+#### Verification & Risk (2 agents)
+
+1. **Verification Director**: Fact-checking, claim extraction, and defensible verdicts
+1. **Risk Intelligence Analyst**: Deception scoring, trust metrics, and longitudinal tracking
+
+#### Knowledge & Personas (2 agents)
+
+1. **Persona Archivist**: Living dossiers with behavior, sentiment, and trust milestones
+1. **Knowledge Integrator**: Memory consolidation across vector, graph, and continual memory
+
+#### Signal Intelligence (2 agents)
+
+1. **Signal Recon Specialist**: Cross-platform discourse and sentiment tracking
+1. **Trend Intelligence Scout**: Emerging content detection and prioritization
+
+#### Community & Research (4 agents)
+
+1. **Community Liaison**: Community Q&A with verified intelligence and context retrieval
+1. **Argument Strategist**: Steelman arguments, debate prep, and persuasive narratives
+1. **Research Synthesist**: Deep background briefs harmonizing multiple perspectives
+1. **Intelligence Briefing Curator**: Stakeholder-ready intelligence packets
+
+#### System Reliability (2 agents)
+
+1. **System Reliability Officer**: Pipeline health, dashboards, and operational visibility
+1. **Personality Synthesis Manager**: Consistent tone, style, and persona alignment
+
+#### Specialized AI Agents - Phase 3.1 (5 agents)
+
+1. **Visual Intelligence Specialist**: Computer vision, image analysis, OCR, and visual fact-checking
+1. **Audio Intelligence Specialist**: Speaker diarization, emotion analysis, and acoustic classification
+1. **Trend Intelligence Specialist**: Real-time trend monitoring and long-term forecasting
+1. **Content Generation Specialist**: AI-powered content creation, adaptation, and optimization
+1. **Cross-Platform Intelligence Specialist**: Multi-platform correlation and propagation analysis
+
+#### Creator Network Intelligence (6 agents)
+
+1. **Network Discovery Specialist**: Social network mapping, collaboration patterns, and influence dynamics
+1. **Deep Content Analyst**: Multimodal long-form analysis and narrative arc tracking
+1. **Guest Intelligence Specialist**: Guest profiling, collaborator tracking, and monitoring recommendations
+1. **Controversy Tracker Specialist**: Drama detection, conflict tracking, and early warnings
+1. **Insight Generation Specialist**: Pattern synthesis and actionable intelligence delivery
+1. **Quality Assurance Specialist**: Output validation, consistency checks, and re-analysis triggers
+
+#### Discord AI Conversational (2 agents)
+
+1. **Conversational Response Agent**: Natural, context-aware Discord responses
+1. **Personality Evolution Agent**: RL-based personality optimization from interaction feedback
 
 ## 🤖 OpenAI Integration
 
@@ -143,20 +200,60 @@ For detailed documentation, see [OpenAI Integration Features](docs/openai_integr
 3. **Install dependencies**
 
    ```bash
-   pip install -r requirements.lock
+   # Recommended for development
+   pip install -e '.[dev]'
+
+   # Minimal install (production)
+   pip install -e .
+
+   # Optional feature sets
+   pip install -e '.[metrics]'     # Prometheus metrics
+   pip install -e '.[whisper]'     # Whisper transcription
+   pip install -e '.[vllm]'        # VLLM inference
+   pip install -e '.[mcp]'         # Model Context Protocol
    ```
 
-4. **Start services**
+1. **Start services**
 
    ```bash
-   docker-compose up -d
+   # Development compose
+   docker compose -f config/docker/docker-compose.yml up -d
    ```
 
-5. **Run the bot**
+1. **Run the bot**
 
    ```bash
-   python -m app.main
+   # Ensure virtualenv is active; sitecustomize.py auto-adds src/ to PYTHONPATH when launched from repo root
+   source .venv/bin/activate
+   python -m app.main run
+
+   # OR use explicit PYTHONPATH
+   PYTHONPATH=src python -m app.main run
+
+   # OR call the file directly
+   python src/app/main.py run
    ```
+
+   Troubleshooting: If you see a Python error like "Could not find platform independent libraries <prefix>" or sys.prefix shows "/install" and "No module named 'encodings'", your virtual environment is corrupted (often due to an external Python shim such as uv). Fix by recreating a clean venv with your system Python:
+
+   ```bash
+   # from repo root
+   deactivate || true
+   rm -rf .venv
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -U pip wheel setuptools
+   pip install -e .
+   # then:
+   python -m app.main run
+   ```
+
+   Note on stdlib platform module conflict: This repository contains a top-level `platform/` package. Some environments ship a system `sitecustomize.py` that loads before project-level startup hooks, which can cause `from platform.core ...` imports to resolve the stdlib module instead. We've implemented two safeguards:
+
+   - Entry-point bootstrap: `app/main.py` and `server/app.py` call a tiny bootstrap (`ultimate_discord_intelligence_bot.core.bootstrap.ensure_platform_proxy()`) at process start to make the stdlib `platform` module behave as a package exposing our `platform/*` submodules.
+   - User customizations: a minimal `src/usercustomize.py` performs the same augmentation on Python startup when supported by your environment.
+
+   With these in place, imports like `from platform.core.step_result import StepResult` work consistently across shells, venvs, and containers.
 
 ## ⚙️ Configuration
 
@@ -195,7 +292,7 @@ ROUTER_POLICY=quality_first
 QUALITY_FIRST_TASKS=analysis,reasoning,coding
 ```
 
-These values are also available at runtime via `core.secure_config.get_config()`
+These values are also available at runtime via `get_config()` from `platform.config.configuration`
 as `llm_provider_allowlist` (parsed list) and `router_policy`.
 
 #### Feature Flags
@@ -301,10 +398,17 @@ python3 profile_tool_imports.py
 #### Content Analysis
 
 ```python
-from app.crew_executor import UltimateDiscordIntelligenceBotCrew
+# Recommended: domain-based import
+from domains.orchestration.crew import get_crew, UltimateDiscordIntelligenceBotCrew
 
-crew = UltimateDiscordIntelligenceBotCrew()
-result = crew.crew().kickoff(inputs={"url": "https://youtube.com/watch?v=example"})
+# Factory pattern
+crew_adapter = get_crew()
+crew_obj = crew_adapter.crew()
+result = crew_obj.kickoff(inputs={"url": "https://youtube.com/watch?v=example"})
+
+# Or instantiate directly
+crew_instance = UltimateDiscordIntelligenceBotCrew()
+result = crew_instance.crew().kickoff(inputs={"url": "https://youtube.com/watch?v=example"})
 ```
 
 #### Fact-Checking
@@ -406,28 +510,22 @@ For detailed quality gate requirements, see [docs/quality-gates.md](docs/quality
 ### Docker Deployment
 
 ```bash
-# Build and deploy
-docker-compose -f docker-compose.prod.yml up -d
+# Build and deploy (production)
+docker compose -f config/docker/docker-compose.prod.yml up -d
 
 # Scale services
-docker-compose -f docker-compose.prod.yml up -d --scale bot=3
+docker compose -f config/docker/docker-compose.prod.yml up -d --scale bot=3
 ```
 
-### Kubernetes Deployment
+### Kubernetes Deployment (optional)
 
-```bash
-# Apply configurations
-kubectl apply -f k8s/
-
-# Monitor deployment
-kubectl get pods -l app=discord-intelligence-bot
-```
+Kubernetes manifests are not included by default in this repository. If you maintain your own manifests,
+apply them in your deployment repository or ops layer.
 
 ### Environment-Specific Configs
 
-- `docker-compose.yml` - Development
-- `docker-compose.prod.yml` - Production
-- `docker-compose.staging.yml` - Staging
+- `config/docker/docker-compose.yml` - Development
+- `config/docker/docker-compose.prod.yml` - Production
 
 ## 🔧 Development
 
@@ -435,42 +533,47 @@ kubectl get pods -l app=discord-intelligence-bot
 
 ```text
 src/
-├── platform/               # Platform layer: Infrastructure & foundational services
-│   ├── core/               # Core protocols (StepResult, etc.)
-│   ├── http/               # HTTP utilities, resilience, circuit breakers
-│   ├── cache/               # Caching infrastructure
-│   ├── llm/                 # LLM providers, routing, structured outputs
-│   ├── rl/                  # Reinforcement learning & bandits
-│   ├── observability/       # Metrics, tracing, logging
-│   ├── security/            # Security, privacy, rate limiting
-│   ├── prompts/             # Prompt engineering (DSPy)
-│   └── rag/                 # RAG capabilities (LlamaIndex)
+├── platform/               # Platform layer: Infrastructure & cross-cutting concerns
+│   ├── core/               # Core protocols (StepResult, config)
+│   ├── http/               # Resilient HTTP client (circuit breakers, retries)
+│   ├── cache/              # Multi-level caching (memory, Redis, semantic)
+│   ├── llm/                # LLM providers, routing, structured outputs
+│   ├── rl/                 # Reinforcement learning (contextual bandits)
+│   ├── observability/      # Metrics, tracing, logging
+│   ├── security/           # Security, privacy, rate limiting
+│   ├── prompts/            # Prompt engineering (DSPy)
+│   └── rag/                # RAG capabilities (LlamaIndex)
 │
-├── domains/                # Domain layer: Business logic
-│   ├── orchestration/       # CrewAI agents, tasks, crew
-│   │   ├── crewai/          # CrewAI-specific components
-│   │   └── legacy/          # Legacy orchestration code
-│   ├── ingestion/           # Multi-platform content ingestion
-│   │   ├── pipeline/        # Ingestion pipeline
-│   │   └── providers/       # Platform-specific providers
-│   ├── intelligence/        # Analysis & verification
-│   │   ├── analysis/        # Content analysis tools
-│   │   └── verification/    # Fact-checking & verification
-│   └── memory/              # Memory systems
-│       ├── vector/           # Vector storage (Qdrant)
-│       ├── graph/            # Graph memory
-│       └── continual/        # Continual learning (Mem0, HippoRAG)
+├── domains/                # Domain layer: Business logic by bounded context
+│   ├── orchestration/      # CrewAI agents, tasks, crew
+│   │   ├── crewai/         # CrewAI-specific components
+│   │   └── legacy/         # Legacy orchestration code
+│   ├── ingestion/          # Multi-platform content ingestion
+│   │   ├── pipeline/       # Ingestion pipeline orchestrator
+│   │   └── providers/      # Platform-specific providers
+│   ├── intelligence/       # Analysis & verification
+│   │   ├── analysis/       # Content analysis tools
+│   │   └── verification/   # Fact-checking & verification
+│   └── memory/             # Memory systems
+│       ├── vector/         # Vector storage (Qdrant)
+│       ├── graph/          # Graph memory (Neo4j)
+│       └── continual/      # Continual learning (Mem0, HippoRAG)
 │
-└── app/                     # App layer: Application-specific code
-    ├── main.py              # Application entry point
-    ├── crew_executor.py     # CrewAI crew execution
-    ├── discord/              # Discord bot integration
-    │   ├── bot.py            # Bot implementation
-    │   ├── commands/         # Discord commands
-    │   └── events/           # Event handlers
-    └── config/               # Application configuration
-        ├── settings.py        # Global settings
-        └── agents.yaml        # Agent definitions
+├── app/                    # App layer: Application-specific code
+│   ├── main.py             # Application entry point
+│   ├── crew_executor.py    # CrewAI crew execution
+│   ├── discord/            # Discord bot integration
+│   │   ├── bot.py          # Bot implementation
+│   │   ├── commands/       # Discord commands
+│   │   └── events/         # Event handlers
+│   └── config/             # Application configuration
+│       ├── settings.py     # Global settings
+│       └── agents.yaml     # Agent definitions
+│
+└── ultimate_discord_intelligence_bot/  # Legacy: being migrated to domains/
+    ├── tools/              # 111 specialized tools (registry)
+    ├── pipeline_components/# Pipeline orchestrator
+    └── tenancy/            # Multi-tenant context management
 ```
 
 ### Adding New Tools
@@ -567,14 +670,16 @@ When reporting issues, please include:
 
 ### ✅ Implemented
 
-- 123+ specialized tools
-- 20+ AI agents
-- Multi-platform content ingestion
-- Advanced fact-checking
-- Vector memory systems
-- Quality assurance
-- Performance optimization
-- Multi-tenancy support
+- **111 specialized tools** across 9 categories (ingestion, analysis, verification, memory, observability, etc.)
+- **31 autonomous AI agents** with role-based tool access
+- **Multi-platform content ingestion** (YouTube, TikTok, Twitter/X, Reddit, Instagram, Discord, Twitch)
+- **Advanced fact-checking** with claim extraction and multi-source verification
+- **Multi-level memory systems** (Qdrant vectors, Neo4j graphs, Mem0/HippoRAG continual learning)
+- **Quality assurance** with validation, consistency checking, and quality gates
+- **Performance optimization** with semantic caching, prompt compression, and model routing
+- **Multi-tenancy** support with complete workspace and resource isolation
+- **Observability** with Prometheus metrics, Langfuse tracing, and structured logging
+- **Reinforcement learning** for adaptive model selection via contextual bandits
 
 ### 🚧 In Development
 

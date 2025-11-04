@@ -46,7 +46,7 @@ This document provides detailed guidance on tool allocation and usage patterns a
 3. Use resolver tools for metadata enrichment and URL normalization
 4. Always preserve content to Drive for downstream processing
 
-### Advanced Transcription Engineer  
+### Advanced Transcription Engineer
 
 **Primary Role**: High-fidelity speech-to-text with linguistic enhancement
 **Core Tools**:
@@ -66,7 +66,7 @@ This document provides detailed guidance on tool allocation and usage patterns a
 
 ### Comprehensive Linguistic Analyst
 
-**Primary Role**: Deep linguistic analysis and semantic extraction  
+**Primary Role**: Deep linguistic analysis and semantic extraction
 **Core Tools**:
 
 - `EnhancedAnalysisTool()` - Advanced NLP and semantic analysis

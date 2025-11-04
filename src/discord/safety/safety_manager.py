@@ -63,7 +63,8 @@ class SafetyManager:
                     self._stats["rate_limits_hit"] += 1
                     return StepResult.fail(
                         f"Rate limit exceeded: {rate_limit_result.error}",
-                        data={"safety_check": "failed", "reason": "rate_limit"},
+                        safety_check="failed",
+                        reason="rate_limit",
                     )
             if self._auto_filter_content:
                 content_filter_result = await self.content_filter.filter_content(
@@ -72,7 +73,8 @@ class SafetyManager:
                 if not content_filter_result.success:
                     return StepResult.fail(
                         f"Content filtering failed: {content_filter_result.error}",
-                        data={"safety_check": "failed", "reason": "content_filter_error"},
+                        safety_check="failed",
+                        reason="content_filter_error",
                     )
                 filter_result: ContentFilterResult = content_filter_result.data["filter_result"]
                 if not filter_result.is_safe:
@@ -101,7 +103,9 @@ class SafetyManager:
                     self._stats["alerts_generated"] += 1
                     return StepResult.fail(
                         f"Content flagged as {filter_result.severity.value}: {(filter_result.suggestions[0] if filter_result.suggestions else 'Inappropriate content detected')}",
-                        data={"safety_check": "failed", "reason": "content_filtered", "filter_result": filter_result},
+                        safety_check="failed",
+                        reason="content_filtered",
+                        filter_result=filter_result,
                     )
             self._stats["total_messages_processed"] += 1
             processing_time = (asyncio.get_event_loop().time() - start_time) * 1000

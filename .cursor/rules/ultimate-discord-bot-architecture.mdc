@@ -38,7 +38,7 @@ Multi-Platform → Download → Transcription → Analysis → Discord
 
 ### Services Integration
 - **PromptEngine**: [services/prompt_engine.py](mdc:src/ultimate_discord_intelligence_bot/services/prompt_engine.py)
-- **MemoryService**: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py) 
+- **MemoryService**: [services/memory_service.py](mdc:src/ultimate_discord_intelligence_bot/services/memory_service.py)
 - **OpenRouterService**: [services/openrouter_service.py](mdc:src/ultimate_discord_intelligence_bot/services/openrouter_service.py)
 
 ### Tenancy Requirements

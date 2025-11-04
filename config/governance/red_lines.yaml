@@ -15,7 +15,7 @@ critical_red_lines:
       - "child.*sexual"
       - "minor.*abuse"
       - "underage.*content"
-      
+
   - principle: "violence_prevention"
     description: "No content promoting terrorism, genocide, or mass violence"
     severity: "critical"
@@ -28,7 +28,7 @@ critical_red_lines:
       - "terrorist.*attack"
       - "genocide.*plan"
       - "mass.*killing"
-      
+
   - principle: "weapons_development"
     description: "No assistance with CBRN weapons or mass destruction"
     severity: "critical"
@@ -56,7 +56,7 @@ high_priority_red_lines:
       - "hack.*account"
       - "breach.*security"
       - "access.*private"
-      
+
   - principle: "election_integrity"
     description: "No interference with democratic processes"
     severity: "high"
@@ -68,7 +68,7 @@ high_priority_red_lines:
       - "rig.*election"
       - "suppress.*vote"
       - "manipulate.*ballot"
-      
+
   - principle: "human_autonomy"
     description: "No content that undermines human agency or consent"
     severity: "high"
@@ -86,19 +86,19 @@ detection:
   pre_execution_check: true
   post_execution_check: true
   confidence_threshold: 0.8
-  
+
   # Escalation levels
   escalation:
     critical:
       action: "immediate_block"
       notification: "admin_alert"
       logging: "critical"
-      
+
     high:
       action: "block_with_review"
       notification: "moderator_alert"
       logging: "warning"
-      
+
     medium:
       action: "flag_for_review"
       notification: "standard_log"
@@ -108,10 +108,10 @@ detection:
 response_templates:
   critical_violation: |
     I cannot and will not assist with this request. This content violates fundamental safety principles and could cause serious harm.
-    
+
   high_violation: |
     I cannot help with this request as it may violate important safety or ethical guidelines. Please consider alternative approaches that don't involve these concerns.
-    
+
   medium_violation: |
     I need to be careful with this type of request. Let me suggest a safer alternative approach.
 
@@ -120,13 +120,13 @@ monitoring:
   real_time_alerts: true
   daily_reports: true
   weekly_summaries: true
-  
+
   metrics:
     - "violation_count_by_type"
     - "violation_count_by_severity"
     - "response_effectiveness"
     - "false_positive_rate"
-    
+
   reporting:
     format: "json"
     retention_days: 365

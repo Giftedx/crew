@@ -71,17 +71,17 @@ class AdvancedSemanticCache:
         self.l1_cache = {}  # Exact matches
         self.l2_cache = {}  # Compressed prompt matches
         self.l3_cache = {}  # Semantic similarity matches
-    
+
     def get_cached_response(self, prompt: str) -> str | None:
         # L1: Exact match
         if prompt in self.l1_cache:
             return self.l1_cache[prompt]
-        
+
         # L2: Compressed prompt match
         compressed = self.compress_prompt(prompt)
         if compressed in self.l2_cache:
             return self.l2_cache[compressed]
-        
+
         # L3: Semantic similarity
         return self.semantic_search(prompt)
 ```
@@ -106,15 +106,15 @@ class DistributedRateLimiter:
         local refill_rate = tonumber(ARGV[2])
         local tokens_requested = tonumber(ARGV[3])
         local now = tonumber(ARGV[4])
-        
+
         local current = redis.call('HMGET', key, 'tokens', 'last_refill')
         local tokens = tonumber(current[1]) or capacity
         local last_refill = tonumber(current[2]) or now
-        
+
         -- Refill tokens based on time elapsed
         local time_elapsed = now - last_refill
         local new_tokens = math.min(capacity, tokens + (time_elapsed * refill_rate))
-        
+
         if new_tokens >= tokens_requested then
             new_tokens = new_tokens - tokens_requested
             redis.call('HMSET', key, 'tokens', new_tokens, 'last_refill', now)
@@ -126,11 +126,11 @@ class DistributedRateLimiter:
             return {0, new_tokens}  -- denied, remaining tokens
         end
         """
-    
+
     def allow(self, key: str, tokens: int = 1) -> tuple[bool, int]:
         result = self.redis.eval(
-            self.lua_script, 
-            keys=[f"rl:{key}"], 
+            self.lua_script,
+            keys=[f"rl:{key}"],
             args=[self.capacity, self.refill_rate, tokens, int(time.time())]
         )
         return bool(result[0]), result[1]
@@ -150,7 +150,7 @@ class ComponentHealthChecker:
             'agents': self.check_agent_coordination,
             'mcp_tools': self.check_mcp_tools,
         }
-    
+
     async def check_llm_router(self) -> StepResult:
         """Check LLM router health and performance."""
         try:
@@ -158,10 +158,10 @@ class ComponentHealthChecker:
             start_time = time.time()
             result = self.router.route("test prompt")
             latency = time.time() - start_time
-            
+
             if latency > 0.5:  # 500ms threshold
                 return StepResult.fail(f"Router latency too high: {latency:.2f}s")
-            
+
             return StepResult.ok(data={"latency": latency, "healthy": True})
         except Exception as e:
             return StepResult.fail(f"Router health check failed: {e}")
@@ -186,17 +186,17 @@ class CostAwareRouter:
             'complex_tasks': 0.01,  # $0.01 max
             'critical_tasks': 0.05, # $0.05 max
         }
-    
+
     def select_model(self, task_complexity: str, prompt_tokens: int) -> str:
         """Select optimal model based on task complexity and cost constraints."""
         threshold = self.cost_thresholds.get(task_complexity, 0.01)
-        
+
         # Try models in order of cost efficiency
         for model in ['gpt-3.5-turbo', 'claude-3-haiku', 'gpt-4-turbo', 'gpt-4']:
             estimated_cost = self.estimate_cost(model, prompt_tokens)
             if estimated_cost <= threshold:
                 return model
-        
+
         # Fallback to cheapest option
         return 'gpt-3.5-turbo'
 ```
@@ -217,7 +217,7 @@ class ConcurrentPipeline:
     async def process_parallel_stages(self, content: dict) -> StepResult:
         """Process pipeline stages concurrently where possible."""
         tasks = []
-        
+
         # These can run in parallel
         if content.get('needs_transcription'):
             tasks.append(self.transcribe_audio(content))
@@ -225,10 +225,10 @@ class ConcurrentPipeline:
             tasks.append(self.analyze_content(content))
         if content.get('needs_fact_check'):
             tasks.append(self.fact_check_claims(content))
-        
+
         # Wait for parallel tasks
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Process sequential stages
         return await self.process_sequential_stages(results)
 ```

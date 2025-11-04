@@ -37,7 +37,7 @@ make run-discord-enhanced
 ```
 ✅ Transcription: Full audio transcript with timestamps
    [Full spoken content from the 5:26 video]
-   
+
 🔄 Updating tool context with keys: ['transcript', 'media_info', ...]
    📝 transcript: 15000+ chars
 ✅ Aliased transcript→text (15000+ chars)
@@ -79,7 +79,7 @@ make run-discord-enhanced
 **OpenRouter 404 Error** (if it appears again):
 
 ```
-ERROR: OpenRouterService route failed task=analysis model=openai/gpt-4o-mini 
+ERROR: OpenRouterService route failed task=analysis model=openai/gpt-4o-mini
 provider=unknown err=openrouter_error status=404
 ```
 
@@ -97,7 +97,7 @@ provider=unknown err=openrouter_error status=404
    ```bash
    # In .env, comment out:
    # OPENROUTER_API_KEY=sk-or-v1-...
-   
+
    # System will use OPENAI_API_KEY instead (already configured)
    ```
 
@@ -165,7 +165,7 @@ Once the YouTube video works, test other platforms:
 # Twitter/X post
 /autointel url:https://twitter.com/elonmusk/status/... depth:standard
 
-# Reddit thread  
+# Reddit thread
 /autointel url:https://reddit.com/r/... depth:standard
 ```
 

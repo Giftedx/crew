@@ -7,9 +7,16 @@ last_moved: 2025-09-02
 
 ## CrewAI Discord Bot Architecture
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Pipeline**: 7 phases in `src/ultimate_discord_intelligence_bot/pipeline_components/orchestrator.py` (1637 lines)
+- **Tools**: 111 across 9 categories
+- **Agents**: 18 specialized agents
+- **Architecture**: 3-layer (Platform/Domains/App)
+
 <!-- Migrated from root ARCHITECTURE.md -->
 
-This document summarises how the key pieces of the CrewAI content system fit
+This document summarises how the key pieces of the CrewAI content system fit together and highlights opportunities for optimisation.
 together and highlights opportunities for optimisation.
 
 ### High level design

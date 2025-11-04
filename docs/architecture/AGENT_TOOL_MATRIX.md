@@ -1,12 +1,18 @@
 # Ultimate Discord Intelligence Bot - Agent-to-Tool Assignment Matrix
 
-**Generated**: 2025-01-22  
-**Analysis Scope**: Complete agent-tool mapping and assignment patterns  
+**Generated**: November 3, 2025
+**Current Implementation** (verified):
+
+- **Agents**: 18 specialized agents (crew_components/tool_registry.py)
+- **Tools**: 111 across 9 categories (tools/**init**.py::**all**)
+- **Tool Distribution**: Observability (26), Analysis (23), Memory (23), Acquisition/Ingestion (19), Verification (10), Discord (4), Social Monitoring (3), Web Automation (1), Other (2)
+
+**Analysis Scope**: Complete agent-tool mapping and assignment patterns
 **Status**: Phase 1 - Architecture & System Understanding
 
 ## Executive Summary
 
-This document provides a comprehensive mapping of all 20+ agents to their assigned tools in the Ultimate Discord Intelligence Bot system. The matrix covers 110+ tools across 5 major categories, showing the specialization patterns and tool distribution across the agent ecosystem.
+This document provides a comprehensive mapping of all 18 agents to their assigned tools in the Ultimate Discord Intelligence Bot system. The matrix covers 111 tools across 9 major categories, showing the specialization patterns and tool distribution across the agent ecosystem.
 
 ## Agent Categories & Tool Assignments
 
@@ -14,8 +20,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Executive Supervisor
 
-**Role**: Executive Intelligence Supervisor  
-**Goal**: Orchestrate enterprise-wide intelligence operations  
+**Role**: Executive Intelligence Supervisor
+**Goal**: Orchestrate enterprise-wide intelligence operations
 **Tools**: Strategic planning, resource allocation, escalation management, performance analytics
 
 | Tool Category | Assigned Tools | Purpose |
@@ -28,8 +34,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Workflow Manager
 
-**Role**: Workflow Orchestration Manager  
-**Goal**: Optimize task routing and dependency management  
+**Role**: Workflow Orchestration Manager
+**Goal**: Optimize task routing and dependency management
 **Tools**: Workflow optimization, task routing, dependency resolution
 
 | Tool Category | Assigned Tools | Purpose |
@@ -41,8 +47,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Mission Orchestrator
 
-**Role**: Autonomy Mission Orchestrator  
-**Goal**: Coordinate end-to-end missions  
+**Role**: Autonomy Mission Orchestrator
+**Goal**: Coordinate end-to-end missions
 **Tools**: Mission coordination, pipeline management, quality control
 
 | Tool Category | Assigned Tools | Purpose |
@@ -56,8 +62,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Acquisition Specialist
 
-**Role**: Multi-Platform Acquisition Specialist  
-**Goal**: Download and prepare content from any supported platform  
+**Role**: Multi-Platform Acquisition Specialist
+**Goal**: Download and prepare content from any supported platform
 **Tools**: 9 acquisition tools for multi-platform content capture
 
 | Tool Category | Assigned Tools | Purpose |
@@ -74,8 +80,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Transcription Engineer
 
-**Role**: Transcription Engineer  
-**Goal**: Convert audio/video content to searchable text  
+**Role**: Transcription Engineer
+**Goal**: Convert audio/video content to searchable text
 **Tools**: 2 specialized transcription tools
 
 | Tool Category | Assigned Tools | Purpose |
@@ -85,8 +91,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Content Ingestion Specialist
 
-**Role**: Content Ingestion Specialist  
-**Goal**: Prepare and validate content for downstream processing  
+**Role**: Content Ingestion Specialist
+**Goal**: Prepare and validate content for downstream processing
 **Tools**: 3 tools for content preparation and validation
 
 | Tool Category | Assigned Tools | Purpose |
@@ -99,8 +105,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Analysis Cartographer
 
-**Role**: Analysis Cartographer  
-**Goal**: Map content insights, sentiment shifts, and topical clusters  
+**Role**: Analysis Cartographer
+**Goal**: Map content insights, sentiment shifts, and topical clusters
 **Tools**: 7 comprehensive analysis tools
 
 | Tool Category | Assigned Tools | Purpose |
@@ -115,8 +121,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Political Analysis Specialist
 
-**Role**: Political Analysis Specialist  
-**Goal**: Analyze political content for bias, claims, and factual accuracy  
+**Role**: Political Analysis Specialist
+**Goal**: Analyze political content for bias, claims, and factual accuracy
 **Tools**: 5 tools focused on political content analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -129,8 +135,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Sentiment Analysis Specialist
 
-**Role**: Sentiment Analysis Specialist  
-**Goal**: Analyze emotional tone and sentiment in content  
+**Role**: Sentiment Analysis Specialist
+**Goal**: Analyze emotional tone and sentiment in content
 **Tools**: 3 tools specialized for sentiment analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -141,8 +147,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Claim Extraction Specialist
 
-**Role**: Claim Extraction Specialist  
-**Goal**: Extract factual claims from content with high accuracy  
+**Role**: Claim Extraction Specialist
+**Goal**: Extract factual claims from content with high accuracy
 **Tools**: 4 tools for claim identification and analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -154,8 +160,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Trend Analysis Specialist
 
-**Role**: Trend Analysis Specialist  
-**Goal**: Analyze trends and patterns in content with forecasting  
+**Role**: Trend Analysis Specialist
+**Goal**: Analyze trends and patterns in content with forecasting
 **Tools**: 4 tools for trend analysis and forecasting
 
 | Tool Category | Assigned Tools | Purpose |
@@ -167,8 +173,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Multimodal Analysis Specialist
 
-**Role**: Multimodal Analysis Specialist  
-**Goal**: Analyze content across multiple modalities  
+**Role**: Multimodal Analysis Specialist
+**Goal**: Analyze content across multiple modalities
 **Tools**: 6 tools for cross-modal content analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -182,8 +188,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Social Graph Analysis Specialist
 
-**Role**: Social Graph Analysis Specialist  
-**Goal**: Analyze social networks and relationships  
+**Role**: Social Graph Analysis Specialist
+**Goal**: Analyze social networks and relationships
 **Tools**: 3 tools for social network analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -194,8 +200,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Live Stream Analysis Specialist
 
-**Role**: Live Stream Analysis Specialist  
-**Goal**: Analyze live streaming content with real-time insights  
+**Role**: Live Stream Analysis Specialist
+**Goal**: Analyze live streaming content with real-time insights
 **Tools**: 4 tools for live stream analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -209,8 +215,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Verification Director
 
-**Role**: Verification Director  
-**Goal**: Coordinate comprehensive fact-checking and verification  
+**Role**: Verification Director
+**Goal**: Coordinate comprehensive fact-checking and verification
 **Tools**: 8 tools for comprehensive verification
 
 | Tool Category | Assigned Tools | Purpose |
@@ -226,8 +232,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Fact-Checking Specialist
 
-**Role**: Fact-Checking Specialist  
-**Goal**: Verify factual claims against reliable sources  
+**Role**: Fact-Checking Specialist
+**Goal**: Verify factual claims against reliable sources
 **Tools**: 5 tools for fact-checking operations
 
 | Tool Category | Assigned Tools | Purpose |
@@ -240,8 +246,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Claim Verification Specialist
 
-**Role**: Claim Verification Specialist  
-**Goal**: Verify extracted claims with high accuracy  
+**Role**: Claim Verification Specialist
+**Goal**: Verify extracted claims with high accuracy
 **Tools**: 5 tools for claim verification
 
 | Tool Category | Assigned Tools | Purpose |
@@ -254,8 +260,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Context Verification Specialist
 
-**Role**: Context Verification Specialist  
-**Goal**: Verify contextual accuracy and citation integrity  
+**Role**: Context Verification Specialist
+**Goal**: Verify contextual accuracy and citation integrity
 **Tools**: 5 tools for context verification
 
 | Tool Category | Assigned Tools | Purpose |
@@ -268,8 +274,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Deception Detection Specialist
 
-**Role**: Deception Detection Specialist  
-**Goal**: Detect deceptive content and misleading information  
+**Role**: Deception Detection Specialist
+**Goal**: Detect deceptive content and misleading information
 **Tools**: 5 tools for deception detection
 
 | Tool Category | Assigned Tools | Purpose |
@@ -282,8 +288,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Logical Fallacy Specialist
 
-**Role**: Logical Fallacy Specialist  
-**Goal**: Detect logical fallacies and reasoning errors  
+**Role**: Logical Fallacy Specialist
+**Goal**: Detect logical fallacies and reasoning errors
 **Tools**: 4 tools for logical analysis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -295,8 +301,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Steelman Argument Specialist
 
-**Role**: Steelman Argument Specialist  
-**Goal**: Create the strongest possible version of arguments  
+**Role**: Steelman Argument Specialist
+**Goal**: Create the strongest possible version of arguments
 **Tools**: 4 tools for argument strengthening
 
 | Tool Category | Assigned Tools | Purpose |
@@ -308,8 +314,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Perspective Synthesis Specialist
 
-**Role**: Perspective Synthesis Specialist  
-**Goal**: Synthesize multiple perspectives into coherent summaries  
+**Role**: Perspective Synthesis Specialist
+**Goal**: Synthesize multiple perspectives into coherent summaries
 **Tools**: 4 tools for perspective synthesis
 
 | Tool Category | Assigned Tools | Purpose |
@@ -323,8 +329,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Knowledge Integrator
 
-**Role**: Knowledge Integrator  
-**Goal**: Integrate and manage knowledge across the system  
+**Role**: Knowledge Integrator
+**Goal**: Integrate and manage knowledge across the system
 **Tools**: 25+ memory and knowledge management tools
 
 | Tool Category | Assigned Tools | Purpose |
@@ -348,8 +354,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### System Reliability Officer
 
-**Role**: System Reliability Officer  
-**Goal**: Guard pipeline health and visibility  
+**Role**: System Reliability Officer
+**Goal**: Guard pipeline health and visibility
 **Tools**: System monitoring, health checks, reliability metrics
 
 | Tool Category | Assigned Tools | Purpose |
@@ -361,8 +367,8 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 #### Community Liaison
 
-**Role**: Community Liaison  
-**Goal**: Answer community questions with verified intelligence  
+**Role**: Community Liaison
+**Goal**: Answer community questions with verified intelligence
 **Tools**: Community engagement, question answering, user interaction
 
 | Tool Category | Assigned Tools | Purpose |
@@ -463,6 +469,6 @@ This document provides a comprehensive mapping of all 20+ agents to their assign
 
 ---
 
-**Analysis Complete**: Agent-to-Tool Assignment Matrix  
-**Next Phase**: Dependency Graph & Import Analysis  
+**Analysis Complete**: Agent-to-Tool Assignment Matrix
+**Next Phase**: Dependency Graph & Import Analysis
 **Status**: Ready for Phase 1.2 execution

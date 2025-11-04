@@ -17,18 +17,22 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import subprocess
 import sys
 from pathlib import Path
-from platform.config.configuration import get_config
+
+
+# Ensure repo-local sitecustomize is loaded to proxy stdlib 'platform' to our package
+with contextlib.suppress(Exception):  # pragma: no cover - defensive import for CLI execution context
+    import sitecustomize as _sitecustomize  # noqa: F401
 from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 REPO_ROOT = Path(__file__).resolve().parents[2]
-config = get_config()
 
 
 def _print_header(title: str) -> None:
@@ -124,7 +128,8 @@ def _wizard(
     ]:
         updates[key] = ask(key, secret=secret)
     print("\nVector database (Qdrant) configuration:")
-    updates["QDRANT_URL"] = ask("QDRANT_URL", default=config.qdrant_url)
+    qdrant_default = os.getenv("QDRANT_URL", "")
+    updates["QDRANT_URL"] = ask("QDRANT_URL", default=qdrant_default)
     updates["QDRANT_API_KEY"] = ask("QDRANT_API_KEY", secret=True)
     print("\nDownload preferences:")
     updates["DEFAULT_DOWNLOAD_QUALITY"] = ask(
@@ -180,9 +185,10 @@ def _wizard(
     updates["ENABLE_METRICS"] = yn("Prometheus metrics", default=False)
     updates["ENABLE_AUDIT_LOGGING"] = yn("Audit logging", default=True)
     _print_header("HTTP & Retry Settings")
-    updates["HTTP_TIMEOUT"] = ask("HTTP_TIMEOUT", default=str(config.http_timeout))
+    # Use environment or sane defaults to avoid importing heavy config modules here
+    updates["HTTP_TIMEOUT"] = ask("HTTP_TIMEOUT", default=os.getenv("HTTP_TIMEOUT", "15"))
     updates["ENABLE_HTTP_RETRY"] = yn("HTTP retry layer", default=True)
-    updates["RETRY_MAX_ATTEMPTS"] = ask("RETRY_MAX_ATTEMPTS", default=str(config.retry_max_attempts))
+    updates["RETRY_MAX_ATTEMPTS"] = ask("RETRY_MAX_ATTEMPTS", default=os.getenv("RETRY_MAX_ATTEMPTS", "3"))
     if updates.get("ENABLE_TRACING") == "1":
         updates["OTEL_EXPORTER_OTLP_ENDPOINT"] = ask(
             "OTEL_EXPORTER_OTLP_ENDPOINT", default=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "")
@@ -353,8 +359,8 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
     try:
         from domains.memory import embeddings as _emb
         from domains.memory import vector_store as _v
-        from domains.memory.vector.qdrant import _DummyClient as _QD
-        from domains.memory.vector.qdrant import get_qdrant_client
+        from domains.memory.vector.qdrant.domains.qdrant_provider import _DummyClient as _QD
+        from domains.memory.vector.qdrant.domains.qdrant_provider import get_qdrant_client
 
         url = os.getenv("QDRANT_URL", "")
         if url:
@@ -362,8 +368,10 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
             mode = "dummy" if isinstance(client, _QD) else "real"
             vs = _v.VectorStore()
             ns = _v.VectorStore.namespace("health", "doctor", "check")
-            vec = _emb.embed(["doctor-health-check"])[0]
-            vs.upsert(ns, [_v.VectorRecord(vector=vec, payload={"text": "ok"})])
+            content = "doctor-health-check"
+            vec = _emb.embed([content])[0]
+            rec = _v.VectorRecord(content=content, metadata={"text": "ok"}, vector=vec)
+            vs.upsert(ns, [rec])
             hits = vs.query(ns, vec, top_k=1)
             if hits:
                 if not quiet:
@@ -410,7 +418,7 @@ def _run_discord() -> int:
 
 def _run_crew() -> int:
     _print_header("Run Crew")
-    return subprocess.call([sys.executable, "-m", "ultimate_discord_intelligence_bot.main", "run"])
+    return subprocess.call([sys.executable, "-m", "app.main", "run"])
 
 
 def _parse_set_args(values: list[str]) -> dict[str, str]:

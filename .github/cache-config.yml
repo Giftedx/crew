@@ -50,20 +50,20 @@ cache_strategies:
 optimization:
   # Use uv for faster dependency resolution
   use_uv: true
-  
+
   # Parallel dependency installation
   parallel_installs: true
-  
+
   # Cache warming strategies
   cache_warming:
     - pip install --no-deps --find-links ~/.cache/pip
     - uv pip install --no-deps --find-links ~/.cache/uv
-  
+
   # Cache eviction policies
   eviction:
     max_age_days: 7
     max_size_gb: 5
-  
+
   # Cache hit rate monitoring
   monitoring:
     track_hit_rate: true
@@ -85,7 +85,7 @@ conditional_execution:
     trigger_events:
       - push
       - pull_request
-  
+
   compatibility_tests:
     trigger_branches:
       - main
@@ -93,7 +93,7 @@ conditional_execution:
     trigger_events:
       - push
       - pull_request
-  
+
   docker_build:
     trigger_paths:
       - Dockerfile

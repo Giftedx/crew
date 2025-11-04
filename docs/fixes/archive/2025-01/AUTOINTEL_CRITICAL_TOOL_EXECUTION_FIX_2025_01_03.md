@@ -67,8 +67,8 @@ CrewAI agents are **generating placeholder JSON responses** instead of **executi
 **AFTER (Imperative):**
 
 ```python
-"STEP 2: YOU MUST CALL AudioTranscriptionTool(file_path=<extracted_path>). 
-DO NOT generate mock transcript data. 
+"STEP 2: YOU MUST CALL AudioTranscriptionTool(file_path=<extracted_path>).
+DO NOT generate mock transcript data.
 DO NOT respond until the tool returns actual results.
 VALIDATION: Tool output must contain 'transcript' field with 1000+ characters."
 ```
@@ -80,7 +80,7 @@ VALIDATION: Tool output must contain 'transcript' field with 1000+ characters."
 ```python
 def _task_completion_callback(self, task_output: Any) -> None:
     # ... existing code ...
-    
+
     # NEW: Detect placeholder/mock responses
     if "transcript" in output_data:
         transcript = output_data["transcript"]
@@ -94,7 +94,7 @@ def _task_completion_callback(self, task_output: Any) -> None:
                 f"❌ TOOL EXECUTION FAILURE: Detected placeholder text in transcript. "
                 f"Agent MUST call AudioTranscriptionTool, not generate mock data!"
             )
-    
+
     if "verified_claims" in output_data:
         claims = output_data["verified_claims"]
         if isinstance(claims, list) and len(claims) == 0:
@@ -151,19 +151,19 @@ transcription_task = Task(
 ```python
 def wrap_tool_for_crewai(tool: BaseTool) -> Any:
     # ... existing code ...
-    
+
     def instrumented_run(*args, **kwargs):
         # Log tool call BEFORE execution
         logger.warning(f"🔧 TOOL CALLED: {tool_name} with args={args}, kwargs={kwargs}")
-        
+
         result = original_run(*args, **kwargs)
-        
+
         # Log tool result AFTER execution
         result_preview = str(result)[:200] if result else "None"
         logger.warning(f"✅ TOOL RETURNED: {tool_name} → {result_preview}")
-        
+
         return result
-    
+
     wrapper._run = instrumented_run
 ```
 
@@ -233,7 +233,7 @@ If LLMs still refuse to call tools, implement manual tool execution in callbacks
 ```python
 def _task_completion_callback(self, task_output: Any) -> None:
     # ... existing code ...
-    
+
     # FALLBACK: If agent didn't call tool, call it ourselves
     if task_name == "transcription" and "transcript" not in output_data:
         self.logger.error("❌ Agent failed to call AudioTranscriptionTool. Calling manually...")

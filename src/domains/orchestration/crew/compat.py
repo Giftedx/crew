@@ -71,6 +71,37 @@ class CrewAdapter:
         self.tasks = tasks
         self._logger = logging.getLogger(__name__)
 
+    async def kickoff_async(self, inputs: dict[str, Any] | None = None) -> Any:
+        """Execute crew with async interface to avoid nested event loop issues.
+
+        Mirrors `kickoff` but awaits the underlying executor.execute call.
+
+        Args:
+            inputs: Input parameters for the crew execution
+
+        Returns:
+            Crew execution output (extracted from StepResult)
+        """
+        inputs = inputs or {}
+        task = CrewTask(
+            task_id=inputs.get("task_id", "crew_execution"),
+            task_type=inputs.get("task_type", "autonomous_intelligence"),
+            description=inputs.get("description", "Execute crew workflow"),
+            inputs=inputs,
+            agent_requirements=[agent.role for agent in self.agents],
+        )
+        try:
+            result = await self.executor.execute(task, self.config)
+            if result.step_result.success:
+                return self._extract_crew_output(result)
+            else:
+                error_msg = result.step_result.error or "Unknown error"
+                self._logger.error(f"Crew execution failed: {error_msg}")
+                return {"error": error_msg, "success": False}
+        except Exception as e:
+            self._logger.exception("Crew execution exception")
+            return {"error": str(e), "success": False}
+
     def kickoff(self, inputs: dict[str, Any] | None = None) -> Any:
         """Execute crew with sync interface (matches CrewAI Crew.kickoff()).
 
@@ -92,7 +123,21 @@ class CrewAdapter:
             agent_requirements=[agent.role for agent in self.agents],
         )
         try:
-            result = asyncio.run(self.executor.execute(task, self.config))
+            # Use asyncio.run when no running loop; otherwise fall back to running
+            # the coroutine in a new loop via asyncio.run in a thread to avoid
+            # RuntimeError about nested event loops.
+            try:
+                # Detect if we're already inside an event loop
+                asyncio.get_running_loop()
+                # We're in an event loop; execute in a worker thread to keep sync API
+                import concurrent.futures
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    future = pool.submit(asyncio.run, self.executor.execute(task, self.config))
+                    result = future.result()
+            except RuntimeError:
+                # No running loop; safe to use asyncio.run
+                result = asyncio.run(self.executor.execute(task, self.config))
             if result.step_result.success:
                 return self._extract_crew_output(result)
             else:
@@ -104,20 +149,71 @@ class CrewAdapter:
             return {"error": str(e), "success": False}
 
     def _extract_crew_output(self, result: Any) -> Any:
-        """Extract crew output from CrewExecutionResult.
+        """Extract crew output and return an object with a `.raw` attribute.
+
+        Many legacy tests expect `crew_instance.kickoff(...).raw` to exist and be
+        printable. To preserve this contract we normalize executor outputs into a
+        lightweight wrapper exposing `.raw` as a string while leaving future
+        structured data extensible.
 
         Args:
             result: CrewExecutionResult from executor
 
         Returns:
-            Output in format expected by legacy callers
+            Object with `.raw` attribute (string) suitable for legacy tests
         """
+
+        class _CrewKickoffOutput:
+            """Simple wrapper to expose a `.raw` string attribute.
+
+            This intentionally keeps the surface minimal for tests that only
+            perform string inspections like `str(result.raw)`.
+            """
+
+            def __init__(self, raw: str, payload: Any | None = None) -> None:
+                self.raw = raw
+                # Keep original payload for potential future assertions/usages
+                self.payload = payload
+
+            def __repr__(self) -> str:  # pragma: no cover - cosmetic
+                return f"_CrewKickoffOutput(raw={self.raw!r})"
+
+        def _coerce_to_text(obj: Any) -> str:
+            if obj is None:
+                return ""
+            if isinstance(obj, str):
+                return obj
+            # Prefer common text fields if present
+            if isinstance(obj, dict):
+                for key in ("response", "content", "text", "message", "result", "output"):
+                    val = obj.get(key)
+                    if isinstance(val, str):
+                        return val
+                # Fallback to concise dict representation
+                try:
+                    import json
+
+                    return json.dumps(obj, ensure_ascii=False)
+                except Exception:
+                    return str(obj)
+            return str(obj)
+
+        # Preferred path: unwrap CrewExecutionResult -> StepResult
         if hasattr(result, "step_result") and hasattr(result.step_result, "data"):
             data = result.step_result.data
-            if isinstance(data, dict) and "result" in data:
-                return data["result"]
-            return data
-        return result
+            payload: Any = data.get("result", data) if isinstance(data, dict) else data
+            raw_text = _coerce_to_text(payload)
+            return _CrewKickoffOutput(raw=raw_text, payload=payload)
+
+        # If a StepResult leaks directly, handle it too
+        if hasattr(result, "data"):
+            data = getattr(result, "data", {})
+            payload = data.get("result", data) if isinstance(data, dict) else data
+            raw_text = _coerce_to_text(payload)
+            return _CrewKickoffOutput(raw=raw_text, payload=payload)
+
+        # Last resort: stringify entire object
+        return _CrewKickoffOutput(raw=_coerce_to_text(result), payload=result)
 
 
 class UltimateDiscordIntelligenceBotCrewAdapter:
@@ -320,7 +416,7 @@ class UltimateDiscordIntelligenceBotCrewAdapter:
         return Task(
             description="Plan and coordinate autonomous intelligence mission",
             expected_output="Mission plan with objectives and coordination strategy",
-            agent=self.mission_orchestrator,
+            agent=self.mission_orchestrator(),
         )
 
     def capture_source_media(self) -> Task:
@@ -333,7 +429,7 @@ class UltimateDiscordIntelligenceBotCrewAdapter:
         return Task(
             description="Acquire and download source media content",
             expected_output="Downloaded media files with metadata",
-            agent=self.acquisition_specialist,
+            agent=self.acquisition_specialist(),
         )
 
     def transcribe_and_index_media(self) -> Task:
@@ -346,7 +442,7 @@ class UltimateDiscordIntelligenceBotCrewAdapter:
         return Task(
             description="Transcribe audio/video and index content",
             expected_output="Transcribed text with timestamps and index",
-            agent=self.transcription_engineer,
+            agent=self.transcription_engineer(),
         )
 
     def map_transcript_insights(self) -> Task:
@@ -359,7 +455,7 @@ class UltimateDiscordIntelligenceBotCrewAdapter:
         return Task(
             description="Analyze transcript and extract insights",
             expected_output="Structured insights and patterns from content",
-            agent=self.analysis_cartographer,
+            agent=self.analysis_cartographer(),
         )
 
     def verify_priority_claims(self) -> Task:
@@ -372,7 +468,7 @@ class UltimateDiscordIntelligenceBotCrewAdapter:
         return Task(
             description="Verify claims and assess priority",
             expected_output="Verified claims with priority ratings",
-            agent=self.verification_director,
+            agent=self.verification_director(),
         )
 
     def crew(self) -> CrewAdapter:
