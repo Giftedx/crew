@@ -53,7 +53,7 @@ def _populate_agent_tool_context(self, agent: Any, context_data: dict[str, Any])
     """Populate shared context on all tool wrappers for an agent."""
     if not hasattr(agent, 'tools'):
         return
-    
+
     for tool in agent.tools:
         if hasattr(tool, 'update_context'):
             tool.update_context(context_data)
@@ -133,36 +133,36 @@ from ultimate_discord_intelligence_bot.autonomous_orchestrator import Autonomous
 async def test_autointel_data_flow_to_tools():
     """Verify data flows correctly from orchestrator to tools."""
     orchestrator = AutonomousIntelligenceOrchestrator()
-    
+
     # Mock interaction
     interaction = Mock()
     interaction.response = AsyncMock()
     interaction.followup = AsyncMock()
     interaction.guild_id = "123"
     interaction.channel = Mock(name="test-channel")
-    
+
     # Track tool calls
     tool_calls = []
-    
+
     def track_tool_call(tool_name, **kwargs):
         tool_calls.append({"tool": tool_name, "kwargs": kwargs})
         return StepResult.ok()
-    
+
     # Patch tools to track calls
     # ... (patch TextAnalysisTool, FactCheckTool, etc.)
-    
+
     # Execute workflow
     await orchestrator.execute_autonomous_intelligence_workflow(
         interaction,
         url="https://www.youtube.com/watch?v=test",
         depth="standard"
     )
-    
+
     # Validate tools received correct data
     text_analysis_call = next(c for c in tool_calls if c["tool"] == "TextAnalysisTool")
     assert "text" in text_analysis_call["kwargs"]
     assert len(text_analysis_call["kwargs"]["text"]) > 100  # Not empty!
-    
+
     # Validate data propagation
     fact_check_call = next(c for c in tool_calls if c["tool"] == "FactCheckTool")
     assert "claims" in fact_check_call["kwargs"]  # Has claims from analysis

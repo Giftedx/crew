@@ -4,9 +4,13 @@ Test configuration and fixtures for Discord AI integration tests.
 # ruff: noqa: E402  # allow path manipulations before imports
 
 import asyncio
+import contextlib
+import importlib
+import importlib.machinery
 import os
 import sys
 import tempfile
+import types
 from pathlib import Path
 
 
@@ -18,15 +22,29 @@ if _SRC.exists():
     if src_path not in sys.path:
         sys.path.insert(0, src_path)
 
-# If stdlib 'platform' module was imported earlier, purge it so our package can be loaded
-mod = sys.modules.get("platform")
-if mod is not None:
-    mod_file = getattr(mod, "__file__", "") or ""
-    # Heuristic: stdlib module path ends with 'platform.py'
-    if mod_file.endswith("platform.py") and "site-packages" not in mod_file:
-        del sys.modules["platform"]
+# Ensure 'platform' resolves to a proxy that exposes stdlib attributes while
+# acting as a package for our repo's 'platform/*' submodules (avoids stdlib shadowing).
+try:
+    std_platform = sys.modules.get("platform") or importlib.import_module("platform")
+    plat_dir = _SRC / "platform"
+    if plat_dir.exists():
+        proxy = types.ModuleType("platform")
+        for name in dir(std_platform):
+            with contextlib.suppress(Exception):
+                setattr(proxy, name, getattr(std_platform, name))
+        proxy.__file__ = getattr(std_platform, "__file__", str(plat_dir / "__init__.py"))
+        proxy.__package__ = "platform"
+        proxy.__path__ = [str(plat_dir)]  # type: ignore[attr-defined]
+        proxy.__spec__ = importlib.machinery.ModuleSpec(name="platform", loader=None, is_package=True)
+        sys.modules["platform"] = proxy
+except Exception:
+    ...
 
-from platform.core.step_result import StepResult
+# Prefer platform.core.StepResult from our repo package; fall back to the shim if stdlib 'platform' is loaded
+try:
+    from platform.core.step_result import StepResult  # type: ignore
+except Exception:  # pragma: no cover - environment-dependent import resolution
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

@@ -84,7 +84,7 @@ if "video_id" in allowed and "video_id" not in final_kwargs:
 ```python
 _SAFE_REGISTRY: dict[str, tuple[str, list[str]]] = {
     # ... existing namespaces ...
-    
+
     # NOTE: 'analysis' namespace intentionally excluded - not implemented in MCP server
     # If agents attempt to call 'analysis.coordinate_analysis', they will receive
     # 'unknown_or_forbidden' error. Either implement the namespace or remove MCPCallTool

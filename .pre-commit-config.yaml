@@ -14,33 +14,20 @@ repos:
   # Previous configuration preserved below for reference.
   # Phase 1 reinstated narrow mypy hook (allowlist). Limit to crew orchestrator while
   # stub packages & targeted overrides are introduced. Expand list in subsequent phases.
+  # Temporarily disable mypy hook at commit-time to align with quick-check gates.
+  # Full typing runs in CI via `make type` and snapshot guard.
+  # To re-enable locally, change `stages` to ["commit"] and expand the allowlist.
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
       - id: mypy
-        name: "mypy (Phase 2: core + services + pipeline_components)"
+        name: "mypy (manual-only; CI uses make type)"
+        stages: [manual]
         additional_dependencies:
           - types-PyYAML
           - types-requests
-        # Phase 2: Expanded to include pipeline_components and additional core modules
         args:
-          [
-            "--config-file",
-            "pyproject.toml",
-            "--follow-imports=skip",
-            "--no-error-summary",
-            "src/ultimate_discord_intelligence_bot/crew.py",
-            "src/ultimate_discord_intelligence_bot/profiles/schema.py",
-            "src/ultimate_discord_intelligence_bot/services/prompt_engine.py",
-            "src/ultimate_discord_intelligence_bot/services/memory_service.py",
-            "src/ultimate_discord_intelligence_bot/pipeline_components/base.py",
-            "src/ultimate_discord_intelligence_bot/pipeline_components/types.py",
-            "src/ultimate_discord_intelligence_bot/pipeline_components/mixins.py",
-            "src/core/time.py",
-            "src/core/typing_utils.py",
-            "src/core/error_handling.py",
-            "src/core/log_schema.py",
-          ]
+          ["--config-file", "pyproject.toml", "--no-error-summary"]
         pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

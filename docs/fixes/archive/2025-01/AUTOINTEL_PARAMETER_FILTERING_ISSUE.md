@@ -1,7 +1,7 @@
 # CRITICAL: Parameter Filtering Breaking Tool Data Flow
 
-**Date**: 2025-10-02  
-**Severity**: 🔴 **CRITICAL** - Blocks all /autointel workflows  
+**Date**: 2025-10-02
+**Severity**: 🔴 **CRITICAL** - Blocks all /autointel workflows
 **Status**: ⚠️ **ROOT CAUSE IDENTIFIED**
 
 ## Problem Summary
@@ -22,7 +22,7 @@ The `/autointel` command fails because **CrewAI tool wrappers are filtering out 
 
 ### The Specific Code Problem
 
-**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`  
+**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`
 **Lines**: 230-268
 
 ```python
@@ -217,7 +217,7 @@ This is the pragmatic solution that:
 
 ### Step 1: Update crewai_tool_wrappers.py
 
-**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`  
+**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`
 **Lines**: ~225-268
 
 ```python
@@ -281,11 +281,11 @@ Add context handling to BaseTool:
 ```python
 class BaseTool(BaseModel, ABC, Generic[T]):
     """Base class for all tools with context support."""
-    
+
     def _extract_context_param(self, param_name: str, **kwargs) -> Any:
         """Helper to extract parameter from kwargs or ignore if missing."""
         return kwargs.get(param_name)
-    
+
     def _get_text_input(self, **kwargs) -> str:
         """Flexible text extraction from various parameter names."""
         for key in ["text", "transcript", "content", "input_text"]:

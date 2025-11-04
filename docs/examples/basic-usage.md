@@ -21,11 +21,11 @@ async def basic_example():
         enable_prompt_optimization=True,
         enable_discord_publishing=True,
     )
-    
+
     # Initialize the pipeline
     pipeline = UnifiedPipeline(config)
     await pipeline.initialize()
-    
+
     # Process content
     result = await pipeline.process_content(
         content="Analyze this debate about climate change",
@@ -33,12 +33,12 @@ async def basic_example():
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if result.success:
         print(f"Processing completed: {result.data}")
     else:
         print(f"Processing failed: {result.error}")
-    
+
     # Cleanup
     await pipeline.shutdown()
 
@@ -55,24 +55,24 @@ from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBo
 async def crew_example():
     # Initialize the crew
     crew = UltimateDiscordIntelligenceBotCrew()
-    
+
     # Setup Discord integration
     crew.setup_discord_integration(
         webhook_url="https://discord.com/api/webhooks/...",
     )
-    
+
     # Initialize MCP tools
     await crew._initialize_mcp_tools()
-    
+
     # Run crew analysis
     inputs = {
         "url": "https://youtube.com/watch?v=example",
         "tenant": "user123",
         "workspace": "workspace1",
     }
-    
+
     result = crew.crew().kickoff(inputs=inputs)
-    
+
     # Publish results
     await crew.publish_crew_results(
         crew_result=result,
@@ -97,7 +97,7 @@ async def vector_memory_example():
     # Initialize services
     embedding_service = EmbeddingService()
     memory_service = MemoryService()
-    
+
     # Store content in vector memory
     content = "This is important information about machine learning"
     result = await memory_service.add(
@@ -105,10 +105,10 @@ async def vector_memory_example():
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if result.success:
         print("Content stored successfully")
-    
+
     # Search for similar content
     search_result = await memory_service.search(
         query="machine learning algorithms",
@@ -116,7 +116,7 @@ async def vector_memory_example():
         workspace="workspace1",
         limit=5,
     )
-    
+
     if search_result.success:
         print(f"Found {len(search_result.data)} similar items")
         for item in search_result.data:
@@ -139,25 +139,25 @@ async def rl_routing_example():
     # Initialize services
     context_service = ContextService()
     obs_service = ObservabilityService()
-    
+
     # Create routing service
     routing_service = RoutingService(
         context_service=context_service,
         obs_service=obs_service,
         available_providers=["openai", "anthropic", "cohere"],
     )
-    
+
     # Select provider
     selection_result = await routing_service.select_llm_provider({
         "tenant": "user123",
         "workspace": "workspace1",
         "content_type": "analysis",
     })
-    
+
     if selection_result.success:
         selected_provider = selection_result.data
         print(f"Selected provider: {selected_provider}")
-        
+
         # Simulate processing and record feedback
         # (In real usage, this would be based on actual results)
         feedback_result = await routing_service.record_provider_feedback(
@@ -168,10 +168,10 @@ async def rl_routing_example():
                 "workspace": "workspace1",
             },
         )
-        
+
         if feedback_result.success:
             print("Feedback recorded successfully")
-    
+
     # Get provider statistics
     stats_result = routing_service.get_provider_stats()
     if stats_result.success:
@@ -193,14 +193,14 @@ async def mcp_tools_example():
         base_url="https://api.mcp.io",
         api_key="your_mcp_api_key",
     )
-    
+
     # Register default tools
     default_tools = create_default_mcp_tools()
     for tool in default_tools:
         result = await mcp_client.register_tool(tool)
         if result.success:
             print(f"Registered tool: {tool.name}")
-    
+
     # Execute web search
     search_result = await mcp_client.execute_tool(
         tool_name="web_search",
@@ -208,10 +208,10 @@ async def mcp_tools_example():
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if search_result.success:
         print(f"Search results: {search_result.data}")
-    
+
     # Execute image analysis
     image_result = await mcp_client.execute_tool(
         tool_name="image_analysis",
@@ -219,10 +219,10 @@ async def mcp_tools_example():
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if image_result.success:
         print(f"Image analysis: {image_result.data}")
-    
+
     # Get client statistics
     stats_result = await mcp_client.get_stats()
     if stats_result.success:
@@ -247,35 +247,35 @@ async def prompt_optimization_example():
         preserve_structure=True,
     )
     compressor = PromptCompressor(compression_config)
-    
+
     # Initialize optimization pipeline
     optimization_pipeline = OptimizationPipeline(compressor=compressor)
-    
+
     # Optimize a prompt
     original_prompt = """
     Please analyze the following content and provide a comprehensive summary
     of the key points, main arguments, and any potential biases or inaccuracies
     that you can identify. Be thorough and detailed in your analysis.
     """
-    
+
     result = await optimization_pipeline.optimize_prompt(
         prompt=original_prompt,
         prompt_id="prompt_001",
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if result.success:
         optimized_prompt = result.data["optimized_prompt"]
         metrics = result.data["metrics"]
-        
+
         print(f"Original tokens: {metrics['original_tokens']}")
         print(f"Optimized tokens: {metrics['optimized_tokens']}")
         print(f"Compression ratio: {metrics['compression_ratio']:.2f}")
         print(f"Quality score: {metrics['quality_score']:.2f}")
         print(f"Cost savings: ${metrics['cost_savings']:.4f}")
         print(f"Optimized prompt: {optimized_prompt}")
-    
+
     # Get optimization statistics
     stats_result = optimization_pipeline.get_optimization_stats()
     if stats_result.success:
@@ -298,10 +298,10 @@ async def discord_publishing_example():
         enable_embeds=True,
         max_message_length=2000,
     )
-    
+
     # Initialize publisher
     publisher = ArtifactPublisher(discord_config)
-    
+
     # Create artifact metadata
     metadata = ArtifactMetadata(
         artifact_id="analysis_001",
@@ -314,7 +314,7 @@ async def discord_publishing_example():
         source_url="https://example.com/source",
         tags=["analysis", "content", "ai"],
     )
-    
+
     # Prepare artifact data
     artifact_data = {
         "summary": "This content discusses important topics...",
@@ -325,7 +325,7 @@ async def discord_publishing_example():
         "confidence_score": 0.85,
         "source_url": "https://example.com/source",
     }
-    
+
     # Publish artifact
     result = await publisher.publish_artifact(
         artifact_data=artifact_data,
@@ -333,12 +333,12 @@ async def discord_publishing_example():
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     if result.success:
         print(f"Artifact published successfully: {result.data}")
     else:
         print(f"Publishing failed: {result.error}")
-    
+
     # Get publishing statistics
     stats_result = publisher.get_publishing_stats()
     if stats_result.success:
@@ -369,53 +369,53 @@ async def complete_workflow_example():
         available_providers=["openai", "anthropic"],
         discord_webhook_url="https://discord.com/api/webhooks/...",
     )
-    
+
     # Initialize pipeline
     pipeline = UnifiedPipeline(config)
     init_result = await pipeline.initialize()
-    
+
     if not init_result.success:
         print(f"Initialization failed: {init_result.error}")
         return
-    
+
     print("Pipeline initialized successfully")
-    
+
     # Process multiple content items
     content_items = [
         "Analyze this debate about renewable energy",
         "Summarize the key points in this article",
         "Fact-check these claims about climate change",
     ]
-    
+
     for i, content in enumerate(content_items):
         print(f"\nProcessing item {i+1}: {content[:50]}...")
-        
+
         result = await pipeline.process_content(
             content=content,
             content_type="analysis",
             tenant=f"user_{i}",
             workspace="workspace1",
         )
-        
+
         if result.success:
             print(f"✓ Processing completed in {result.data['processing_time_ms']:.1f}ms")
         else:
             print(f"✗ Processing failed: {result.error}")
-    
+
     # Get comprehensive statistics
     stats_result = await pipeline.get_pipeline_stats()
     if stats_result.success:
         print(f"\nPipeline Statistics:")
         print(f"- Components: {stats_result.data['components']}")
         print(f"- Config: {stats_result.data['config']}")
-    
+
     # Perform health check
     health_result = await pipeline.health_check()
     if health_result.success:
         print(f"\nHealth Status: {health_result.data['overall_health']}")
         for component, status in health_result.data['components'].items():
             print(f"- {component}: {status['status']}")
-    
+
     # Shutdown pipeline
     shutdown_result = await pipeline.shutdown()
     if shutdown_result.success:
@@ -443,29 +443,29 @@ async def error_handling_example():
         qdrant_url="http://invalid-url:6333",
         discord_webhook_url="https://invalid-webhook.com",
     )
-    
+
     pipeline = UnifiedPipeline(config)
-    
+
     try:
         # Attempt initialization
         init_result = await pipeline.initialize()
-        
+
         if not init_result.success:
             print(f"Initialization failed (expected): {init_result.error}")
-            
+
             # Try with fallback configuration
             config.qdrant_url = "http://localhost:6333"
             config.discord_webhook_url = None  # Disable Discord publishing
-            
+
             pipeline = UnifiedPipeline(config)
             init_result = await pipeline.initialize()
-            
+
             if init_result.success:
                 print("Pipeline initialized with fallback configuration")
             else:
                 print(f"Fallback initialization also failed: {init_result.error}")
                 return
-        
+
         # Process content with error handling
         result = await pipeline.process_content(
             content="Test content for error handling",
@@ -473,19 +473,19 @@ async def error_handling_example():
             tenant="user123",
             workspace="workspace1",
         )
-        
+
         if result.success:
             print("Content processed successfully")
         else:
             print(f"Content processing failed: {result.error}")
-            
+
             # Try with simplified configuration
             print("Attempting with simplified configuration...")
             # ... implement fallback logic
-        
+
     except Exception as e:
         print(f"Unexpected error: {e}")
-        
+
     finally:
         # Always cleanup
         try:
@@ -521,12 +521,12 @@ async def resource_management_example():
 # Always check results and handle errors gracefully
 async def error_handling_example():
     result = await pipeline.process_content(content)
-    
+
     if not result.success:
         logger.error(f"Processing failed: {result.error}")
         # Implement fallback logic
         return
-    
+
     # Process successful result
     data = result.data
 ```
@@ -537,11 +537,11 @@ async def error_handling_example():
 # Monitor performance and adjust configuration
 async def performance_monitoring_example():
     start_time = time.time()
-    
+
     result = await pipeline.process_content(content)
-    
+
     processing_time = time.time() - start_time
-    
+
     if processing_time > 5.0:  # 5 seconds threshold
         logger.warning(f"Slow processing: {processing_time:.2f}s")
         # Consider adjusting configuration
@@ -555,7 +555,7 @@ import os
 
 def get_config():
     env = os.getenv('APP_ENV', 'development')
-    
+
     if env == 'production':
         return PipelineConfig(
             enable_observability=True,
@@ -599,7 +599,7 @@ config = PipelineConfig(
 # Regular health checks
 async def health_monitoring():
     health_result = await pipeline.health_check()
-    
+
     if health_result.data['overall_health'] != 'healthy':
         logger.warning(f"Pipeline health issues: {health_result.data}")
         # Implement recovery logic

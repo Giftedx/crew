@@ -10,7 +10,7 @@
 
 - `multi_platform_download_tool.py` - Primary downloader
 - `youtube_download_tool.py` - Legacy wrapper
-- `enhanced_youtube_tool.py` - Legacy wrapper  
+- `enhanced_youtube_tool.py` - Legacy wrapper
 - `yt_dlp_download_tool.py` - Core implementation
 - `tiktok_enhanced_download_tool.py` - Platform-specific
 - `discord_download_tool.py` - Platform-specific
@@ -137,12 +137,12 @@
 ```python
 class StandardTool(BaseTool):
     """Base class for all project tools with StepResult pattern."""
-    
+
     @abstractmethod
     def _run(self, *args, **kwargs) -> StepResult:
         """Execute tool logic. Must return StepResult."""
         pass
-    
+
     def _handle_error(self, error: Exception) -> StepResult:
         """Standard error handling."""
         return StepResult.fail(str(error))
@@ -153,11 +153,11 @@ class StandardTool(BaseTool):
 ```python
 class AcquisitionTool(StandardTool):
     """Base class for content acquisition tools."""
-    
+
     def _validate_url(self, url: str) -> bool:
         """Validate URL format."""
         pass
-    
+
     def _get_platform(self, url: str) -> str:
         """Detect platform from URL."""
         pass
@@ -168,11 +168,11 @@ class AcquisitionTool(StandardTool):
 ```python
 class AnalysisTool(StandardTool):
     """Base class for content analysis tools."""
-    
+
     def _preprocess_content(self, content: str) -> str:
         """Preprocess content for analysis."""
         pass
-    
+
     def _postprocess_results(self, results: dict) -> dict:
         """Postprocess analysis results."""
         pass

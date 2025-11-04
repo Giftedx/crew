@@ -47,7 +47,7 @@
 ### 4. Standardized Base Classes Created
 
 - `AcquisitionBaseTool`: For content acquisition tools
-- `AnalysisBaseTool`: For content analysis tools  
+- `AnalysisBaseTool`: For content analysis tools
 - `MemoryBaseTool`: For memory/RAG tools
 - `VerificationBaseTool`: For fact-checking tools
 

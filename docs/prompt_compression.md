@@ -1,5 +1,12 @@
 # Advanced Prompt Compression
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Prompt Engine**: `src/ultimate_discord_intelligence_bot/services/prompt_engine.py`
+- **DSPy Integration**: `src/platform/prompts/` (advanced prompt engineering)
+- **Feature Flag**: `ENABLE_PROMPT_COMPRESSION` with source policy configuration
+- **Metrics**: `prompt_compression_ratio` histogram for compression effectiveness
+
 This document describes the multi-pass prompt compression pipeline guarded by feature flags and settings.
 
 ## Overview

@@ -1,5 +1,14 @@
 # Observability
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Metrics Module**: `src/ultimate_discord_intelligence_bot/obs/metrics.py`
+- **Metric Specs**: `src/ultimate_discord_intelligence_bot/obs/metric_specs.py`
+- **Tracing**: `src/platform/observability/tracing.py`
+- **Langfuse Service**: `src/platform/observability/langfuse_service.py`
+- **Observability Tools**: 26 tools in Observability category (23% of 111 total tools)
+- **Prometheus Endpoint**: `/metrics` (enabled via `ENABLE_PROMETHEUS_ENDPOINT=1`)
+
 This repository exposes tracing, metrics, logging, and incident helpers under
 `src/obs/`.  A tiny OpenTelemetry configuration is provided:
 

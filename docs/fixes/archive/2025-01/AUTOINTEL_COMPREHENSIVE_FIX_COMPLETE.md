@@ -17,7 +17,7 @@ Three root causes identified and fixed:
 **Problem**: Task descriptions formatted like analysis prompts:
 
 ```python
-description="Conduct comprehensive information verification including fact-checking, 
+description="Conduct comprehensive information verification including fact-checking,
 logical analysis, credibility assessment, and bias detection using transcript..."
 ```
 
@@ -76,13 +76,13 @@ schema_fields[param_name] = (optional_type, Field(None, description=f"{param_nam
   ```python
   # OLD (BAD - analyzed as content):
   description="Conduct comprehensive information verification including fact-checking..."
-  
+
   # NEW (GOOD - clear instructions):
-  description="You are the Verification Director. Your role is to orchestrate comprehensive 
-  verification of the provided content. The transcript and analysis data are available in 
-  your shared context. Use your tools to: (1) Extract specific factual claims from the 
-  transcript, (2) Verify each claim using fact-checking tools, (3) Analyze logical structure 
-  for fallacies, (4) Assess source credibility, (5) Detect bias indicators. Synthesize 
+  description="You are the Verification Director. Your role is to orchestrate comprehensive
+  verification of the provided content. The transcript and analysis data are available in
+  your shared context. Use your tools to: (1) Extract specific factual claims from the
+  transcript, (2) Verify each claim using fact-checking tools, (3) Analyze logical structure
+  for fallacies, (4) Assess source credibility, (5) Detect bias indicators. Synthesize
   findings into a structured verification report."
   ```
 
@@ -91,14 +91,14 @@ schema_fields[param_name] = (optional_type, Field(None, description=f"{param_nam
   ```python
   # OLD (BAD):
   description="Conduct comprehensive deception and threat analysis including manipulation detection..."
-  
+
   # NEW (GOOD):
-  description="You are the Threat Analysis Director. Your role is to assess deception, 
-  manipulation, and information threats in the provided content. All analysis data 
-  (transcript, fact-checks, logical analysis, credibility scores, sentiment) is available 
-  in your shared context. Use your tools to: (1) Score deception indicators in the transcript, 
-  (2) Identify manipulation techniques and psychological influence patterns, (3) Assess 
-  narrative integrity and consistency, (4) Build psychological threat profile, (5) Generate 
+  description="You are the Threat Analysis Director. Your role is to assess deception,
+  manipulation, and information threats in the provided content. All analysis data
+  (transcript, fact-checks, logical analysis, credibility scores, sentiment) is available
+  in your shared context. Use your tools to: (1) Score deception indicators in the transcript,
+  (2) Identify manipulation techniques and psychological influence patterns, (3) Assess
+  narrative integrity and consistency, (4) Build psychological threat profile, (5) Generate
   actionable threat intelligence. Synthesize into a comprehensive threat assessment."
   ```
 
@@ -197,9 +197,9 @@ for k, v in list(final_kwargs.items()):
 2. **Task Instructions** (line 2240, FIXED):
 
    ```
-   "You are the Verification Director. Your role is to orchestrate comprehensive 
-   verification of the provided content. The transcript and analysis data are 
-   available in your shared context. Use your tools to: (1) Extract specific 
+   "You are the Verification Director. Your role is to orchestrate comprehensive
+   verification of the provided content. The transcript and analysis data are
+   available in your shared context. Use your tools to: (1) Extract specific
    factual claims from the transcript, (2) Verify each claim..."
    ```
 

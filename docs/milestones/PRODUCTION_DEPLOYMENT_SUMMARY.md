@@ -23,7 +23,7 @@
 - **Complete OAuth Framework**: `src/creator_ops/auth/oauth_manager.py` (742+ lines)
 - **5 Platform Integration Clients**:
   - `YouTubeClient` - Data API v3 integration
-  - `TwitchClient` - Helix API integration  
+  - `TwitchClient` - Helix API integration
   - `TikTokClient` - Research API integration
   - `InstagramClient` - Graph API integration
   - `XClient` - API v2 integration

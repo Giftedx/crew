@@ -4,7 +4,7 @@ This file is **DEPRECATED** as of Phase 6 (October 2025).
 
 ## Migration Path
 
-**Old**: `from core.llm_router import LLMRouter`  
+**Old**: `from core.llm_router import LLMRouter`
 **New**: `from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService`
 
 ## Rationale

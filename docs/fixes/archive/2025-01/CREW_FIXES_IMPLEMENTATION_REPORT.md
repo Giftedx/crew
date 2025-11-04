@@ -24,7 +24,7 @@ Key issues identified:
 - **Problem**: Sync method throws `RuntimeError` when called from CrewAI's async context
 - **Impact**: Pipeline tool failures cascade through entire workflow
 
-### 2. Tool Data Flow Issues  
+### 2. Tool Data Flow Issues
 
 - **Issue**: No context sharing between tools and agents
 - **Problem**: Tools couldn't access previous results or shared content data
@@ -160,7 +160,7 @@ error_context = {
     "error_message": str(e),
     "error_type": type(e).__name__,
     "args_provided": list(final_kwargs.keys()),
-    "args_values": {k: str(v)[:100] + "..." if len(str(v)) > 100 else str(v) 
+    "args_values": {k: str(v)[:100] + "..." if len(str(v)) > 100 else str(v)
                    for k, v in final_kwargs.items()},
     "shared_context_keys": list(self._shared_context.keys()) if self._shared_context else [],
     "traceback": full_traceback,
@@ -175,7 +175,7 @@ Created comprehensive test suite (`test_crew_fixes.py`) with results:
 ```
 📊 TEST RESULTS SUMMARY
 ✅ PASS Pipeline Tool Wrapper          - Async/sync handling fixed
-✅ PASS Orchestrator Imports          - Import chain simplified  
+✅ PASS Orchestrator Imports          - Import chain simplified
 ✅ PASS Async Pipeline Execution      - Pipeline async methods working
 ⚠️  PARTIAL Tool Wrapper Context       - Context sharing implemented (NLTK dependency issue)
 ⚠️  PARTIAL StepResult Handling        - StepResult working (minor API differences)
@@ -194,7 +194,7 @@ The user's original failing command:
 **Should now work because**:
 
 1. **Pipeline Tool**: No more RuntimeError from async/sync mismatch
-2. **Tool Chain**: Proper data flow between all 25 experimental stages  
+2. **Tool Chain**: Proper data flow between all 25 experimental stages
 3. **Orchestrator**: Stable import and execution chain
 4. **Error Handling**: Clear diagnostics if issues occur
 5. **Context Passing**: Tools can access previous results and content data

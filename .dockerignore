@@ -1,0 +1,47 @@
+# General
+.git
+.gitignore
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# Python caches and build artifacts
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+.eggs/
+*.egg-info/
+
+# Local data and logs
+logs/
+logs/**
+data/
+data/**
+crew_data/Downloads/
+crew_data/Processing/
+crew_data/Logs/
+cache/
+
+# Not needed for image
+benchmarks/
+datasets/
+reports/
+docs/
+examples/
+htmlcov/
+
+# Node/npm
+node_modules/
+
+# Docker
+config/docker/*.log

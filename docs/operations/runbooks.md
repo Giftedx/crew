@@ -429,17 +429,17 @@ kubectl patch deployment unified-system -p '{"spec":{"template":{"spec":{"contai
 
 ```sql
 -- Check slow queries
-SELECT query, mean_time, calls 
-FROM pg_stat_statements 
-ORDER BY mean_time DESC 
+SELECT query, mean_time, calls
+FROM pg_stat_statements
+ORDER BY mean_time DESC
 LIMIT 10;
 
 -- Analyze table statistics
 ANALYZE unified_system;
 
 -- Check index usage
-SELECT schemaname, tablename, indexname, idx_scan 
-FROM pg_stat_user_indexes 
+SELECT schemaname, tablename, indexname, idx_scan
+FROM pg_stat_user_indexes
 ORDER BY idx_scan DESC;
 ```
 

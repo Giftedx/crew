@@ -64,38 +64,38 @@ from typing import Optional
 
 class Settings(BaseSettings):
     """Application settings with validation and defaults."""
-    
+
     # Discord Configuration
     discord_bot_token: str = Field(..., env="DISCORD_BOT_TOKEN")
     discord_command_prefix: str = Field("!", env="DISCORD_COMMAND_PREFIX")
-    
+
     # API Keys (at least one required)
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     openrouter_api_key: Optional[str] = Field(None, env="OPENROUTER_API_KEY")
-    
+
     # Service URLs
     qdrant_url: str = Field(":memory:", env="QDRANT_URL")
     qdrant_api_key: Optional[str] = Field(None, env="QDRANT_API_KEY")
-    
+
     # Feature Flags
     enable_debate_analysis: bool = Field(True, env="ENABLE_DEBATE_ANALYSIS")
     enable_fact_checking: bool = Field(True, env="ENABLE_FACT_CHECKING")
     enable_memory_storage: bool = Field(True, env="ENABLE_MEMORY_STORAGE")
-    
+
     # Performance Settings
     crew_max_iterations: int = Field(10, env="CREW_MAX_ITERATIONS")
     crew_max_rpm: int = Field(100, env="CREW_MAX_RPM")
-    
+
     # Logging
     log_level: str = Field("INFO", env="LOG_LEVEL")
-    
+
     @validator("openrouter_api_key", always=True)
     def validate_api_keys(cls, v, values):
         """Ensure at least one LLM API key is provided."""
         if not v and not values.get("openai_api_key"):
             raise ValueError("Either OPENAI_API_KEY or OPENROUTER_API_KEY must be set")
         return v
-    
+
     @validator("log_level")
     def validate_log_level(cls, v):
         """Validate log level is valid."""
@@ -103,7 +103,7 @@ class Settings(BaseSettings):
         if v.upper() not in valid_levels:
             raise ValueError(f"Invalid log level: {v}")
         return v.upper()
-    
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -148,19 +148,19 @@ Keep [docs/configuration.md](mdc:docs/configuration.md) in sync:
 def generate_config_docs():
     """Generate configuration documentation from settings."""
     docs = ["# Configuration Reference\n"]
-    
+
     for field_name, field in Settings.__fields__.items():
         env_var = field.field_info.extra.get("env", field_name.upper())
         default = field.default
         required = field.required
         description = field.field_info.description or ""
-        
+
         docs.append(f"## {env_var}")
         docs.append(f"- **Required**: {'Yes' if required else 'No'}")
         docs.append(f"- **Default**: `{default}`")
         docs.append(f"- **Description**: {description}")
         docs.append("")
-    
+
     return "\n".join(docs)
 ```
 
@@ -233,30 +233,30 @@ def get_production_secret(key: str) -> str:
 def validate_configuration():
     """Validate all configuration on startup."""
     errors = []
-    
+
     # Check required variables
     for var, description in REQUIRED_ENV_VARS.items():
         if not os.getenv(var):
             errors.append(f"Missing {var}: {description}")
-    
+
     # Validate feature flag format
     for key, value in os.environ.items():
         if key.startswith("ENABLE_"):
             if value.lower() not in ["true", "false", "1", "0"]:
                 errors.append(f"Invalid feature flag {key}={value}")
-    
+
     # Validate URLs
     qdrant_url = os.getenv("QDRANT_URL", "")
     if qdrant_url and qdrant_url != ":memory:":
         if not qdrant_url.startswith(("http://", "https://")):
             errors.append(f"Invalid Qdrant URL format: {qdrant_url}")
-    
+
     if errors:
         print("❌ Configuration errors:")
         for error in errors:
             print(f"   - {error}")
         return False
-    
+
     return True
 ```
 
@@ -265,21 +265,21 @@ def validate_configuration():
 ```python
 class DynamicConfig:
     """Support runtime configuration updates."""
-    
+
     def __init__(self):
         self._config = {}
         self._callbacks = {}
-    
+
     def set(self, key: str, value: Any):
         """Update configuration value."""
         old_value = self._config.get(key)
         self._config[key] = value
-        
+
         # Notify callbacks
         if key in self._callbacks:
             for callback in self._callbacks[key]:
                 callback(old_value, value)
-    
+
     def on_change(self, key: str, callback: Callable):
         """Register callback for configuration changes."""
         if key not in self._callbacks:
@@ -321,7 +321,7 @@ QDRANT_COLLECTION_NAME=debates
 class Settings(BaseSettings):
     # Maximum time to wait for LLM response (seconds)
     llm_timeout: int = Field(30, env="LLM_TIMEOUT")
-    
+
     # Number of retry attempts for failed requests
     max_retries: int = Field(3, env="MAX_RETRIES")
 ```
@@ -337,7 +337,7 @@ def main():
     except ValidationError as e:
         print(f"❌ Configuration error: {e}")
         sys.exit(1)
-    
+
     # Continue with validated settings
     run_application(settings)
 ```

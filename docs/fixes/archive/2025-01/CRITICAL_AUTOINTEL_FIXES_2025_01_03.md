@@ -5,7 +5,7 @@
 The `/autointel` command is fundamentally broken with multiple cascading failures:
 
 1. **Parameter Filtering Catastrophe**: Tools receive ZERO context data - everything filtered out
-2. **Content Analysis Failure**: Final report analyzes error messages instead of video content  
+2. **Content Analysis Failure**: Final report analyzes error messages instead of video content
 3. **Tool Misuse**: Verification Director calls Claim Extractor 22 times with same input
 4. **Missing Tool Usage**: MemoryStorageTool and GraphMemoryTool never called
 5. **Context Propagation Failure**: 30+ redundant context updates, data not flowing to tools
@@ -67,7 +67,7 @@ if context_keys:
 
 1. Fix parameter filtering to preserve context
 2. Improve claim extraction to return multiple claims
-3. Add tool usage validation  
+3. Add tool usage validation
 4. Fix JSON extraction from task outputs
 5. Add max tool call limits per task
 6. Improve verification task instructions

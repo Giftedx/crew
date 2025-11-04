@@ -1,10 +1,10 @@
 # ASC-1 Execution Report
 
-**Protocol Version**: ASC-1  
-**Execution Date**: 2025-11-03  
-**Agent Mode**: Beast Mode (Autonomous Research–Planner–Implementer)  
-**Environment**: Python 3.12.3, venv at `/home/crew/venv`  
-**Repository**: `crew` (main branch)  
+**Protocol Version**: ASC-1
+**Execution Date**: 2025-11-03
+**Agent Mode**: Beast Mode (Autonomous Research–Planner–Implementer)
+**Environment**: Python 3.12.3, venv at `/home/crew/venv`
+**Repository**: `crew` (main branch)
 
 ---
 
@@ -290,8 +290,8 @@ tests/test_discord_safety.py::... PASSED [100%]
 | `src/discord/safety/safety_manager.py` | StepResult top-level keys | ~8 |
 | `src/domains/step_result.py` | Re-export shim (lint stable) | ~35 |
 
-**Total Modified Lines**: ~85  
-**Public Interface Changes**: None (internal logic only)  
+**Total Modified Lines**: ~85
+**Public Interface Changes**: None (internal logic only)
 **Breaking Changes**: None
 
 ---
@@ -322,24 +322,24 @@ tests/test_discord_safety.py::... PASSED [100%]
 
 ### Design Decisions and Justifications
 
-**Decision 1**: Make AI classifier optional  
-**Justification**: Test environments may lack ML dependencies; regex/similarity checks provide baseline coverage; fallback to non-toxic prevents false positives.  
+**Decision 1**: Make AI classifier optional
+**Justification**: Test environments may lack ML dependencies; regex/similarity checks provide baseline coverage; fallback to non-toxic prevents false positives.
 **Reference**: `src/discord/safety/content_filter.py:267-273`
 
-**Decision 2**: Elevate spam to medium risk  
-**Justification**: Default spam confidence ($0.7$) exceeds medium threshold ($0.6$); spam must not be `is_safe=True`.  
+**Decision 2**: Elevate spam to medium risk
+**Justification**: Default spam confidence ($0.7$) exceeds medium threshold ($0.6$); spam must not be `is_safe=True`.
 **Reference**: `src/discord/safety/content_filter.py:281`
 
-**Decision 3**: Defer background task creation until loop exists  
-**Justification**: Pytest fixtures instantiate objects synchronously; starting tasks requires running loop; lazy start prevents "no running event loop" errors.  
+**Decision 3**: Defer background task creation until loop exists
+**Justification**: Pytest fixtures instantiate objects synchronously; starting tasks requires running loop; lazy start prevents "no running event loop" errors.
 **Reference**: `src/discord/safety/rate_limiter.py:105-111`, `src/discord/safety/moderation_alerts.py:113-118`
 
-**Decision 4**: Use nanosecond-resolution alert IDs  
-**Justification**: Millisecond IDs collide when $>1$ alert/ms; nanosecond IDs eliminate overwrites in burst scenarios.  
+**Decision 4**: Use nanosecond-resolution alert IDs
+**Justification**: Millisecond IDs collide when $>1$ alert/ms; nanosecond IDs eliminate overwrites in burst scenarios.
 **Reference**: `src/discord/safety/moderation_alerts.py:138`
 
-**Decision 5**: Pass top-level keys to `StepResult.fail(...)`  
-**Justification**: Tests expect `result.data["key"]`; passing `data={...}` creates nested structure `result.data["data"]["key"]`.  
+**Decision 5**: Pass top-level keys to `StepResult.fail(...)`
+**Justification**: Tests expect `result.data["key"]`; passing `data={...}` creates nested structure `result.data["data"]["key"]`.
 **Reference**: `src/discord/safety/safety_manager.py:62-65`, `tests/test_discord_safety.py:313`
 
 ---
@@ -598,11 +598,11 @@ python run_safety_tests.py
 
 ### Test Results Archive
 
-**Observability**: $20/20$ passed in $0.06$s  
-**Safety**: $23/23$ passed in $0.17$s  
-**Guardrails**: $536$ files compliant, $111$ tools validated  
-**Compliance**: HTTP wrappers ✅, StepResult contracts ✅  
-**Format/Lint**: Clean ✅  
+**Observability**: $20/20$ passed in $0.06$s
+**Safety**: $23/23$ passed in $0.17$s
+**Guardrails**: $536$ files compliant, $111$ tools validated
+**Compliance**: HTTP wrappers ✅, StepResult contracts ✅
+**Format/Lint**: Clean ✅
 
 ### Affected Modules
 
@@ -639,11 +639,11 @@ This ASC-1 execution adhered to all foundational objectives:
 
 All deliverables are production-ready, functionally verified, and academically defensible as reproducible research artifacts.
 
-**Execution Status**: ✅ **COMPLETE**  
+**Execution Status**: ✅ **COMPLETE**
 **Overall Verdict**: ✅ **SUCCESS** ($43/43$ tests passed, zero compliance violations)
 
-**Agent Signature**: Beast Mode Autonomous Agent  
-**Timestamp**: 2025-11-03T19:34:07+00:00  
+**Agent Signature**: Beast Mode Autonomous Agent
+**Timestamp**: 2025-11-03T19:34:07+00:00
 **Protocol Compliance**: ASC-1 Fully Satisfied
 
 ---

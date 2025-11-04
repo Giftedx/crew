@@ -1,5 +1,12 @@
 # Neo4j Graph Database Integration
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Graph Store**: `src/domains/memory/unified_graph_store.py`
+- **Memory Provider**: Neo4j (1 of 4 memory systems)
+- **Feature Flag**: `ENABLE_NEO4J_GRAPH`
+- **Docker Image**: neo4j:5.14 with APOC plugins
+
 Neo4j provides powerful graph database capabilities for relationship analysis, entity networks, and fact-checking graphs.
 
 ## Overview
@@ -114,7 +121,7 @@ for neighbor_id in neighbors:
 result = store.cypher_query("""
     MATCH path = (start:Node)-[*1..3]->(connected:Node)
     WHERE start.name = $name
-    RETURN DISTINCT connected.name as name, 
+    RETURN DISTINCT connected.name as name,
            length(path) as distance
     ORDER BY distance
 """, name="John Doe")
@@ -123,7 +130,7 @@ result = store.cypher_query("""
 result = store.cypher_query("""
     MATCH (n:Node)-[r:RELATES]->(m:Node)
     WHERE n.tenant = $tenant
-    RETURN n.name as from, m.name as to, 
+    RETURN n.name as from, m.name as to,
            sum(r.weight) as total_weight
     ORDER BY total_weight DESC
     LIMIT 10

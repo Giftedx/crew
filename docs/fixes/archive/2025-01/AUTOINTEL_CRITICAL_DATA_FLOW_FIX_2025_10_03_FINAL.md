@@ -126,19 +126,19 @@ def _task_completion_callback(self, task_output: Any) -> None:
         # Extract JSON from output text
         import json, re
         raw = str(task_output.raw) if hasattr(task_output, 'raw') else str(task_output)
-        
+
         # Look for JSON blocks
         json_match = re.search(r'```json\s*({.*?})\s*```', raw, re.DOTALL)
         if not json_match:
             json_match = re.search(r'({\s*"[^"]+"\s*:.*?})', raw, re.DOTALL)
-        
+
         if json_match:
             output_data = json.loads(json_match.group(1))
-            
+
             # Update global context
             from .crewai_tool_wrappers import _GLOBAL_CREW_CONTEXT
             _GLOBAL_CREW_CONTEXT.update(output_data)
-            
+
             # Update all cached agent tools
             for agent in self.agent_coordinators.values():
                 self._populate_agent_tool_context(agent, output_data)
@@ -297,6 +297,6 @@ Task(
 
 ## Author
 
-**Fix Date:** 2025-10-03  
-**Analysis by:** AI Agent (Claude/Copilot)  
+**Fix Date:** 2025-10-03
+**Analysis by:** AI Agent (Claude/Copilot)
 **Validated:** Ready for testing

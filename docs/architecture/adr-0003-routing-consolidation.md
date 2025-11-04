@@ -1,8 +1,10 @@
 ---
 adr: 0003
 title: Consolidate Model Routing Stack
-status: Proposed
+status: Accepted
 date: 2025-10-18
+implementation_date: 2025-10-28
+implementation_status: Complete
 authors:
   - Ultimate Discord Intelligence Bot Architecture Group
 ---
@@ -22,10 +24,10 @@ The system has 15+ router implementations competing for the same purpose:
 
 ## Decision
 
-1. **Canonical Stack** – `services/openrouter_service/` (modular workflow) + `services/model_router.py` are the production routing layer.
-2. **Deprecate Legacy** – Archive `core/routing/*`, `ai/routing/*`, `services/rl_model_router.py`, `services/semantic_router_service.py`.
-3. **RL Integration** – Preserve reinforcement learning capabilities by integrating bandit logic into `openrouter_service/adaptive_routing.py` or as plugins.
-4. **Migration Path** – Services importing deprecated routers must switch to `services.openrouter_service.OpenRouterService`.
+1. **Canonical Stack** – `src/platform/llm/` provides the unified, provider-agnostic routing layer for completions and embeddings.
+2. **Deprecate Legacy** – Archive `src/core/routing/*`, `src/ai/routing/*`, `src/ultimate_discord_intelligence_bot/services/rl_model_router.py`, and `src/ultimate_discord_intelligence_bot/services/semantic_router_service.py`.
+3. **RL Integration** – Preserve reinforcement learning capabilities by integrating bandit logic under `src/platform/rl/` as first-class plugins to the LLM router.
+4. **Migration Path** – Callers of deprecated routers must migrate to the platform LLM router APIs (`platform.llm.*`).
 
 ## Consequences
 
@@ -33,3 +35,26 @@ The system has 15+ router implementations competing for the same purpose:
 - Easier to A/B test routing strategies
 - Deprecating 10+ modules requires careful dependency analysis
 - Existing RL experiments may need adapter layer
+
+## Implementation Status (Updated November 3, 2025)
+
+**Canonical Implementation**: ✅ Complete
+
+- `src/platform/llm/` - Unified LLM routing layer
+- Provider-agnostic router with 15+ LLM providers
+- `ROUTER_POLICY` configuration (quality_first, cost, latency)
+- Contextual bandits for adaptive routing
+
+**Supported Providers**: OpenAI, Anthropic, Google, OpenRouter, Groq, Together AI, Cohere, Mistral, Fireworks, Perplexity, X.AI, DeepSeek, Azure OpenAI, AWS Bedrock
+
+**RL Integration**: ✅ Complete
+
+- `src/platform/rl/` - Reinforcement learning for routing
+- LinUCB contextual bandits implementation
+- Reward shaping with quality/cost weights
+
+**Migration Status**: 🔄 In Progress
+
+- New code uses platform LLM layer
+- Deprecated routing modules still exist (`src/core/routing/`, `src/ai/routing/`)
+- Guard script blocks new code in deprecated directories

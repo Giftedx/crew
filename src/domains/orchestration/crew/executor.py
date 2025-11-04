@@ -67,10 +67,10 @@ class UnifiedCrewExecutor(CrewExecutor):
         tools_used: list[str] = []
         cache_hits = 0
         retry_count = 0
-        self.metrics.get_counter(
+        self.metrics.increment_counter(
             "crew_executions_total",
             labels={"tenant_id": config.tenant_id, "task_type": task.task_type, "priority": task.priority.value},
-        ).inc()
+        )
         try:
             validation_result = await self.validate_task(task)
             if not validation_result.success:
@@ -89,10 +89,11 @@ class UnifiedCrewExecutor(CrewExecutor):
                 try:
                     result = await self._execute_internal(task, config)
                     execution_time = time.time() - start_time
-                    self.metrics.get_histogram(
+                    self.metrics.observe_histogram(
                         "crew_execution_duration_seconds",
+                        execution_time,
                         labels={"tenant_id": config.tenant_id, "task_type": task.task_type, "outcome": "success"},
-                    ).observe(execution_time)
+                    )
                     if result.metadata:
                         agents_used = result.metadata.get("agents_used", [])
                         tools_used = result.metadata.get("tools_used", [])
@@ -138,10 +139,10 @@ class UnifiedCrewExecutor(CrewExecutor):
                 error=str(e),
                 error_type=type(e).__name__,
             )
-            self.metrics.get_counter(
+            self.metrics.increment_counter(
                 "crew_execution_errors_total",
                 labels={"tenant_id": config.tenant_id, "task_type": task.task_type, "error_type": type(e).__name__},
-            ).inc()
+            )
             return CrewExecutionResult(
                 step_result=StepResult.fail(
                     f"Crew execution failed: {e!s}",

@@ -21,7 +21,7 @@ PYTHONPATH=/home/crew/src python3 scripts/diagnose_autointel.py
 This uses **system python3** which:
 
 - ❌ Doesn't have `python-dotenv` installed
-- ❌ Can't load the `.env` file  
+- ❌ Can't load the `.env` file
 - ❌ Results in empty `os.getenv()` calls
 - ❌ Causes all API key validations to fail
 - ❌ Makes ALL tools fail due to missing credentials
@@ -52,7 +52,7 @@ Errors: ['Critical dependency missing: llm_api']
 ```
 ✅ Loaded environment from /home/crew/.env
 System Health: {'healthy': True, ...}
-Available capabilities: ['discord_posting', 'qdrant', 'vector_search', 'advanced_analytics', 
+Available capabilities: ['discord_posting', 'qdrant', 'vector_search', 'advanced_analytics',
                         'content_acquisition', 'transcription_processing', 'content_analysis']
 ✅ All 5 agents created successfully
 ✅ Context populated on 35+ tools
@@ -157,7 +157,7 @@ chmod +x /home/crew/run_autointel_test.sh
 The `.env` file contains all required credentials:
 
 - ✅ OPENAI_API_KEY
-- ✅ OPENROUTER_API_KEY  
+- ✅ OPENROUTER_API_KEY
 - ✅ DISCORD_BOT_TOKEN
 - ✅ DISCORD_WEBHOOK
 - ✅ DISCORD_PRIVATE_WEBHOOK
@@ -179,7 +179,7 @@ The `.env` file contains all required credentials:
 
 3. **Content Analysis** ✅
    - Text analysis
-   - Sentiment analysis  
+   - Sentiment analysis
    - Perspective synthesis
    - Logical fallacy detection
 
@@ -246,8 +246,8 @@ print('DISCORD_BOT_TOKEN:', 'SET' if os.getenv('DISCORD_BOT_TOKEN') else 'MISSIN
 
 ## Conclusion
 
-**NO BUGS FOUND IN CODE**  
-**SYSTEM IS FULLY OPERATIONAL**  
+**NO BUGS FOUND IN CODE**
+**SYSTEM IS FULLY OPERATIONAL**
 **ISSUE WAS PURELY ENVIRONMENTAL**
 
 The reported "critical failures" were caused by:
@@ -277,6 +277,6 @@ None - all code was already correct.
 
 ---
 
-**Status: RESOLVED ✅**  
-**Action Required: Use venv Python for all commands**  
+**Status: RESOLVED ✅**
+**Action Required: Use venv Python for all commands**
 **Code Quality: EXCELLENT - No changes needed**

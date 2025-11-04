@@ -62,10 +62,10 @@ cat << 'EOF'
   ./check-env.sh              Check configuration
   make doctor                 Diagnose issues
   docker compose logs         Check errors
-  
+
   # Kill port
   kill $(lsof -ti :8080)
-  
+
   # Fresh start
   docker compose down -v
   ./start-all-services.sh
@@ -88,13 +88,13 @@ cat << 'EOF'
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   # Local development
   make run-discord-enhanced
-  
+
   # Full production stack
   ./manage-services.sh → Option 8
-  
+
   # Check everything
   ./check-status.sh
-  
+
   # Stop everything
   ./stop-all-services.sh
 

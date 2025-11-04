@@ -5,7 +5,7 @@
 Your `/autointel` command is experiencing failures where:
 
 - Tools are failing to execute
-- Tools are being misused  
+- Tools are being misused
 - Tools are not receiving correct content data
 
 ## ✅ What I've Done

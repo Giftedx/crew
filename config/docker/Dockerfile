@@ -22,25 +22,18 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Set work directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.lock /app/requirements.lock
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.lock
+# Install Python dependencies using pyproject.toml (no external lockfile)
+# Copy only metadata and source to leverage Docker layer caching effectively
+COPY pyproject.toml README.md /app/
+COPY src /app/src
+# Install the package and its runtime dependencies
+RUN pip install --no-cache-dir .
 
 # Development stage
 FROM base as development
 
-# Install development dependencies
-RUN pip install --no-cache-dir \
-    pytest \
-    pytest-asyncio \
-    pytest-cov \
-    black \
-    isort \
-    flake8 \
-    mypy \
-    pre-commit
+# Install development dependencies (extras)
+RUN pip install --no-cache-dir .[dev]
 
 # Copy source code
 COPY . /app
@@ -58,13 +51,13 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Default command
-CMD ["python", "-m", "ultimate_discord_intelligence_bot.main"]
+# Default command: start API server with safe bootstrap
+CMD ["python", "-m", "scripts.run_api", "--host", "0.0.0.0", "--port", "8000"]
 
 # Production stage
 FROM base as production
 
-# Copy source code
+# Copy full source (including configs) for runtime
 COPY . /app
 
 # Create necessary directories
@@ -83,8 +76,8 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Default command
-CMD ["python", "-m", "ultimate_discord_intelligence_bot.main"]
+# Default command: start API server with safe bootstrap
+CMD ["python", "-m", "scripts.run_api", "--host", "0.0.0.0", "--port", "8000"]
 
 # Testing stage
 FROM development as testing
@@ -155,5 +148,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Default command
-CMD ["python", "-m", "ultimate_discord_intelligence_bot.main"]
+# Default command: start API server with safe bootstrap
+CMD ["python", "-m", "scripts.run_api", "--host", "0.0.0.0", "--port", "8000"]

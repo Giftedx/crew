@@ -1,8 +1,8 @@
 
 # Detailed Master Plan: Research-Grade Multi-Agent Plan for Creator Intelligence
 
-**Status:** In Progress  
-**Last Updated:** 2025-01-17  
+**Status:** In Progress
+**Last Updated:** 2025-01-17
 **Version:** 2.0
 
 ---
@@ -543,11 +543,11 @@ The system will be implemented by a crew of specialized agents with distinct rol
    # Clone repository
    git clone https://github.com/Giftedx/crew.git
    cd crew
-   
+
    # Create virtual environment
    python3 -m venv venv
    source venv/bin/activate
-   
+
    # Install dependencies
    pip install -r requirements.lock
    ```
@@ -557,7 +557,7 @@ The system will be implemented by a crew of specialized agents with distinct rol
    ```bash
    # Copy environment template
    cp .env.example .env
-   
+
    # Edit .env with required credentials
    # DISCORD_BOT_TOKEN, OPENAI_API_KEY, QDRANT_URL, etc.
    ```
@@ -567,7 +567,7 @@ The system will be implemented by a crew of specialized agents with distinct rol
    ```bash
    # Start Qdrant
    docker-compose up -d qdrant
-   
+
    # Initialize KG schema
    python -m scripts.init_kg_schema crew/schema.yaml
    ```
@@ -596,7 +596,7 @@ The system will be implemented by a crew of specialized agents with distinct rol
    ```bash
    # View recent logs
    docker-compose logs -f --tail=100 discord-bot
-   
+
    # Search for errors
    grep "ERROR" logs/crew.log | tail -20
    ```
@@ -682,6 +682,6 @@ The system will be considered successful when:
 
 ---
 
-**Document Version:** 2.0  
-**Last Updated:** 2025-01-17  
+**Document Version:** 2.0
+**Last Updated:** 2025-01-17
 **Status:** Living document; updated as implementation progresses

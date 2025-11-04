@@ -46,7 +46,7 @@ The evaluation harness is working correctly and has established strong baselines
 All tested tools failed to initialize due to module import issues:
 
 - **content_ingestion**: Module not found
-- **debate_analysis**: Module not found  
+- **debate_analysis**: Module not found
 - **fact_checking**: Module not found
 - **claim_verifier**: Module not found
 

@@ -1,7 +1,7 @@
 # /autointel Critical Fix - Parameter Filtering Resolved
 
-**Date**: 2025-10-02  
-**Status**: ✅ **FIXED**  
+**Date**: 2025-10-02
+**Status**: ✅ **FIXED**
 **File Modified**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`
 
 ## Executive Summary
@@ -57,7 +57,7 @@ if not has_var_kw:
 
 ### Code Change
 
-**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`  
+**File**: `src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py`
 **Lines**: 223-273
 
 **Key Change**:
@@ -218,7 +218,7 @@ Check tool outputs contain expected structure:
     ↓ CrewAI decides to call tool
 [CrewAI] tool.run(explicit_args)
     ↓ Wrapper._run(explicit_args)
-[Wrapper] 
+[Wrapper]
     1. ✅ Merge: {**_shared_context, **explicit_args}
     2. ✅ Track: context_keys = _shared_context.keys()
     3. ✅ Filter: keep if (k in allowed OR k in context_keys)  ← THE FIX

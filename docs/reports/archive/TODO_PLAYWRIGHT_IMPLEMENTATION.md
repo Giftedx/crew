@@ -20,7 +20,7 @@
 - [ ] Test text extraction from elements
 - [ ] Mock Playwright sync_api for unit tests
 
-### Integration Tests Required  
+### Integration Tests Required
 - [ ] End-to-end browser automation test with real page
 - [ ] Test navigation with various website types
 - [ ] Test screenshot capture and verification

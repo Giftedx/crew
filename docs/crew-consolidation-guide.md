@@ -11,7 +11,7 @@ The crew consolidation system allows you to switch between different crew implem
 The following feature flags control which crew implementation is used:
 
 - `ENABLE_LEGACY_CREW` - Enable legacy crew variants
-- `ENABLE_CREW_MODULAR` - Enable modular crew system  
+- `ENABLE_CREW_MODULAR` - Enable modular crew system
 - `ENABLE_CREW_REFACTORED` - Enable refactored crew system
 - `ENABLE_CREW_NEW` - Enable new crew system
 
@@ -189,12 +189,12 @@ def get_crew_with_flag(flag_name):
 def test_crew_consolidation():
     """Test crew consolidation with different flags."""
     from ultimate_discord_intelligence_bot.crew_consolidation import get_crew
-    
+
     # Test canonical crew (no flags)
     crew = get_crew()
     assert crew is not None
     assert hasattr(crew, 'crew')
-    
+
     # Test that crew can be instantiated
     crew_instance = crew.crew()
     assert crew_instance is not None
@@ -203,11 +203,11 @@ def test_feature_flag_priority():
     """Test that feature flags are respected in priority order."""
     import os
     from ultimate_discord_intelligence_bot.crew_consolidation import get_crew
-    
+
     # Test ENABLE_CREW_NEW has highest priority
     os.environ["ENABLE_CREW_NEW"] = "true"
     os.environ["ENABLE_CREW_MODULAR"] = "true"
-    
+
     try:
         crew = get_crew()
         # Should use new crew despite modular being enabled
@@ -223,14 +223,14 @@ def test_feature_flag_priority():
 def test_crew_execution():
     """Test that crew execution works with consolidation."""
     from ultimate_discord_intelligence_bot.crew_consolidation import get_crew
-    
+
     crew = get_crew()
     crew_instance = crew.crew()
-    
+
     # Test that crew can be executed
     inputs = {"url": "https://example.com"}
     result = crew_instance.kickoff(inputs=inputs)
-    
+
     assert result is not None
 ```
 
@@ -316,7 +316,7 @@ metrics.counter(
    ```bash
    # Check for conflicting flags
    env | grep ENABLE_CREW
-   
+
    # Disable all flags to use canonical
    unset ENABLE_CREW_NEW
    unset ENABLE_CREW_MODULAR
@@ -329,7 +329,7 @@ metrics.counter(
    ```python
    # Check if crew module exists
    ls src/ultimate_discord_intelligence_bot/crew*.py
-   
+
    # Verify import path
    python -c "from ultimate_discord_intelligence_bot.crew_new import UltimateDiscordIntelligenceBotCrew"
    ```

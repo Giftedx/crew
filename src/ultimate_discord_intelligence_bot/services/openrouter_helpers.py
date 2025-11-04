@@ -4,7 +4,7 @@ import contextlib
 import copy
 import logging
 from collections.abc import Mapping
-from platform.flags import enabled
+from platform.config.flags import enabled
 from platform.observability.metrics import get_metrics
 from typing import Any
 

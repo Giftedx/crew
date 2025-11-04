@@ -101,13 +101,13 @@ if ! command -v docker &> /dev/null; then
 else
         log_info "Starting Docker infrastructure..."
         cd ops/deployment/docker
-        
+
         # Copy .env file if it exists
         if [ -f ../../../.env ]; then
             cp ../../../.env .env
             log_info "Environment file copied"
         fi
-        
+
         if command -v docker-compose &> /dev/null; then
             COMPOSE_CMD="docker-compose"
         elif docker compose version &> /dev/null; then
@@ -116,15 +116,15 @@ else
             log_error "Neither 'docker-compose' nor 'docker compose' found"
             exit 1
         fi
-        
+
         log_info "Starting infrastructure services (Qdrant, Redis, PostgreSQL, MinIO)..."
-    
+
     # Start only infrastructure services (not application services)
     $COMPOSE_CMD --env-file .env up -d postgresql redis qdrant minio
-    
+
     log_info "Waiting for services to be healthy..."
     sleep 10
-    
+
     # Check service health
     for service in postgresql redis qdrant minio; do
         if $COMPOSE_CMD ps | grep -q "$service.*healthy\|$service.*Up"; then
@@ -133,7 +133,7 @@ else
             log_warning "$service may not be healthy yet"
         fi
     done
-    
+
     cd "$SCRIPT_DIR"
     log_success "Infrastructure services started"
 fi
@@ -221,23 +221,23 @@ case $OPTION in
         log_info "Starting all local services..."
         log_info "You'll need multiple terminal windows for this."
         log_info "Opening services in background with logging..."
-        
+
         # Create logs directory
         mkdir -p logs/services
-        
+
         # Start services in background
         nohup python -m ultimate_discord_intelligence_bot.setup_cli run discord > logs/services/discord-bot.log 2>&1 &
         echo $! > logs/services/discord-bot.pid
         log_success "Discord Bot started (PID: $(cat logs/services/discord-bot.pid))"
-        
+
         nohup python -m uvicorn server.app:app --host 0.0.0.0 --port 8080 > logs/services/api-server.log 2>&1 &
         echo $! > logs/services/api-server.pid
         log_success "API Server started (PID: $(cat logs/services/api-server.pid))"
-        
+
         nohup python -m ultimate_discord_intelligence_bot.setup_cli run crew > logs/services/crewai.log 2>&1 &
         echo $! > logs/services/crewai.pid
         log_success "CrewAI started (PID: $(cat logs/services/crewai.pid))"
-        
+
         log_info "Services started in background. Logs in logs/services/"
         log_info "To stop: kill \$(cat logs/services/*.pid)"
         log_info "Tailing logs..."
@@ -249,17 +249,17 @@ case $OPTION in
             log_error "Docker not available in WSL. Please enable Docker Desktop WSL integration."
             exit 1
         fi
-        
+
         # Copy .env to docker directory so docker-compose can use it
         if [ -f .env ]; then
             cp .env ops/deployment/docker/.env
             log_info "Environment file copied to docker directory"
         fi
-        
+
         cd ops/deployment/docker
         $COMPOSE_CMD --env-file .env up -d
         cd "$SCRIPT_DIR"
-        
+
         log_success "Full stack started with Docker Compose"
         log_info "Access points:"
         log_info "  - API Server: http://localhost:8080"
@@ -280,9 +280,9 @@ case $OPTION in
         echo "  4) CrewAI"
         echo "  5) MCP Server"
         read -p "Components: " COMPONENTS
-        
+
         mkdir -p logs/services
-        
+
         for comp in $COMPONENTS; do
             case $comp in
                 1)
@@ -318,7 +318,7 @@ case $OPTION in
                     ;;
             esac
         done
-        
+
         log_info "Selected services started. Logs in logs/services/"
         ;;
     9)

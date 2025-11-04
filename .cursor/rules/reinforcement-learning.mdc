@@ -244,14 +244,14 @@ for _ in range(100):
 def route_model(query: str, context: dict) -> str:
     """Route query to optimal model using RL"""
     features = feature_store.extract_features(query, context)
-    
+
     result = learn_helper(
         domain="model_routing",
         context=features,
         action_func=lambda arm: call_model(arm, query),
         reward_func=lambda result: calculate_model_reward(result)
     )
-    
+
     return result.arm
 ```
 
@@ -261,14 +261,14 @@ def route_model(query: str, context: dict) -> str:
 def plan_tool_execution(task: str, available_tools: list) -> list:
     """Plan tool execution sequence using RL"""
     features = extract_task_features(task)
-    
+
     result = learn_helper(
         domain="tool_planning",
         context=features,
         action_func=lambda plan: execute_tool_plan(plan, available_tools),
         reward_func=lambda result: calculate_plan_reward(result)
     )
-    
+
     return result.arm
 ```
 

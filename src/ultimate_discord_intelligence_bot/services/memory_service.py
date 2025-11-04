@@ -12,11 +12,10 @@ import logging
 import time
 from copy import deepcopy
 from dataclasses import dataclass, field
-from platform.flags import enabled
+from platform.config.flags import enabled
 from typing import Any
 
 import yaml
-
 from domains.memory.vector.qdrant import get_qdrant_client
 
 from ..observability.stepresult_observer import observe_step_result

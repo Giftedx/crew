@@ -1,5 +1,13 @@
 # Privacy and Policy Controls
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Privacy Module**: `src/core/privacy/` (PII detection and redaction)
+- **Policy Engine**: `config/policy.yaml` (source allow/block rules)
+- **Security Layer**: `src/platform/security/` (rate limiting, privacy controls)
+- **Feature Flags**: `enable_pii_detection`, `enable_pii_redaction`
+- **RL Override**: `strict` arm forces maximum privacy enforcement
+
 This project includes a privacy layer used by ingestion, retrieval, prompting
 and archiving services. The policy file defines allowed sources, forbidden
 media types, and redaction masks. Content is passed through the privacy filter
@@ -7,6 +15,7 @@ before storage so that email addresses, phone numbers, IP addresses and other
 personal data are masked.
 
 ## Modules
+
 - `policy_engine` loads `config/policy.yaml` and offers simple allow/block checks.
 - `pii_detector` finds email, phone, IP, credit-like numbers and more.
 - `redactor` replaces detected spans with masks.
@@ -45,6 +54,7 @@ The `discord.commands` module exposes a few helpers for operational tasks:
   the number of deleted provenance rows.
 
 ## Extending
+
 Rules can be adjusted by editing `config/policy.yaml` without changing code.
 Additional detectors or redaction strategies can be added under
 `core/privacy` as needed.

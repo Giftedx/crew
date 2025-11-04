@@ -54,7 +54,7 @@ alwaysApply: true
 Before any code submission, ALL of these must pass:
 
 ```bash
-make format     # Auto-fix style & imports  
+make format     # Auto-fix style & imports
 make lint       # Lint check (CI style)
 make type       # Static type check
 make test       # Run full test suite

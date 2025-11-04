@@ -1,7 +1,20 @@
 import asyncio
 import sys
+from contextlib import suppress
+
+
+# Early bootstrap to avoid stdlib/platform name clash
+try:
+    from ultimate_discord_intelligence_bot.core.bootstrap import ensure_platform_proxy  # type: ignore
+except Exception:
+    ensure_platform_proxy = None  # type: ignore
+
+if callable(ensure_platform_proxy):  # type: ignore
+    with suppress(Exception):
+        ensure_platform_proxy()  # type: ignore
 
 from domains.orchestration.crew import get_crew
+
 from ultimate_discord_intelligence_bot.enhanced_crew_integration import execute_crew_with_quality_monitoring
 
 

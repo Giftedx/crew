@@ -1,7 +1,7 @@
 # Unified Feedback Orchestrator - Comprehensive Analysis
 
-**File**: `src/ai/rl/unified_feedback_orchestrator.py`  
-**Total Lines**: 1,059  
+**File**: `src/ai/rl/unified_feedback_orchestrator.py`
+**Total Lines**: 1,059
 **Analysis Date**: October 31, 2025
 
 ---
@@ -509,7 +509,7 @@ From `rg` analysis:
 
 ### 8.1 🔴 **HIGH COMPLEXITY: Multi-Component Trajectory Feedback Extraction**
 
-**Method**: `submit_trajectory_feedback()` (Lines 407-535)  
+**Method**: `submit_trajectory_feedback()` (Lines 407-535)
 **Complexity**: Extracts feedback for **multiple component types** from a single trajectory.
 
 ```python
@@ -521,31 +521,31 @@ def submit_trajectory_feedback(
         # 1. Extract trajectory metadata
         trajectory_id = getattr(trajectory, "session_id", None) or ...
         overall_score = float(evaluation_dict.get("overall_score", ...))
-        
+
         # 2. Extract and submit MODEL feedback
         model_id = self._extract_model_from_trajectory(trajectory)
         if model_id:
             model_signal = FeedbackSignal(...)
             self.submit_feedback(model_signal)
-        
+
         # 3. Extract and submit TOOL feedback (per-tool)
         tool_performance = self._extract_tool_performance(trajectory, evaluation_dict)
         for tool_id, performance in tool_performance.items():
             tool_signal = FeedbackSignal(...)
             self.submit_feedback(tool_signal)
-        
+
         # 4. Extract and submit AGENT feedback
         agent_id = getattr(trajectory, "agent_id", None) or ...
         if agent_id:
             agent_signal = FeedbackSignal(...)
             self.submit_feedback(agent_signal)
-        
+
         # 5. Extract and submit PROMPT feedback (per-variant)
         prompt_variants = self._extract_prompt_variants(trajectory, evaluation_dict)
         for variant_id, variant_performance in prompt_variants.items():
             prompt_signal = FeedbackSignal(...)
             self.submit_feedback(prompt_signal)
-        
+
         return StepResult.ok(message="Trajectory feedback submitted")
 ```
 
@@ -682,10 +682,10 @@ def _calculate_component_health(
     self, component_type: ComponentType, component_id: str, *, detailed: bool = False
 ) -> float | dict[str, Any]:
     """Calculate health metrics for a component."""
-    
+
     rewards_deque = self._recent_rewards.get(component_type, {}).get(component_id, deque())
     rewards: list[float] = list(rewards_deque)
-    
+
     if not rewards:
         health_info = {"health_score": 1.0, "sample_size": 0, ...}
     else:
@@ -694,10 +694,10 @@ def _calculate_component_health(
         error_rate = sum(1 for r in rewards if r < 0.3) / len(rewards)
         health_score = max(0.0, min(1.0, avg_reward * (1.0 - error_rate) * (1.0 - min(std_reward, 0.5))))
         health_info = {...}
-    
+
     self._component_health_scores[component_type][component_id] = health_info["health_score"]
     self.component_health[component_id] = health_info
-    
+
     if detailed:
         return health_info
     return health_info["health_score"]
@@ -751,7 +751,7 @@ class ContentPipeline:
         self.unified_feedback_orchestrator = (
             unified_feedback_orchestrator or get_orchestrator(auto_create=False)
         )
-        
+
         # Wire dependencies
         if self.unified_feedback_orchestrator:
             self.unified_feedback_orchestrator._tool_router = self.tool_router
@@ -784,20 +784,20 @@ class ContentPipeline:
             if not result.success:
                 logger.error("Failed to start unified feedback orchestrator")
                 return result
-        
+
         # ... start other components
-        
+
     async def stop(self) -> StepResult:
         """Stop all subsystems"""
         # Stop orchestrator last to collect final feedback
         try:
             # ... stop other components first
-            
+
             if self.unified_feedback_orchestrator:
                 result = await self.unified_feedback_orchestrator.stop()
                 if not result.success:
                     logger.warning("Orchestrator stop had issues")
-                    
+
         except Exception as e:
             logger.error(f"Pipeline stop failed: {e}")
 ```
@@ -809,15 +809,15 @@ class ContentPipeline:
 ```python
 class ContentPipeline:
     async def finalize_pipeline(
-        self, 
-        context: PipelineContext, 
+        self,
+        context: PipelineContext,
         results: dict[str, Any]
     ) -> StepResult:
         """Finalize pipeline and submit feedback"""
-        
+
         # Build trajectory from pipeline execution
         trajectory = self._build_trajectory_from_context(context)
-        
+
         # Submit to unified feedback orchestrator
         if self.unified_feedback_orchestrator:
             evaluation_result = {
@@ -827,12 +827,12 @@ class ContentPipeline:
                 "latency_ms": context.metrics.get("total_duration_ms", 0),
                 # ... extract more metrics
             }
-            
+
             feedback_result = self.unified_feedback_orchestrator.submit_trajectory_feedback(
                 trajectory=trajectory,
                 evaluation_result=evaluation_result
             )
-            
+
             if feedback_result.success:
                 logger.info("Trajectory feedback submitted successfully")
 ```
@@ -992,22 +992,22 @@ async def _process_model_feedback(self) -> None:
     """Process queued model feedback"""
     queue = self.feedback_queues[ComponentType.MODEL]
     batch_size = min(10, len(queue))
-    
+
     router = self.model_router or get_model_router(auto_create=False)
     if router is None:
         router = get_model_router(auto_create=True)
     if router is None:
         logger.debug("No model router available for feedback processing")
         return
-    
+
     self.model_router = router
-    
+
     for _ in range(batch_size):
         if not queue:
             break
-        
+
         signal = queue.popleft()
-        
+
         try:
             # Update model router with feedback
             if hasattr(router, "bandit"):
@@ -1027,7 +1027,7 @@ def _extract_context_vector(self, context: dict[str, Any]) -> np.ndarray:
     """Extract feature vector from context dictionary"""
     # Simple heuristic feature extraction
     features = []
-    
+
     # Numeric features
     features.append(context.get("accuracy", 0.5))
     features.append(context.get("efficiency", 0.5))
@@ -1039,7 +1039,7 @@ def _extract_context_vector(self, context: dict[str, Any]) -> np.ndarray:
     features.append(context.get("trajectory_length", 5) / 20.0)  # Normalize
     features.append(context.get("token_count", 1000) / 10000.0)  # Normalize
     features.append(context.get("confidence", 0.5))
-    
+
     return np.array(features[:10], dtype=float)
 ```
 
@@ -1163,26 +1163,26 @@ def tasks(self) -> list[asyncio.Task]:
   - [ ] Call `orchestrator.start()` in pipeline startup
   - [ ] Call `orchestrator.stop()` in pipeline shutdown
   - [ ] Add orchestrator to pipeline's `get_metrics()` output
-  
+
 - [ ] **Phase 2: Dependency Wiring**
   - [ ] Wire model router reference
   - [ ] Wire tool router if enabled
   - [ ] Wire agent router if enabled
   - [ ] Wire RAG feedback if enabled
   - [ ] Wire prompt library if enabled
-  
+
 - [ ] **Phase 3: Feedback Integration**
   - [ ] Build trajectory from PipelineContext
   - [ ] Submit trajectory feedback in finalization
   - [ ] Test multi-component signal extraction
   - [ ] Verify feedback reaches correct queues
-  
+
 - [ ] **Phase 4: Monitoring & Validation**
   - [ ] Add Prometheus metrics for orchestrator
   - [ ] Expose health report in dashboard
   - [ ] Test auto-disable behavior
   - [ ] Validate RAG consolidation triggers
-  
+
 - [ ] **Phase 5: Testing & Cleanup**
   - [ ] Write integration tests for feedback flow
   - [ ] Mock background tasks for unit tests

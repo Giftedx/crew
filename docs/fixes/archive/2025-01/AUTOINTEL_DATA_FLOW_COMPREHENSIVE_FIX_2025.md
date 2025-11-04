@@ -17,7 +17,7 @@ Critical failures identified in the `/autointel` command where CrewAI agents and
 **Location**: `crewai_tool_wrappers.py` lines 370-379
 **Problem**: Placeholder detection only caught specific patterns like "Transcript data" but missed:
 
-- Single-word placeholders ("transcript", "text", "content")  
+- Single-word placeholders ("transcript", "text", "content")
 - Very short strings (< 20 chars)
 - Generic phrases ("the transcript", "provide the content")
 - Parameter names used as values
@@ -54,13 +54,13 @@ def _is_placeholder_or_empty(value: Any, param_name: str) -> bool:
         return True
     if not isinstance(value, str):
         return False
-    
+
     normalized = value.strip().lower()
-    
+
     # Empty after normalization
     if not normalized or len(normalized) < 10:
         return True
-    
+
     # Common placeholder patterns
     placeholder_patterns = [
         "transcript data", "please provide", "the transcript",
@@ -68,19 +68,19 @@ def _is_placeholder_or_empty(value: Any, param_name: str) -> bool:
         "[transcript]", "{{transcript}}", "n/a", "not available",
         "tbd", "todo",
     ]
-    
+
     if any(pattern in normalized for pattern in placeholder_patterns):
         return True
-    
+
     # Single-word "placeholders" that are just parameter names
-    if normalized in {"transcript", "text", "content", "data", 
+    if normalized in {"transcript", "text", "content", "data",
                       "input", "claim", "claims", "query", "question"}:
         return True
-    
+
     # Very generic/vague phrases
     if normalized.startswith(("the ", "a ", "an ")) and len(normalized.split()) < 5:
         return True
-    
+
     return False
 ```
 
@@ -107,14 +107,14 @@ for k in list(final_kwargs.keys()):
 **Changes**:
 
 ```python
-CRITICAL_DATA_PARAMS = {"text", "transcript", "content", "claim", 
+CRITICAL_DATA_PARAMS = {"text", "transcript", "content", "claim",
                         "claims", "enhanced_transcript", "url", "source_url"}
 
 merged_kwargs = {**self._shared_context}  # Start with shared context as base
 for k, v in final_kwargs.items():
     # Only override if value is meaningful AND not a placeholder
     is_meaningful = v not in (None, "", [], {}) and not _is_placeholder_or_empty(v, k)
-    
+
     if is_meaningful:
         merged_kwargs[k] = v
         print(f"✅ Using LLM-provided value for '{k}'...")
@@ -157,18 +157,18 @@ analysis_task = Task(
     description=dedent(
         f"""
         ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:
-        
+
         The complete transcript ({len(transcript)} characters) and ALL media metadata are
         ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.
-        
+
         ❌ WRONG - DO NOT DO THIS:
         - TextAnalysisTool(text="transcript content...")  # NEVER pass text parameter!
         - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!
-        
+
         ✅ CORRECT - DO THIS INSTEAD:
         - TextAnalysisTool()  # Tools auto-access data from shared context
         - FactCheckTool()  # No parameters needed - data is pre-loaded
-        
+
         When calling ANY tool, OMIT the text/transcript/content/claim parameters.
         """
     ).strip(),
@@ -227,7 +227,7 @@ analysis_task = Task(
 ## Rollout Plan
 
 1. ✅ Apply fixes to crewai_tool_wrappers.py
-2. ✅ Apply fixes to autonomous_orchestrator.py  
+2. ✅ Apply fixes to autonomous_orchestrator.py
 3. ⏳ Run test suite: `python test_autointel_data_flow_fix.py`
 4. ⏳ Test with real URL: `/autointel url:https://www.youtube.com/watch?v=xtFiJ8AVdW0 depth:standard`
 5. ⏳ Escalate to comprehensive depth if standard passes

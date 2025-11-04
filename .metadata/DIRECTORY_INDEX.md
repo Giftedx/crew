@@ -130,4 +130,3 @@ from features.rights_management import RightsReuseIntelligenceService
 ```
 
 Both work due to backward-compatible wrappers.
-

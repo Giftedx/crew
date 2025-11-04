@@ -341,13 +341,13 @@ jobs:
     steps:
       - name: Check CI status
         run: |
-          if [[ "${{ needs.quality-gates.result }}" == "success" && 
-                "${{ needs.unit-tests.result }}" == "success" && 
-                "${{ needs.integration-tests.result }}" == "success" && 
-                "${{ needs.e2e-tests.result }}" == "success" && 
-                "${{ needs.docs-tests.result }}" == "success" && 
-                "${{ needs.performance-tests.result }}" == "success" && 
-                "${{ needs.docker-build.result }}" == "success" && 
+          if [[ "${{ needs.quality-gates.result }}" == "success" &&
+                "${{ needs.unit-tests.result }}" == "success" &&
+                "${{ needs.integration-tests.result }}" == "success" &&
+                "${{ needs.e2e-tests.result }}" == "success" &&
+                "${{ needs.docs-tests.result }}" == "success" &&
+                "${{ needs.performance-tests.result }}" == "success" &&
+                "${{ needs.docker-build.result }}" == "success" &&
                 "${{ needs.security-scan.result }}" == "success" ]]; then
             echo "✅ All CI checks passed!"
             exit 0

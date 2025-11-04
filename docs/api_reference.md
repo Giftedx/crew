@@ -1,12 +1,241 @@
-# API Reference Guide
+# HTTP API Reference (FastAPI)
 
-This document provides comprehensive API documentation for the Ultimate Discord Intelligence Bot system, including service interfaces, tool APIs, and integration endpoints.
+This document catalogs the HTTP endpoints exposed by the service in `src/server/app.py`. Endpoints are registered via small route modules and many are gated by feature flags. Paths below are relative to the service base URL (default <http://localhost:8000>).
 
-## Core Services API
+- App factory: `src/server/app.py::create_app`
+- Route registrars: `src/server/routes/`
 
-### Memory Service
+## Authentication
 
-**Base Class:** `MemoryService`  
+- Most endpoints are open by default for local development.
+- A2A JSON-RPC can be protected by API key headers when enabled:
+  - Flags: `ENABLE_A2A_API_KEY=1` and `A2A_API_KEY="k1,k2,..."`
+  - Header: `X-API-Key: <key>`
+
+## Rate limiting
+
+- Optional fixed-window limiter (1s window) applied to all endpoints except `/health` and `/metrics`.
+- Flags: `ENABLE_RATE_LIMITING=1`, `RATE_LIMIT_BURST` (or `RATE_LIMIT_RPS`, default 10)
+- Implementation: `src/server/rate_limit.py`
+
+## Tenancy headers
+
+Some endpoints and tools respect tenant scoping via headers:
+
+- `X-Tenant-Id: <tenant>`
+- `X-Workspace-Id: <workspace>`
+
+Where not provided, defaults may be used (`tenant=default`, `workspace=main`).
+
+---
+
+## Core endpoints
+
+### GET /health
+
+Simple service health. Always available.
+
+### GET /activities/health
+
+Lightweight health for Discord Activities local dev. Always available.
+
+### GET /metrics  (conditional)
+
+Prometheus exposition endpoint.
+
+- Flag: `ENABLE_PROMETHEUS_ENDPOINT=1`
+- Optional path override: `prometheus_endpoint_path` in settings
+- Source: `src/server/routes/metrics.py`
+
+### GET /activities/echo  (conditional)
+
+Request echo for client debugging (method, path, selected headers, client).
+
+- Flag: `ENABLE_ACTIVITIES_ECHO=1` (or settings.enable_activities_echo)
+- Source: `src/server/routes/activities.py`
+
+---
+
+## A2A JSON-RPC Adapter  (conditional)
+
+Expose selected tools over JSON-RPC 2.0.
+
+- Flags: `ENABLE_A2A_API=1` to enable router; optional `ENABLE_A2A_API_KEY=1` + `A2A_API_KEY` for auth
+- Module: `src/server/a2a_router.py`, registrars in `src/server/routes/a2a.py`
+
+Endpoints:
+
+- POST `/a2a/jsonrpc` — JSON-RPC 2.0 (single or batch)
+- GET `/a2a/agent-card` — Agent card and capabilities
+- GET `/a2a/skills` — Enabled skills with input schemas
+
+JSON-RPC errors use standard codes: -32600 (Invalid Request), -32601 (Method not found), -32602 (Invalid params), -32603 (Internal error).
+
+See `docs/a2a_api.md` for method list, schemas, and examples.
+
+---
+
+## Content Pipeline API  (conditional)
+
+Run the unified ContentPipeline and manage async jobs.
+
+- Flags in settings: `enable_pipeline_run_api`, `enable_pipeline_job_queue`
+- Module: `src/server/routes/pipeline_api.py`
+
+Endpoints:
+
+- POST `/pipeline/run`
+  - Body: `{ "url": string, "quality": string? , "tenant_id"?: string, "workspace_id"?: string }`
+  - 200 on success (payload mirrors `StepResult.to_dict()`), 4xx/5xx on error.
+- POST `/pipeline/jobs`  (requires job queue flag)
+  - Body: `{ "url": string, "quality"?: string, "tenant_id"?: string, "workspace_id"?: string }`
+  - 201 with job object `{id,status,tenant_id,workspace_id,...}`
+- GET `/pipeline/jobs/{job_id}` — Retrieve job status/result
+- DELETE `/pipeline/jobs/{job_id}` — Cancel/delete job
+- GET `/pipeline/jobs` — List jobs (optional query: `tenant_id`, `workspace_id`, `status`)
+
+Notes:
+
+- Jobs execute in background with periodic cleanup.
+- Tenancy is stored on each job and returned in responses.
+
+---
+
+## Autonomous Intelligence API  (conditional)
+
+Programmatic trigger for the autonomous intelligence workflow (non-Discord).
+
+- Flag: `enable_autointel_api` in settings
+- Module: `src/server/routes/autointel.py`
+
+Endpoint:
+
+- POST `/autointel`
+  - Body: `{ "url": string, "depth"?: "standard|deep|comprehensive|experimental", "tenant_id"?: string, "workspace_id"?: string }`
+  - 200 on success with `{success: true, data: {...}}` or 500 on failure with error details.
+
+---
+
+## Performance Dashboard API
+
+Dashboard REST API and static UI.
+
+- Modules: `src/server/routers/performance_dashboard.py` (API), `src/server/routes/performance_dashboard.py` (mount)
+
+Endpoints (prefix `/api/performance`):
+
+- GET `/` — Full dashboard data
+- GET `/metrics/summary` — Overall metrics summary
+- GET `/content-types` — Breakdown by content type
+- GET `/checkpoints` — Early exit checkpoint analytics
+- GET `/quality-trends` — Quality metrics trend (query: `hours`)
+- POST `/record` — Record pipeline outcome (see function docstring for fields)
+- DELETE `/reset` — Reset metrics (for testing only)
+
+Static dashboard:
+
+- GET `/dashboard` — Serves HTML page from `src/server/static/performance_dashboard.html`
+
+---
+
+## Pilot API  (conditional)
+
+Experimental LangGraph pilot
+
+- Flag: `ENABLE_LANGGRAPH_PILOT_API=1` (or settings.enable_langgraph_pilot_api)
+- Endpoint: GET `/pilot/run` (optional query: `tenant`, `workspace`, `enable_segment`, `enable_embed`)
+- Module: `src/server/routes/pilot.py`
+
+---
+
+## Archive & Alerts Routers  (optional/external)
+
+---
+
+## Implementation Verification
+
+**Last Verified**: November 3, 2025
+**Server Factory**: `src/server/app.py::create_app` (122 lines)
+**Route Modules**: `src/server/routes/` (10+ registration functions)
+
+**Registered Routers** (verified from `create_app`):
+
+1. Archive routes (`register_archive_routes`)
+2. Alert routes (`register_alert_routes`)
+3. A2A router (`register_a2a_router`) - Feature-gated
+4. Pipeline routes (`register_pipeline_routes`) - Feature-gated
+5. Autonomous Intelligence routes (`register_autointel_routes`) - Feature-gated
+6. Performance dashboard (`register_performance_dashboard`)
+7. Metrics endpoint (`register_metrics_endpoint`) - Feature-gated
+8. Pilot route (`register_pilot_route`) - Feature-gated
+9. Health routes (`register_health_routes`)
+10. Activities echo (`register_activities_echo`) - Feature-gated
+
+**Middleware Stack** (in registration order):
+
+- CORS middleware (conditional)
+- Metrics middleware (conditional)
+- API cache middleware (conditional)
+- Rate limit middleware (conditional)
+
+**Lifespan Hooks**:
+
+- Tracing initialization (conditional)
+- Enhanced monitoring system startup/shutdown
+- Logfire setup (conditional)
+- Qdrant client pre-initialization (lazy)
+
+**Feature Flags** (primary):
+
+- `ENABLE_A2A_API` - A2A JSON-RPC adapter
+- `ENABLE_PROMETHEUS_ENDPOINT` - Metrics endpoint
+- `ENABLE_RATE_LIMITING` - Rate limiting middleware
+- `ENABLE_TRACING` - OpenTelemetry tracing
+- `ENABLE_CORS` - CORS middleware
+- `enable_pipeline_run_api` - Pipeline execution API
+- `enable_autointel_api` - Autonomous intelligence API
+- `enable_langgraph_pilot_api` - LangGraph pilot
+
+These routers are included only if their modules are importable.
+
+- Archive: `archive.discord_store.api.api_router` → mounted router (paths under project-specific prefix)
+- Alerts: `ops.alert_adapter.alert_router` → mounted router
+
+---
+
+## Error shape (non-JSON-RPC)
+
+Many endpoints return a structured `StepResult` in their payloads when calling internal tools.
+Typical HTTP error responses follow FastAPI conventions with appropriate 4xx/5xx status codes and `detail` messages.
+
+---
+
+## Examples
+
+cURL — pipeline run:
+
+```bash
+curl -sS -X POST http://localhost:8000/pipeline/run \
+    -H 'Content-Type: application/json' \
+    -d '{"url": "https://youtube.com/watch?v=...", "quality": "1080p", "tenant_id": "default", "workspace_id": "main"}'
+```
+
+cURL — A2A JSON-RPC (single):
+
+```bash
+curl -sS -X POST http://localhost:8000/a2a/jsonrpc \
+    -H 'Content-Type: application/json' \
+    -H 'X-API-Key: key1' \
+    -d '{"jsonrpc":"2.0","id":"1","method":"tools.text_analyze","params":{"text":"hello world"}}'
+```
+
+---
+
+Last Updated: November 3, 2025
+Status: Current — verified against `src/server/routes/*`
+Related: [A2A API](a2a_api.md), [MCP Server](mcp.md)
+
+**Base Class:** `MemoryService`
 **File:** `src/ultimate_discord_intelligence_bot/services/memory_service.py`
 
 #### Methods
@@ -86,7 +315,7 @@ Deletes content from memory.
 
 ### Prompt Engine Service
 
-**Base Class:** `PromptEngine`  
+**Base Class:** `PromptEngine`
 **File:** `src/ultimate_discord_intelligence_bot/services/prompt_engine.py`
 
 #### Methods
@@ -146,7 +375,7 @@ Validates prompt format and content.
 
 ### OpenRouter Service
 
-**Base Class:** `OpenRouterService`  
+**Base Class:** `OpenRouterService`
 **File:** `src/ultimate_discord_intelligence_bot/services/openrouter_service.py`
 
 #### Methods
@@ -217,7 +446,7 @@ Main execution method for all tools.
 
 #### Logical Fallacy Tool
 
-**Class:** `LogicalFallacyTool`  
+**Class:** `LogicalFallacyTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/logical_fallacy_tool.py`
 
 ##### `_run(text: str) -> StepResult`
@@ -248,7 +477,7 @@ if result.success:
 
 #### Claim Extractor Tool
 
-**Class:** `ClaimExtractorTool`  
+**Class:** `ClaimExtractorTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/claim_extractor_tool.py`
 
 ##### `_run(text: str) -> StepResult`
@@ -265,7 +494,7 @@ Extracts factual claims from text.
 
 #### Sentiment Tool
 
-**Class:** `SentimentTool`  
+**Class:** `SentimentTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/sentiment_tool.py`
 
 ##### `_run(text: str) -> StepResult`
@@ -284,7 +513,7 @@ Analyzes sentiment in text.
 
 #### Multi-Platform Download Tool
 
-**Class:** `MultiPlatformDownloadTool`  
+**Class:** `MultiPlatformDownloadTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/multi_platform_download_tool.py`
 
 ##### `_run(url: str, quality: str = "720p") -> StepResult`
@@ -314,7 +543,7 @@ if result.success:
 
 #### Audio Transcription Tool
 
-**Class:** `AudioTranscriptionTool`  
+**Class:** `AudioTranscriptionTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/audio_transcription_tool.py`
 
 ##### `_run(audio_file_path: str) -> StepResult`
@@ -333,7 +562,7 @@ Transcribes audio to text.
 
 #### Discord Post Tool
 
-**Class:** `DiscordPostTool`  
+**Class:** `DiscordPostTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/discord_post_tool.py`
 
 ##### `_run(webhook_url: str, content: str, embeds: list = None) -> StepResult`
@@ -370,7 +599,7 @@ if result.success:
 
 #### Vector Search Tool
 
-**Class:** `VectorSearchTool`  
+**Class:** `VectorSearchTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/vector_search_tool.py`
 
 ##### `_run(query: str, limit: int = 10) -> StepResult`
@@ -388,7 +617,7 @@ Performs semantic search using vector embeddings.
 
 #### Fact Check Tool
 
-**Class:** `FactCheckTool`  
+**Class:** `FactCheckTool`
 **File:** `src/ultimate_discord_intelligence_bot/tools/fact_check_tool.py`
 
 ##### `_run(claim: str, sources: list = None) -> StepResult`
@@ -408,7 +637,7 @@ Performs fact-checking on claims.
 
 ### Settings Management
 
-**Class:** `Settings`  
+**Class:** `Settings`
 **File:** `src/ultimate_discord_intelligence_bot/settings.py`
 
 #### Environment Variables
@@ -601,3 +830,5 @@ Health check endpoints for monitoring:
 3. **Use HTTPS** for all external communications
 4. **Implement proper authentication** and authorization
 5. **Monitor for suspicious activity** and implement alerts
+
+---

@@ -6,14 +6,14 @@ privacy:
     enabled: true
     strict_mode: false
     redaction_method: "mask"  # mask, remove, or hash
-  
+
   # Sensitive data patterns
   patterns:
     email: "\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b"
     phone: "\\b\\d{3}-\\d{3}-\\d{4}\\b"
     ssn: "\\b\\d{3}-\\d{2}-\\d{4}\\b"
     credit_card: "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}\\b"
-  
+
   # Data retention policies
   retention:
     default_days: 30
@@ -26,14 +26,14 @@ security:
     require_authentication: true
     session_timeout_minutes: 60
     max_login_attempts: 5
-  
+
   # API security
   api:
     rate_limiting:
       enabled: true
       requests_per_minute: 100
       burst_limit: 200
-    
+
     cors:
       enabled: true
       allowed_origins: ["http://localhost:3000", "https://discord.com"]
@@ -57,14 +57,14 @@ data_processing:
     store_intermediate_results: false
     anonymize_metadata: true
     aggregate_statistics_only: true
-  
+
   # Memory storage policies
   memory:
     vector_storage:
       enabled: true
       retention_days: 30
       max_vectors_per_tenant: 10000
-    
+
     graph_storage:
       enabled: true
       retention_days: 60
@@ -76,11 +76,11 @@ compliance:
     enabled: true
     data_subject_rights: true
     consent_management: true
-  
+
   ccpa:
     enabled: true
     opt_out_mechanism: true
-  
+
   coppa:
     enabled: false  # Set to true if processing children's data
 
@@ -91,7 +91,7 @@ monitoring:
     failed_login_threshold: 10
     suspicious_activity_threshold: 5
     alert_channels: ["email", "discord"]
-  
+
   # Privacy monitoring
   privacy:
     pii_detection_alerts: true

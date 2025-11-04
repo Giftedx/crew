@@ -7,6 +7,12 @@ last_moved: 2025-09-02
 
 ## Overview
 
+**Current Implementation** (verified November 3, 2025):
+
+- **LLM Routing**: Unified routing via platform/llm/openrouter_service
+- **Model Selection**: LinUCBDiagBandit policy (platform/rl/core/policies/linucb.py)
+- **Feature Flag**: Model-specific integration controlled via configuration
+
 This document captures integration considerations, limitations, and tuning guidance when using the Gemini model family within the system's unified LLM abstraction layer.
 
 ## Capabilities Snapshot

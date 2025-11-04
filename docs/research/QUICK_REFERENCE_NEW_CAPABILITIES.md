@@ -250,7 +250,7 @@ metrics.histogram("langgraph.execution.duration_s")
 ```python
 def test_mem0_preference_storage():
     memory = Mem0MemoryService()
-    
+
     # Store preference
     result = memory.remember_preference(
         "User likes concise output",
@@ -258,7 +258,7 @@ def test_mem0_preference_storage():
         workspace="test_workspace"
     )
     assert result.success
-    
+
     # Recall preference
     memories = memory.recall_preferences(
         "How should I format output?",
@@ -274,20 +274,20 @@ def test_mem0_preference_storage():
 ```python
 def test_agent_optimization():
     optimizer = AgentOptimizer()
-    
+
     # Create test examples
     examples = [
         {"input": "test1", "expected_output": "result1"},
         {"input": "test2", "expected_output": "result2"},
     ]
-    
+
     # Optimize
     optimized = optimizer.optimize_agent_prompt(
         agent_signature="input -> output",
         training_examples=examples,
         metric=test_metric
     )
-    
+
     # Verify improvement
     baseline_score = evaluate_baseline(examples)
     optimized_score = evaluate_optimized(optimized, examples)
@@ -409,6 +409,6 @@ print(f"Next nodes: {checkpoint.next}")
 
 ---
 
-**Last Updated:** October 17, 2025  
-**Version:** 1.0  
+**Last Updated:** October 17, 2025
+**Version:** 1.0
 **Maintained By:** Development Team

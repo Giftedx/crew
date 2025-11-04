@@ -219,7 +219,7 @@ profiler_config = ProfilerConfig(
 with trace_async("content_pipeline", SpanType.PIPELINE_STEP):
     with trace_async("download_content", SpanType.HTTP_REQUEST):
         content = await download_content(url)
-    
+
     with trace_async("analyze_content", SpanType.TOOL_EXECUTION):
         analysis = await analyze_content(content)
 ```
@@ -232,7 +232,7 @@ with trace_async("content_pipeline", SpanType.PIPELINE_STEP):
 def debate_analysis_tool(content: str) -> StepResult:
     # Record metrics
     record_counter("tools_executed", 1.0, {"tool": "debate_analysis"})
-    
+
     start_time = time.time()
     try:
         result = analyze_debate(content)

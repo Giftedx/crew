@@ -67,18 +67,18 @@ async def main():
     # Get and start the system
     ai_system = get_ai_integration()
     await ai_system.start()
-    
+
     # Route a tool request
     result = await ai_system.route_tool(
         task_description="Analyze sentiment",
         context={"complexity": 0.7},
         task_type="analysis"
     )
-    
+
     if result.success:
         tool_id = result.data.tool_id
         print(f"Selected: {tool_id}")
-    
+
     # Stop when done
     await ai_system.stop()
 
@@ -163,7 +163,7 @@ if result.success:
     selection = result.data
     # Use selected tool
     execute_tool(selection.tool_id)
-    
+
     # Submit feedback after execution
     ai_system.submit_tool_feedback(
         tool_id=selection.tool_id,
@@ -215,7 +215,7 @@ result = await ai_system.select_prompt(
 if result.success:
     template = result.data.template
     prompt = template.format(content="Your content here")
-    
+
     # After using prompt
     ai_system.submit_prompt_feedback(
         variant_id=result.data.variant_id,
@@ -408,7 +408,7 @@ context = {
     # Standard features
     "complexity": 0.7,
     "urgency": 0.8,
-    
+
     # Custom features
     "domain": "medical",           # Categorical
     "user_expertise": 0.9,         # Continuous

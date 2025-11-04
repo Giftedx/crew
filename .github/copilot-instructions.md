@@ -7,7 +7,7 @@ Big picture
 - Platform layer: `src/platform/` (HTTP, cache, LLM routing, observability). Domains: `src/domains/` (ingest, memory, analysis). App/API: `src/app/` (Discord bot), `src/server/` (FastAPI; Prometheus `/metrics` when `ENABLE_PROMETHEUS_ENDPOINT=1`).
 
 Guardrails (must-follow)
-- Always return `StepResult` (see `src/ultimate_discord_intelligence_bot/step_result.py`): use `.ok()/.skip()/.uncertain()/.fail()` and set `error_category` + `metadata` when relevant.
+- Always return `StepResult` (see `src/platform/core/step_result.py`; compatibility shim at `src/ultimate_discord_intelligence_bot/step_result.py`): use `.ok()/.skip()/.uncertain()/.fail()` and set `error_category` + `metadata` when relevant.
 - HTTP: never call `requests.*`. Use `src/platform/http/http_utils.py` (`resilient_get/resilient_post/retrying_*`; compat shim at `src/ultimate_discord_intelligence_bot/core/http_utils.py`). Enforced by `scripts/validate_http_wrappers_usage.py`.
 - Tools: subclass `src/ultimate_discord_intelligence_bot/tools/_base.py::BaseTool`, export in `__all__`, and register in `src/ultimate_discord_intelligence_bot/tools/__init__.py` MAPPING. Instrument metrics via `src/ultimate_discord_intelligence_bot/obs/metrics.py` (counter `tool_runs_total`).
 - Tenancy: use `with_tenant/current_tenant/mem_ns` from `src/ultimate_discord_intelligence_bot/tenancy/context.py` to scope storage, cache, metrics, and thread hops.

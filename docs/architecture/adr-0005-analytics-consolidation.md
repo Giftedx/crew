@@ -1,8 +1,10 @@
 ---
 adr: 0005
 title: Consolidate Performance Analytics
-status: Proposed
+status: Accepted
 date: 2025-10-18
+implementation_date: 2025-10-31
+implementation_status: Partially Complete
 authors:
   - Ultimate Discord Intelligence Bot Architecture Group
 ---
@@ -42,3 +44,30 @@ This creates:
 - Clearer separation: `obs/metrics` emits, `observability/*` queries and visualizes
 - Dashboards no longer tightly coupled to internal Step Result structures
 - Requires migrating `performance_dashboard` callers and cleaning up optimization scripts
+
+## Implementation Status (Updated November 3, 2025)
+
+**Canonical Implementation**: ✅ Complete
+
+- `src/ultimate_discord_intelligence_bot/obs/metrics.py` - Metrics registry
+- `src/ultimate_discord_intelligence_bot/obs/metric_specs.py` - Metric specifications
+- `src/platform/observability/langfuse_service.py` - Tracing service
+- Prometheus `/metrics` endpoint (enabled via `ENABLE_PROMETHEUS_ENDPOINT=1`)
+
+**Metrics System**: ✅ Operational
+
+- Required labels: `tool`, `operation`, `status`, `agent`, `tenant`
+- Common metrics: `tool_runs_total`, `agent_operations_total`, `agent_duration_seconds`, `pipeline_stage_duration_seconds`
+- Enforcement via `scripts/metrics_instrumentation_guard.py`
+
+**Migration Status**: 🔄 In Progress
+
+- Core metrics instrumentation complete
+- Legacy performance modules still exist
+- New tools use unified metrics API
+
+**Next Steps**:
+
+- Complete migration of performance dashboards
+- Remove deprecated analytics modules
+- Consolidate health score calculations

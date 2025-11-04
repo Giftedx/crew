@@ -1,5 +1,13 @@
 # Quality Gates - Ultimate Discord Intelligence Bot
 
+**Current Quality Standards** (verified November 3, 2025):
+
+- **StepResult Compliance**: All 111 tools must return `StepResult` objects
+- **Type Safety**: MyPy baseline tracking (zero increase tolerance)
+- **Test Coverage**: ≥80% for critical modules (tools, services, pipeline)
+- **Documentation Sync**: Config docs match implementation
+- **Enforcement Scripts**: `scripts/validate_*.py` (HTTP, tools, metrics, docs)
+
 ## Overview
 
 This document defines the mandatory quality gates that must pass before any code submission. These gates ensure code quality, type safety, test coverage, and documentation consistency.
