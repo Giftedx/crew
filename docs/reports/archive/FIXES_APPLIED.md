@@ -56,7 +56,7 @@ Docker Compose is pulling and starting these services:
 ### Infrastructure (Ready for Production)
 
 - ✅ **PostgreSQL** - Metadata database
-- ✅ **Redis** - Caching layer  
+- ✅ **Redis** - Caching layer
 - ✅ **Qdrant** - Vector database for embeddings
 - ✅ **MinIO** - Object storage (S3-compatible)
 

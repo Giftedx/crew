@@ -201,7 +201,7 @@ All unified systems are controlled by feature flags for safe rollout:
 # Knowledge Layer
 ENABLE_UNIFIED_KNOWLEDGE = True
 
-# Router System  
+# Router System
 ENABLE_UNIFIED_ROUTER = True
 
 # Cache System

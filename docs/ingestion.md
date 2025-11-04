@@ -1,5 +1,13 @@
 # Ingestion Guide
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Pipeline**: `src/domains/ingestion/pipeline/` (orchestrator and components)
+- **Providers**: `src/domains/ingestion/providers/` (YouTube, TikTok, Twitch, Discord, Reddit, Twitter, Instagram)
+- **Ingestion Tools**: 13 tools in Ingestion category (12% of 111 total tools)
+- **Quality Parameter**: Supports quality optimization for video/audio
+- **Error Handling**: Full `StepResult` pattern with fallback strategies
+
 This document describes the comprehensive ingestion pipeline for multi-platform content.
 It supports fetching metadata and transcripts from YouTube, Twitch, and TikTok,
 transcribing audio when transcripts are missing, content analysis and segmentation,
@@ -19,6 +27,7 @@ python -m ingest <url> --tenant <tenant> --workspace <workspace>
 ```
 
 Examples:
+
 ```bash
 # YouTube video
 python -m ingest https://youtu.be/dummy --tenant default --workspace main
@@ -33,24 +42,28 @@ python -m ingest https://vm.tiktok.com/dummy --tenant default --workspace main
 ## Pipeline Components
 
 ### Content Download
+
 - Platform-specific downloaders using `yt-dlp` base classes
 - Quality parameter support for video/audio optimization
 - Metadata extraction (title, description, duration, etc.)
 - Error handling with `StepResult` dataclass
 
 ### Analysis Pipeline
+
 - **Transcript segmentation** - Chunks content using `analysis.segmenter`
 - **Topic extraction** - Identifies key topics with `analysis.topics`
 - **Claim extraction** - Extracts factual claims for verification
 - **Sentiment analysis** - Analyzes emotional tone
 
 ### Vector Storage
+
 - Tenant-aware namespacing in Qdrant
 - Hybrid storage with SQLite metadata
 - Retention policy enforcement
 - Embedding generation and indexing
 
 ### Error Handling and Fallbacks
+
 - Transcript fetch failures: the pipeline falls back to Whisper transcription. In tests, this path is stubbed to avoid heavy dependencies.
 - Missing creator or episode id: creator defaults to `"unknown"`; episode id falls back to a stable hash of the URL and is used consistently in payloads and provenance.
 - `published_at` normalization: accepts strings, datetimes, or `None`. Naive datetimes are treated as UTC and emitted as ISO8601.
@@ -67,6 +80,7 @@ Use in canary/staging to surface upstream provider regressions early.
 ## Operations Runbook
 
 ### Strict‑Mode Triage
+
 - Symptom: Ingest fails with "ingest strict mode violation".
 - Immediate steps:
   1. Check provider health and recent API changes.
@@ -76,6 +90,7 @@ Use in canary/staging to surface upstream provider regressions early.
   4. File an issue to track normalisation fixes or provider adapter updates.
 
 ### Fallback Spike Triage
+
 - Symptom: Sudden increase in transcript/id fallbacks.
 - Immediate steps:
   1. Open Grafana: Ingest Fallbacks dashboard; filter by source.
@@ -110,6 +125,7 @@ processing:
 ```
 
 Environment variables for external services are required:
+
 - `OPENAI_API_KEY` or `OPENROUTER_API_KEY` - For transcription and processing
 - `QDRANT_URL` - Vector database connection
 - Platform-specific API keys when needed
@@ -117,6 +133,7 @@ Environment variables for external services are required:
 ## Advanced Features
 
 ### Scheduled Ingestion
+
 Configure recurring ingestion via the scheduler:
 
 ```python
@@ -132,12 +149,14 @@ sched.add_watch(
 ```
 
 ### Quality Control
+
 - Content verification before storage
 - Duplicate detection and deduplication
 - Policy compliance checking
 - Error recovery and retries
 
 ### Performance Optimization
+
 - Parallel processing for multiple URLs
 - Caching of processed content
 - Incremental updates for channels/playlists
@@ -153,19 +172,20 @@ reducing end-to-end latency particularly for sources with non-trivial caption
 latency.
 
 Behavior:
-* Default: flag unset -> sequential (baseline, deterministic ordering)
-* Enabled: concurrent; on unexpected executor errors the code transparently
+- Default: flag unset -> sequential (baseline, deterministic ordering)
+- Enabled: concurrent; on unexpected executor errors the code transparently
   falls back to the sequential path
-* Transcript errors are isolated: a transcript fetch failure downgrades to
+- Transcript errors are isolated: a transcript fetch failure downgrades to
   `None` and the pipeline triggers the Whisper fallback transcription path.
 
 Operational Guidance:
-* Enable incrementally in staging before production wide rollout
-* Pair with observability (tracing + a latency histogram) for before/after
+- Enable incrementally in staging before production wide rollout
+- Pair with observability (tracing + a latency histogram) for before/after
   comparisons (future enhancement)
-* Safe to disable at any time; only affects the metadata + transcript phase
+- Safe to disable at any time; only affects the metadata + transcript phase
 
 Example (bash):
+
 ```bash
 export ENABLE_INGEST_CONCURRENT=1
 python -m ingest https://youtu.be/dummy --tenant default --workspace main
@@ -180,7 +200,7 @@ ingest https://youtu.be/dummy --tenant default --workspace main
 ```
 
 Notes:
-* Your virtual environment's `bin` directory must be on `PATH` (activate it with `source venv/bin/activate` or use the absolute path: `./venv/bin/ingest`).
-* The console script is functionally equivalent to `python -m ingest` and simply dispatches to `ingest.__main__:main`.
-* Documentation examples keep `python -m ingest` because it works even if the console script is not on `PATH`.
-* After modifying `pyproject.toml` you must reinstall (`pip install -e .`) for entry point changes to take effect.
+- Your virtual environment's `bin` directory must be on `PATH` (activate it with `source venv/bin/activate` or use the absolute path: `./venv/bin/ingest`).
+- The console script is functionally equivalent to `python -m ingest` and simply dispatches to `ingest.__main__:main`.
+- Documentation examples keep `python -m ingest` because it works even if the console script is not on `PATH`.
+- After modifying `pyproject.toml` you must reinstall (`pip install -e .`) for entry point changes to take effect.

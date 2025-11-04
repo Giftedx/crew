@@ -11,13 +11,13 @@ transparency_requirements:
       - "Confidence level"
       - "Alternative approaches"
       - "Appeal process"
-    
+
     user_facing:
       - "Clear, jargon-free language"
       - "Specific examples when helpful"
       - "Actionable next steps"
       - "Contact information for questions"
-    
+
     technical_details:
       - "Rule violations detected"
       - "Confidence scores"
@@ -33,7 +33,7 @@ transparency_requirements:
       - "System responses"
       - "Human reviews"
       - "Appeals and outcomes"
-    
+
     data_protection:
       - "Anonymize personal information"
       - "Encrypt sensitive data"
@@ -48,13 +48,13 @@ transparency_requirements:
       - "Appeal outcomes"
       - "System performance"
       - "User feedback"
-    
+
     public_reports:
       - "High-level statistics"
       - "Policy updates"
       - "System improvements"
       - "Transparency commitments"
-    
+
     internal_reports:
       - "Detailed metrics"
       - "Trend analysis"
@@ -67,13 +67,13 @@ transparency_requirements:
       - "Bias detected"
       - "Appeal status"
       - "System updates"
-    
+
     notification_preferences:
       - "Email notifications"
       - "In-app notifications"
       - "SMS alerts (critical only)"
       - "Digest emails"
-    
+
     notification_content:
       - "Clear explanation of decision"
       - "Relevant policy information"
@@ -86,13 +86,13 @@ transparency_requirements:
       - "What rules were applied"
       - "How to appeal if needed"
       - "Alternative approaches"
-    
+
     bias_explanations:
       - "What bias was detected"
       - "How it was measured"
       - "Why it matters"
       - "How to improve"
-    
+
     policy_explanations:
       - "Relevant policies"
       - "Why policies exist"
@@ -105,13 +105,13 @@ transparency_requirements:
       - "Multiple language support"
       - "Accessibility compliance"
       - "Screen reader compatibility"
-    
+
     format_options:
       - "Text explanations"
       - "Visual diagrams"
       - "Audio explanations"
       - "Video tutorials"
-    
+
     user_support:
       - "Help documentation"
       - "FAQ sections"
@@ -124,13 +124,13 @@ transparency_requirements:
       - "Anonymize when possible"
       - "Secure data storage"
       - "User consent for processing"
-    
+
     data_retention:
       - "Retention periods defined"
       - "Automatic deletion"
       - "User data export"
       - "Right to be forgotten"
-    
+
     data_sharing:
       - "No third-party sharing"
       - "Aggregated data only"
@@ -143,13 +143,13 @@ transparency_requirements:
       - "CCPA compliance"
       - "Accessibility standards"
       - "Industry best practices"
-    
+
     audit_requirements:
       - "Regular compliance audits"
       - "Third-party assessments"
       - "Documentation requirements"
       - "Certification maintenance"
-    
+
     monitoring:
       - "Continuous monitoring"
       - "Automated compliance checks"
@@ -162,13 +162,13 @@ transparency_requirements:
       - "Clear appeal procedures"
       - "Timely response requirements"
       - "Human review availability"
-    
+
     data_rights:
       - "Right to access data"
       - "Right to correct data"
       - "Right to delete data"
       - "Right to data portability"
-    
+
     transparency_rights:
       - "Right to explanation"
       - "Right to information"
@@ -181,13 +181,13 @@ transparency_requirements:
       - "Bias detection methods"
       - "Decision-making processes"
       - "Limitations and uncertainties"
-    
+
     performance_metrics:
       - "Accuracy rates"
       - "Bias detection rates"
       - "Response times"
       - "User satisfaction"
-    
+
     improvement_process:
       - "How systems are improved"
       - "User feedback integration"
@@ -200,13 +200,13 @@ transparency_requirements:
       - "Proactive notifications"
       - "Educational content"
       - "Support resources"
-    
+
     stakeholder_communication:
       - "Regular updates to stakeholders"
       - "Transparency reports"
       - "Policy consultations"
       - "Feedback mechanisms"
-    
+
     public_communication:
       - "Public transparency reports"
       - "Policy announcements"
@@ -219,13 +219,13 @@ transparency_requirements:
       - "Completeness"
       - "User-friendliness"
       - "Cultural sensitivity"
-    
+
     review_process:
       - "Regular review of explanations"
       - "User feedback integration"
       - "Continuous improvement"
       - "Quality metrics"
-    
+
     training:
       - "Staff training on transparency"
       - "User education"
@@ -238,13 +238,13 @@ transparency_requirements:
       - "User understanding rates"
       - "Appeal success rates"
       - "User satisfaction"
-    
+
     performance_tracking:
       - "Decision accuracy"
       - "Response times"
       - "System reliability"
       - "User experience"
-    
+
     continuous_improvement:
       - "Regular system updates"
       - "User feedback integration"

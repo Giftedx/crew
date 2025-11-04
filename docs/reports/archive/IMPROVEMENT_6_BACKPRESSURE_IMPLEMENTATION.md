@@ -19,7 +19,7 @@ When multiple circuit breakers open simultaneously or system load exceeds thresh
 
 #### 1. Backpressure Coordinator (`src/core/resilience/backpressure_coordinator.py`)
 
-**Lines:** 458 lines  
+**Lines:** 458 lines
 **Purpose:** Centralized health aggregation and backpressure detection
 
 **Key Features:**
@@ -80,7 +80,7 @@ class BackpressureMetrics:
 
 #### 2. Pipeline Integration (`src/ultimate_discord_intelligence_bot/pipeline_components/orchestrator.py`)
 
-**Modified:** `_run_pipeline()` method  
+**Modified:** `_run_pipeline()` method
 **Lines Added:** ~32 lines at start of method
 
 **Implementation:**
@@ -99,7 +99,7 @@ async def _run_pipeline(self, ctx: _PipelineContext, url: str, quality: str) -> 
         )
         ctx.span.set_attribute("backpressure_rejected", True)
         ctx.span.set_attribute("backpressure_level", level.name)
-        
+
         # Return early with backpressure error
         return PipelineRunResult(
             success=False,
@@ -127,7 +127,7 @@ async def _run_pipeline(self, ctx: _PipelineContext, url: str, quality: str) -> 
 
 #### 3. FastAPI Middleware (`src/server/backpressure_middleware.py`)
 
-**Lines:** 136 lines  
+**Lines:** 136 lines
 **Purpose:** HTTP-level request rejection before routing
 
 **Key Features:**
@@ -193,7 +193,7 @@ class BackpressureMiddleware(BaseHTTPMiddleware):
 
 #### 4. FastAPI App Integration (`src/server/app.py`)
 
-**Modified:** `create_app()` function  
+**Modified:** `create_app()` function
 **Changes:**
 
 - Added import: `from server.backpressure_middleware import add_backpressure_middleware`
@@ -211,7 +211,7 @@ class BackpressureMiddleware(BaseHTTPMiddleware):
 
 #### 5. Circuit Breaker Integration (`src/core/circuit_breaker_canonical.py`)
 
-**Modified:** State transition methods  
+**Modified:** State transition methods
 **Lines Added:** ~40 lines in `_report_health_to_coordinator()` method
 
 **Implementation:**
@@ -221,7 +221,7 @@ def _open_circuit(self):
     """Transition circuit to open state."""
     self.state = CircuitState.OPEN
     # ... existing logic ...
-    
+
     # Report health status to backpressure coordinator
     self._report_health_to_coordinator()
 
@@ -229,7 +229,7 @@ def _close_circuit(self):
     """Transition circuit to closed state."""
     self.state = CircuitState.CLOSED
     # ... existing logic ...
-    
+
     # Report health status to backpressure coordinator
     self._report_health_to_coordinator()
 
@@ -237,7 +237,7 @@ def _half_open_circuit(self):
     """Transition circuit to half-open state."""
     self.state = CircuitState.HALF_OPEN
     # ... existing logic ...
-    
+
     # Report health status to backpressure coordinator
     self._report_health_to_coordinator()
 

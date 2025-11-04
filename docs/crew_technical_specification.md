@@ -20,7 +20,7 @@ system_architecture:
       - Interactive documentation viewer
       - Search interface
       - Analytics visualization
-    
+
   backend:
     technology: Python/FastAPI or Node.js/Express
     services:
@@ -28,13 +28,13 @@ system_architecture:
       - Automation Engine
       - Search Service
       - Analytics Processor
-    
+
   data_layer:
     primary_storage: PostgreSQL/MongoDB
     search_engine: Elasticsearch
     cache: Redis
     file_storage: S3-compatible
-    
+
   ai_services:
     nlp_engine: OpenAI GPT-4/Claude
     classification: scikit-learn
@@ -101,35 +101,35 @@ class DocumentationAutomation:
     """
     Core automation engine for documentation management
     """
-    
+
     def __init__(self):
         self.git_hooks = GitHooks()
         self.parser = DocumentParser()
         self.generator = DocGenerator()
         self.validator = DocValidator()
-    
+
     def process_commit(self, commit_hash: str):
         """
         Process git commit and update documentation
         """
         changes = self.git_hooks.get_changes(commit_hash)
-        
+
         for file in changes:
             if self.should_document(file):
                 doc = self.generator.create_documentation(file)
                 validated = self.validator.validate(doc)
-                
+
                 if validated:
                     self.save_documentation(doc)
                     self.trigger_notifications(doc)
-    
+
     def should_document(self, file_path: str) -> bool:
         """
         Determine if file requires documentation
         """
         extensions = ['.py', '.js', '.ts', '.md', '.yaml', '.json']
         return any(file_path.endswith(ext) for ext in extensions)
-    
+
     def save_documentation(self, doc: Documentation):
         """
         Save documentation to appropriate location
@@ -147,28 +147,28 @@ class AIDocumentationAssistant:
     """
     AI-powered documentation enhancement system
     """
-    
+
     def __init__(self, api_key: str):
         self.llm = OpenAI(api_key=api_key)
         self.embeddings = SentenceTransformer('all-MiniLM-L6-v2')
         self.vector_store = Pinecone(index='documentation')
-    
+
     async def enhance_documentation(self, doc: str) -> str:
         """
         Enhance documentation with AI-generated insights
         """
         # Generate embeddings
         embedding = self.embeddings.encode(doc)
-        
+
         # Find similar documents
         similar = self.vector_store.query(embedding, k=5)
-        
+
         # Generate enhancements
         prompt = self.build_enhancement_prompt(doc, similar)
         enhanced = await self.llm.complete(prompt)
-        
+
         return self.merge_enhancements(doc, enhanced)
-    
+
     async def auto_categorize(self, doc: str) -> Dict[str, Any]:
         """
         Automatically categorize documentation
@@ -177,14 +177,14 @@ class AIDocumentationAssistant:
             doc,
             categories=self.get_categories()
         )
-        
+
         return {
             "primary_category": categories[0],
             "secondary_categories": categories[1:3],
             "tags": self.extract_tags(doc),
             "confidence": self.calculate_confidence(categories)
         }
-    
+
     def semantic_search(self, query: str, limit: int = 10) -> List[Document]:
         """
         Perform semantic search across documentation
@@ -195,7 +195,7 @@ class AIDocumentationAssistant:
             limit=limit,
             include_metadata=True
         )
-        
+
         return self.rank_results(results, query)
 ```
 
@@ -216,57 +216,57 @@ const Dashboard: React.FC<DashboardProps> = ({ userId, projectId }) => {
     const [metrics, setMetrics] = useState<Metrics | null>(null);
     const [documents, setDocuments] = useState<Document[]>([]);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-    
+
     useEffect(() => {
         // Fetch initial data
         fetchMetrics();
         fetchRecentDocuments();
         setupWebSocket();
     }, [projectId]);
-    
+
     const fetchMetrics = async () => {
         const response = await fetch(`/api/analytics/metrics/${projectId}`);
         const data = await response.json();
         setMetrics(data);
     };
-    
+
     const setupWebSocket = () => {
         const ws = new WebSocket('ws://localhost:3005/realtime');
-        
+
         ws.onmessage = (event) => {
             const update = JSON.parse(event.data);
             handleRealtimeUpdate(update);
         };
     };
-    
+
     const handleSearch = async (query: string) => {
         const response = await fetch('/api/search', {
             method: 'POST',
             body: JSON.stringify({ query, projectId }),
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         const results = await response.json();
         setSearchResults(results);
     };
-    
+
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
                 <h1>Crew Documentation Dashboard</h1>
                 <SearchBar onSearch={handleSearch} />
             </header>
-            
+
             <div className="dashboard-grid">
                 <MetricsPanel metrics={metrics} />
                 <DocumentViewer documents={documents} />
-                
+
                 <div className="charts-section">
                     <LineChart data={metrics?.timeline} />
                     <BarChart data={metrics?.categories} />
                     <PieChart data={metrics?.distribution} />
                 </div>
-                
+
                 <div className="search-results">
                     {searchResults.map(result => (
                         <SearchResultCard key={result.id} result={result} />
@@ -297,44 +297,44 @@ on:
 jobs:
   documentation:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v3
-    
+
     - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-    
+
     - name: Install dependencies
       run: |
         pip install -r requirements.txt
         npm install -g @documentator/cli
-    
+
     - name: Generate Documentation
       run: |
         python scripts/generate_docs.py
         documentator build --source ./src --output ./docs
-    
+
     - name: Validate Documentation
       run: |
         python scripts/validate_docs.py
         documentator lint ./docs
-    
+
     - name: Run Tests
       run: |
         pytest tests/documentation/
         npm test
-    
+
     - name: Update Search Index
       run: |
         python scripts/update_search_index.py
-    
+
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
       run: |
         documentator deploy --env production
-    
+
     - name: Notify Team
       uses: 8398a7/action-slack@v3
       with:
@@ -457,7 +457,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Document'
-    
+
     post:
       summary: Create new document
       requestBody:
@@ -473,7 +473,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
-  
+
   /api/documents/{id}:
     get:
       summary: Get document by ID
@@ -490,7 +490,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
-    
+
     put:
       summary: Update document
       parameters:
@@ -508,7 +508,7 @@ paths:
       responses:
         200:
           description: Document updated
-    
+
     delete:
       summary: Delete document
       parameters:
@@ -520,7 +520,7 @@ paths:
       responses:
         204:
           description: Document deleted
-  
+
   /api/search:
     post:
       summary: Search documents
@@ -586,44 +586,44 @@ class SecurityManager:
     """
     Comprehensive security management for documentation system
     """
-    
+
     def __init__(self):
         self.encryptor = AESEncryption()
         self.scanner = SecurityScanner()
         self.auth = AuthenticationService()
         self.rbac = RoleBasedAccessControl()
-    
+
     def secure_document(self, doc: Document) -> SecureDocument:
         """
         Apply security measures to document
         """
         # Scan for sensitive information
         sensitive_data = self.scanner.scan_sensitive_data(doc.content)
-        
+
         if sensitive_data:
             doc = self.redact_sensitive_data(doc, sensitive_data)
-        
+
         # Encrypt if required
         if doc.classification == 'confidential':
             doc.content = self.encryptor.encrypt(doc.content)
-        
+
         # Apply access controls
         doc.permissions = self.rbac.generate_permissions(doc)
-        
+
         # Add audit trail
         doc.audit_trail = self.create_audit_entry(doc)
-        
+
         return SecureDocument(doc)
-    
+
     def validate_access(self, user: User, document: Document) -> bool:
         """
         Validate user access to document
         """
         user_roles = self.auth.get_user_roles(user)
         required_permissions = document.permissions
-        
+
         return self.rbac.check_permissions(user_roles, required_permissions)
-    
+
     def audit_access(self, user: User, document: Document, action: str):
         """
         Log access attempt for audit purposes
@@ -636,7 +636,7 @@ class SecurityManager:
             "ip_address": user.ip_address,
             "success": True
         }
-        
+
         self.audit_logger.log(audit_entry)
 ```
 
@@ -651,12 +651,12 @@ class CacheManager:
     """
     Multi-layer caching implementation
     """
-    
+
     def __init__(self):
         self.redis_client = Redis()
         self.local_cache = LRUCache(maxsize=1000)
         self.cdn = CloudflareCDN()
-    
+
     def get_document(self, doc_id: str) -> Optional[Document]:
         """
         Retrieve document with multi-layer caching
@@ -664,33 +664,33 @@ class CacheManager:
         # L1: Local memory cache
         if doc := self.local_cache.get(doc_id):
             return doc
-        
+
         # L2: Redis cache
         if doc := self.redis_client.get(f"doc:{doc_id}"):
             self.local_cache.set(doc_id, doc)
             return doc
-        
+
         # L3: Database
         doc = self.db.get_document(doc_id)
         if doc:
             self.cache_document(doc)
-        
+
         return doc
-    
+
     def cache_document(self, doc: Document):
         """
         Cache document at multiple levels
         """
         # Local cache
         self.local_cache.set(doc.id, doc)
-        
+
         # Redis with TTL
         self.redis_client.setex(
             f"doc:{doc.id}",
             ttl=3600,
             value=doc.serialize()
         )
-        
+
         # CDN for static content
         if doc.is_public:
             self.cdn.cache(doc.url, doc.content)
@@ -709,44 +709,44 @@ from unittest.mock import Mock, patch
 from src.automation import DocumentationAutomation
 
 class TestDocumentationAutomation:
-    
+
     @pytest.fixture
     def automation_engine(self):
         return DocumentationAutomation()
-    
+
     def test_document_generation(self, automation_engine):
         """Test automatic documentation generation"""
         test_file = "test_module.py"
-        
+
         with patch('src.automation.GitHooks') as mock_git:
             mock_git.get_changes.return_value = [test_file]
-            
+
             result = automation_engine.process_commit("abc123")
-            
+
             assert result.success
             assert result.documents_created == 1
-    
+
     def test_validation_process(self, automation_engine):
         """Test documentation validation"""
         invalid_doc = Document(
             title="",  # Missing title
             content="Test content"
         )
-        
+
         result = automation_engine.validator.validate(invalid_doc)
-        
+
         assert not result.valid
         assert "title" in result.errors
-    
+
     @pytest.mark.integration
     def test_end_to_end_workflow(self, automation_engine):
         """Test complete automation workflow"""
         # Setup
         test_commit = create_test_commit()
-        
+
         # Execute
         result = automation_engine.process_commit(test_commit)
-        
+
         # Verify
         assert result.success
         assert result.documents_created > 0
@@ -869,7 +869,7 @@ class MetricsCollector:
     """
     Comprehensive metrics collection for monitoring
     """
-    
+
     def __init__(self):
         # Counters
         self.doc_created = Counter(
@@ -885,7 +885,7 @@ class MetricsCollector:
             'Total number of search queries',
             ['query_type']
         )
-        
+
         # Histograms
         self.response_time = Histogram(
             'http_request_duration_seconds',
@@ -896,7 +896,7 @@ class MetricsCollector:
             'document_processing_seconds',
             'Time taken to process documents'
         )
-        
+
         # Gauges
         self.active_users = Gauge(
             'active_users',
@@ -906,15 +906,15 @@ class MetricsCollector:
             'cache_hit_rate',
             'Cache hit rate percentage'
         )
-    
+
     def track_document_creation(self, doc: Document):
         """Track document creation metrics"""
         self.doc_created.inc()
-        
+
         with self.doc_processing_time.time():
             # Document processing logic
             pass
-    
+
     def track_search(self, query_type: str):
         """Track search metrics"""
         self.search_queries.labels(query_type=query_type).inc()
@@ -962,6 +962,6 @@ This technical implementation specification provides a comprehensive blueprint f
 
 ---
 
-**Technical Lead Approval**: _______________  
-**Architecture Review Date**: October 30, 2025  
+**Technical Lead Approval**: _______________
+**Architecture Review Date**: October 30, 2025
 **Implementation Start Date**: November 1, 2025

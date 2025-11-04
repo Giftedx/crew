@@ -11,7 +11,7 @@ This report analyzes the current CI pipeline execution times and identifies opti
 The project uses a multi-workflow CI strategy:
 
 1. **ci-fast.yml** - Fast feedback loop (PR/push triggers)
-2. **ci-style.yml** - Code quality checks (PR/push triggers)  
+2. **ci-style.yml** - Code quality checks (PR/push triggers)
 3. **ci.yml** - Comprehensive CI pipeline (PR/push triggers)
 4. **ci-nightly.yml** - Full test suite (daily at 3 AM UTC)
 5. **Additional workflows** - Specialized tests (MCP, A2A, etc.)
@@ -194,7 +194,7 @@ unit-tests-core:
   strategy:
     matrix:
       python-version: ['3.12']  # Only latest for core tests
-      
+
 unit-tests-compatibility:
   strategy:
     matrix:
@@ -241,8 +241,8 @@ unit-tests-compatibility:
 # Only run expensive jobs when needed
 performance-tests:
   if: |
-    github.event_name == 'push' && 
-    (contains(github.event.head_commit.modified, 'src/') || 
+    github.event_name == 'push' &&
+    (contains(github.event.head_commit.modified, 'src/') ||
      contains(github.event.head_commit.modified, 'tests/performance/'))
 ```
 

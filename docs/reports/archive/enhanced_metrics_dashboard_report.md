@@ -74,7 +74,7 @@ This report documents the implementation of a comprehensive web-based metrics da
 
 ```
 GET  /                    - Main dashboard
-GET  /simple             - Simple dashboard  
+GET  /simple             - Simple dashboard
 GET  /api/metrics/health - Health check
 GET  /api/metrics/system - System metrics
 GET  /api/metrics/tools  - All tool metrics

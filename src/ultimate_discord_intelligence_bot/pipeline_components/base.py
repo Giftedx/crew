@@ -46,7 +46,7 @@ from .tracing import TRACING_AVAILABLE
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from ..tools.multi_platform_download_tool import MultiPlatformDownloadTool
+    from domains.ingestion.providers.multi_platform_download_tool import MultiPlatformDownloadTool
 
 
 class PipelineBase:
@@ -93,7 +93,7 @@ class PipelineBase:
         if not any(isinstance(m, LogPatternMiddleware) for m in self._step_middlewares):
             self._step_middlewares.append(LogPatternMiddleware())
         if downloader is None:
-            from ..tools.multi_platform_download_tool import MultiPlatformDownloadTool
+            from domains.ingestion.providers.multi_platform_download_tool import MultiPlatformDownloadTool
 
             self.downloader = MultiPlatformDownloadTool()
         else:
@@ -294,7 +294,7 @@ class PipelineBase:
             return (transcript, meta)
         final_tokens: int
         raw_final = details.get("final_tokens") if isinstance(details, dict) else None
-        if isinstance(raw_final, (int, float)):
+        if isinstance(raw_final, int | float):
             final_tokens = int(raw_final)
         else:
             try:

@@ -26,7 +26,7 @@ def ctx_or_fallback(component: str) -> TenantContext | None:
         ctx = current_tenant()
         if ctx is not None:
             return ctx
-        from platform.flags import enabled
+        from platform.config.flags import enabled
 
         if enabled("ENABLE_TENANCY_STRICT", False):
             raise RuntimeError(f"TenantContext required for {component} but not set (strict mode)")

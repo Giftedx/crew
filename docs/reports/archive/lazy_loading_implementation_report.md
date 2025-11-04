@@ -55,7 +55,7 @@ This report documents the implementation of a comprehensive lazy loading system 
 #### Startup Time Improvements
 
 - **Eager Loading Average**: 0.0002s
-- **Lazy Loading (Creation)**: 0.0000s  
+- **Lazy Loading (Creation)**: 0.0000s
 - **Lazy Loading (With Tools)**: 0.0004s
 - **🎯 Startup Improvement**: **97.2% faster** agent creation
 
@@ -82,11 +82,11 @@ class LazyToolLoader:
     def get_tool(self, tool_name: str, *args, **kwargs) -> BaseTool:
         if tool_name in self._tool_cache:
             return self._tool_cache[tool_name]
-        
+
         # Import and instantiate tool lazily
         tool_class = self._import_tool_class(tool_name)
         tool_instance = tool_class(*args, **kwargs)
-        
+
         # Cache for future use
         self._tool_cache[tool_name] = tool_instance
         return tool_instance
@@ -100,7 +100,7 @@ class LazyBaseAgent(BaseAgent):
         self._tool_specs = tool_specs or []
         self._lazy_tools: LazyToolWrapper | None = None
         super().__init__(tools=[])  # Empty tools initially
-    
+
     @property
     def tools(self) -> list[BaseTool]:
         if self._lazy_tools is None:

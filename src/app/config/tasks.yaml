@@ -18,7 +18,7 @@ plan_autonomy_mission:
 
 capture_source_media:
   description: >-
-    Use the MultiPlatformDownloadTool to resolve and download the highest-quality media for {url} 
+    Use the MultiPlatformDownloadTool to resolve and download the highest-quality media for {url}
     across all supported platforms. Call MultiPlatformDownloadTool with the URL to download the video
     and capture rich metadata including file paths, formats, durations, and resolver notes.
     The tool will handle platform detection and download the content.
@@ -45,7 +45,7 @@ transcribe_and_index_media:
 map_transcript_insights:
   description: >-
     Use the EnhancedAnalysisTool and TextAnalysisTool to analyse the transcript from the previous task.
-    Call EnhancedAnalysisTool with the transcript text to identify sentiment shifts, topical clusters, 
+    Call EnhancedAnalysisTool with the transcript text to identify sentiment shifts, topical clusters,
     and noteworthy excerpts. Use TextAnalysisTool to extract themes and perspectives.
     The transcript should be available from the previous transcription task.
   expected_output: Structured insight report containing themes, sentiment summary, and highlighted excerpts.
@@ -58,9 +58,9 @@ map_transcript_insights:
 
 verify_priority_claims:
   description: >-
-    Use the ClaimExtractorTool to extract factual claims from the transcript, then use FactCheckTool 
+    Use the ClaimExtractorTool to extract factual claims from the transcript, then use FactCheckTool
     to verify them. First call ClaimExtractorTool with the transcript text to extract key claims.
-    Then call FactCheckTool for each significant claim to capture verdicts, confidence levels, 
+    Then call FactCheckTool for each significant claim to capture verdicts, confidence levels,
     and supporting evidence. The transcript should be available from the transcription task.
   expected_output: Verification dossier with claim list, verdicts, fallacy notes, and citations.
   agent: verification_director
@@ -76,8 +76,8 @@ verify_priority_claims:
 
 visual_analysis_task:
   description: >-
-    Perform comprehensive visual analysis on media content including frame analysis, scene detection, 
-    object recognition, and visual fact-checking. Use VideoFrameAnalysisTool for video content, 
+    Perform comprehensive visual analysis on media content including frame analysis, scene detection,
+    object recognition, and visual fact-checking. Use VideoFrameAnalysisTool for video content,
     ImageAnalysisTool for images, and VisualSummaryTool for key moment identification.
   expected_output: Detailed visual analysis report with key findings, visual sentiment, detected objects, and content moderation results.
   agent: visual_intelligence_specialist
@@ -89,8 +89,8 @@ visual_analysis_task:
 
 audio_analysis_task:
   description: >-
-    Provide advanced audio analysis including music recognition, speaker identification, emotional tone analysis, 
-    and acoustic scene classification. Use AdvancedAudioAnalysisTool for comprehensive audio analysis and 
+    Provide advanced audio analysis including music recognition, speaker identification, emotional tone analysis,
+    and acoustic scene classification. Use AdvancedAudioAnalysisTool for comprehensive audio analysis and
     AudioTranscriptionTool for speech-to-text conversion with speaker identification.
   expected_output: Comprehensive audio analysis report with music recognition, speaker diarization, emotional analysis, and audio quality assessment.
   agent: audio_intelligence_specialist
@@ -102,8 +102,8 @@ audio_analysis_task:
 
 trend_analysis_task:
   description: >-
-    Monitor, analyze, and predict content trends with real-time analysis and long-term forecasting capabilities. 
-    Use TrendAnalysisTool for cross-platform trend detection, TrendForecastingTool for long-term predictions, 
+    Monitor, analyze, and predict content trends with real-time analysis and long-term forecasting capabilities.
+    Use TrendAnalysisTool for cross-platform trend detection, TrendForecastingTool for long-term predictions,
     and ViralityPredictionTool for content virality assessment.
   expected_output: Comprehensive trend analysis report with current trends, viral predictions, and long-term forecasting insights.
   agent: trend_intelligence_specialist
@@ -115,8 +115,8 @@ trend_analysis_task:
 
 content_generation_task:
   description: >-
-    Create, adapt, and optimize content across platforms using AI-powered generation and multimodal understanding. 
-    Use ContentGenerationTool for AI-powered content creation, ContentRecommendationTool for personalized recommendations, 
+    Create, adapt, and optimize content across platforms using AI-powered generation and multimodal understanding.
+    Use ContentGenerationTool for AI-powered content creation, ContentRecommendationTool for personalized recommendations,
     and EngagementPredictionTool for content performance optimization.
   expected_output: Generated content recommendations with platform-specific optimizations, engagement predictions, and audience targeting insights.
   agent: content_generation_specialist
@@ -130,8 +130,8 @@ content_generation_task:
 
 cross_platform_analysis_task:
   description: >-
-    Correlate and analyze content patterns across multiple platforms, identifying cross-platform trends and content propagation. 
-    Use TrendAnalysisTool for cross-platform correlation, MultiPlatformMonitorTool for comprehensive monitoring, 
+    Correlate and analyze content patterns across multiple platforms, identifying cross-platform trends and content propagation.
+    Use TrendAnalysisTool for cross-platform correlation, MultiPlatformMonitorTool for comprehensive monitoring,
     and MultimodalAnalysisTool for cross-platform content understanding.
   expected_output: Cross-platform intelligence report with content propagation patterns, platform-specific behaviors, and multi-platform trend correlations.
   agent: cross_platform_intelligence_specialist

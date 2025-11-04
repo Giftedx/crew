@@ -2,6 +2,10 @@
 
 This service exposes a minimal Agent-to-Agent (A2A) adapter over HTTP using JSON-RPC 2.0.
 
+**Implementation**: `src/server/a2a_router.py` (279 lines)
+**Discovery Module**: `src/server/a2a_discovery.py`
+**Client**: `src/client/a2a_client.py`
+
 - Base path: `/a2a`
 - RPC endpoint: `POST /a2a/jsonrpc`
 - Discovery:
@@ -102,6 +106,22 @@ The `/a2a/skills` endpoint returns the currently enabled tool list with input sc
 - `tools.research_and_brief` — Synthesize an outline and key findings from sources
 - `tools.research_and_brief_multi` — Multi-agent variant (behind flag) with offline fallback
 
+### Methods quick reference
+
+| Method | Purpose | Key params | Default enabled |
+|---|---|---|---|
+| `tools.text_analyze` | Simple text metrics | `text: str` | yes |
+| `tools.lc_summarize` | Extractive summarization | `text: str`, `max_sentences?: int` | yes |
+| `tools.rag_query` | Offline ranking of provided docs | `query: str`, `documents: str[]`, `top_k?: int` | yes |
+| `tools.rag_query_vs` | Tenant-scoped vector search | `query: str`, `index?: str`, `top_k?: int`, `documents?: str[]` | yes |
+| `tools.rag_ingest` | Ingest raw texts to vector index | `texts: str[]`, `index?: str`, `chunk_size?: int`, `overlap?: int` | no |
+| `tools.rag_ingest_url` | Fetch/ingest HTTPS URLs | `urls: str[]`, `index?: str`, `chunk_size?: int`, `overlap?: int`, `max_bytes?: int` | no |
+| `tools.rag_hybrid` | Hybrid retrieval (vector + offline) | `query: str`, `index?: str`, `candidate_docs?: str[]`, `top_k?: int`, `alpha?: number`, `enable_rerank?: bool` | yes |
+| `tools.research_and_brief` | Synthesize outline + findings | `query: str`, `sources_text?: str[]`, `max_items?: int` | yes |
+| `tools.research_and_brief_multi` | Multi-agent variant with time budget | `query: str`, `sources_text?: str[]`, `max_items?: int`, `max_time?: number`, `enable_alerts?: bool` | no |
+
+Input schemas are returned by `/a2a/skills` and defined in `src/server/a2a_schemas.py`.
+
 ## Observability
 
 - Latency histograms and counters are recorded when metrics are enabled.
@@ -152,6 +172,11 @@ make test-a2a
 - Import a ready-made Postman collection: `docs/a2a_postman_collection.json`
 
 Note: The `make test-a2a` target also validates the Postman/Insomnia collection JSON and required variables.
+
+---
+
+Last Updated: November 3, 2025
+Status: Current — verified against `src/server/a2a_router.py` and `src/server/a2a_tools.py`
 
 ## Using Postman/Insomnia collections
 

@@ -464,8 +464,7 @@ class SponsorComplianceAssistant:
             script_segments=script_segments,
             brand_guidelines_applied=[
                 f"target_audience: {brand_guidelines.target_audience}",
-                f"tone: {', '.join(brand_guidelines.tone_requirements)}"
-                f"format: {brand_guidelines.sponsorship_format}",
+                f"tone: {', '.join(brand_guidelines.tone_requirements)}format: {brand_guidelines.sponsorship_format}",
             ],
             compliance_annotations=compliance_annotations,
             total_script_duration=sum(s["end_time"] - s["start_time"] for s in script_segments),

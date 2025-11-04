@@ -20,7 +20,7 @@ except ImportError:
     StorageContext = None  # type: ignore[assignment,misc]
     Document = None  # type: ignore[assignment,misc]
 
-from src.ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 _logger = logging.getLogger(__name__)

@@ -1,5 +1,12 @@
 # CrewAI System Architecture
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Agent Count**: 18 registered agents in `crew_components/tool_registry.py`
+- **Tool Count**: 111 tools across 9 categories
+- **Orchestrator**: `pipeline_components/orchestrator.py` (1637 lines, 7 phases)
+- **CrewAI Integration**: `app/crew_executor.py`
+
 ## Overview
 
 The Ultimate Discord Intelligence Bot uses CrewAI to orchestrate autonomous agents that work together to analyze content, fact-check claims, and provide intelligent responses. The system is designed with modularity, scalability, and maintainability in mind.

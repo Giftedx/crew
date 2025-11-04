@@ -127,12 +127,12 @@ class RouterResponse:
 
 class BaseRouter(ABC):
     """Abstract base router interface."""
-    
+
     @abstractmethod
     def route(self, request: RouterRequest) -> RouterResponse:
         """Route a request to the best model."""
         pass
-    
+
     @abstractmethod
     def update(self, model: str, reward: float, context: Dict[str, Any]) -> None:
         """Update router with feedback."""
@@ -149,17 +149,17 @@ from ..models import RouterRequest, RouterResponse
 
 class BaseStrategy(ABC):
     """Abstract base strategy for routing."""
-    
+
     @abstractmethod
     def select_model(self, request: RouterRequest) -> RouterResponse:
         """Select model using this strategy."""
         pass
-    
+
     @abstractmethod
     def update(self, model: str, reward: float, context: Dict[str, Any]) -> None:
         """Update strategy with feedback."""
         pass
-    
+
     @abstractmethod
     def get_name(self) -> str:
         """Get strategy name."""
@@ -176,20 +176,20 @@ from .strategies import BaseStrategy
 
 class RouterFactory:
     """Factory for creating configured routers."""
-    
+
     _strategies: Dict[str, Type[BaseStrategy]] = {}
-    
+
     @classmethod
     def register_strategy(cls, name: str, strategy_class: Type[BaseStrategy]) -> None:
         """Register a routing strategy."""
         cls._strategies[name] = strategy_class
-    
+
     @classmethod
     def create_router(cls, strategy_name: str, **kwargs) -> BaseRouter:
         """Create a router with specified strategy."""
         if strategy_name not in cls._strategies:
             raise ValueError(f"Unknown strategy: {strategy_name}")
-        
+
         strategy_class = cls._strategies[strategy_name]
         strategy = strategy_class(**kwargs)
         return UnifiedRouter(strategy)
@@ -207,16 +207,16 @@ from .base_strategy import BaseStrategy
 
 class BanditStrategy(BaseStrategy):
     """Consolidated bandit-based routing strategy."""
-    
+
     def __init__(self, bandit_type: str = "thompson"):
         self.bandit_type = bandit_type
         self.bandit = self._create_bandit(bandit_type)
-    
+
     def select_model(self, request: RouterRequest) -> RouterResponse:
         """Select model using bandit algorithm."""
         # Implement consolidated bandit logic
         pass
-    
+
     def _create_bandit(self, bandit_type: str):
         """Create appropriate bandit implementation."""
         if bandit_type == "thompson":
@@ -239,12 +239,12 @@ from .base_strategy import BaseStrategy
 
 class CostAwareStrategy(BaseStrategy):
     """Cost-aware routing strategy."""
-    
+
     def __init__(self, cost_weight: float = 0.4, quality_weight: float = 0.5):
         self.cost_weight = cost_weight
         self.quality_weight = quality_weight
         self.model_profiles = {}
-    
+
     def select_model(self, request: RouterRequest) -> RouterResponse:
         """Select model based on cost-utility optimization."""
         # Implement cost-aware selection logic
@@ -262,23 +262,23 @@ from .router_factory import RouterFactory
 
 class RouterMigrator:
     """Utilities for migrating from old routers to new unified router."""
-    
+
     def __init__(self):
         self.router_factory = RouterFactory()
-    
+
     def migrate_from_core_router(self, old_router) -> BaseRouter:
         """Migrate from core/router.py."""
         # Extract configuration from old router
         config = self._extract_core_router_config(old_router)
-        
+
         # Create new router with equivalent strategy
         return self.router_factory.create_router("bandit", **config)
-    
+
     def migrate_from_llm_router(self, old_router) -> BaseRouter:
         """Migrate from core/llm_router.py."""
         # Extract configuration from old router
         config = self._extract_llm_router_config(old_router)
-        
+
         # Create new router with cost-aware strategy
         return self.router_factory.create_router("cost_aware", **config)
 ```
@@ -327,7 +327,7 @@ from core.routing import RouterFactory
 
 class TestRouterPerformance:
     """Performance tests for unified router."""
-    
+
     def test_router_selection_speed(self):
         """Test that router selection is fast."""
         router = RouterFactory.create_router("bandit")
@@ -336,11 +336,11 @@ class TestRouterPerformance:
             context={},
             candidates=["gpt-4", "gpt-3.5-turbo"]
         )
-        
+
         start_time = time.time()
         response = router.route(request)
         end_time = time.time()
-        
+
         # Should complete in less than 10ms
         assert (end_time - start_time) < 0.01
         assert response.selected_model in request.candidates
@@ -361,13 +361,13 @@ while maintaining a consistent interface.
 
 Example:
     from core.routing import RouterFactory
-    
+
     # Create a cost-aware router
     router = RouterFactory.create_router("cost_aware")
-    
+
     # Route a request
     response = router.route(request)
-    
+
     # Update with feedback
     router.update(response.selected_model, 0.8, context)
 """
@@ -378,7 +378,7 @@ from .strategies import BaseStrategy
 
 __all__ = [
     "RouterFactory",
-    "BaseRouter", 
+    "BaseRouter",
     "RouterRequest",
     "RouterResponse",
     "BaseStrategy"
@@ -400,7 +400,7 @@ This guide helps migrate from the old router implementations to the new unified 
 # OLD
 from core.router import Router
 
-# NEW  
+# NEW
 from core.routing import RouterFactory
 ```
 

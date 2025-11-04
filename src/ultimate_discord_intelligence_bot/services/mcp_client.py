@@ -7,12 +7,12 @@ and analytical utilities through the Model Context Protocol (MCP).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from dataclasses import dataclass
+from platform.http.http_utils import retrying_get, retrying_post
 from typing import Any
-
-import aiohttp
 
 from ..step_result import StepResult
 from ..tenancy.helpers import require_tenant
@@ -58,7 +58,7 @@ class MCPClient:
         """
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
-        self.session: aiohttp.ClientSession | None = None
+        self.session = None  # Deprecated; HTTP routed via http_utils wrappers
         self.tools: dict[str, MCPTool] = {}
         self.request_count = 0
         self.total_latency = 0.0
@@ -66,28 +66,20 @@ class MCPClient:
         logger.info("Initialized MCPClient with base URL: %s", base_url)
 
     async def __aenter__(self):
-        """Async context manager entry."""
-        await self._ensure_session()
+        """Async context manager entry (no-op for http_utils)."""
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit."""
+        """Async context manager exit (no-op)."""
         await self.close()
 
     async def _ensure_session(self):
-        """Ensure HTTP session is available."""
-        if self.session is None or self.session.closed:
-            headers = {"Content-Type": "application/json"}
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
-
-            timeout = aiohttp.ClientTimeout(total=30)
-            self.session = aiohttp.ClientSession(headers=headers, timeout=timeout)
+        """No-op retained for compatibility with previous aiohttp-based client."""
+        return None
 
     async def close(self):
-        """Close the HTTP session."""
-        if self.session and not self.session.closed:
-            await self.session.close()
+        """Close the HTTP session (no-op for http_utils-based client)."""
+        return None
 
     @require_tenant(strict_flag_enabled=False)
     async def register_tool(
@@ -107,8 +99,6 @@ class MCPClient:
             StepResult indicating success/failure
         """
         try:
-            await self._ensure_session()
-
             # Register tool with MCP server
             registration_data = {
                 "name": tool.name,
@@ -122,16 +112,18 @@ class MCPClient:
             }
 
             url = f"{self.base_url}/tools/register"
-            if self.session is None:
-                return StepResult.fail("MCP client session not initialized")
-            async with self.session.post(url, json=registration_data) as response:
-                if response.status == 200:
-                    self.tools[tool.name] = tool
-                    logger.info("Registered MCP tool: %s", tool.name)
-                    return StepResult.ok(data={"tool_name": tool.name, "registered": True})
-                else:
-                    error_text = await response.text()
-                    return StepResult.fail(f"Failed to register tool: {error_text}")
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            resp = await asyncio.to_thread(retrying_post, url, json_payload=registration_data, headers=headers)
+            if 200 <= getattr(resp, "status_code", 0) < 300:
+                self.tools[tool.name] = tool
+                logger.info("Registered MCP tool: %s", tool.name)
+                return StepResult.ok(data={"tool_name": tool.name, "registered": True})
+            else:
+                return StepResult.fail(
+                    f"Failed to register tool: {getattr(resp, 'status_code', 0)} - {getattr(resp, 'text', '')}"
+                )
 
         except Exception as e:
             logger.error("Failed to register MCP tool %s: %s", tool.name, str(e))
@@ -160,8 +152,6 @@ class MCPClient:
             if tool_name not in self.tools:
                 return StepResult.fail(f"Tool not found: {tool_name}")
 
-            await self._ensure_session()
-
             start_time = time.time()
 
             # Prepare execution request
@@ -174,36 +164,36 @@ class MCPClient:
 
             # Execute tool
             url = f"{self.base_url}/tools/execute"
-            if self.session is None:
-                return StepResult.fail("MCP client session not initialized")
-            async with self.session.post(url, json=execution_data) as response:
-                execution_time = (time.time() - start_time) * 1000
-                self.request_count += 1
-                self.total_latency += execution_time
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            resp = await asyncio.to_thread(retrying_post, url, json_payload=execution_data, headers=headers)
+            execution_time = (time.time() - start_time) * 1000
+            self.request_count += 1
+            self.total_latency += execution_time
+            if 200 <= getattr(resp, "status_code", 0) < 300:
+                try:
+                    result_data = resp.json()
+                except Exception:
+                    result_data = {}
+                logger.debug(
+                    "Executed MCP tool %s (latency: %.1fms)",
+                    tool_name,
+                    execution_time,
+                )
 
-                if response.status == 200:
-                    result_data = await response.json()
-                    logger.debug(
-                        "Executed MCP tool %s (latency: %.1fms)",
-                        tool_name,
-                        execution_time,
-                    )
-
-                    return StepResult.ok(
-                        data={
-                            "result": result_data,
-                            "latency_ms": execution_time,
-                            "tool_name": tool_name,
-                        }
-                    )
-                else:
-                    error_text = await response.text()
-                    logger.warning(
-                        "MCP tool execution failed: %s (status: %d)",
-                        error_text,
-                        response.status,
-                    )
-                    return StepResult.fail(f"Tool execution failed: {error_text}")
+                return StepResult.ok(
+                    data={
+                        "result": result_data,
+                        "latency_ms": execution_time,
+                        "tool_name": tool_name,
+                    }
+                )
+            else:
+                logger.warning("MCP tool execution failed: status=%s", getattr(resp, "status_code", 0))
+                return StepResult.fail(
+                    f"Tool execution failed: {getattr(resp, 'status_code', 0)} - {getattr(resp, 'text', '')}"
+                )
 
         except Exception as e:
             logger.error("Failed to execute MCP tool %s: %s", tool_name, str(e))
@@ -268,17 +258,19 @@ class MCPClient:
             StepResult with health status
         """
         try:
-            await self._ensure_session()
-
             url = f"{self.base_url}/health"
-            if self.session is None:
-                return StepResult.fail("MCP client session not initialized")
-            async with self.session.get(url) as response:
-                if response.status == 200:
-                    health_data = await response.json()
-                    return StepResult.ok(data=health_data)
-                else:
-                    return StepResult.fail(f"Health check failed: {response.status}")
+            headers = {"Content-Type": "application/json"}
+            if self.api_key:
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            resp = await asyncio.to_thread(retrying_get, url, headers=headers)
+            if 200 <= getattr(resp, "status_code", 0) < 300:
+                try:
+                    health_data = resp.json()
+                except Exception:
+                    health_data = {}
+                return StepResult.ok(data=health_data)
+            else:
+                return StepResult.fail(f"Health check failed: {getattr(resp, 'status_code', 0)}")
 
         except Exception as e:
             logger.error("MCP health check failed: %s", str(e))

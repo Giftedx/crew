@@ -75,14 +75,14 @@ class MyTool(BaseTool):
 def test_my_function():
     """Test function with proper error handling."""
     result = my_function("test_input", "tenant", "workspace")
-    
+
     assert result.status == "success"
     assert result.data is not None
 
 def test_my_function_error():
     """Test error handling."""
     result = my_function("", "tenant", "workspace")
-    
+
     assert result.status == "bad_request"
     assert "error" in result.error
 ```
@@ -185,13 +185,13 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class ToolNameInput(BaseModel):
     """Input schema for ToolName."""
-    
+
     # Define inputs with descriptions
 
 
 class ToolName(BaseTool):
     """Tool description."""
-    
+
     name: str = "tool_name"
     description: str = "Detailed description"
     args_schema: Type[BaseModel] = ToolNameInput

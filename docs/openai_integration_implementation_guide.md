@@ -1,7 +1,7 @@
 # OpenAI Integration Implementation Guide
 
-**Generated**: 2025-01-22  
-**Purpose**: Detailed implementation guide for OpenAI integration with Ultimate Discord Intelligence Bot  
+**Generated**: 2025-01-22
+**Purpose**: Detailed implementation guide for OpenAI integration with Ultimate Discord Intelligence Bot
 **Status**: ✅ COMPLETED
 
 ## Overview
@@ -36,13 +36,13 @@ asyncio-mqtt>=0.11.0
 # Add to settings.py
 class Settings:
     # Existing settings...
-    
+
     # OpenAI Integration
     OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY")
     OPENAI_BASE_URL: str = Field("https://api.openai.com/v1", env="OPENAI_BASE_URL")
     OPENAI_MAX_TOKENS: int = Field(4000, env="OPENAI_MAX_TOKENS")
     OPENAI_TEMPERATURE: float = Field(0.7, env="OPENAI_TEMPERATURE")
-    
+
     # Feature Flags
     ENABLE_OPENAI_STRUCTURED_OUTPUTS: bool = Field(True, env="ENABLE_OPENAI_STRUCTURED_OUTPUTS")
     ENABLE_OPENAI_STREAMING: bool = Field(True, env="ENABLE_OPENAI_STREAMING")
@@ -67,7 +67,7 @@ from ultimate_discord_intelligence_bot.settings import get_settings
 
 class OpenAIService:
     """Base OpenAI service with common functionality."""
-    
+
     def __init__(self):
         self.settings = get_settings()
         self.client = AsyncOpenAI(
@@ -76,7 +76,7 @@ class OpenAIService:
         )
         self.max_retries = 3
         self.retry_delay = 1.0
-    
+
     async def _make_request_with_retry(self, request_func, *args, **kwargs) -> StepResult:
         """Make OpenAI request with exponential backoff retry."""
         for attempt in range(self.max_retries):
@@ -86,16 +86,16 @@ class OpenAIService:
             except Exception as e:
                 if attempt == self.max_retries - 1:
                     return StepResult.fail(f"OpenAI request failed after {self.max_retries} attempts: {str(e)}")
-                
+
                 await asyncio.sleep(self.retry_delay * (2 ** attempt))
-        
+
         return StepResult.fail("Unexpected error in retry logic")
-    
+
     async def _validate_response(self, response: Any, schema: Optional[Dict] = None) -> StepResult:
         """Validate OpenAI response against schema."""
         if not response:
             return StepResult.fail("Empty response from OpenAI")
-        
+
         if schema:
             try:
                 # Validate response against JSON schema
@@ -103,7 +103,7 @@ class OpenAIService:
                 jsonschema.validate(response, schema)
             except Exception as e:
                 return StepResult.fail(f"Response validation failed: {str(e)}")
-        
+
         return StepResult.ok(data=response)
 ```
 
@@ -119,11 +119,11 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OpenAIStructuredOutputsService(OpenAIService):
     """Service for OpenAI structured outputs with JSON schema validation."""
-    
+
     def __init__(self):
         super().__init__()
         self.model = "gpt-4o-mini"  # Cost-effective model for structured outputs
-    
+
     async def generate_structured_response(
         self,
         prompt: str,
@@ -147,7 +147,7 @@ class OpenAIStructuredOutputsService(OpenAIService):
                     "content": prompt
                 }
             ]
-            
+
             # Make OpenAI request with structured output
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -164,28 +164,28 @@ class OpenAIStructuredOutputsService(OpenAIService):
                 temperature=self.settings.OPENAI_TEMPERATURE,
                 **kwargs
             )
-            
+
             # Extract and validate response
             content = response.choices[0].message.content
             if not content:
                 return StepResult.fail("Empty response from OpenAI")
-            
+
             # Parse JSON response
             try:
                 structured_data = json.loads(content)
             except json.JSONDecodeError as e:
                 return StepResult.fail(f"Invalid JSON response: {str(e)}")
-            
+
             # Validate against schema
             validation_result = await self._validate_response(structured_data, schema)
             if not validation_result.success:
                 return validation_result
-            
+
             return StepResult.ok(data=structured_data)
-            
+
         except Exception as e:
             return StepResult.fail(f"Structured output generation failed: {str(e)}")
-    
+
     async def analyze_content_structured(
         self,
         content: str,
@@ -228,12 +228,12 @@ class OpenAIStructuredOutputsService(OpenAIService):
             },
             "required": ["analysis_type", "score", "confidence", "key_points", "summary"]
         }
-        
+
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Provide a comprehensive analysis including:
         1. Overall score (0-10)
         2. Confidence level (0-1)
@@ -242,7 +242,7 @@ class OpenAIStructuredOutputsService(OpenAIService):
         5. Fact-check claims (if applicable)
         6. Summary of findings
         """
-        
+
         return await self.generate_structured_response(
             prompt=prompt,
             schema=schema,
@@ -263,18 +263,18 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OpenAIFunctionCallingService(OpenAIService):
     """Service for OpenAI function calling with tool integration."""
-    
+
     def __init__(self):
         super().__init__()
         self.model = "gpt-4o-mini"
         self.functions = {}
         self.function_handlers = {}
-    
+
     def register_function(self, name: str, schema: Dict[str, Any], handler: Callable) -> None:
         """Register a function for OpenAI function calling."""
         self.functions[name] = schema
         self.function_handlers[name] = handler
-    
+
     async def call_with_functions(
         self,
         prompt: str,
@@ -297,7 +297,7 @@ class OpenAIFunctionCallingService(OpenAIService):
                     "content": prompt
                 }
             ]
-            
+
             # Make OpenAI request with function calling
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -308,13 +308,13 @@ class OpenAIFunctionCallingService(OpenAIService):
                 temperature=self.settings.OPENAI_TEMPERATURE,
                 **kwargs
             )
-            
+
             # Handle function calls
             message = response.choices[0].message
             if message.function_call:
                 function_name = message.function_call.name
                 function_args = json.loads(message.function_call.arguments)
-                
+
                 # Execute function
                 if function_name in self.function_handlers:
                     handler = self.function_handlers[function_name]
@@ -325,10 +325,10 @@ class OpenAIFunctionCallingService(OpenAIService):
             else:
                 # Return text response
                 return StepResult.ok(data={"content": message.content})
-                
+
         except Exception as e:
             return StepResult.fail(f"Function calling failed: {str(e)}")
-    
+
     async def analyze_content_with_functions(
         self,
         content: str,
@@ -337,7 +337,7 @@ class OpenAIFunctionCallingService(OpenAIService):
         workspace: str
     ) -> StepResult:
         """Analyze content using function calling for enhanced capabilities."""
-        
+
         # Register analysis functions
         self.register_function(
             "analyze_debate_content",
@@ -355,7 +355,7 @@ class OpenAIFunctionCallingService(OpenAIService):
             },
             self._analyze_debate_content_handler
         )
-        
+
         self.register_function(
             "fact_check_claims",
             {
@@ -375,24 +375,24 @@ class OpenAIFunctionCallingService(OpenAIService):
             },
             self._fact_check_claims_handler
         )
-        
+
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Use the available functions to:
         1. Analyze the debate quality and bias
         2. Fact-check any specific claims
         3. Provide a comprehensive analysis
         """
-        
+
         return await self.call_with_functions(
             prompt=prompt,
             tenant=tenant,
             workspace=workspace
         )
-    
+
     async def _analyze_debate_content_handler(self, content: str, analysis_type: str) -> Dict[str, Any]:
         """Handler for debate content analysis."""
         # Implement analysis logic here
@@ -402,7 +402,7 @@ class OpenAIFunctionCallingService(OpenAIService):
             "key_points": ["Point 1", "Point 2"],
             "summary": "Content analysis summary"
         }
-    
+
     async def _fact_check_claims_handler(self, claims: List[str]) -> Dict[str, Any]:
         """Handler for fact-checking claims."""
         # Implement fact-checking logic here
@@ -427,11 +427,11 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OpenAIStreamingService(OpenAIService):
     """Service for OpenAI streaming responses."""
-    
+
     def __init__(self):
         super().__init__()
         self.model = "gpt-4o-mini"
-    
+
     async def stream_response(
         self,
         prompt: str,
@@ -453,7 +453,7 @@ class OpenAIStreamingService(OpenAIService):
                     "content": prompt
                 }
             ]
-            
+
             # Stream response
             stream = await self.client.chat.completions.create(
                 model=self.model,
@@ -463,24 +463,24 @@ class OpenAIStreamingService(OpenAIService):
                 temperature=self.settings.OPENAI_TEMPERATURE,
                 **kwargs
             )
-            
+
             async for chunk in stream:
                 if chunk.choices[0].delta.content:
                     yield StepResult.ok(data={
                         "content": chunk.choices[0].delta.content,
                         "streaming": True
                     })
-            
+
             # Final chunk
             yield StepResult.ok(data={
                 "content": "",
                 "streaming": False,
                 "complete": True
             })
-            
+
         except Exception as e:
             yield StepResult.fail(f"Streaming failed: {str(e)}")
-    
+
     async def stream_content_analysis(
         self,
         content: str,
@@ -491,9 +491,9 @@ class OpenAIStreamingService(OpenAIService):
         """Stream content analysis in real-time."""
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Provide a detailed analysis including:
         1. Overall assessment
         2. Key findings
@@ -501,7 +501,7 @@ class OpenAIStreamingService(OpenAIService):
         4. Fact-check results
         5. Recommendations
         """
-        
+
         async for result in self.stream_response(prompt, tenant, workspace):
             yield result
 ```
@@ -518,12 +518,12 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OpenAIVoiceService(OpenAIService):
     """Service for OpenAI voice capabilities."""
-    
+
     def __init__(self):
         super().__init__()
         self.voice_model = "tts-1"
         self.voice_quality = "hd"
-    
+
     async def text_to_speech(
         self,
         text: str,
@@ -539,19 +539,19 @@ class OpenAIVoiceService(OpenAIService):
                 input=text,
                 response_format="mp3"
             )
-            
+
             # Convert response to bytes
             audio_data = response.content
-            
+
             return StepResult.ok(data={
                 "audio_data": audio_data,
                 "format": "mp3",
                 "voice": voice
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Text-to-speech failed: {str(e)}")
-    
+
     async def speech_to_text(
         self,
         audio_data: bytes,
@@ -564,21 +564,21 @@ class OpenAIVoiceService(OpenAIService):
             import io
             audio_file = io.BytesIO(audio_data)
             audio_file.name = "audio.wav"
-            
+
             response = await self.client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
                 response_format="text"
             )
-            
+
             return StepResult.ok(data={
                 "text": response,
                 "confidence": 0.95  # Whisper doesn't provide confidence scores
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Speech-to-text failed: {str(e)}")
-    
+
     async def process_voice_command(
         self,
         audio_data: bytes,
@@ -591,9 +591,9 @@ class OpenAIVoiceService(OpenAIService):
             stt_result = await self.speech_to_text(audio_data, tenant, workspace)
             if not stt_result.success:
                 return stt_result
-            
+
             text = stt_result.data["text"]
-            
+
             # Generate response using chat completion
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -612,21 +612,21 @@ class OpenAIVoiceService(OpenAIService):
                 max_tokens=500,
                 temperature=0.7
             )
-            
+
             response_text = response.choices[0].message.content
-            
+
             # Convert response to speech
             tts_result = await self.text_to_speech(response_text, tenant=tenant, workspace=workspace)
             if not tts_result.success:
                 return tts_result
-            
+
             return StepResult.ok(data={
                 "original_text": text,
                 "response_text": response_text,
                 "audio_response": tts_result.data["audio_data"],
                 "format": "mp3"
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Voice command processing failed: {str(e)}")
 ```
@@ -645,11 +645,11 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OpenAIVisionService(OpenAIService):
     """Service for OpenAI vision capabilities."""
-    
+
     def __init__(self):
         super().__init__()
         self.model = "gpt-4o"  # Vision model
-    
+
     async def analyze_image(
         self,
         image_data: bytes,
@@ -662,7 +662,7 @@ class OpenAIVisionService(OpenAIService):
             # Convert image to base64
             import base64
             image_base64 = base64.b64encode(image_data).decode('utf-8')
-            
+
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -685,15 +685,15 @@ class OpenAIVisionService(OpenAIService):
                 max_tokens=1000,
                 temperature=0.7
             )
-            
+
             return StepResult.ok(data={
                 "analysis": response.choices[0].message.content,
                 "model": self.model
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Image analysis failed: {str(e)}")
-    
+
     async def analyze_video_frame(
         self,
         frame_data: bytes,
@@ -703,7 +703,7 @@ class OpenAIVisionService(OpenAIService):
     ) -> StepResult:
         """Analyze video frame using OpenAI vision."""
         return await self.analyze_image(frame_data, prompt, tenant, workspace)
-    
+
     async def analyze_thumbnail(
         self,
         thumbnail_data: bytes,
@@ -719,10 +719,10 @@ class OpenAIVisionService(OpenAIService):
         3. Key themes or topics visible
         4. Overall quality and professionalism
         5. Any text or captions visible
-        
+
         Video URL: {video_url}
         """
-        
+
         return await self.analyze_image(thumbnail_data, prompt, tenant, workspace)
 ```
 
@@ -739,12 +739,12 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class MultimodalAnalysisService(OpenAIService):
     """Service for multimodal content analysis combining text, images, and audio."""
-    
+
     def __init__(self):
         super().__init__()
         self.model = "gpt-4o"
         self.vision_service = OpenAIVisionService()
-    
+
     async def analyze_multimodal_content(
         self,
         text: str,
@@ -768,13 +768,13 @@ class MultimodalAnalysisService(OpenAIService):
                     "content": []
                 }
             ]
-            
+
             # Add text content
             messages[1]["content"].append({
                 "type": "text",
                 "text": f"Text content to analyze:\n{text}"
             })
-            
+
             # Add image content
             for i, image_data in enumerate(images):
                 import base64
@@ -786,7 +786,7 @@ class MultimodalAnalysisService(OpenAIService):
                         "detail": "high"
                     }
                 })
-            
+
             # Add audio content description (if available)
             if audio_data:
                 # Note: OpenAI doesn't support direct audio input in chat completions
@@ -795,7 +795,7 @@ class MultimodalAnalysisService(OpenAIService):
                     "type": "text",
                     "text": f"Audio content is also available (transcribed separately)"
                 })
-            
+
             # Make multimodal analysis request
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -803,16 +803,16 @@ class MultimodalAnalysisService(OpenAIService):
                 max_tokens=2000,
                 temperature=0.7
             )
-            
+
             return StepResult.ok(data={
                 "multimodal_analysis": response.choices[0].message.content,
                 "modalities_analyzed": ["text", "images"] + (["audio"] if audio_data else []),
                 "model": self.model
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Multimodal analysis failed: {str(e)}")
-    
+
     async def analyze_debate_content_multimodal(
         self,
         transcript: str,
@@ -824,32 +824,32 @@ class MultimodalAnalysisService(OpenAIService):
         """Analyze debate content using multimodal approach."""
         prompt = f"""
         Analyze this debate content across multiple modalities:
-        
+
         1. Text Analysis:
            - Identify key arguments and claims
            - Assess logical structure and reasoning
            - Detect bias and emotional language
            - Evaluate evidence quality
-        
+
         2. Visual Analysis:
            - Assess visual presentation quality
            - Identify visual bias indicators
            - Analyze body language and expressions
            - Evaluate visual evidence
-        
+
         3. Audio Analysis (if available):
            - Assess tone and delivery
            - Identify emotional indicators
            - Evaluate speaking quality
            - Detect interruptions or manipulation
-        
+
         Provide a comprehensive analysis including:
         - Overall debate quality score (0-10)
         - Bias assessment across modalities
         - Fact-checking recommendations
         - Key insights and recommendations
         """
-        
+
         return await self.analyze_multimodal_content(
             text=transcript,
             images=thumbnails,
@@ -875,13 +875,13 @@ from ultimate_discord_intelligence_bot.services.openai_multimodal import Multimo
 
 class OpenAIEnhancedAnalysisTool(BaseTool):
     """Enhanced analysis tool with OpenAI capabilities."""
-    
+
     def __init__(self):
         super().__init__()
         self.structured_outputs = OpenAIStructuredOutputsService()
         self.streaming = OpenAIStreamingService()
         self.multimodal = MultimodalAnalysisService()
-    
+
     def _run(self, content: str, analysis_type: str, tenant: str, workspace: str) -> StepResult:
         """Run enhanced analysis with OpenAI capabilities."""
         try:
@@ -892,26 +892,26 @@ class OpenAIEnhancedAnalysisTool(BaseTool):
                 tenant=tenant,
                 workspace=workspace
             )
-            
+
             if not result.success:
                 return result
-            
+
             return StepResult.ok(data={
                 "analysis": result.data,
                 "enhanced": True,
                 "openai_powered": True
             })
-            
+
         except Exception as e:
             return StepResult.fail(f"Enhanced analysis failed: {str(e)}")
-    
+
     async def stream_analysis(self, content: str, analysis_type: str, tenant: str, workspace: str):
         """Stream analysis results in real-time."""
         prompt = f"""
         Analyze the following content for {analysis_type}:
-        
+
         Content: {content}
-        
+
         Provide a detailed analysis including:
         1. Overall assessment
         2. Key findings
@@ -919,7 +919,7 @@ class OpenAIEnhancedAnalysisTool(BaseTool):
         4. Fact-check results
         5. Recommendations
         """
-        
+
         async for result in self.streaming.stream_content_analysis(
             content=content,
             analysis_type=analysis_type,
@@ -945,14 +945,14 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class EnhancedDiscordBot(DiscordBot):
     """Enhanced Discord bot with OpenAI capabilities."""
-    
+
     def __init__(self):
         super().__init__()
         self.voice_service = OpenAIVoiceService()
         self.streaming_service = OpenAIStreamingService()
         self.voice_enabled = True
         self.streaming_enabled = True
-    
+
     async def handle_voice_command(self, interaction: discord.Interaction, audio_data: bytes) -> None:
         """Handle voice commands with OpenAI voice processing."""
         try:
@@ -962,15 +962,15 @@ class EnhancedDiscordBot(DiscordBot):
                 tenant=str(interaction.guild.id),
                 workspace=str(interaction.channel.id)
             )
-            
+
             if not result.success:
                 await interaction.followup.send(f"❌ Voice processing failed: {result.error}")
                 return
-            
+
             # Send text response
             await interaction.followup.send(f"🎤 **Voice Command**: {result.data['original_text']}")
             await interaction.followup.send(f"🤖 **Response**: {result.data['response_text']}")
-            
+
             # Send audio response if available
             if result.data.get('audio_response'):
                 # Convert audio data to Discord file
@@ -980,19 +980,19 @@ class EnhancedDiscordBot(DiscordBot):
                     filename="response.mp3"
                 )
                 await interaction.followup.send(file=audio_file)
-            
+
         except Exception as e:
             await interaction.followup.send(f"❌ Voice command failed: {str(e)}")
-    
+
     async def stream_analysis(self, interaction: discord.Interaction, content: str, analysis_type: str) -> None:
         """Stream analysis results in real-time."""
         try:
             # Start streaming
             await interaction.response.defer()
-            
+
             # Create streaming message
             stream_message = await interaction.followup.send("🔄 Starting analysis...")
-            
+
             # Stream analysis
             async for result in self.streaming_service.stream_content_analysis(
                 content=content,
@@ -1013,7 +1013,7 @@ class EnhancedDiscordBot(DiscordBot):
                     # Error occurred
                     await stream_message.edit(content=f"❌ Analysis failed: {result.error}")
                     break
-            
+
         except Exception as e:
             await interaction.followup.send(f"❌ Streaming analysis failed: {str(e)}")
 ```
@@ -1031,11 +1031,11 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class TestOpenAIStructuredOutputsService:
     """Test OpenAI structured outputs service."""
-    
+
     @pytest.fixture
     def service(self):
         return OpenAIStructuredOutputsService()
-    
+
     @pytest.mark.asyncio
     async def test_generate_structured_response_success(self, service):
         """Test successful structured response generation."""
@@ -1043,7 +1043,7 @@ class TestOpenAIStructuredOutputsService:
             mock_create.return_value = AsyncMock(
                 choices=[AsyncMock(message=AsyncMock(content='{"score": 8.5, "confidence": 0.9}'))]
             )
-            
+
             schema = {
                 "type": "object",
                 "properties": {
@@ -1051,18 +1051,18 @@ class TestOpenAIStructuredOutputsService:
                     "confidence": {"type": "number"}
                 }
             }
-            
+
             result = await service.generate_structured_response(
                 prompt="Test prompt",
                 schema=schema,
                 tenant="test_tenant",
                 workspace="test_workspace"
             )
-            
+
             assert result.success
             assert result.data["score"] == 8.5
             assert result.data["confidence"] == 0.9
-    
+
     @pytest.mark.asyncio
     async def test_generate_structured_response_validation_error(self, service):
         """Test structured response with validation error."""
@@ -1070,7 +1070,7 @@ class TestOpenAIStructuredOutputsService:
             mock_create.return_value = AsyncMock(
                 choices=[AsyncMock(message=AsyncMock(content='{"invalid": "data"}'))]
             )
-            
+
             schema = {
                 "type": "object",
                 "properties": {
@@ -1079,14 +1079,14 @@ class TestOpenAIStructuredOutputsService:
                 },
                 "required": ["score", "confidence"]
             }
-            
+
             result = await service.generate_structured_response(
                 prompt="Test prompt",
                 schema=schema,
                 tenant="test_tenant",
                 workspace="test_workspace"
             )
-            
+
             assert not result.success
             assert "validation" in result.error.lower()
 ```
@@ -1101,11 +1101,11 @@ from ultimate_discord_intelligence_bot.tools.analysis.openai_enhanced_analysis_t
 
 class TestOpenAIIntegration:
     """Test OpenAI integration with existing tools."""
-    
+
     @pytest.fixture
     def analysis_tool(self):
         return OpenAIEnhancedAnalysisTool()
-    
+
     @pytest.mark.asyncio
     async def test_enhanced_analysis_tool_integration(self, analysis_tool):
         """Test enhanced analysis tool integration."""
@@ -1113,9 +1113,9 @@ class TestOpenAIIntegration:
         analysis_type = "debate"
         tenant = "test_tenant"
         workspace = "test_workspace"
-        
+
         result = await analysis_tool._run(content, analysis_type, tenant, workspace)
-        
+
         assert result.success
         assert result.data["enhanced"] is True
         assert result.data["openai_powered"] is True
@@ -1205,28 +1205,28 @@ class OpenAIMetrics:
 
 class OpenAIMetricsCollector:
     """Collect metrics for OpenAI services."""
-    
+
     def __init__(self):
         self.metrics = OpenAIMetrics()
         self.metrics_collector = MetricsCollector()
-    
+
     def record_request(self, tokens: int, cost: float, response_time: float, success: bool):
         """Record OpenAI request metrics."""
         self.metrics.request_count += 1
         self.metrics.total_tokens += tokens
         self.metrics.total_cost += cost
-        
+
         if success:
             self.metrics.success_count += 1
         else:
             self.metrics.error_count += 1
-        
+
         # Update average response time
         self.metrics.average_response_time = (
-            (self.metrics.average_response_time * (self.metrics.request_count - 1) + response_time) 
+            (self.metrics.average_response_time * (self.metrics.request_count - 1) + response_time)
             / self.metrics.request_count
         )
-        
+
         # Send metrics to collector
         self.metrics_collector.record_gauge("openai.requests.total", self.metrics.request_count)
         self.metrics_collector.record_gauge("openai.requests.success", self.metrics.success_count)

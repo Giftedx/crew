@@ -121,7 +121,7 @@ The enhanced metrics dashboard has been successfully implemented, providing a co
 # Basic dashboard
 make enhanced-metrics
 
-# Dashboard on all interfaces  
+# Dashboard on all interfaces
 make enhanced-metrics-host
 
 # Debug mode

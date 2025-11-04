@@ -82,7 +82,7 @@ Traces are saved as JSON files in `crew_data/Logs/traces/` with this structure:
     {
       "step_number": 1,
       "timestamp": "2025-09-27T14:30:22.123Z",
-      "agent_role": "Multi-Platform Content Acquisition Specialist", 
+      "agent_role": "Multi-Platform Content Acquisition Specialist",
       "tool": "MultiPlatformDownloadTool",
       "step_type": "tool_execution",
       "status": "completed",
@@ -148,7 +148,7 @@ Identifies bottlenecks and patterns:
 🐌 Slowest Operations:
     12.3s - Advanced Transcription Engineer using AudioTranscriptionTool
      8.7s - Information Verification Director using FactCheckTool
-     
+
 🔧 Tool Performance Summary:
    MultiPlatformDownloadTool....   3 uses | avg:     2.1s | max:     4.2s
    AudioTranscriptionTool.......   1 uses | avg:    12.3s | max:    12.3s

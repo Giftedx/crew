@@ -11,7 +11,7 @@
 **Reason**: Replaced by UnifiedCache with adaptive bandit-based optimization
 **Migration Target**: `UnifiedCache.get()` / `UnifiedCache.set()` with automatic optimization
 
-### 2. services/rl_cache_optimizer.py  
+### 2. services/rl_cache_optimizer.py
 
 **Reason**: Consolidated into UnifiedCache's internal bandit system
 **Migration Target**: UnifiedCache (no manual optimizer needed)
@@ -141,7 +141,7 @@ ENABLE_SEMANTIC_CACHE=true     # Optional: semantic similarity caching
    # Find usages
    grep -r "from services.cache_optimizer import" src/
    grep -r "from performance.cache_warmer import" src/
-   
+
    # Replace with
    from ultimate_discord_intelligence_bot.cache import get_unified_cache
    ```
@@ -158,7 +158,7 @@ ENABLE_SEMANTIC_CACHE=true     # Optional: semantic similarity caching
    ```python
    # OLD: optimizer.optimize_cache(key, value, pattern)
    # NEW: cache.set(key, value, ttl=3600)
-   
+
    # OLD: result = optimizer.get_cached(key)
    # NEW: result = cache.get(key)
    ```

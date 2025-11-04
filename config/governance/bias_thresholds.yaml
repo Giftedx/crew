@@ -210,7 +210,7 @@ detection_patterns:
       - "data"
       - "research"
       - "studies"
-    
+
     opposing:
       - "refutes"
       - "contradicts"
@@ -352,13 +352,13 @@ mitigation_strategies:
     - "Use neutral language"
     - "Add multiple sources"
     - "Acknowledge limitations"
-  
+
   moderate_bias:
     - "Consider alternative viewpoints"
     - "Balance supporting and opposing evidence"
     - "Reduce emotional language"
     - "Include additional sources"
-  
+
   low_bias:
     - "Minor adjustments recommended"
     - "Consider adding context"

@@ -17,7 +17,7 @@ All features are tenant-aware and respect existing guardrails (StepResult, retri
 Minimal .env snippet:
 
 ```bash
- 
+
 ENABLE_GPTCACHE=true
 ENABLE_SEMANTIC_CACHE_SHADOW=true
 ENABLE_GPTCACHE_ANALYSIS_SHADOW=true

@@ -2,11 +2,17 @@
 
 Complete API documentation for the advanced contextual bandit system.
 
+**Current Implementation**: `src/platform/rl/core/policies/linucb.py` (154 lines)
+**Primary Class**: `LinUCBDiagBandit` (lightweight diagonal LinUCB policy)
+**Status**: Active in LLM routing and model selection
+
+> **Note**: This document describes the conceptual API and advanced bandit patterns. The production implementation uses `LinUCBDiagBandit` for performance. See `src/platform/rl/` for current code.
+
 ## Core Classes
 
 ### DoublyRobustBandit
 
-**Location:** `src/core/rl/policies/advanced_bandits.py`
+**Location:** `src/core/rl/policies/advanced_bandits.py` (Conceptual)
 
 ```python
 class DoublyRobustBandit:

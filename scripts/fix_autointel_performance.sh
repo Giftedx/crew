@@ -23,7 +23,7 @@ add_or_update_env() {
     local key=$1
     local value=$2
     local comment=$3
-    
+
     if grep -q "^${key}=" .env; then
         # Update existing
         sed -i.bak "s|^${key}=.*|${key}=${value}|" .env

@@ -44,7 +44,7 @@ All changes must pass these quality gates before merge:
 ### 1. Linting and Formatting
 
 ```bash
-make format     # Auto-fix style & imports  
+make format     # Auto-fix style & imports
 make lint       # Lint check (CI style)
 ```
 
@@ -147,7 +147,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```bash
 feat: add new vector search optimization
-fix: resolve memory leak in content pipeline  
+fix: resolve memory leak in content pipeline
 docs: update tool development guide
 refactor: simplify error handling in tools
 test: add integration tests for debate analysis
@@ -163,7 +163,7 @@ chore: update dependencies to latest versions
 def process_url(url: str) -> StepResult:
     if not url or not isinstance(url, str):
         return StepResult.fail("Invalid URL")
-    
+
     if not is_valid_url(url):
         return StepResult.fail("URL validation failed")
 ```

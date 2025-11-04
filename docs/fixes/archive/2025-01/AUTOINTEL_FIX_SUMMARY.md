@@ -18,7 +18,7 @@ crew_instance = UltimateDiscordIntelligenceBotCrew()
 agent = crew_instance.analysis_cartographer()  # Creates agent
 self.agent_coordinators["analysis_cartographer"] = agent  # Caches it
 
-# Stage 5: Content Analysis  
+# Stage 5: Content Analysis
 agent = self.agent_coordinators["analysis_cartographer"]  # Gets cached agent
 self._populate_agent_tool_context(agent, {"transcript": "..."})  # ✅ Populates context
 # Tools work correctly here!
@@ -34,7 +34,7 @@ self._populate_agent_tool_context(agent, {"transcript": "..."})  # Populates THI
 
 - Tools in later stages received empty/default parameters
 - `TextAnalysisTool` got empty `text` parameter
-- `FactCheckTool` got empty `claim` parameter  
+- `FactCheckTool` got empty `claim` parameter
 - `MemoryStorageTool` got empty data to store
 - All analysis/verification results were meaningless
 
@@ -47,26 +47,26 @@ self._populate_agent_tool_context(agent, {"transcript": "..."})  # Populates THI
 ```python
 def _get_or_create_agent(self, agent_name: str) -> Any:
     """Get agent from coordinators cache or create and cache it.
-    
+
     CRITICAL: This ensures agents are created ONCE and reused across stages.
     """
     if not hasattr(self, "agent_coordinators"):
         self.agent_coordinators = {}
-    
+
     # Return cached agent if available
     if agent_name in self.agent_coordinators:
         self.logger.debug(f"✅ Reusing cached agent: {agent_name}")
         return self.agent_coordinators[agent_name]
-    
+
     # Create new agent and cache it
     if not hasattr(self, "crew_instance") or self.crew_instance is None:
         from .crew import UltimateDiscordIntelligenceBotCrew
         self.crew_instance = UltimateDiscordIntelligenceBotCrew()
-    
+
     agent_method = getattr(self.crew_instance, agent_name, None)
     if not agent_method:
         raise ValueError(f"Unknown agent: {agent_name}")
-    
+
     agent = agent_method()
     self.agent_coordinators[agent_name] = agent
     self.logger.info(f"✨ Created and cached new agent: {agent_name}")

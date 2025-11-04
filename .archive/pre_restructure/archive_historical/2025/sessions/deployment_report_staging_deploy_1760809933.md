@@ -35,8 +35,8 @@
 
 - **install_dependencies:** ❌ Failed: [31mERROR: Could not open requirements file: [Errno 2] No such file or directory: 'requirements.txt'[0m[31m
 [0m
-- **type_checking:** ❌ Failed: 
-- **run_tests:** ❌ Failed: 
+- **type_checking:** ❌ Failed:
+- **run_tests:** ❌ Failed:
 
 ## Infrastructure Deployment
 
@@ -44,10 +44,10 @@
 - **Successful:** 0
 - **Failed:** 4
 
-- **postgresql:** ❌ Failed: 
-- **redis:** ❌ Failed: 
-- **qdrant:** ❌ Failed: 
-- **minio:** ❌ Failed: 
+- **postgresql:** ❌ Failed:
+- **redis:** ❌ Failed:
+- **qdrant:** ❌ Failed:
+- **minio:** ❌ Failed:
 
 ## Monitoring Deployment
 
@@ -55,9 +55,9 @@
 - **Successful:** 0
 - **Failed:** 3
 
-- **prometheus:** ❌ Failed: 
-- **grafana:** ❌ Failed: 
-- **alertmanager:** ❌ Failed: 
+- **prometheus:** ❌ Failed:
+- **grafana:** ❌ Failed:
+- **alertmanager:** ❌ Failed:
 
 ## Application Deployment
 
@@ -65,9 +65,9 @@
 - **Successful:** 0
 - **Failed:** 3
 
-- **discord-bot:** ❌ Failed: 
-- **api-server:** ❌ Failed: 
-- **worker-processes:** ❌ Failed: 
+- **discord-bot:** ❌ Failed:
+- **api-server:** ❌ Failed:
+- **worker-processes:** ❌ Failed:
 
 ## Health Checks
 

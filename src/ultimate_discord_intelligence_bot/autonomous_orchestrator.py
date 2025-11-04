@@ -1277,7 +1277,7 @@ class AutonomousIntelligenceOrchestrator:
                     duration = media_info.get("duration", "Unknown Duration")
                     analysis_task = Task(
                         description=dedent(
-                            f"""\n                            Analyze content from {platform} video: '{title}' (URL: {source_url})\n\n                            Duration: {duration}\n\n                            ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:\n\n                            The complete transcript ({len(transcript)} characters) and ALL media metadata are\n                            ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.\n\n                            ❌ WRONG - DO NOT DO THIS:\n                            - TextAnalysisTool(text="transcript content here...")  # NEVER pass text parameter!\n                            - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!\n\n                            ✅ CORRECT - DO THIS INSTEAD:\n                            - TextAnalysisTool()  # Tools auto-access data from shared context\n                            - FactCheckTool()  # No parameters needed - data is pre-loaded\n\n                            When calling ANY tool, OMIT the text/transcript/content/claim parameters.\n                            The tools have DIRECT ACCESS to:\n                            - Full transcript ({len(transcript)} chars) - accessible as 'text' parameter internally\n                            - Media metadata (title, platform, duration, uploader)\n                            - Timeline anchors: {len(transcription_data.get('timeline_anchors', []))} available\n                            - Quality score: {transcription_data.get('quality_score', 0)}\n\n                            YOUR TASK:\n                            Use TextAnalysisTool (WITH NO PARAMETERS) to analyze linguistic patterns, sentiment,\n                            and thematic insights. The tool will automatically access the transcript from shared context.\n\n                            Provide comprehensive analysis including:\n                            - Sentiment analysis\n                            - Key themes and topics\n                            - Important contextual insights\n                            - Linguistic patterns\n                            """
+                            f"""\n                            Analyze content from {platform} video: '{title}' (URL: {source_url})\n\n                            Duration: {duration}\n\n                            ⚠️ CRITICAL INSTRUCTIONS - DATA IS PRE-LOADED:\n\n                            The complete transcript ({len(transcript)} characters) and ALL media metadata are\n                            ALREADY AVAILABLE in the tool's shared context. You MUST NOT pass these as parameters.\n\n                            ❌ WRONG - DO NOT DO THIS:\n                            - TextAnalysisTool(text="transcript content here...")  # NEVER pass text parameter!\n                            - FactCheckTool(claim="some claim...")  # NEVER pass claim parameter!\n\n                            ✅ CORRECT - DO THIS INSTEAD:\n                            - TextAnalysisTool()  # Tools auto-access data from shared context\n                            - FactCheckTool()  # No parameters needed - data is pre-loaded\n\n                            When calling ANY tool, OMIT the text/transcript/content/claim parameters.\n                            The tools have DIRECT ACCESS to:\n                            - Full transcript ({len(transcript)} chars) - accessible as 'text' parameter internally\n                            - Media metadata (title, platform, duration, uploader)\n                            - Timeline anchors: {len(transcription_data.get("timeline_anchors", []))} available\n                            - Quality score: {transcription_data.get("quality_score", 0)}\n\n                            YOUR TASK:\n                            Use TextAnalysisTool (WITH NO PARAMETERS) to analyze linguistic patterns, sentiment,\n                            and thematic insights. The tool will automatically access the transcript from shared context.\n\n                            Provide comprehensive analysis including:\n                            - Sentiment analysis\n                            - Key themes and topics\n                            - Important contextual insights\n                            - Linguistic patterns\n                            """
                         ).strip(),
                         expected_output="Comprehensive content analysis with linguistic mapping, sentiment analysis, thematic insights, and structured annotations for the specified video content",
                         agent=analysis_agent,
@@ -2299,7 +2299,7 @@ class AutonomousIntelligenceOrchestrator:
                                 conf_raw = r.data.get("confidence")
                             verdict = str(verdict_raw).strip().lower() if isinstance(verdict_raw, str) else None
                             confidence = 0.5
-                            if isinstance(conf_raw, (int, float, str)):
+                            if isinstance(conf_raw, int | float | str):
                                 try:
                                     confidence = float(conf_raw)
                                 except Exception:
@@ -2490,7 +2490,7 @@ class AutonomousIntelligenceOrchestrator:
                 verdict_bool = None
                 if isinstance(tr, StepResult) and tr.success:
                     score = tr.data.get("score") if isinstance(tr.data, dict) else None
-                    if isinstance(score, (int, float)):
+                    if isinstance(score, int | float):
                         verdict_bool = bool(score >= 0.55)
                 if verdict_bool is None:
                     true_ct = sum(1 for b in truth_verdicts if b is True)
@@ -2557,7 +2557,7 @@ class AutonomousIntelligenceOrchestrator:
                     text=knowledge_payload.get("analysis_summary", ""),
                     metadata=knowledge_payload,
                     index="autointel_analysis",
-                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"]
+                    tags=[f"platform:{knowledge_payload.get('platform', 'unknown')}"],
                 )
             )
             hipporag_task = asyncio.create_task(

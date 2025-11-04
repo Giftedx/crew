@@ -4,7 +4,7 @@ This directory is deprecated per ADR-0003 (Routing Consolidation).
 
 **Canonical Replacement**: `src/ultimate_discord_intelligence_bot/services/openrouter_service/`
 
-**Migration Status**: Pending  
+**Migration Status**: Pending
 **Target Removal**: TBD (after all callers migrated)
 
 **Reason**: Consolidation of 15+ router implementations into unified routing stack.

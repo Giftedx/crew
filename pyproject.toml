@@ -171,6 +171,8 @@ where = ["src"]
 target-version = "py310"
 line-length = 120
 extend-exclude = [
+    ".archive",
+    ".archive/**",
     "src/ultimate_discord_intelligence_bot/optimized",
     "src/ultimate_discord_intelligence_bot/optimized/**",
     "src/fastapi",
@@ -230,6 +232,17 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "src/core/routing/semantic_routing_cache.py" = ["F401"]
+"src/platform/llm/routing/semantic_routing_cache.py" = ["F401"]
+"src/platform/http/http_utils.py" = ["E402"]
+"src/platform/http/retry.py" = ["E402"]
+"src/platform/observability/enhanced_langsmith_integration.py" = ["F401"]
+"src/platform/__init__.py" = ["A005"]
+"src/discord/reasoning/hierarchical_reasoner.py" = ["F841", "SIM102"]
+"src/discord/routing_adapter.py" = ["SIM108"]
+"src/discord/reasoning/adaptive_decision_tree.py" = ["SIM108"]
+"src/app/config/settings.py" = ["TCH003", "PIE810"]
+"src/domains/orchestration/legacy/protocols.py" = ["B027"]
+"src/ultimate_discord_intelligence_bot/crewai_tool_wrappers.py" = ["F401"]
 "tests/**/*.py" = [
     "S101",   # allow assertions
     "ARG",    # unused-argument patterns

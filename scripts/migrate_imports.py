@@ -44,7 +44,6 @@ class ImportRewriter(ast.NodeTransformer):
             "core.secure_config": "platform.config.configuration",
             "core.settings": "platform.config.settings",
             "core": "platform",
-            
             # AI/RL migrations
             "ai": "platform.rl",
             "ai.rl": "platform.rl",
@@ -52,13 +51,11 @@ class ImportRewriter(ast.NodeTransformer):
             "ai.bandits": "platform.rl.bandits",
             "ai.meta_learning": "platform.rl.meta_learning",
             "ai.feature_engineering": "platform.rl.feature_engineering",
-            
             # Observability migrations
             "obs": "platform.observability",
             "obs.metrics": "platform.observability.metrics",
             "obs.tracing": "platform.observability.tracing",
             "obs.logging": "platform.observability.logging",
-            
             # === Domain Layer Migrations ===
             # Ingestion
             "ingest": "domains.ingestion.pipeline",
@@ -66,7 +63,6 @@ class ImportRewriter(ast.NodeTransformer):
             "ingest.providers": "domains.ingestion.providers",
             "ingest.sources": "domains.ingestion.pipeline.sources",
             "ingest.models": "domains.ingestion.pipeline.models",
-            
             # Analysis
             "analysis": "domains.intelligence.analysis",
             "analysis.deduplication": "domains.intelligence.analysis.deduplication",
@@ -78,7 +74,6 @@ class ImportRewriter(ast.NodeTransformer):
             "analysis.transcription": "domains.intelligence.analysis.transcription",
             "analysis.vision": "domains.intelligence.analysis.vision",
             "analysis.rerank": "domains.intelligence.analysis.rerank",
-            
             # Memory
             "memory": "domains.memory",
             "memory.api": "domains.memory.api",
@@ -89,7 +84,6 @@ class ImportRewriter(ast.NodeTransformer):
             "memory.graph": "domains.memory.graph",
             "memory.continual": "domains.memory.continual",
             "memory.qdrant_provider": "domains.memory.vector.qdrant",
-            
             # === App Layer Migrations ===
             # Discord bot
             "ultimate_discord_intelligence_bot.discord": "app.discord",
@@ -99,52 +93,40 @@ class ImportRewriter(ast.NodeTransformer):
             "ultimate_discord_intelligence_bot.main": "app.main",
             "ultimate_discord_intelligence_bot.step_result": "platform.core.step_result",
             "ultimate_discord_intelligence_bot.settings": "app.config.settings",
-            
             # Orchestration
             "ultimate_discord_intelligence_bot.orchestrator": "domains.orchestration",
             "ultimate_discord_intelligence_bot.agents": "domains.orchestration.crewai.agents",
             "ultimate_discord_intelligence_bot.crew_core": "domains.orchestration.crew",
             "ultimate_discord_intelligence_bot.crew_components": "domains.orchestration.crewai",
-            
             # Services
             "ultimate_discord_intelligence_bot.services.openrouter_service": "platform.llm.providers.openrouter",
             "ultimate_discord_intelligence_bot.services.prompt_engine": "platform.prompts.engine",
             "ultimate_discord_intelligence_bot.services.memory_service": "domains.memory",
-            
             # Tools (moved to domains)
             "ultimate_discord_intelligence_bot.tools.analysis": "domains.intelligence.analysis.tools",
             "ultimate_discord_intelligence_bot.tools.verification": "domains.intelligence.verification.tools",
             "ultimate_discord_intelligence_bot.tools.acquisition": "domains.ingestion.providers.tools",
             "ultimate_discord_intelligence_bot.tools.memory": "domains.memory.tools",
-            
             # Observability
             "ultimate_discord_intelligence_bot.observability": "platform.observability",
             "ultimate_discord_intelligence_bot.obs": "platform.observability",
-            
             # Memory (app layer)
             "ultimate_discord_intelligence_bot.memory": "domains.memory",
-            
             # === Framework Consolidations ===
             # CrewAI
             "domains.orchestration.crewai.agents": "domains.orchestration.crewai.agents",
             "domains.orchestration.crewai.tasks": "domains.orchestration.crewai.tasks",
             "domains.orchestration.crewai.crew": "domains.orchestration.crewai.crew",
-            
             # Qdrant
             "domains.memory.vector.qdrant": "domains.memory.vector.qdrant",
-            
             # DSPy
             "platform.prompts.dspy": "platform.prompts.dspy",
-            
             # LlamaIndex
             "platform.rag.llamaindex": "platform.rag.llamaindex",
-            
             # Mem0
             "domains.memory.continual.mem0": "domains.memory.continual.mem0",
-            
             # HippoRAG
             "domains.memory.continual.hipporag": "domains.memory.continual.hipporag",
-            
             # === Preserved Modules ===
             "server": "server",
             "mcp_server": "mcp_server",
@@ -187,11 +169,10 @@ class ImportRewriter(ast.NodeTransformer):
         longest_match = ""
         longest_new_prefix = ""
         for old_prefix, new_prefix in self.IMPORT_MAPPINGS.items():
-            if old_module.startswith(old_prefix + "."):
-                # Use longest prefix to avoid partial matches
-                if len(old_prefix) > len(longest_match):
-                    longest_match = old_prefix
-                    longest_new_prefix = new_prefix
+            # Use longest prefix to avoid partial matches
+            if old_module.startswith(old_prefix + ".") and len(old_prefix) > len(longest_match):
+                longest_match = old_prefix
+                longest_new_prefix = new_prefix
 
         if longest_match:
             suffix = old_module[len(longest_match) :]
@@ -201,9 +182,8 @@ class ImportRewriter(ast.NodeTransformer):
         # Keep as fallback for any edge cases
         if old_module.startswith("src."):
             parts = old_module.split(".")
-            if len(parts) >= 2:
-                if parts[1] in ["core", "ai", "obs", "http", "cache", "config", "security"]:
-                    return f"platform.{'.'.join(parts[1:])}"
+            if len(parts) >= 2 and parts[1] in ["core", "ai", "obs", "http", "cache", "config", "security"]:
+                return f"platform.{'.'.join(parts[1:])}"
 
         return None
 
@@ -239,7 +219,7 @@ def rewrite_file(file_path: Path, dry_run: bool = False, backup: bool = True) ->
             if backup:
                 backup_path = file_path.with_suffix(file_path.suffix + ".bak")
                 backup_path.write_text(source, encoding="utf-8")
-            
+
             file_path.write_text(new_source, encoding="utf-8")
 
         return True, rewriter.changes
@@ -250,7 +230,13 @@ def rewrite_file(file_path: Path, dry_run: bool = False, backup: bool = True) ->
         return False, [f"ERROR: {e}"]
 
 
-def main(target_dirs: list[Path], dry_run: bool = True, verbose: bool = False, backup: bool = True, pattern_filter: str | None = None):
+def main(
+    target_dirs: list[Path],
+    dry_run: bool = True,
+    verbose: bool = False,
+    backup: bool = True,
+    pattern_filter: str | None = None,
+):
     """Run migration across all Python files.
 
     Args:
@@ -273,7 +259,7 @@ def main(target_dirs: list[Path], dry_run: bool = True, verbose: bool = False, b
     # Filter files by pattern if specified
     if pattern_filter:
         files = [f for f in files if pattern_filter in str(f) or pattern_filter in f.read_text()]
-    
+
     # Exclude backup files
     files = [f for f in files if not f.name.endswith(".bak")]
 

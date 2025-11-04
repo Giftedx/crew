@@ -43,7 +43,7 @@ class RoutingAdapter:
                 selected_model = candidates[0] if candidates else "openai/gpt-4o-mini"
                 logger.debug(f"Routing manager returned None, using fallback: {selected_model}")
             else:
-                trial_index, selected_model = suggestion
+                _trial_index, selected_model = suggestion
             return StepResult.ok(data={"model": selected_model, "task_type": task_type})
         except Exception as e:
             logger.error(f"Failed to suggest model: {e}", exc_info=True)

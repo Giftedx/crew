@@ -1,10 +1,17 @@
 # Analysis Module Documentation
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Analysis Domain**: `src/domains/intelligence/analysis/` (primary location)
+- **Legacy Analysis**: `src/analysis/` (being migrated)
+- **Analysis Tools**: 23 tools in Analysis category (21% of 111 total tools)
+- **Modules**: Segmenter, topic extraction, transcription, content chunking
+
 The analysis package provides utilities for processing and analyzing transcript data, topics, and other content. These modules support the ingestion pipeline and RAG functionality.
 
 ## Overview
 
-**Location:** `src/analysis/`
+**Location:** `src/analysis/` (legacy), `src/domains/intelligence/analysis/` (current)
 
 The analysis modules handle:
 

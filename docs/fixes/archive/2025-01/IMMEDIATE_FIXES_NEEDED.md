@@ -38,7 +38,7 @@ pip install -e '.[whisper]'
 **Error**:
 
 ```
-ERROR: OpenRouterService route failed task=analysis model=openai/gpt-4o-mini 
+ERROR: OpenRouterService route failed task=analysis model=openai/gpt-4o-mini
 provider=unknown err=openrouter_error status=404
 ```
 

@@ -393,7 +393,7 @@ gdpr = GDPRCompliance()
 async def handle_data_deletion_request(user_id: str):
     # Delete all user data
     await gdpr.delete_user_data(user_id)
-    
+
     # Log deletion
     await audit_logger.log_event(
         event_type="gdpr_deletion",
@@ -470,7 +470,7 @@ def test_rate_limiting(security_helper):
     # Test rate limiting
     for _ in range(15):  # Exceed limit
         result = security_helper.check_rate_limit("user123")
-    
+
     assert not result.can_proceed
 ```
 
@@ -481,7 +481,7 @@ def test_data_anonymization(security_helper):
     # Test data anonymization
     original = {"email": "test@example.com", "name": "John Doe"}
     anonymized = security_helper.anonymize_data(original)
-    
+
     assert anonymized["email"] != original["email"]
     assert anonymized["name"] == original["name"]  # Preserved field
 ```

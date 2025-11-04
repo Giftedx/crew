@@ -3,9 +3,17 @@ title: Contributing Guide
 origin: CONTRIBUTING.md (root)
 status: migrated
 last_moved: 2025-09-02
+last_verified: 2025-11-03
 ---
 
 Thanks for your interest in improving the project! This guide summarizes the local workflow, quality gates, and incremental improvement policies (lint & typing) so changes stay fast and safe.
+
+**Project Stats** (verified November 3, 2025):
+
+- **111 specialized tools** across 9 categories
+- **18 autonomous agents** with role-based tool access
+- **7-phase content pipeline** with early exit system
+- **3-layer architecture** (Platform/Domains/App)
 
 ## Quick Start
 

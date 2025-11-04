@@ -30,23 +30,23 @@ class UnifiedConfig:
     environment: str = "development"
     debug: bool = False
     log_level: str = "INFO"
-    
+
     # API Keys
     openai_api_key: Optional[str] = None
     openrouter_api_key: Optional[str] = None
     discord_bot_token: Optional[str] = None
-    
+
     # Feature Flags (ENABLE_* pattern)
     enable_debate_analysis: bool = True
     enable_fact_checking: bool = True
     enable_sentiment_analysis: bool = True
     # ... and many more
-    
+
     # Performance Settings
     max_workers: int = 4
     request_timeout: int = 30
     max_retries: int = 3
-    
+
     # Path Configuration
     base_dir: Path = field(default_factory=lambda: Path.cwd())
     data_dir: Path = field(default_factory=lambda: Path.cwd() / "data")
@@ -125,7 +125,7 @@ class UnifiedConfig:
 def from_env(cls) -> "UnifiedConfig":
     """Create configuration from environment variables with precedence."""
     config = cls()
-    
+
     # Load from environment variables
     for field_name, field_info in config.__dataclass_fields__.items():
         env_var = field_name.upper()
@@ -133,7 +133,7 @@ def from_env(cls) -> "UnifiedConfig":
         if env_value is not None:
             # Convert to appropriate type
             setattr(config, field_name, converted_value)
-    
+
     config.validate()
     return config
 ```
@@ -158,18 +158,18 @@ def set_feature_flag(self, flag_name: str, value: bool) -> None:
 def validate(self) -> None:
     """Validate configuration settings."""
     errors = []
-    
+
     # Validate required settings
     if not self.openai_api_key and not self.openrouter_api_key:
         errors.append("Either OPENAI_API_KEY or OPENROUTER_API_KEY must be set")
-    
+
     if self.enable_discord_integration and not self.discord_bot_token:
         errors.append("DISCORD_BOT_TOKEN is required when Discord integration is enabled")
-    
+
     # Validate numeric settings
     if self.max_workers < 1:
         errors.append("max_workers must be at least 1")
-    
+
     if errors:
         raise ValueError(f"Configuration validation failed: {'; '.join(errors)}")
 ```

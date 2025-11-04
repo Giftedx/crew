@@ -1,8 +1,8 @@
 # Extractors Module Unit Tests - Implementation Complete
 
-**Date**: 2025-01-04  
-**Module**: `src/ultimate_discord_intelligence_bot/orchestrator/extractors.py`  
-**Test File**: `tests/orchestrator/modules/test_extractors_unit.py`  
+**Date**: 2025-01-04
+**Module**: `src/ultimate_discord_intelligence_bot/orchestrator/extractors.py`
+**Test File**: `tests/orchestrator/modules/test_extractors_unit.py`
 **Status**: ✅ **COMPLETE - 51/51 tests passing**
 
 ---
@@ -245,7 +245,7 @@ Successfully created **51 comprehensive unit tests** for the extractors module, 
 }
 ```
 
-**Default (None input)**: `{"score": 0.0, "factors": []}`  
+**Default (None input)**: `{"score": 0.0, "factors": []}`
 **Error Return**: `{"score": 0.5, "factors": [], "error": "assessment_failed"}`
 
 ---
@@ -307,16 +307,16 @@ Successfully created **51 comprehensive unit tests** for the extractors module, 
 }
 ```
 
-**Default (None input)**: `{"validated": False, "reason": "no_analysis"}`  
+**Default (None input)**: `{"validated": False, "reason": "no_analysis"}`
 **Error Return**: `{"validated": False, "reason": "validation_failed"}`
 
 ---
 
 ## Test Coverage Summary
 
-**Total Tests**: 51  
-**Test Classes**: 12  
-**Pass Rate**: 100%  
+**Total Tests**: 51
+**Test Classes**: 12
+**Pass Rate**: 100%
 **Function Coverage**: 100% (12/12 functions)
 
 ### Test Distribution
@@ -608,9 +608,9 @@ Successfully extended unit test coverage to the extractors module, maintaining t
 
 ---
 
-**Status**: ✅ **EXTRACTORS UNIT TESTS COMPLETE**  
-**Test File**: `tests/orchestrator/modules/test_extractors_unit.py`  
-**Tests**: 51/51 passing  
-**Coverage**: 100% of extractors.py functions  
-**Performance**: 0.12s execution (2.4ms avg per test)  
+**Status**: ✅ **EXTRACTORS UNIT TESTS COMPLETE**
+**Test File**: `tests/orchestrator/modules/test_extractors_unit.py`
+**Tests**: 51/51 passing
+**Coverage**: 100% of extractors.py functions
+**Performance**: 0.12s execution (2.4ms avg per test)
 **Compliance**: All guards passing
