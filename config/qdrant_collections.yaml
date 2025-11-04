@@ -69,21 +69,21 @@ collections:
 metadata:
   # Tenant-aware namespace isolation
   namespace_template: "{tenant}_{workspace}_{collection}"
-  
+
   # TTL settings for cache collections
   cache_ttl_hours: 24
-  
+
   # Indexing configuration
   indexing:
     # Batch size for embedding generation
     batch_size: 100
-    
+
     # Similarity threshold for cache hits
     similarity_threshold: 0.85
-    
+
     # Maximum results per query
     max_results: 50
-    
+
     # Context window for RAG
     context_window: 5
 
@@ -91,19 +91,19 @@ metadata:
 performance:
   # Connection pool settings
   connection_pool_size: 10
-  
+
   # Query timeout (seconds)
   query_timeout: 30
-  
+
   # Batch processing settings
   batch_processing:
     max_batch_size: 1000
     batch_timeout: 60
-    
+
   # Memory optimization
   memory:
     # Enable on-disk storage for large collections
     on_disk_storage: true
-    
+
     # Compression for payload data
     payload_compression: true

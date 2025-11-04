@@ -1,7 +1,7 @@
 # Week 3 Next Steps Decision
 
-**Date:** October 4, 2025  
-**Status:** 🤔 **DECISION REQUIRED**  
+**Date:** October 4, 2025
+**Status:** 🤔 **DECISION REQUIRED**
 **Context:** Baseline too fast (2.7 min vs expected 10.5 min)
 
 ---

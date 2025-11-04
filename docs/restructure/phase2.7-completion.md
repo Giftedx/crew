@@ -65,4 +65,3 @@ Only root-level files remain in `core/`:
 - Phase 2.8: Verify zero imports from migrated core/ subdirectories
 - Update imports from `core.{module}.*` to `platform.{target}.*` or `domains.{target}.*`
 - Run test suite to verify functionality
-

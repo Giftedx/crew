@@ -53,11 +53,11 @@ schema_fields = {}
 for param_name, param in sig.parameters.items():
     if param_name == "self":
         continue
-    
+
     # ✅ NEW: Skip **kwargs variadic keyword arguments
     if param.kind == inspect.Parameter.VAR_KEYWORD:
         continue
-    
+
     # Skip keyword-only tenant/workspace params
     if param_name in ("tenant_id", "workspace_id") and param.kind == inspect.Parameter.KEYWORD_ONLY:
         continue
@@ -76,7 +76,7 @@ if tool_cls.endswith("DownloadTool"):
     # video_url ← url (or source_url)
     if "video_url" not in final_kwargs and ("url" in final_kwargs or "source_url" in final_kwargs):
         final_kwargs["video_url"] = final_kwargs.get("url") or final_kwargs.get("source_url")
-    
+
     # url ← video_url (or source_url)
     if "url" not in final_kwargs and ("video_url" in final_kwargs or "source_url" in final_kwargs):
         final_kwargs["url"] = final_kwargs.get("video_url") or final_kwargs.get("source_url")

@@ -10,7 +10,7 @@ This report provides a comprehensive analysis of the current test coverage for t
 The project has a well-organized test structure with the following directories:
 
 - **`tests/tools/`** - Tool-specific tests
-- **`tests/agents/`** - Agent tests  
+- **`tests/agents/`** - Agent tests
 - **`tests/services/`** - Service tests
 - **`tests/integration/`** - Integration tests
 - **`tests/e2e/`** - End-to-end tests
@@ -119,11 +119,11 @@ The tools are organized into the following categories:
        def test_successful_operation(self):
            """Test successful tool operation."""
            pass
-       
+
        def test_error_handling(self):
            """Test error handling."""
            pass
-       
+
        def test_input_validation(self):
            """Test input validation."""
            pass

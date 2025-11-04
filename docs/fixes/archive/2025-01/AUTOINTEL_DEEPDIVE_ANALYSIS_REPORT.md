@@ -1,8 +1,8 @@
 # /autointel Command Deep-Dive Analysis Report
 
-**Generated:** 2025-10-03  
-**Purpose:** Comprehensive technical analysis for complete project rewrite planning  
-**Command Analyzed:** `/autointel url: 'https://www.youtube.com/watch?v=xtFiJ8AVdW0' depth: 'Experimental - Cutting-Edge AI'`  
+**Generated:** 2025-10-03
+**Purpose:** Comprehensive technical analysis for complete project rewrite planning
+**Command Analyzed:** `/autointel url: 'https://www.youtube.com/watch?v=xtFiJ8AVdW0' depth: 'Experimental - Cutting-Edge AI'`
 **Status:** 🔄 IN PROGRESS - Living Document
 
 ---
@@ -39,7 +39,7 @@ The `/autointel` command is a **CrewAI-based multi-agent autonomous intelligence
 
 ### Critical Finding
 
-**MAJOR ARCHITECTURAL CHANGE (2025-10-03):**  
+**MAJOR ARCHITECTURAL CHANGE (2025-10-03):**
 The system was completely rewritten from a broken pattern (25 separate single-task crews with data embedded in task descriptions) to proper CrewAI architecture (1 crew with chained tasks using context parameter). This is documented in the code but represents a fundamental shift that must be understood for any rewrite.
 
 ---
@@ -191,7 +191,7 @@ ATTEMPT 1: Direct orchestrator
    orchestrator = AutonomousIntelligenceOrchestrator()
    ✅ Most common path
 
-ATTEMPT 2: Crew-based orchestrator  
+ATTEMPT 2: Crew-based orchestrator
    from ..crew import UltimateDiscordIntelligenceBotCrew
    orchestrator = UltimateDiscordIntelligenceBotCrew().autonomous_orchestrator()
    ⚠️  Fallback if direct import fails
@@ -230,10 +230,10 @@ try:
     await orchestrator.execute_autonomous_intelligence_workflow(
         interaction, url, depth, tenant_ctx
     )
-    
+
     execution_time = time.time() - start_time
     print(f"✅ Orchestrator completed in {execution_time:.2f}s")
-    
+
 except Exception as orchestrator_error:
     # Comprehensive error context logging
     error_context = {
@@ -261,31 +261,31 @@ async def execute_autonomous_intelligence_workflow(
     ARCHITECTURE (2025-10-03 REWRITE):
     - Previously: 25 separate single-task crews (BROKEN)
     - Now: 1 crew with chained tasks via context parameter
-    
+
     Depths:
     - standard: 3 tasks
-    - deep: 4 tasks  
+    - deep: 4 tasks
     - comprehensive/experimental: 5 tasks
     """
-    
+
     # 1. Setup
     workflow_id = f"autointel_{int(time.time())}_{hash(url) % 10000}"
-    
+
     # 2. Tenant context (if not provided)
     if not tenant_ctx:
         tenant_ctx = TenantContext(
             tenant_id=f"guild_{guild_id or 'dm'}",
             workspace_id=channel_name
         )
-    
+
     # 3. Depth canonicalization
     depth = _canonical_depth(depth)  # "Experimental - Cutting-Edge AI" → "experimental"
-    
+
     # 4. Feature gate check (experimental mode)
     if depth == "experimental" and not os.getenv("ENABLE_EXPERIMENTAL_DEPTH"):
         depth = "comprehensive"  # Safety fallback
         await send_message("⚠️ Experimental mode disabled, using comprehensive")
-    
+
     # 5. Execute within tenant context
     if tenant_ctx:
         from .tenancy import with_tenant
@@ -304,28 +304,28 @@ async def _execute_crew_workflow(
     self, interaction, url, depth, workflow_id, start_time
 ):
     """ONE crew with chained tasks - proper CrewAI architecture."""
-    
+
     # CRITICAL FIX: Reset global context between runs
     from .crewai_tool_wrappers import reset_global_crew_context
     reset_global_crew_context()  # Clean slate
-    
+
     # Build crew with task chaining
     await send_progress("🤖 Building CrewAI multi-agent system...", 1, 5)
     crew = self._build_intelligence_crew(url, depth)
-    
+
     # CRITICAL FIX: Populate initial context on all agents
     # Without this, first task (acquisition) doesn't see URL
     initial_context = {"url": url, "depth": depth}
     for agent in crew.agents:
         self._populate_agent_tool_context(agent, initial_context)
-    
+
     # Execute crew (blocking call in thread pool)
     await send_progress("⚙️ Executing intelligence workflow...", 2, 5)
     result = await asyncio.to_thread(
-        crew.kickoff, 
+        crew.kickoff,
         inputs={"url": url, "depth": depth}
     )
-    
+
     # Extract outputs from tasks
     task_outputs = {
         "acquisition": result.tasks_output[0].raw,
@@ -333,11 +333,11 @@ async def _execute_crew_workflow(
         "analysis": result.tasks_output[2].raw,
         # ... depth-dependent tasks
     }
-    
+
     # Format and send results
     await send_progress("📝 Formatting intelligence report...", 4, 5)
     result_message = build_report(result, url, depth, execution_time)
-    
+
     # Send to Discord (chunked for length limits)
     await interaction.followup.send(result_message[:2000])
 ```
@@ -351,49 +351,49 @@ def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
     """
     CRITICAL PATTERN (2025-10-03):
     Build ONE crew with chained tasks using context parameter.
-    
+
     WRONG (old pattern):
     ❌ for stage in stages:
     ❌     crew = Crew(agents=[agent], tasks=[Task(...)])
     ❌     crew.kickoff()  # Breaks data flow!
-    
+
     RIGHT (current pattern):
     ✅ Build all tasks with context=[previous_tasks]
     ✅ Return Crew(agents=[all], tasks=[all], process=Sequential)
     ✅ Data flows via CrewAI's internal context system
     """
-    
+
     # Get cached agents (created once, reused across tasks)
     acquisition_agent = self._get_or_create_agent("acquisition_specialist")
     transcription_agent = self._get_or_create_agent("transcription_engineer")
     analysis_agent = self._get_or_create_agent("analysis_cartographer")
     verification_agent = self._get_or_create_agent("verification_director")
     integration_agent = self._get_or_create_agent("knowledge_integrator")
-    
+
     # Build tasks with high-level descriptions (NO embedded data!)
     acquisition_task = Task(
         description="Acquire and download content from {url}",  # Placeholder for kickoff inputs
         agent=acquisition_agent,
         expected_output="Complete media file with metadata"
     )
-    
+
     transcription_task = Task(
         description="Enhance and index the acquired media transcript",
         agent=transcription_agent,
         context=[acquisition_task],  # ✅ Receives acquisition output
         expected_output="Enhanced transcript with timeline anchors"
     )
-    
+
     analysis_task = Task(
         description="Analyze linguistic patterns and sentiment",
         agent=analysis_agent,
         context=[transcription_task],  # ✅ Receives transcription output
         expected_output="Comprehensive content analysis"
     )
-    
+
     # Depth-dependent tasks
     tasks = [acquisition_task, transcription_task, analysis_task]
-    
+
     if depth in ["deep", "comprehensive", "experimental"]:
         verification_task = Task(
             description="Extract key TEXTUAL claims (NOT full JSON)...",  # FIX: Avoid JSON-in-JSON
@@ -402,17 +402,17 @@ def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
             expected_output="Verified claims with confidence scores"
         )
         tasks.append(verification_task)
-    
+
     if depth in ["comprehensive", "experimental"]:
         integration_task = Task(
             description="Review ALL previous task outputs...",  # FIX: Explicit instruction
             agent=integration_agent,
-            context=[acquisition_task, transcription_task, 
+            context=[acquisition_task, transcription_task,
                     analysis_task, verification_task],  # FIX: Full context (was just [verification])
             expected_output="Comprehensive intelligence briefing"
         )
         tasks.append(integration_task)
-    
+
     # Return single crew with all tasks
     return Crew(
         agents=[acquisition_agent, transcription_agent, analysis_agent, ...],
@@ -429,15 +429,15 @@ def _build_intelligence_crew(self, url: str, depth: str) -> Crew:
 ```python
 def _task_completion_callback(self, task_output: Any) -> None:
     """
-    CRITICAL FIX: CrewAI task context passes TEXT to LLM prompts, 
-    NOT structured data to tools. This callback extracts tool 
-    results and updates global crew context so subsequent tasks 
+    CRITICAL FIX: CrewAI task context passes TEXT to LLM prompts,
+    NOT structured data to tools. This callback extracts tool
+    results and updates global crew context so subsequent tasks
     can access the data.
     """
-    
+
     # Extract structured data from task output
     raw_str = str(task_output.raw)
-    
+
     # Try 4 extraction strategies (non-greedy patterns for nested JSON)
     strategies = [
         r"```json\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*```",  # JSON code block
@@ -445,7 +445,7 @@ def _task_completion_callback(self, task_output: Any) -> None:
         r'(\{(?:[^{}"]*"[^"]*"[^{}]*|[^{}]|\{...)*\})',  # Inline JSON
         r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})"             # Multiline JSON
     ]
-    
+
     for pattern, method in strategies:
         json_match = re.search(pattern, raw_str, re.DOTALL)
         if json_match:
@@ -457,11 +457,11 @@ def _task_completion_callback(self, task_output: Any) -> None:
                 repaired = self._repair_json(json_match.group(1))
                 output_data = json.loads(repaired)
                 break
-    
+
     # Update global crew context
     from .crewai_tool_wrappers import _GLOBAL_CREW_CONTEXT
     _GLOBAL_CREW_CONTEXT.update(output_data)
-    
+
     # Also update tools on all cached agents
     for agent in self.agent_coordinators.values():
         self._populate_agent_tool_context(agent, output_data)
@@ -472,28 +472,28 @@ def _task_completion_callback(self, task_output: Any) -> None:
 ```python
 def _repair_json(self, json_text: str) -> str:
     """Repair common JSON formatting issues in LLM outputs.
-    
+
     Strategies:
     1. Remove trailing commas before } or ]
     2. Convert single quotes to double quotes
     3. Escape unescaped quotes inside strings (heuristic)
     4. Remove newlines inside string values
     """
-    
+
     repaired = json_text
-    
+
     # Fix 1: Trailing commas
     repaired = re.sub(r',\s*([}\]])', r'\1', repaired)
-    
+
     # Fix 2: Single → double quotes
     repaired = repaired.replace("'", '"')
-    
+
     # Fix 3: Escape unescaped quotes (simplified heuristic)
     # ... implementation ...
-    
+
     # Fix 4: Remove newlines in strings
     repaired = repaired.replace('\n', ' ')
-    
+
     return repaired
 ```
 
@@ -595,21 +595,21 @@ Key Features:
    @staticmethod
    def _create_args_schema(wrapped_tool: Any) -> type[BaseModel] | None:
        """Create a Pydantic schema from the wrapped tool's run() signature.
-       
+
        Parameters that can be sourced from shared_context are marked as Optional
        with helpful descriptions, so the LLM understands it doesn't need to provide them.
        """
-       
+
        # Parameters that can be automatically sourced from shared_context
        SHARED_CONTEXT_PARAMS = {
            "text", "transcript", "content", "claim", "claims",
            "url", "source_url", "metadata", "media_info", "query",
            "question", "enhanced_transcript",
        }
-       
+
        # Extract parameters from tool signature
        sig = inspect.signature(wrapped_tool.run or wrapped_tool._run)
-       
+
        # Build Pydantic schema with Field() annotations
        schema_fields = {}
        for param_name, param in sig.parameters.items():
@@ -620,7 +620,7 @@ Key Features:
                schema_fields[param_name] = (field_type | None, None)
            else:
                schema_fields[param_name] = (field_type, Field(..., description=f"{param_name} parameter"))
-       
+
        # Create dynamic Pydantic model
        DynamicArgsSchema = type(f"{wrapped_tool.__class__.__name__}Args", (BaseModel,), class_dict)
        DynamicArgsSchema.model_rebuild(_types_namespace=_PYDANTIC_TYPES_NAMESPACE)
@@ -632,12 +632,12 @@ Key Features:
    ```python
    def update_context(self, context: dict[str, Any]) -> None:
        """Update shared context for data flow between tools.
-       
+
        CRITICAL FIX: Updates both instance-level AND global shared context.
        This ensures data flows across task boundaries in CrewAI crews where
        tools are attached to different agent instances.
        """
-       
+
        # Debug logging
        if context:
            print(f"🔄 Updating tool context with keys: {list(context.keys())}")
@@ -645,11 +645,11 @@ Key Features:
                print(f"   📝 transcript: {len(context['transcript'])} chars")
            if "media_info" in context:
                print(f"   📹 media_info: {list(context['media_info'].keys())}")
-       
+
        # Update BOTH instance and global context
        self._shared_context.update(context or {})
        _GLOBAL_CREW_CONTEXT.update(context or {})
-       
+
        # Metrics tracking
        metrics.counter("crewai_shared_context_updates", labels={...}).inc()
    ```
@@ -659,16 +659,16 @@ Key Features:
    ```python
    def _is_placeholder_or_empty(value: Any, param_name: str) -> bool:
        """Detect if a value is a placeholder, empty, or otherwise meaningless."""
-       
+
        if value is None or value == "":
            return True
-       
+
        normalized = value.strip().lower()
-       
+
        # Empty after normalization (< 10 chars)
        if not normalized or len(normalized) < 10:
            return True
-       
+
        # Common placeholder patterns
        placeholder_patterns = [
            "transcript data", "please provide", "the transcript",
@@ -676,18 +676,18 @@ Key Features:
            "[transcript]", "{{transcript}}", "n/a", "not available",
            "tbd", "todo",
        ]
-       
+
        if any(pattern in normalized for pattern in placeholder_patterns):
            return True
-       
+
        # Single-word "placeholders" (just parameter names)
        if normalized in {"transcript", "text", "content", "data", ...}:
            return True
-       
+
        # Very generic/vague phrases
        if normalized.startswith(("the ", "a ", "an ")) and len(normalized.split()) < 5:
            return True
-       
+
        return False
    ```
 
@@ -703,14 +703,14 @@ Key Features:
            or merged_context.get("text")
            or ""
        )
-       
+
        # Map transcript to 'text' parameter (TextAnalysisTool, LogicalFallacyTool, etc.)
        text_value = final_kwargs.get("text", "")
        text_is_placeholder = _is_placeholder_or_empty(text_value, "text")
        if "text" in allowed and text_is_placeholder and transcript_data:
            final_kwargs["text"] = transcript_data
            print(f"✅ Aliased transcript→text ({len(transcript_data)} chars)")
-       
+
        # Map transcript to 'claim' parameter (FactCheckTool)
        claim_value = final_kwargs.get("claim", "")
        claim_is_empty_or_missing = _is_placeholder_or_empty(claim_value, "claim")
@@ -719,13 +719,13 @@ Key Features:
                final_kwargs["claim"] = transcript_data[:500] + "..."
            else:
                final_kwargs["claim"] = transcript_data
-       
+
        # Map transcript to 'content' parameter (generic content processors)
        # Map claims/fact_checks to 'claims' parameter
        # Map media file path (for transcription tools)
        # Map media info
        # Map query/question parameters
-       
+
        # Map URL parameters (bidirectional aliasing)
        # CRITICAL FIX: Check both merged_context AND final_kwargs
        if "url" in allowed and "url" not in final_kwargs:
@@ -736,7 +736,7 @@ Key Features:
            )
            if url_data:
                final_kwargs["url"] = url_data
-       
+
        # Map video_url parameter (YouTube/download tools)
        if "video_url" in allowed and "video_url" not in final_kwargs:
            url_data = (
@@ -755,14 +755,14 @@ Key Features:
    sig = inspect.signature(target_fn)
    allowed = {p.name for p in params if p.kind in (POSITIONAL_OR_KEYWORD, KEYWORD_ONLY)}
    has_var_kw = any(p.kind == VAR_KEYWORD for p in params)
-   
+
    # Context-only parameters (never passed to tools)
    CONTEXT_ONLY_PARAMS = {"depth", "tenant_id", "workspace_id", "routing_profile_id"}
-   
+
    if not has_var_kw:
        # Standard filtering: only keep parameters in tool signature
        filtered_kwargs = {k: v for k, v in final_kwargs.items() if k in allowed}
-       
+
        # Critical debug: show what was filtered out
        removed = set(final_kwargs.keys()) - set(filtered_kwargs.keys())
        if removed:
@@ -785,7 +785,7 @@ Key Features:
        "DeceptionScoringTool": ["text"],
        "MemoryStorageTool": ["text"],
    }
-   
+
    if tool_cls in DATA_DEPENDENT_TOOLS:
        required_params = DATA_DEPENDENT_TOOLS[tool_cls]
        for param in required_params:
@@ -812,15 +812,15 @@ Key Features:
        res = self._wrapped_tool._run(**final_kwargs)
    else:
        res = self._wrapped_tool(**final_kwargs)
-   
+
    # Store result for potential tool chaining
    self._last_result = res
-   
+
    # Extract useful context for future tools
    # CRITICAL FIX: Remove 'last_' prefix so aliasing logic works correctly
    if hasattr(res, "data") and isinstance(res.data, dict):
        context_updates = {}
-       
+
        # Core data fields (no 'last_' prefix)
        if "url" in res.data:
            context_updates["url"] = res.data["url"]
@@ -832,11 +832,11 @@ Key Features:
            context_updates["media_info"] = res.data["media_info"]
        if "claims" in res.data:
            context_updates["claims"] = res.data["claims"]
-       
+
        if context_updates:
            print(f"📤 Updating global context with keys: {list(context_updates.keys())}")
            self.update_context(context_updates)
-   
+
    # Preserve StepResult structure - don't convert to strings
    if isinstance(res, StepResult):
        return res  # Return as-is to preserve all data
@@ -878,7 +878,7 @@ Key Features:
    def __init__(self, wrapped_tool, default_text: str | None = None, **kwargs):
        self._wrapped_tool = wrapped_tool
        self._default_text = default_text
-   
+
    def _run(self, text: str = "", **kwargs) -> Any:
        if not text and self._default_text:
            text = self._default_text
@@ -898,7 +898,7 @@ Key Features:
    ```python
    class AudioTranscriptionArgs(BaseModel):
        video_path: str = Field(..., description="Local path to the video file")
-   
+
    class AudioTranscriptionToolWrapper(BaseTool):
        args_schema: type[BaseModel] = AudioTranscriptionArgs
    ```
@@ -919,26 +919,26 @@ Key Features:
 ```python
 def _validate_tool_dependencies(self) -> dict[str, Any]:
     """Validate that tool dependencies are available before execution."""
-    
+
     missing_deps = []
     config_issues = []
     tool_cls = self._wrapped_tool.__class__.__name__
-    
+
     # Check common dependencies based on tool type
     if "YouTube" in tool_cls or "Download" in tool_cls:
         import shutil
         if not shutil.which("yt-dlp"):
             missing_deps.append("yt-dlp binary not found on PATH")
-    
+
     if "Discord" in tool_cls:
         webhook_url = getattr(self._wrapped_tool, "webhook_url", None)
         if not webhook_url or webhook_url.startswith("dummy"):
             config_issues.append("Discord webhook URL not configured")
-    
+
     if "OpenAI" in tool_cls or "Transcription" in tool_cls:
         if not os.getenv("OPENAI_API_KEY"):
             config_issues.append("OpenAI API key not configured")
-    
+
     return {
         "dependencies_valid": len(missing_deps) == 0 and len(config_issues) == 0,
         "missing_dependencies": missing_deps,
@@ -1030,7 +1030,7 @@ class MultiPlatformDownloadTool(BaseTool[StepResult]):
     def __init__(self, download_dir: Path | None = None):
         self.download_dir = download_dir or Path("/tmp/downloads")
         self.dispatchers = self._init_dispatchers()
-        
+
     def _init_dispatchers(self) -> dict[str, BaseTool]:
         return {
             "youtube.com": YouTubeDownloadTool(),
@@ -1064,7 +1064,7 @@ class MultiPlatformDownloadTool(BaseTool[StepResult]):
 
 ```python
 self._metrics.counter(
-    "tool_runs_total", 
+    "tool_runs_total",
     labels={"tool": "multi_platform_download", "outcome": "success|error|skipped"}
 ).inc()
 ```
@@ -1095,7 +1095,7 @@ self._metrics.counter(
 class AudioTranscriptionTool(BaseTool[StepResult]):
     def __init__(self, model_name: str | None = None):
         self._model_name = model_name or config.whisper_model
-        
+
     @cached_property
     def model(self) -> _WhisperModel:
         if whisper is None:
@@ -1168,7 +1168,7 @@ class EnhancedAnalysisTool(BaseTool[StepResult]):
             platform = content.get("platform", "unknown")
         else:
             text = str(content)
-            
+
         if analysis_type in ["comprehensive", "political"]:
             analysis_result.update(self._political_analysis(text))
         if analysis_type in ["comprehensive", "sentiment"]:
@@ -1249,7 +1249,7 @@ class FactCheckTool:
             ("perplexity", self._search_perplexity),
             ("wolfram", self._search_wolfram),
         ]
-        
+
         for name, fn in backends:
             try:
                 results = fn(claim) or []
@@ -1363,7 +1363,7 @@ class MemoryStorageTool(BaseTool[StepResult]):
         self.base_collection = collection or config.get_setting("qdrant_collection") or "content"
         self.embedding_fn = embedding_fn or (lambda text: [float(len(text))])  # Dummy default
         self.client = client or get_qdrant_client()
-        
+
     def _get_tenant_collection(self) -> str:
         tenant_ctx = current_tenant()
         base = self.base_collection or "content"
@@ -1436,12 +1436,12 @@ class GraphMemoryTool(BaseTool[StepResult]):
     def __init__(self, storage_dir=None):
         base_dir = storage_dir or os.getenv("GRAPH_MEMORY_STORAGE", "crew_data/Processing/graph_memory")
         self._base_path = Path(base_dir)
-        
+
     def run(self, *, text: str, index: str = "graph", metadata: dict = None, tags: list = None):
         namespace, tenant_scoped = self._resolve_namespace(index)
         graph_payload = _build_graph(text)  # Build graph from text
         graph_id = uuid4().hex
-        
+
         # Save to file
         ns_path = self._namespace_path(namespace)
         file_path = ns_path / f"{graph_id}.json"
@@ -1455,17 +1455,17 @@ class GraphMemoryTool(BaseTool[StepResult]):
 def _build_graph(text: str) -> dict:
     sentences = _split_sentences(text)  # Split on .!? with regex
     keywords = _extract_keywords(text, limit=12)  # Top 12 frequent tokens
-    
+
     if nx is None:  # Fallback (no NetworkX)
         nodes = [{"id": f"sentence_{i+1}", "label": sentence} for i, sentence in enumerate(sentences)]
-        edges = [{"source": f"sentence_{i}", "target": f"sentence_{i+1}", "relation": "sequence"} 
+        edges = [{"source": f"sentence_{i}", "target": f"sentence_{i+1}", "relation": "sequence"}
                  for i in range(1, len(sentences))]
         # Add keyword nodes
         for kw in keywords:
             nodes.append({"id": f"keyword_{kw}", "label": kw, "type": "keyword"})
             edges.append({"source": f"keyword_{kw}", "target": "sentence_1", "relation": "mentions"})
         return {"nodes": nodes, "edges": edges, "keywords": keywords}
-    
+
     # With NetworkX (richer graph)
     graph = nx.DiGraph()
     for idx, sentence in enumerate(sentences):
@@ -1473,7 +1473,7 @@ def _build_graph(text: str) -> dict:
         graph.add_node(node_id, label=sentence, type="sentence", order=idx+1)
         if idx > 0:
             graph.add_edge(f"sentence_{idx}", node_id, relation="sequence")
-    
+
     for kw in keywords:
         kw_id = f"keyword_{kw}"
         graph.add_node(kw_id, label=kw, type="keyword")
@@ -1617,13 +1617,13 @@ self._metrics = get_metrics()
 try:
     result = self._process(...)
     self._metrics.counter(
-        "tool_runs_total", 
+        "tool_runs_total",
         labels={"tool": self.name, "outcome": "success"}
     ).inc()
     return StepResult.ok(result=result)
 except Exception as e:
     self._metrics.counter(
-        "tool_runs_total", 
+        "tool_runs_total",
         labels={"tool": self.name, "outcome": "error"}
     ).inc()
     return StepResult.fail(error=str(e))
@@ -1653,7 +1653,7 @@ def __getattr__(name: str):  # PEP 562 lazy loading
     mod = MAPPING.get(name)
     if mod is None:
         raise AttributeError(name)
-    
+
     try:
         module = import_module(f"{__name__}{mod}")
         return getattr(module, name)
@@ -1815,7 +1815,7 @@ confidence_threshold: 0.75
 **Configuration:**
 
 ```yaml
-role: Acquisition Specialist  
+role: Acquisition Specialist
 goal: Capture pristine source media and metadata
 reasoning_style: operational
 confidence_threshold: 0.8
@@ -2306,10 +2306,10 @@ physical = logical.replace(":", "__")  # "acme__main__vectors"
 # From memory/qdrant_provider.py
 def get_qdrant_client():
     url = os.getenv("QDRANT_URL", "")
-    
+
     if not url or url == ":memory:":
         return _DummyClient()  # In-memory fallback for tests
-    
+
     if QDRANT_AVAILABLE:
         return QdrantClient(url=url, api_key=os.getenv("QDRANT_API_KEY"))
     else:
@@ -2465,36 +2465,36 @@ embedding_fn = lambda text: model.encode(text).tolist()
 def _build_graph(text: str) -> dict:
     # 1. Sentence segmentation
     sentences = re.split(r"(?<=[.!?])\s+", text)
-    
+
     # 2. Keyword extraction (top 12)
     tokens = re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}", text)
     keywords = Counter(token.lower() for token in tokens).most_common(12)
-    
+
     # 3. Graph construction
     graph = nx.DiGraph()
-    
+
     # Add sentence nodes
     for idx, sentence in enumerate(sentences):
         node_id = f"sentence_{idx + 1}"
         graph.add_node(node_id, label=sentence, type="sentence", order=idx + 1)
-        
+
         # Link to previous sentence (sequence edge)
         if idx > 0:
             graph.add_edge(f"sentence_{idx}", node_id, relation="sequence")
-    
+
     # Add keyword nodes
     for kw in keywords:
         kw_id = f"keyword_{kw}"
         graph.add_node(kw_id, label=kw, type="keyword")
-        
+
         # Link keywords to first 3 sentences (mentions edge)
         for idx in range(min(3, len(sentences))):
             graph.add_edge(kw_id, f"sentence_{idx + 1}", relation="mentions")
-    
+
     # Serialize to dict (not NetworkX format!)
     return {
         "nodes": [{"id": node, **graph.nodes[node]} for node in graph.nodes],
-        "edges": [{"source": src, "target": dst, **graph.edges[src, dst]} 
+        "edges": [{"source": src, "target": dst, **graph.edges[src, dst]}
                   for src, dst in graph.edges],
         "keywords": keywords
     }
@@ -2505,7 +2505,7 @@ def _build_graph(text: str) -> dict:
 ```python
 # Simple dict-based graph when NetworkX not installed
 nodes = [{"id": f"sentence_{i+1}", "label": sent} for i, sent in enumerate(sentences)]
-edges = [{"source": f"sentence_{i}", "target": f"sentence_{i+1}", "relation": "sequence"} 
+edges = [{"source": f"sentence_{i}", "target": f"sentence_{i+1}", "relation": "sequence"}
          for i in range(len(sentences)-1)]
 ```
 
@@ -2606,7 +2606,7 @@ self._hipporag_instances: dict[str, HippoRAG] = {}
 def _get_hipporag_instance(namespace: str) -> HippoRAG:
     if namespace in cache:
         return cache[namespace]
-    
+
     hipporag = HippoRAG(
         save_dir=str(namespace_path),
         llm_model_name="gpt-4o-mini",
@@ -2816,12 +2816,12 @@ physical = logical.replace(":", "__")           # "acme__main__content"
    ```python
    from memory import embeddings
    from memory.vector_store import VectorStore, VectorRecord
-   
+
    vstore = VectorStore()
    for text in texts:
        chunks = _chunk_text(text, chunk_size=400, overlap=50)
        vectors = embeddings.embed(chunks)
-       records = [VectorRecord(vector=vec, payload={"text": chunk}) 
+       records = [VectorRecord(vector=vec, payload={"text": chunk})
                   for chunk, vec in zip(chunks, vectors)]
        vstore.upsert(namespace, records)
    ```
@@ -2859,7 +2859,7 @@ RagIngestTool.run(
    ```python
    from memory import embeddings
    from memory.vector_store import VectorStore
-   
+
    vec = embeddings.embed([query])[0]
    vector_hits = VectorStore().query(namespace, vec, top_k=5)
    ```
@@ -2868,7 +2868,7 @@ RagIngestTool.run(
 
    ```python
    from sklearn.feature_extraction.text import TfidfVectorizer
-   
+
    vectorizer = TfidfVectorizer()
    tfidf_matrix = vectorizer.fit_transform([query] + candidate_docs)
    tfidf_hits = compute_similarity(tfidf_matrix)
@@ -3087,13 +3087,13 @@ physical = namespace  # "acme:main:continual_memory" (no transformation!)
 # ❌ WRONG: 25 separate crews with data embedded
 for stage in ["acquisition", "transcription", "analysis", ...]:
     agent = get_agent(stage)
-    
+
     # Data embedded in task description (LLMs can't extract structured data!)
     task = Task(
         description=f"Analyze this transcript: {transcript[:500]}...",
         agent=agent
     )
-    
+
     crew = Crew(agents=[agent], tasks=[task])
     result = crew.kickoff()  # Each crew isolated - data doesn't flow!
 ```
@@ -3161,12 +3161,12 @@ result = crew.kickoff(inputs={"url": url, "depth": depth})
    ```python
    # crewai_tool_wrappers.py
    _GLOBAL_CREW_CONTEXT = {}  # Shared state across all agents
-   
+
    # Updated by task completion callback
    def _task_completion_callback(task_output):
        extracted_data = parse_json(task_output.raw)
        _GLOBAL_CREW_CONTEXT.update(extracted_data)
-       
+
        # Also populate agent tools
        for agent in agents:
            populate_tool_context(agent, extracted_data)
@@ -3182,13 +3182,13 @@ result = crew.kickoff(inputs={"url": url, "depth": depth})
 strategies = [
     # Strategy 1: JSON in ```json code block (non-greedy, handles nesting)
     (r"```json\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*```", "json code block"),
-    
+
     # Strategy 2: JSON in ``` code block without language
     (r"```\s*(\{(?:[^{}]|\{[^{}]*\})*\})\s*```", "generic code block"),
-    
+
     # Strategy 3: Inline JSON with balanced braces
     (r'(\{(?:[^{}"]*"[^"]*"[^{}]*|[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\})', "inline JSON"),
-    
+
     # Strategy 4: Greedy multiline JSON (last resort)
     (r"(\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\})", "multiline JSON")
 ]
@@ -3215,23 +3215,23 @@ def _repair_json(json_text: str) -> str:
     """
     4 repair strategies for common LLM JSON errors:
     """
-    
+
     # 1. Remove trailing commas before } or ]
     # {"key": "value",} → {"key": "value"}
     repaired = re.sub(r',\s*([}\]])', r'\1', json_text)
-    
+
     # 2. Convert single quotes to double quotes
     # {'key': 'value'} → {"key": "value"}
     repaired = repaired.replace("'", '"')
-    
+
     # 3. Escape unescaped quotes inside strings (heuristic)
     # {"claim": "Video says "hello""} → {"claim": "Video says \"hello\""}
     # ... complex regex implementation ...
-    
+
     # 4. Remove newlines inside string values
     # {"text": "line1\nline2"} → {"text": "line1 line2"}
     repaired = repaired.replace('\n', ' ')
-    
+
     return repaired
 ```
 
@@ -3245,25 +3245,25 @@ if no JSON found:
     def _extract_key_values_from_text(text: str) -> dict:
         """
         Heuristic extraction when structured JSON unavailable.
-        
+
         Looks for patterns like:
         - "file_path: /root/Downloads/video.mp4"
         - "Title: Test Video"
         - "Confidence: 0.85"
         """
         result = {}
-        
+
         patterns = [
             r'(\w+)\s*:\s*([^\n]+)',  # key: value
             r'(\w+)\s*=\s*([^\n]+)',  # key = value
         ]
-        
+
         for pattern in patterns:
             for match in re.finditer(pattern, text):
                 key = match.group(1).lower()
                 value = match.group(2).strip()
                 result[key] = value
-        
+
         return result
 ```
 
@@ -3283,7 +3283,7 @@ CrewAI Stack:
 LLM Providers:
   - openai: ">=1.0.0"  # OpenAI API
   - anthropic: ">=0.8.0"  # Claude API (optional)
-  
+
 Media Processing:
   - yt-dlp: ">=2024.1.0"  # YouTube/multi-platform download
   - whisper: ">=1.0.0"  # Audio transcription (CPU)
@@ -3292,12 +3292,12 @@ Media Processing:
 Data Storage:
   - qdrant-client: ">=1.7.0"  # Vector database
   - redis: ">=5.0.0"  # Caching & rate limiting
-  
+
 Repository Core:
   - ultimate_discord_intelligence_bot.tools: (60+ tools)
   - ultimate_discord_intelligence_bot.tenancy: Tenant isolation
   - ultimate_discord_intelligence_bot.crewai_tool_wrappers: Tool adaptation
-  
+
 Discord:
   - discord.py: ">=2.0.0"  # Bot framework
   - discord-interactions: ">=0.4.0"  # Slash commands
@@ -3310,12 +3310,12 @@ Advanced Features (experimental depth):
   - vllm: Local GPU inference
   - sentence-transformers: Local embeddings
   - faiss-cpu: Alternative vector store
-  
+
 Enhanced Processing:
   - nltk: NLP utilities
   - spacy: Advanced NLP
   - transformers: HuggingFace models
-  
+
 Monitoring:
   - prometheus-client: Metrics export
   - opentelemetry: Distributed tracing
@@ -3460,7 +3460,7 @@ Whisper (local): 80-100% (CPU-bound transcription)
 Download: Variable (video size-dependent)
   - Audio-only: 5-20 MB
   - Video: 50-500 MB
-  
+
 Upload (Drive):
   - If file >25MB: Full file upload
   - Otherwise: Skipped
@@ -3473,10 +3473,10 @@ LLM API:
 **Storage:**
 
 ```
-Temporary files: 
+Temporary files:
   - Downloaded media: 50-500 MB (cleaned after workflow)
   - Transcripts: 10-100 KB
-  
+
 Persistent:
   - Qdrant vectors: ~1-5 MB per analyzed video
   - Redis cache: ~100-500 KB per result (TTL: 24h)
@@ -3838,7 +3838,7 @@ async def call_llm(...):
 ```python
 # Lines 1178-1182
 result = await asyncio.to_thread(
-    crew.kickoff, 
+    crew.kickoff,
     inputs={"url": url, "depth": depth}
 )  # No timeout! Can hang indefinitely
 ```
@@ -3953,18 +3953,18 @@ src/autointel/
 ```python
 class WorkflowContext:
     """Immutable workflow-scoped context."""
-    
+
     def __init__(self, url: str, depth: str):
         self.url = url
         self.depth = depth
         self._data: dict[str, Any] = {}
-    
+
     def with_data(self, **kwargs) -> "WorkflowContext":
         """Return new context with updated data."""
         new_ctx = WorkflowContext(self.url, self.depth)
         new_ctx._data = {**self._data, **kwargs}
         return new_ctx
-    
+
     @property
     def data(self) -> dict[str, Any]:
         """Immutable view of context data."""
@@ -4011,10 +4011,10 @@ class WorkflowEvent:
 class EventBus:
     def __init__(self):
         self._handlers: dict[str, list[Callable]] = {}
-    
+
     def subscribe(self, event_type: str, handler: Callable):
         self._handlers.setdefault(event_type, []).append(handler)
-    
+
     async def publish(self, event: WorkflowEvent):
         for handler in self._handlers.get(event.type, []):
             await handler(event)
@@ -4055,7 +4055,7 @@ class WorkflowOrchestrator:
         self.llm = llm
         self.storage = storage
         self.logger = logger
-    
+
     # No global dependencies!
 ```
 
@@ -4182,7 +4182,7 @@ _GLOBAL_CREW_CONTEXT = {}  # ⚠️ Shared mutable state across all agents
 def _task_completion_callback(task_output):
     extracted_data = parse_json(task_output.raw)
     _GLOBAL_CREW_CONTEXT.update(extracted_data)
-    
+
     # Also populate agent tools
     for agent in agents:
         populate_tool_context(agent, extracted_data)
@@ -4491,12 +4491,12 @@ src/autointel/
 ```python
 class WorkflowContext:
     """Immutable workflow-scoped context."""
-    
+
     def __init__(self, url: str, depth: str):
         self.url = url
         self.depth = depth
         self._data: dict[str, Any] = {}
-    
+
     def with_data(self, **kwargs) -> "WorkflowContext":
         """Return new context with updated data."""
         new_ctx = WorkflowContext(self.url, self.depth)
@@ -4566,7 +4566,7 @@ class WorkflowOrchestrator:
         self.llm = llm
         self.storage = storage
         self.logger = logger
-    
+
     # No global dependencies!
 ```
 
@@ -4707,7 +4707,7 @@ transcription = await transcript_task  # Wait for parallel transcription
 # test_content_pipeline_e2e.py:248-261
 async def delayed_transcription(*args, **kwargs):
     await asyncio.sleep(0.1)  # Simulate 100ms transcription
-    
+
 async def delayed_drive_upload(*args, **kwargs):
     await asyncio.sleep(0.1)  # Simulate 100ms upload
 
@@ -5082,9 +5082,9 @@ LLM_CACHE_MISSES_TOTAL               # Counter: Cache misses
 
 ---
 
-**Report Status:** ✅ PHASE 1 COMPLETE - Core Architecture Analyzed  
-**Next Phase:** Individual tool analysis and memory systems deep-dive  
-**Rewrite Readiness:** 🟢 Ready for Phase 1 immediate fixes  
+**Report Status:** ✅ PHASE 1 COMPLETE - Core Architecture Analyzed
+**Next Phase:** Individual tool analysis and memory systems deep-dive
+**Rewrite Readiness:** 🟢 Ready for Phase 1 immediate fixes
 
 ---
 
@@ -5481,12 +5481,12 @@ class ResilienceStrategy(Enum):
 
    ```python
    tenant_ctx = current_tenant()
-   
+
    # For async functions:
    if tenant_ctx is not None:
        with with_tenant(tenant_ctx):
            return await func(*args, **kwargs)
-   
+
    # For sync functions (run in executor):
    def call_sync() -> Any:
        if tenant_ctx is not None:
@@ -5507,13 +5507,13 @@ class ResilienceStrategy(Enum):
            status_code = int(result.get("status_code", result.data.get("status_code")))
        except Exception:
            status_code = None
-       
+
        # Classify based on status code
        if status_code == 429:
            return "rate_limit"
        if status_code is not None and 400 <= status_code < 500:
            return "permanent"  # Client error, don't retry
-       
+
        # Classify based on error message
        err = (result.error or "").lower()
        transient_markers = [
@@ -5522,7 +5522,7 @@ class ResilienceStrategy(Enum):
        ]
        if any(marker in err for marker in transient_markers):
            return "transient"
-       
+
        return "transient"  # Default: retry
    ```
 
@@ -5536,21 +5536,21 @@ class ResilienceStrategy(Enum):
            result = StepResult.from_dict(raw)
        except Exception as exc:
            result = StepResult.fail(str(exc))
-       
+
        if result.success:
            return result
-       
+
        classification = self._classify_failure(result)
-       
+
        # Don't retry permanent failures or on last attempt
        if classification == "permanent" or attempt >= attempts - 1:
            break
-       
+
        # Exponential backoff with jitter
        backoff = delay * (2**attempt)
        jitter = random.uniform(0.5, 1.5)
        sleep_for = max(0.0, min(backoff * jitter, 60.0))  # Cap at 60s
-       
+
        # Record retry metric
        try:
            metrics.PIPELINE_RETRIES.labels(
@@ -5560,9 +5560,9 @@ class ResilienceStrategy(Enum):
            ).inc()
        except Exception:
            pass
-       
+
        await asyncio.sleep(sleep_for)
-   
+
    return result
    ```
 
@@ -5700,7 +5700,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
             severity="warn",
             detail="faster-whisper failed; falling back to whisper/text",
         )
-    
+
     # Tier 2: standard whisper (CPU)
     try:
         import whisper
@@ -5714,7 +5714,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
             severity="warn",
             detail="whisper failed; falling back to plain-text mode",
         )
-    
+
     # Tier 3: plain-text mode (for tests)
     with open(path, encoding="utf-8") as f:
         lines = f.readlines()
@@ -5742,16 +5742,16 @@ faster-whisper (CUDA) → whisper (CPU) → plain-text (file parsing)
 ```python
 def test_run_with_retries_rate_limit_then_success(monkeypatch):
     calls = {"n": 0}
-    
+
     def fn():
         calls["n"] += 1
         if calls["n"] == 1:
             return {"status": "error", "status_code": 429, "error": "rate limited"}
         return {"status": "success", "ok": True}
-    
+
     pipe = ContentPipeline(...)
     res = _run(pipe._run_with_retries(fn, step="test", attempts=2, delay=0.01))
-    
+
     assert res.success is True
     assert calls["n"] == 2  # First attempt fails (429), second succeeds
 ```
@@ -5773,14 +5773,14 @@ def test_run_with_retries_rate_limit_then_success(monkeypatch):
 ```python
 def test_run_with_retries_permanent_no_retry(monkeypatch):
     calls = {"n": 0}
-    
+
     def fn():
         calls["n"] += 1
         return {"status": "error", "status_code": 400, "error": "bad request"}
-    
+
     pipe = ContentPipeline(...)
     res = _run(pipe._run_with_retries(fn, step="test", attempts=3, delay=0.01))
-    
+
     assert res.success is False
     assert calls["n"] == 1  # Only one attempt, no retries
 ```
@@ -5806,16 +5806,16 @@ def test_run_with_retries_permanent_no_retry(monkeypatch):
 ```python
 def test_run_with_retries_transient_retries(monkeypatch):
     calls = {"n": 0}
-    
+
     def fn():
         calls["n"] += 1
         if calls["n"] < 3:
             return {"status": "error", "error": "Connection timeout"}
         return {"status": "success", "ok": True}
-    
+
     pipe = ContentPipeline(...)
     res = _run(pipe._run_with_retries(fn, step="test", attempts=3, delay=0.01))
-    
+
     assert res.success is True
     assert calls["n"] == 3  # Retried until success
 ```
@@ -5848,12 +5848,12 @@ def test_run_with_retries_transient_retries(monkeypatch):
 ```python
 def setup_qdrant():
     qdrant_url = os.getenv("QDRANT_URL", "")
-    
+
     # Fallback to in-memory mode
     if not qdrant_url or "403" in qdrant_url or "cloud.qdrant" in qdrant_url:
         print("⚠️  Using local memory mode for Qdrant")
         os.environ["QDRANT_URL"] = ":memory:"
-    
+
     try:
         from qdrant_client import QdrantClient
         client = QdrantClient(url=os.getenv("QDRANT_URL"))
@@ -5948,13 +5948,13 @@ except Exception:
 def test_missing_whisper_returns_error(monkeypatch, tmp_path):
     # Simulate whisper missing
     monkeypatch.setitem(sys.modules, "whisper", None)
-    
+
     tool = AudioTranscriptionTool()
     video = tmp_path / "sample.mp4"
     video.write_text("dummy")
-    
+
     result = tool.run(str(video))
-    
+
     assert result["status"] == "error"
     assert "whisper" in result["error"].lower()
 ```
@@ -6008,14 +6008,14 @@ except Exception:
 def test_segment_failure_emits_degradation_and_continues(monkeypatch):
     def _ingest(job: dict):
         return {"chunks": 1}
-    
+
     def _segment(_ctx: dict):
         raise RuntimeError("seg fail")  # Step fails
-    
+
     def _analyze(ctx: dict):
         # Should still run
         return {"ok": True, "chunks": ctx.get("chunks")}
-    
+
     # Pipeline continues despite segment failure
     result = run_ingest_analysis_pilot(...)
     assert result["analyze"]["ok"] is True
@@ -6043,7 +6043,7 @@ async def _analysis_phase(self, ctx, download_info, transcription_bundle):
         asyncio.create_task(self._run_fallacy(...)),
         asyncio.create_task(self._run_perspective(...)),
     ]
-    
+
     try:
         results = await asyncio.gather(*tasks)
     except Exception as e:
@@ -6072,9 +6072,9 @@ async def _analysis_phase(self, ctx, download_info, transcription_bundle):
 ```python
 def test_http_circuit_breaker_opens_and_short_circuits(monkeypatch):
     monkeypatch.setenv("ENABLE_HTTP_CIRCUIT_BREAKER", "1")
-    
+
     url = "https://example.com"
-    
+
     # Trip the breaker with 5 consecutive 500s
     for _ in range(5):
         resp = http_request_with_retry(
@@ -6084,11 +6084,11 @@ def test_http_circuit_breaker_opens_and_short_circuits(monkeypatch):
             statuses_to_retry=(),
         )
         assert resp.status_code == 500
-    
+
     # Next call should short-circuit
     with pytest.raises(Exception) as ei:
         http_request_with_retry("GET", url, ...)
-    
+
     assert "circuit_open" in str(ei.value)
 ```
 
@@ -6115,15 +6115,15 @@ def test_http_circuit_breaker_opens_and_short_circuits(monkeypatch):
 def check_circuit_breakers() -> dict[str, Any]:
     try:
         from core.http.retry import get_circuit_breaker_status
-        
+
         breaker_status = get_circuit_breaker_status()
-        
+
         # Count open breakers
         open_breakers = [
             name for name, status in breaker_status.items()
             if status.get("state") == "open"
         ]
-        
+
         return {
             "healthy": len(open_breakers) == 0,
             "circuit_breakers": breaker_status,
@@ -6351,23 +6351,23 @@ async def get_system_status():
 # Store partial results
 async def _analysis_phase(self, ...):
     results = {"analysis": None, "fallacy": None, "perspective": None}
-    
+
     tasks = [
         asyncio.create_task(self._run_analysis(...)),
         asyncio.create_task(self._run_fallacy(...)),
         asyncio.create_task(self._run_perspective(...)),
     ]
-    
+
     # Gather with return_exceptions=True (don't cancel on first error)
     outcomes = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     for i, outcome in enumerate(outcomes):
         if isinstance(outcome, Exception):
             self.logger.warning("Branch %d failed: %s", i, outcome)
             record_degradation(f"analysis_branch_{i}_failed", ...)
         else:
             results[["analysis", "fallacy", "perspective"][i]] = outcome
-    
+
     # Return partial results
     return StepResult.ok(
         data=results,
@@ -6418,7 +6418,7 @@ retry:
 # Load in pipeline:
 retry_config = tenant_registry.get_retry_config(tenant_ctx)
 result = await self._run_with_retries(
-    func, 
+    func,
     step="llm_analysis",
     attempts=retry_config.get_attempts("llm_analysis"),
     delay=retry_config.get_delay("llm_analysis"),
@@ -6453,7 +6453,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
         ...
     except Exception:
         record_degradation(...)
-    
+
     # Tier 2: whisper
     try:
         import whisper
@@ -6464,7 +6464,7 @@ def run_whisper(path: str, model: str = "tiny") -> Transcript:
         raise RuntimeError(
             "Whisper unavailable. Install with: pip install openai-whisper"
         )
-    
+
     # Plain-text mode ONLY in tests (via mock/patch)
 ```
 
@@ -6500,7 +6500,7 @@ def _get_retry_delay(self, result: StepResult, attempt: int, base_delay: float) 
             from email.utils import parsedate_to_datetime
             retry_time = parsedate_to_datetime(retry_after)
             return max(0, (retry_time - datetime.utcnow()).total_seconds())
-    
+
     # Fallback to exponential backoff
     backoff = base_delay * (2**attempt)
     jitter = random.uniform(0.5, 1.5)
@@ -6822,6 +6822,6 @@ async def health_check():
 
 ---
 
-**Last Updated:** 2025-10-03  
-**Report Version:** 2.0 (Phase 2 Complete - Tool Ecosystem)  
+**Last Updated:** 2025-10-03
+**Report Version:** 2.0 (Phase 2 Complete - Tool Ecosystem)
 **Next Update:** After Phase 3 (Agent Configuration)

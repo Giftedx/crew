@@ -1,6 +1,6 @@
 # Official Model Configuration Reference
 
-**Official Sources:** OpenAI, Anthropic, Google AI  
+**Official Sources:** OpenAI, Anthropic, Google AI
 **Last Updated:** 2025-10-09
 
 ---

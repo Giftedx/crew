@@ -1,7 +1,7 @@
 # Deprecated: performance_optimization/
 
-**Archived:** 2024-10-31  
-**Original Location:** `/home/crew/performance_optimization/`  
+**Archived:** 2024-10-31
+**Original Location:** `/home/crew/performance_optimization/`
 **New Location:** `/home/crew/archive/deprecated/performance_optimization_archived_20241031/`
 
 ## Reason for Deprecation
@@ -57,5 +57,5 @@ If any code from this archived directory is needed:
 
 ---
 
-**Archive performed during:** Phase 1.2 Orchestration Unification (Task 8: Organizational Cleanup)  
+**Archive performed during:** Phase 1.2 Orchestration Unification (Task 8: Organizational Cleanup)
 **Related Work:** Strategic Refactoring Plan 2025, Section 1.2

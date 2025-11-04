@@ -43,16 +43,16 @@ Content Sources → Ingestion → Transcription → Analysis → Memory → Disc
    # Discord
    DISCORD_BOT_TOKEN=Bot your_token_here
    DISCORD_PRIVATE_WEBHOOK=https://discord.com/api/webhooks/...
-   
+
    # LLM Services
    OPENAI_API_KEY=your_openai_key
    # OR
    OPENROUTER_API_KEY=your_openrouter_key
-   
+
    # Vector Database
    QDRANT_URL=http://localhost:6333
    QDRANT_API_KEY=your_qdrant_key
-   
+
    # Feature Flags
    ENABLE_DISCORD_PUBLISHING=true
    ENABLE_DEBATE_ANALYSIS=true
@@ -319,7 +319,7 @@ curl http://localhost:8080/health/discord
    ```bash
    # Restore Qdrant
    curl -X POST http://localhost:6333/snapshots/restore
-   
+
    # Restore configuration
    cp .env.backup .env
    ```
@@ -367,7 +367,7 @@ curl http://localhost:8080/health/discord
    ```bash
    # Check metrics
    curl http://localhost:8080/metrics | grep new_feature
-   
+
    # Check logs
    tail -f logs/application.log | grep new_feature
    ```

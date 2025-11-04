@@ -1,7 +1,7 @@
 # Phase 4 Implementation Complete: Memory Plugin Architecture
 
-**Date:** October 19, 2025  
-**Phase:** 4 of 8 (UnifiedMemoryService Plugin Support)  
+**Date:** October 19, 2025
+**Phase:** 4 of 8 (UnifiedMemoryService Plugin Support)
 **Status:** ✅ COMPLETE
 
 ---
@@ -324,7 +324,7 @@ result = await memory.query(
 class CustomPlugin:
     async def store(self, namespace: str, records: Sequence[Dict]) -> StepResult:
         ...
-    
+
     async def retrieve(self, namespace: str, query: str, limit: int) -> StepResult:
         ...
 
@@ -472,28 +472,28 @@ await memory.upsert(tenant=ctx.tenant, workspace=ctx.workspace, plugin="graph", 
 def remember_knowledge(content: str, backend: str = "vector") -> str:
     """Store knowledge in specified memory backend."""
     memory = get_unified_memory()
-    
+
     result = await memory.upsert(
         tenant=current_tenant().tenant_id,
         workspace=current_tenant().workspace_id,
         records=[{"content": content}],
         plugin=backend if backend != "vector" else None
     )
-    
+
     return json.dumps(result.to_dict())
 
 @tool
 def recall_knowledge(query: str, backend: str = "vector") -> str:
     """Recall knowledge from specified memory backend."""
     memory = get_unified_memory()
-    
+
     result = await memory.query(
         tenant=current_tenant().tenant_id,
         workspace=current_tenant().workspace_id,
         query_text=query,
         plugin=backend if backend != "vector" else None
     )
-    
+
     return json.dumps(result.to_dict())
 ```
 
@@ -520,7 +520,7 @@ async def test_plugin_registration(memory_service):
     """Test plugin registration."""
     plugin = Mem0Plugin()
     memory_service.register_plugin("mem0", plugin)
-    
+
     assert "mem0" in memory_service._plugins
     assert memory_service._plugins["mem0"] is plugin
 
@@ -529,16 +529,16 @@ async def test_plugin_routing_upsert(memory_service, monkeypatch):
     """Test upsert routes to plugin."""
     mock_plugin = MagicMock()
     mock_plugin.store = AsyncMock(return_value=StepResult.ok(stored=1))
-    
+
     memory_service.register_plugin("test", mock_plugin)
-    
+
     result = await memory_service.upsert(
         tenant="demo",
         workspace="main",
         records=[{"content": "test"}],
         plugin="test"
     )
-    
+
     assert result.success
     mock_plugin.store.assert_called_once()
 
@@ -549,9 +549,9 @@ async def test_plugin_routing_query(memory_service, monkeypatch):
     mock_plugin.retrieve = AsyncMock(
         return_value=StepResult.ok(results=[], count=0)
     )
-    
+
     memory_service.register_plugin("test", mock_plugin)
-    
+
     result = await memory.query(
         tenant="demo",
         workspace="main",
@@ -559,7 +559,7 @@ async def test_plugin_routing_query(memory_service, monkeypatch):
         plugin="test",
         query_text="query"
     )
-    
+
     assert result.success
     mock_plugin.retrieve.assert_called_once_with(
         namespace="demo:main:default",
@@ -575,7 +575,7 @@ async def test_fallback_to_vector_store(memory_service):
         workspace="main",
         records=[VectorRecord(vector=[1.0], payload={"text": "test"})]
     )
-    
+
     # Should use vector store, not plugin
     assert result.success
     assert "plugin" not in result.data
@@ -594,7 +594,7 @@ async def test_mem0_plugin_integration():
     """Test Mem0 plugin end-to-end."""
     memory = get_unified_memory()
     memory.register_plugin("mem0", Mem0Plugin())
-    
+
     # Store
     store_result = await memory.upsert(
         tenant="test",
@@ -602,10 +602,10 @@ async def test_mem0_plugin_integration():
         records=[{"content": "Test memory"}],
         plugin="mem0"
     )
-    
+
     assert store_result.success
     assert store_result.data["backend"] == "mem0"
-    
+
     # Retrieve
     query_result = await memory.query(
         tenant="test",
@@ -614,7 +614,7 @@ async def test_mem0_plugin_integration():
         plugin="mem0",
         query_text="test"
     )
-    
+
     assert query_result.success
     assert query_result.data["count"] > 0
 ```
@@ -768,16 +768,16 @@ class CachedHippoRAGPlugin:
     def __init__(self):
         self._cache = {}  # Simple dict cache
         self._plugin = HippoRAGPlugin()
-    
+
     async def retrieve(self, namespace: str, query: str, limit: int):
         cache_key = f"{namespace}:{query}:{limit}"
         if cache_key in self._cache:
             return self._cache[cache_key]
-        
+
         result = await self._plugin.retrieve(namespace, query, limit)
         if result.success:
             self._cache[cache_key] = result
-        
+
         return result
 ```
 
@@ -838,11 +838,11 @@ async def store(self, namespace: str, records: Sequence[Dict]):
         if "content" not in record:
             logger.warning("Skipping record without content")
             continue
-        
+
         if not isinstance(record["content"], str):
             logger.warning(f"Invalid content type: {type(record['content'])}")
             continue
-        
+
         # Process valid record
         ...
 ```
@@ -955,13 +955,13 @@ self.memory.register_plugin("hipporag", HippoRAGPlugin())
 async def _store_analysis_results(self, data: dict):
     # Single interface, multiple backends
     base_records = [{"content": data["summary"]}]
-    
+
     # Vector store (default)
     await self.memory.upsert(tenant, workspace, base_records)
-    
+
     # Graph memory
     await self.memory.upsert(tenant, workspace, base_records, plugin="graph")
-    
+
     # HippoRAG continual memory
     await self.memory.upsert(tenant, workspace, base_records, plugin="hipporag")
 ```
@@ -1114,12 +1114,12 @@ if not result.success:
 rate(memory_plugin_calls_total[5m])
 
 # Plugin error rate
-rate(memory_plugin_errors_total[5m]) 
-/ 
+rate(memory_plugin_errors_total[5m])
+/
 rate(memory_plugin_calls_total[5m])
 
 # Plugin latency p95
-histogram_quantile(0.95, 
+histogram_quantile(0.95,
   rate(memory_plugin_duration_seconds_bucket[5m])
 )
 ```

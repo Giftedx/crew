@@ -42,4 +42,3 @@ All `_base.py` files are **NOT duplicates**. They are:
 ## Documentation Added
 
 Migration comments have been added to the MAPPING dictionary in `tools/__init__.py` to indicate which tools have been migrated to domains/ locations.
-

@@ -20,7 +20,7 @@ The Ultimate Discord Intelligence Bot now includes comprehensive governance fram
 ### Governance Flow
 
 ```
-User Request → Red Line Check → Model Spec Evaluation → Content Classification → 
+User Request → Red Line Check → Model Spec Evaluation → Content Classification →
 Agent Instructions → Communication Style → Response Generation → Audit Logging
 ```
 
@@ -190,7 +190,7 @@ result = bias_detector._run(content)
 if result.success:
     bias_indicators = result.data["bias_indicators"]
     print(f"Overall bias score: {bias_indicators.overall_score}")
-    
+
     # Calculate comprehensive metrics
     metrics_result = bias_metrics.analyze_bias(content)
     if metrics_result.success:

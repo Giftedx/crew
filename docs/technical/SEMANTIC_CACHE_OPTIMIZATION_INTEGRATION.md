@@ -122,7 +122,7 @@ import asyncio
 
 async def initialize_optimization_system():
     """Initialize the complete optimization system."""
-    
+
     # Initialize adaptive semantic cache
     semantic_cache = await get_adaptive_semantic_cache(
         name="production_cache",
@@ -131,7 +131,7 @@ async def initialize_optimization_system():
         evaluation_window=100,
         min_requests_for_adjustment=50
     )
-    
+
     # Initialize optimized vector store
     vector_store = await get_optimized_vector_store(
         name="production_vector_store",
@@ -142,7 +142,7 @@ async def initialize_optimization_system():
             "target_latency_ms": 50
         }
     )
-    
+
     # Initialize cache optimizer
     optimizer = get_cache_optimizer(
         monitoring_interval=60,  # Monitor every minute
@@ -150,10 +150,10 @@ async def initialize_optimization_system():
         enable_auto_optimization=True,
         enable_cost_tracking=True
     )
-    
+
     # Start monitoring
     await optimizer.start_monitoring()
-    
+
     return semantic_cache, vector_store, optimizer
 ```
 
@@ -169,7 +169,7 @@ from core.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
 class OpenRouterService:
     def __init__(self):
         self.semantic_cache = None
-    
+
     async def initialize_cache(self):
         """Initialize semantic cache for the service."""
         self.semantic_cache = await get_adaptive_semantic_cache(
@@ -177,28 +177,28 @@ class OpenRouterService:
             initial_threshold=0.75,
             enable_adaptive_optimization=True
         )
-    
+
     async def route_prompt(self, prompt: str, model: str, tenant: str, workspace: str):
         """Route prompt with semantic caching."""
         if not self.semantic_cache:
             await self.initialize_cache()
-        
+
         # Try cache first
         cached_response = await self.semantic_cache.get(
             prompt, model, f"{tenant}:{workspace}"
         )
-        
+
         if cached_response:
             return cached_response["response"]
-        
+
         # Make LLM call
         response = await self._call_llm(prompt, model)
-        
+
         # Cache the response
         await self.semantic_cache.set(
             prompt, model, {"response": response}, f"{tenant}:{workspace}"
         )
-        
+
         return response
 ```
 
@@ -212,7 +212,7 @@ from core.vector_search.optimized_vector_store import get_optimized_vector_store
 class VectorSearchTool:
     def __init__(self):
         self.vector_store = None
-    
+
     async def initialize_vector_store(self):
         """Initialize optimized vector store."""
         self.vector_store = await get_optimized_vector_store(
@@ -223,12 +223,12 @@ class VectorSearchTool:
                 "target_latency_ms": 50
             }
         )
-    
+
     async def search_vectors(self, query_vector, collection, limit=10):
         """Search vectors with optimization."""
         if not self.vector_store:
             await self.initialize_vector_store()
-        
+
         return await self.vector_store.search(
             query_vector=query_vector,
             collection=collection,
@@ -250,7 +250,7 @@ async def start_performance_monitoring():
     """Start performance monitoring system."""
     optimizer = get_cache_optimizer()
     await optimizer.start_monitoring()
-    
+
     # Log initial status
     report = await optimizer.get_performance_report()
     logger.info(f"Performance monitoring started. Initial score: {report.overall_score:.3f}")
@@ -269,7 +269,7 @@ async def cache_health():
     """Cache system health check."""
     optimizer = get_cache_optimizer()
     report = await optimizer.get_performance_report()
-    
+
     return {
         "status": "healthy" if report.overall_score > 0.7 else "degraded",
         "score": report.overall_score,
@@ -323,13 +323,13 @@ class Settings:
     SEMANTIC_CACHE_THRESHOLD: float = 0.75
     SEMANTIC_CACHE_EVALUATION_WINDOW: int = 100
     SEMANTIC_CACHE_MIN_REQUESTS: int = 50
-    
+
     # Vector Store
     ENABLE_OPTIMIZED_VECTOR_STORE: bool = True
     VECTOR_STORE_BATCH_SIZE: int = 32
     VECTOR_STORE_TARGET_LATENCY_MS: float = 50.0
     VECTOR_STORE_ENABLE_QUERY_CACHE: bool = True
-    
+
     # Performance Monitoring
     ENABLE_CACHE_OPTIMIZER: bool = True
     CACHE_MONITORING_INTERVAL: int = 60
@@ -399,7 +399,7 @@ groups:
       severity: warning
     annotations:
       summary: "Cache hit rate below target"
-      
+
   - alert: HighVectorSearchLatency
     expr: vector_search_latency > 0.05
     for: 5m
@@ -431,17 +431,17 @@ from core.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
 async def performance_test():
     """Test performance targets."""
     cache = await get_adaptive_semantic_cache("perf_test")
-    
+
     # Test cache operations
     start_time = time.time()
     for i in range(100):
         prompt = f"test prompt {i}"
         await cache.get(prompt, "gpt-4", "test")
         await cache.set(prompt, "gpt-4", {"response": f"response {i}"}, "test")
-    
+
     avg_latency = (time.time() - start_time) / 200 * 1000  # ms per operation
     summary = cache.get_performance_summary()
-    
+
     print(f"Average latency: {avg_latency:.2f}ms")
     print(f"Hit rate: {summary['hit_rate']:.3f}")
     print(f"Cost savings: {summary['cost_savings_ratio']:.3f}")

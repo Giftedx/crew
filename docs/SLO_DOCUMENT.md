@@ -120,7 +120,7 @@ From the Master System Prompt, the following targets were specified:
 - **PromQL**:
 
   ```promql
-  (sum(token_usage_before_compression_total[1h]) - 
+  (sum(token_usage_before_compression_total[1h]) -
    sum(token_usage_after_compression_total[1h])) /
   sum(token_usage_before_compression_total[1h]) >= 0.30
   ```

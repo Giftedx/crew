@@ -5,14 +5,14 @@
 The `/autointel` command was failing with widespread Pydantic validation errors across multiple tools:
 
 ```
-Arguments validation failed: `MCPCallToolArgs` is not fully defined; 
+Arguments validation failed: `MCPCallToolArgs` is not fully defined;
 you should define `Any`, then call `MCPCallToolArgs.model_rebuild()`.
 ```
 
 **Affected tools** (100+ failed tool calls):
 
 - MCP Call Tool
-- Graph Memory Tool  
+- Graph Memory Tool
 - HippoRAG Continual Memory Tool
 - Qdrant Memory Storage Tool
 - Multi-Platform Monitor Tool
@@ -124,7 +124,7 @@ make test-fast
 
 # 3. Monitor logs for these success indicators:
 # ✅ "🔄 Updating tool context with keys: ['transcript', 'claims', ...]"
-# ✅ "✅ [ToolName] executed successfully"  
+# ✅ "✅ [ToolName] executed successfully"
 # ❌ No more "Arguments validation failed" errors
 # ❌ No more "ForwardRef not fully defined" errors
 ```
@@ -149,7 +149,7 @@ Together, these fixes create a complete solution for the /autointel data flow pr
 After deploying this fix:
 
 1. **Check schema generation**: Verify tools create valid Pydantic models
-2. **Test tool calls**: Ensure LLM can invoke tools without validation errors  
+2. **Test tool calls**: Ensure LLM can invoke tools without validation errors
 3. **Monitor tool execution**: Confirm tools receive correct parameters
 4. **Validate memory writes**: Check that Graph/HippoRAG tools succeed
 

@@ -1,8 +1,8 @@
 # ✅ Discord Interaction Timeout Fix
 
-**Date:** October 6, 2025  
-**Issue:** `404 Not Found (error code: 10062): Unknown interaction`  
-**Root Cause:** Double-defer attempt on Discord interaction  
+**Date:** October 6, 2025
+**Issue:** `404 Not Found (error code: 10062): Unknown interaction`
+**Root Cause:** Double-defer attempt on Discord interaction
 **Status:** Fixed
 
 ---
@@ -134,7 +134,7 @@ await interaction.response.defer()  # Error: Unknown interaction
 async def my_command(interaction):
     # Must defer within 3 seconds
     await interaction.response.defer()  # ✅ Do this FIRST
-    
+
     # Now you have 15 minutes for followup messages
     await interaction.followup.send("Result here")
 ```
@@ -222,19 +222,19 @@ In Discord:
 ```python
 async def handle_autointel_background(interaction, ...):
     """Improved error handling pattern."""
-    
+
     # 1. Defer FIRST (before any logic)
     if not interaction.response.is_done():
         await interaction.response.defer(ephemeral=False)
-    
+
     # 2. Validate and use followup for errors
     if not webhook_url:
         await interaction.followup.send("❌ Error message", ephemeral=True)
         return
-    
+
     # 3. Continue with workflow
     workflow_id = await background_worker.start_background_workflow(...)
-    
+
     # 4. Send acknowledgment via followup
     await interaction.followup.send(f"✅ Started: {workflow_id}")
 ```
@@ -243,9 +243,9 @@ async def handle_autointel_background(interaction, ...):
 
 ## Summary
 
-**Problem:** Double-defer attempt causing "Unknown interaction" errors  
-**Solution:** Single defer with proper response.is_done() check  
-**Files Modified:** 2 (registrations.py, background_autointel_handler.py)  
+**Problem:** Double-defer attempt causing "Unknown interaction" errors
+**Solution:** Single defer with proper response.is_done() check
+**Files Modified:** 2 (registrations.py, background_autointel_handler.py)
 **Status:** Ready to test
 
 **Next Steps:**

@@ -147,7 +147,7 @@ To stop all services:
    # Stop processes
    pkill -f "uvicorn server.app"
    pkill -f "ultimate_discord_intelligence_bot"
-   
+
    # Stop Docker containers
    cd ops/deployment/docker && docker compose down
    ```

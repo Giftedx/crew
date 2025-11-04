@@ -110,7 +110,12 @@ class ModerationAlertManager:
             "auto_actions_taken": 0,
             "avg_resolution_time_minutes": 0.0,
         }
-        self._cleanup_task = asyncio.create_task(self._cleanup_loop())
+        # Start background cleanup loop only if an event loop is already running; defer otherwise
+        try:
+            loop = asyncio.get_running_loop()
+            self._cleanup_task = loop.create_task(self._cleanup_loop())
+        except RuntimeError:
+            self._cleanup_task = None
 
     async def create_alert(
         self,
@@ -130,7 +135,8 @@ class ModerationAlertManager:
             rate_limit_check = await self._check_alert_rate_limit(user_id, guild_id)
             if not rate_limit_check.success:
                 return rate_limit_check
-            alert_id = f"alert_{int(time.time() * 1000)}_{user_id}"
+            # Use high-resolution timestamp to avoid ID collisions when many alerts are created rapidly
+            alert_id = f"alert_{time.time_ns()}_{user_id}"
             alert = ModerationAlert(
                 alert_id=alert_id,
                 alert_type=alert_type,
@@ -549,10 +555,11 @@ class ModerationAlertManager:
 
     async def close(self):
         """Clean up resources."""
-        if hasattr(self, "_cleanup_task"):
-            self._cleanup_task.cancel()
+        task = getattr(self, "_cleanup_task", None)
+        if task is not None:
+            task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await self._cleanup_task
+                await task
 
 
 def create_moderation_alert_manager(config: AlertConfig | None = None) -> ModerationAlertManager:

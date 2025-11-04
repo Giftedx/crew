@@ -7,7 +7,7 @@ This repository includes an advanced Model Context Protocol (MCP) server powered
 **Enhanced CrewAI Integration:**
 
 - CrewAI MCP Server: Expose CrewAI crew execution, monitoring, and control via MCP
-- FastMCP Client Tools: Enable CrewAI agents to call external MCP servers  
+- FastMCP Client Tools: Enable CrewAI agents to call external MCP servers
 - Bidirectional workflows: MCP clients can trigger CrewAI crews, crews can call MCP servers
 - Production-ready patterns with enterprise authentication and advanced routing
 

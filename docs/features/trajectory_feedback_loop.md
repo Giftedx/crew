@@ -49,9 +49,9 @@ class TrajectoryFeedback:
 
 ```python
 def update(
-    self, 
-    arm_id: str, 
-    context: np.ndarray, 
+    self,
+    arm_id: str,
+    context: np.ndarray,
     reward: float,
     trajectory_feedback: TrajectoryFeedback | None = None
 ):
@@ -83,8 +83,8 @@ def update(
 
 ```python
 def _emit_routing_feedback(
-    self, 
-    trajectory: AgentTrajectory, 
+    self,
+    trajectory: AgentTrajectory,
     evaluation_result: dict[str, Any]
 ) -> StepResult:
     """Emit trajectory evaluation feedback to RL model router."""
@@ -99,7 +99,7 @@ def _emit_routing_feedback(
         success=trajectory.success,
         reasoning=evaluation_result["reasoning"],
     )
-    
+
     # Queue for batch processing
     self.rl_model_router.trajectory_feedback_queue.append(feedback)
 ```
@@ -116,10 +116,10 @@ def process_trajectory_feedback(self, batch_size: int = 10) -> StepResult:
     for feedback in batch:
         # Find matching routing history
         routing_entry = find_matching_entry(feedback)
-        
+
         # Extract context vector
         context_vec = self._extract_context_vector(routing_entry.context)
-        
+
         # Update bandit with trajectory feedback
         self.bandit.update(
             arm_id=feedback.model_id,
@@ -375,7 +375,7 @@ avg(enhanced_reward - base_reward) by model_id
   for: 5m
   annotations:
     summary: "Trajectory feedback queue growing"
-    
+
 - alert: TrajectoryFeedbackProcessingStalled
   expr: rate(trajectory_feedback_processed_total[10m]) == 0
   for: 10m

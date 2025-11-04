@@ -1,9 +1,9 @@
 import logging
-from platform.obs.metrics import get_metrics
 from typing import Any
 
-from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
-from src.ultimate_discord_intelligence_bot.tenancy.context import current_tenant, with_tenant
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
+from ultimate_discord_intelligence_bot.tenancy.context import current_tenant, with_tenant
 
 
 logger = logging.getLogger(__name__)

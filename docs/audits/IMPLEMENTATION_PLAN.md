@@ -1,9 +1,9 @@
 # Architecture Consolidation Implementation Plan
 
-**Date**: October 19, 2025  
-**Project**: Ultimate Discord Intelligence Bot  
-**Objective**: Complete consolidation of 60+ deprecated modules across 5 subsystems  
-**Timeline**: 12 weeks (Weeks 1-12)  
+**Date**: October 19, 2025
+**Project**: Ultimate Discord Intelligence Bot
+**Objective**: Complete consolidation of 60+ deprecated modules across 5 subsystems
+**Timeline**: 12 weeks (Weeks 1-12)
 **Status**: EXECUTING
 
 ---
@@ -126,12 +126,12 @@ from ultimate_discord_intelligence_bot.services.cache import RedisLLMCache
 
 class CacheShadowHarness:
     """Runs legacy and unified caches in parallel for validation"""
-    
+
     def __init__(self):
         self.unified = UnifiedCache()
         self.legacy = RedisLLMCache()  # temporary
         self.stats = {"unified_hits": 0, "legacy_hits": 0, "mismatches": 0}
-    
+
     async def get(self, namespace: CacheNamespace, cache_name: str, key: str) -> Any:
         """Get from both caches and compare results"""
         # Run both in parallel
@@ -140,21 +140,21 @@ class CacheShadowHarness:
             asyncio.to_thread(self.legacy.get, key),
             return_exceptions=True
         )
-        
+
         # Track hits
         if unified_result.data.get("hit"):
             self.stats["unified_hits"] += 1
         if legacy_result is not None:
             self.stats["legacy_hits"] += 1
-        
+
         # Detect mismatches
         if (unified_result.data.get("value") != legacy_result):
             self.stats["mismatches"] += 1
             logger.warning(f"Cache mismatch for key {key}")
-        
+
         # Return unified result (it's the production path)
         return unified_result
-    
+
     def get_stats(self):
         return self.stats
 ```
@@ -215,15 +215,15 @@ class UnifiedCache:
             result = await self._do_get(namespace, cache_name, key)
             hit = result.data.get("hit", False)
             cache_v2_operations_total.labels(
-                operation="get", 
-                cache_name=cache_name, 
-                tenant=namespace.tenant, 
+                operation="get",
+                cache_name=cache_name,
+                tenant=namespace.tenant,
                 hit=str(hit)
             ).inc()
             return result
         finally:
             cache_v2_latency_seconds.labels(
-                operation="get", 
+                operation="get",
                 cache_name=cache_name
             ).observe(time.time() - start)
 ```
@@ -297,17 +297,17 @@ from typing import Any, Dict, List
 
 class BanditPlugin(ABC):
     """Base interface for routing bandit plugins"""
-    
+
     @abstractmethod
     def select_action(self, context: Dict[str, Any], available_models: List[str]) -> str:
         """Select model based on context and RL policy"""
         pass
-    
+
     @abstractmethod
     def update(self, context: Dict[str, Any], model: str, reward: float):
         """Update bandit with observed reward"""
         pass
-    
+
     @abstractmethod
     def get_state(self) -> Dict[str, Any]:
         """Get current bandit state for serialization"""
@@ -324,68 +324,68 @@ from .base_plugin import BanditPlugin
 
 class EnhancedLinUCBPlugin(BanditPlugin):
     """Enhanced LinUCB with advanced contextual features"""
-    
+
     def __init__(self, alpha: float = 1.0, context_dim: int = 10):
         self.alpha = alpha
         self.context_dim = context_dim
         self.A = {}  # Model → inverse covariance matrix
         self.b = {}  # Model → reward vector
-    
+
     def select_action(self, context: Dict[str, Any], available_models: List[str]) -> str:
         """Select model using UCB with confidence bounds"""
         context_vec = self._extract_context_features(context)
-        
+
         ucb_scores = {}
         for model in available_models:
             if model not in self.A:
                 self._initialize_model(model)
-            
+
             # Compute UCB score
             A_inv = np.linalg.inv(self.A[model])
             theta = A_inv @ self.b[model]
             ucb = theta @ context_vec + self.alpha * np.sqrt(context_vec @ A_inv @ context_vec)
             ucb_scores[model] = ucb
-        
+
         return max(ucb_scores, key=ucb_scores.get)
-    
+
     def _extract_context_features(self, context: Dict[str, Any]) -> np.ndarray:
         """Extract enhanced contextual features"""
         features = []
-        
+
         # Task complexity (prompt length, tokens)
         features.append(len(context.get("prompt", "")) / 1000.0)
         features.append(context.get("max_tokens", 1000) / 4000.0)
-        
+
         # Temporal features (time of day, day of week)
         import datetime
         now = datetime.datetime.now()
         features.append(now.hour / 24.0)
         features.append(now.weekday() / 7.0)
-        
+
         # Cost constraints
         features.append(context.get("budget_remaining", 1.0))
-        
+
         # Quality requirements
         features.append(context.get("min_quality", 0.5))
-        
+
         # Pad to context_dim
         while len(features) < self.context_dim:
             features.append(0.0)
-        
+
         return np.array(features[:self.context_dim])
-    
+
     def update(self, context: Dict[str, Any], model: str, reward: float):
         """Update model parameters with observed reward"""
         context_vec = self._extract_context_features(context)
-        
+
         self.A[model] += np.outer(context_vec, context_vec)
         self.b[model] += reward * context_vec
-    
+
     def _initialize_model(self, model: str):
         """Initialize parameters for new model"""
         self.A[model] = np.eye(self.context_dim)
         self.b[model] = np.zeros(self.context_dim)
-    
+
     def get_state(self) -> Dict[str, Any]:
         return {
             "A": {k: v.tolist() for k, v in self.A.items()},
@@ -404,7 +404,7 @@ from .plugins import EnhancedLinUCBPlugin, ThompsonSamplingPlugin
 class AdaptiveRoutingManager:
     def __init__(self, settings):
         self.settings = settings
-        
+
         # Load plugin based on configuration
         plugin_type = settings.routing_plugin or "linucb"
         if plugin_type == "enhanced_linucb":
@@ -413,7 +413,7 @@ class AdaptiveRoutingManager:
             self.plugin = ThompsonSamplingPlugin()
         else:
             self.plugin = None  # Use default routing
-    
+
     async def select_model(self, context: dict, available_models: list) -> str:
         if self.plugin:
             return self.plugin.select_action(context, available_models)
@@ -471,29 +471,29 @@ class CompressorProtocol(Protocol):
 
 class SyntaxAwareCompressor:
     """Preserve code structure during compression"""
-    
+
     def compress(self, text: str, target_ratio: float) -> str:
         # Detect code blocks
         import re
         code_blocks = re.findall(r'```[\s\S]*?```', text)
-        
+
         # Compress prose aggressively, code lightly
         prose = re.sub(r'```[\s\S]*?```', '<<CODE_BLOCK>>', text)
         compressed_prose = self._compress_prose(prose, target_ratio * 0.7)
-        
+
         # Reinsert code blocks (lightly compressed)
         for block in code_blocks:
             compressed_block = self._compress_code(block, target_ratio * 1.2)
             compressed_prose = compressed_prose.replace('<<CODE_BLOCK>>', compressed_block, 1)
-        
+
         return compressed_prose
-    
+
     def _compress_prose(self, text: str, ratio: float) -> str:
         # Remove filler words, redundant whitespace
         words = text.split()
         target_words = int(len(words) * ratio)
         return ' '.join(words[:target_words])
-    
+
     def _compress_code(self, code: str, ratio: float) -> str:
         # Preserve syntax, remove comments only if needed
         lines = code.split('\n')
@@ -504,58 +504,58 @@ class SyntaxAwareCompressor:
 
 class SemanticClusteringCompressor:
     """Group similar content and deduplicate"""
-    
+
     def compress(self, text: str, target_ratio: float) -> str:
         sentences = text.split('. ')
-        
+
         # Simple similarity clustering (can enhance with embeddings)
         clusters = self._cluster_sentences(sentences)
-        
+
         # Keep one representative per cluster
         compressed = []
         for cluster in clusters:
             compressed.append(self._select_representative(cluster))
-        
+
         return '. '.join(compressed)
-    
+
     def _cluster_sentences(self, sentences: list) -> list:
         # Placeholder: simple word overlap clustering
         clusters = []
         used = set()
-        
+
         for i, sent in enumerate(sentences):
             if i in used:
                 continue
             cluster = [sent]
             used.add(i)
-            
+
             for j, other in enumerate(sentences[i+1:], i+1):
                 if j in used:
                     continue
                 if self._similarity(sent, other) > 0.5:
                     cluster.append(other)
                     used.add(j)
-            
+
             clusters.append(cluster)
-        
+
         return clusters
-    
+
     def _similarity(self, s1: str, s2: str) -> float:
         words1 = set(s1.lower().split())
         words2 = set(s2.lower().split())
         return len(words1 & words2) / len(words1 | words2) if words1 | words2 else 0
-    
+
     def _select_representative(self, cluster: list) -> str:
         # Return longest (most informative) sentence
         return max(cluster, key=len)
 
 class AdaptiveCompressor:
     """Choose strategy based on content analysis"""
-    
+
     def __init__(self):
         self.syntax_aware = SyntaxAwareCompressor()
         self.semantic = SemanticClusteringCompressor()
-    
+
     def compress(self, text: str, target_ratio: float) -> str:
         # Detect content type
         if '```' in text or 'def ' in text or 'class ' in text:
@@ -573,7 +573,7 @@ def compress_prompt(text: str, target_ratio: float = 0.7, strategy: str = "adapt
         "semantic_clustering": SemanticClusteringCompressor(),
         "adaptive": AdaptiveCompressor()
     }
-    
+
     compressor = compressors.get(strategy, AdaptiveCompressor())
     return compressor.compress(text, target_ratio)
 ```
@@ -640,24 +640,24 @@ class MemoryRecord:
 
 class MemoryPlugin(Protocol):
     """Protocol for specialty memory backends"""
-    
+
     async def store(self, records: List[MemoryRecord]) -> StepResult:
         ...
-    
+
     async def retrieve(self, query: str, tenant: str, workspace: str, limit: int) -> StepResult:
         ...
 
 class UnifiedMemoryService:
     """Unified memory service with pluggable backends"""
-    
+
     def __init__(self):
         self._vector_store = VectorStore()
         self._plugins: Dict[str, MemoryPlugin] = {}
-    
+
     def register_plugin(self, name: str, plugin: MemoryPlugin):
         """Register specialty memory backend"""
         self._plugins[name] = plugin
-    
+
     async def upsert(
         self,
         tenant: str,
@@ -681,10 +681,10 @@ class UnifiedMemoryService:
                     creator=creator
                 )
                 return StepResult.ok(data={"stored": len(records)})
-        
+
         except Exception as e:
             return StepResult.fail(f"Memory upsert failed: {e}")
-    
+
     async def search(
         self,
         tenant: str,
@@ -705,7 +705,7 @@ class UnifiedMemoryService:
                     limit=limit
                 )
                 return StepResult.ok(data={"results": results})
-        
+
         except Exception as e:
             return StepResult.fail(f"Memory search failed: {e}")
 
@@ -741,10 +741,10 @@ from ..import MemoryPlugin, MemoryRecord, StepResult
 
 class Mem0Plugin(MemoryPlugin):
     """Plugin for Mem0 long-term memory backend"""
-    
+
     def __init__(self):
         self.service = Mem0Service()
-    
+
     async def store(self, records: List[MemoryRecord]) -> StepResult:
         try:
             for record in records:
@@ -756,7 +756,7 @@ class Mem0Plugin(MemoryPlugin):
             return StepResult.ok(data={"stored": len(records)})
         except Exception as e:
             return StepResult.fail(f"Mem0 store failed: {e}")
-    
+
     async def retrieve(self, query: str, tenant: str, workspace: str, limit: int) -> StepResult:
         try:
             results = await self.service.search_memory(
@@ -862,7 +862,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class OrchestrationStrategy(Protocol):
     """Protocol for orchestration strategies"""
-    
+
     async def execute_workflow(
         self,
         tasks: List[Dict[str, Any]],
@@ -870,7 +870,7 @@ class OrchestrationStrategy(Protocol):
     ) -> StepResult:
         """Execute workflow with strategy-specific logic"""
         ...
-    
+
     def get_strategy_name(self) -> str:
         """Return strategy identifier"""
         ...
@@ -885,10 +885,10 @@ from .base_strategy import OrchestrationStrategy
 
 class FallbackStrategy:
     """Fallback orchestration with automatic retry and degradation"""
-    
+
     def __init__(self, max_retries: int = 3):
         self.max_retries = max_retries
-    
+
     async def execute_workflow(self, tasks: List[Dict], context: Dict) -> StepResult:
         """Execute with fallback on failure"""
         for attempt in range(self.max_retries):
@@ -896,19 +896,19 @@ class FallbackStrategy:
                 result = await self._execute_tasks(tasks, context)
                 if result.success:
                     return result
-                
+
                 # Try degraded version
                 logger.warning(f"Attempt {attempt+1} failed, trying fallback")
                 result = await self._execute_degraded(tasks, context)
                 if result.success:
                     return result
-            
+
             except Exception as e:
                 if attempt == self.max_retries - 1:
                     return StepResult.fail(f"All fallback attempts exhausted: {e}")
-        
+
         return StepResult.fail("Workflow failed with fallback")
-    
+
     def get_strategy_name(self) -> str:
         return "fallback"
 ```
@@ -942,7 +942,7 @@ class OrchestrationStrategy(Enum):
 
 class OrchestrationFacade:
     """Unified orchestration with pluggable strategies"""
-    
+
     def __init__(self):
         self._strategies: Dict[OrchestrationStrategy, Any] = {
             OrchestrationStrategy.FALLBACK: FallbackStrategy(),
@@ -951,7 +951,7 @@ class OrchestrationFacade:
             OrchestrationStrategy.RESILIENCE: ResilienceStrategy(),
         }
         self._default_strategy = OrchestrationStrategy.DEFAULT
-    
+
     async def execute_workflow(
         self,
         tasks: List[Dict],
@@ -960,17 +960,17 @@ class OrchestrationFacade:
     ) -> StepResult:
         """Execute workflow using specified strategy"""
         strategy = strategy or self._default_strategy
-        
+
         if strategy == OrchestrationStrategy.DEFAULT:
             # Use autonomous_orchestrator.py
             from ..autonomous_orchestrator import AutonomousIntelligenceOrchestrator
             orchestrator = AutonomousIntelligenceOrchestrator()
             return await orchestrator.execute(tasks, context)
-        
+
         elif strategy in self._strategies:
             strategy_impl = self._strategies[strategy]
             return await strategy_impl.execute_workflow(tasks, context)
-        
+
         else:
             return StepResult.fail(f"Unknown strategy: {strategy}")
 ```
@@ -1096,24 +1096,24 @@ model = result.data["selected_model"]
 
 class RoutingShadowHarness:
     """Runs legacy and unified routing in parallel"""
-    
+
     def __init__(self):
         self.unified_service = OpenRouterService()
         # Keep ONE legacy router for comparison
         from ai.routing import LinUCBRouter
         self.legacy_router = LinUCBRouter()
         self.stats = {"agreement": 0, "disagreement": 0, "unified_wins": 0}
-    
+
     async def select_model(self, prompt: str, context: dict) -> str:
         """Select model using both approaches and compare"""
         unified_result = await self.unified_service.route(prompt, context)
         legacy_result = self.legacy_router.select_model(context)
-        
+
         if unified_result.data["selected_model"] == legacy_result:
             self.stats["agreement"] += 1
         else:
             self.stats["disagreement"] += 1
-        
+
         # Return unified result (production path)
         return unified_result.data["selected_model"]
 ```
@@ -1454,8 +1454,8 @@ python benchmarks/performance_benchmarks.py --mode=before_after
 | 9-10 | Routing | Migrate callers, shadow test | OpenRouterService unified |
 | 11-12 | Analytics + Cleanup | Consolidate monitors, delete deprecated | 100% consolidation complete |
 
-**Total Duration**: 12 weeks  
-**Estimated Effort**: ~400 hours (split across team)  
+**Total Duration**: 12 weeks
+**Estimated Effort**: ~400 hours (split across team)
 **Go-Live Date**: Week of January 6, 2026
 
 ---
@@ -1557,14 +1557,14 @@ make docs-flags-write
 
 ## Appendix C: Contact & Escalation
 
-**Project Lead**: Architecture Group  
-**Technical Questions**: See ADRs in `docs/architecture/`  
-**Blockers**: Create GitHub issue with label `consolidation-blocker`  
-**Daily Standups**: Review progress via todo list  
+**Project Lead**: Architecture Group
+**Technical Questions**: See ADRs in `docs/architecture/`
+**Blockers**: Create GitHub issue with label `consolidation-blocker`
+**Daily Standups**: Review progress via todo list
 **Weekly Review**: Update consolidation-status.md
 
 ---
 
-**Document Status**: ACTIVE  
-**Last Updated**: October 19, 2025  
+**Document Status**: ACTIVE
+**Last Updated**: October 19, 2025
 **Next Review**: Weekly during execution

@@ -1,7 +1,7 @@
 # /autointel Command - Critical Data Flow Issues
 
-**Status**: 🔴 CRITICAL - Command fundamentally broken due to architectural flaw  
-**Date**: 2025-09-30  
+**Status**: 🔴 CRITICAL - Command fundamentally broken due to architectural flaw
+**Date**: 2025-09-30
 **Affected Command**: `/autointel url:... depth:experimental`
 
 ## Executive Summary
@@ -57,7 +57,7 @@ class CrewAIToolWrapper(BaseTool):
     def update_context(self, context: dict[str, Any]) -> None:
         """Update shared context for data flow between tools."""
         self._shared_context.update(context or {})
-    
+
     def _run(self, *args, **kwargs) -> Any:
         # Merge shared context with kwargs
         if isinstance(self._shared_context, dict) and self._shared_context:
@@ -217,17 +217,17 @@ crew_result = await asyncio.to_thread(
 async def test_autointel_full_workflow_with_real_data():
     """Test complete /autointel workflow with actual data flow."""
     orchestrator = AutonomousIntelligenceOrchestrator()
-    
+
     # Mock interaction
     interaction = MockInteraction()
-    
+
     # Execute with real YouTube URL
     await orchestrator.execute_autonomous_intelligence_workflow(
         interaction,
         url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         depth="standard"
     )
-    
+
     # Validate data flow at each stage
     assert interaction.messages_sent > 0
     assert "transcript" in interaction.final_results

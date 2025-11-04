@@ -60,7 +60,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
 
 ### Multimodal Analysis Migration
 
-**From:** `multi_modal_analysis_tool.py`  
+**From:** `multi_modal_analysis_tool.py`
 **To:** `multimodal_analysis_tool.py`
 
 #### Changes
@@ -76,7 +76,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import MultiModalAnalysisTool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import MultimodalAnalysisTool
    ```
@@ -86,7 +86,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    tool = MultiModalAnalysisTool()
-   
+
    # New
    tool = MultimodalAnalysisTool()
    ```
@@ -96,14 +96,14 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    tools=[wrap_tool_for_crewai(MultiModalAnalysisTool())]
-   
+
    # New
    tools=[wrap_tool_for_crewai(MultimodalAnalysisTool())]
    ```
 
 ### Memory Storage Migration
 
-**From:** `memory_storage_tool.py`  
+**From:** `memory_storage_tool.py`
 **To:** `unified_memory_tool.py`
 
 #### Changes
@@ -119,7 +119,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import MemoryStorageTool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import UnifiedMemoryTool
    ```
@@ -130,7 +130,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    # Old
    tool = MemoryStorageTool()
    result = tool._run(content="data", operation="store")
-   
+
    # New
    tool = UnifiedMemoryTool()
    result = tool._run(content="data", operation="store", backend="qdrant")
@@ -138,7 +138,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
 
 ### Memory V2 Migration
 
-**From:** `memory_v2_tool.py`  
+**From:** `memory_v2_tool.py`
 **To:** `unified_memory_tool.py`
 
 #### Changes
@@ -154,7 +154,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import MemoryV2Tool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import UnifiedMemoryTool
    ```
@@ -165,7 +165,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    # Old
    tool = MemoryV2Tool()
    result = tool._run(operation="store", content="data")
-   
+
    # New
    tool = UnifiedMemoryTool()
    result = tool._run(operation="store", content="data", backend="unified")
@@ -173,7 +173,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
 
 ### Mem0 Memory Migration
 
-**From:** `mem0_memory_tool.py`  
+**From:** `mem0_memory_tool.py`
 **To:** `unified_memory_tool.py`
 
 #### Changes
@@ -189,7 +189,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import Mem0MemoryTool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import UnifiedMemoryTool
    ```
@@ -200,7 +200,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    # Old
    tool = Mem0MemoryTool()
    result = tool._run(content="data", operation="store")
-   
+
    # New
    tool = UnifiedMemoryTool()
    result = tool._run(content="data", operation="store", backend="mem0")
@@ -208,7 +208,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
 
 ### HippoRAG Memory Migration
 
-**From:** `hipporag_continual_memory_tool.py`  
+**From:** `hipporag_continual_memory_tool.py`
 **To:** `unified_memory_tool.py`
 
 #### Changes
@@ -224,7 +224,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import HippoRagContinualMemoryTool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import UnifiedMemoryTool
    ```
@@ -235,7 +235,7 @@ This registry tracks the deprecation lifecycle of tools in the Ultimate Discord 
    # Old
    tool = HippoRagContinualMemoryTool()
    result = tool._run(content="data", operation="store")
-   
+
    # New
    tool = UnifiedMemoryTool()
    result = tool._run(content="data", operation="store", backend="hipporag")
@@ -300,7 +300,7 @@ class DeprecatedTool(BaseTool):
         super().__init__()
         self._metrics = get_metrics()
         self._usage_counter = self._metrics.counter("deprecated_tool_usage_total")
-    
+
     def _run(self, *args, **kwargs):
         self._usage_counter.inc(labels={"tool": "DeprecatedTool"})
         warnings.warn("Deprecated tool usage detected", DeprecationWarning)
@@ -343,5 +343,5 @@ For questions about tool deprecations or migration:
 
 ---
 
-*Last Updated: 2024-01-XX*  
+*Last Updated: 2024-01-XX*
 *Next Review: 2024-02-XX*

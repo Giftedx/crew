@@ -18,7 +18,7 @@ except ImportError:
     RedisSettings = None  # type: ignore[assignment,misc]
 
 
-from src.tasks.arq_config import get_arq_settings
+from tasks.arq_config import get_arq_settings
 
 
 logger = logging.getLogger(__name__)

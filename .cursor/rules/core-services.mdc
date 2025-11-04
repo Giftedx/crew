@@ -436,10 +436,10 @@ from core.flags import enabled
 def test_feature_flag():
     # Set environment variable
     os.environ["ENABLE_TEST_FEATURE"] = "true"
-    
+
     # Test flag behavior
     assert enabled("ENABLE_TEST_FEATURE")
-    
+
     # Clean up
     del os.environ["ENABLE_TEST_FEATURE"]
 ```

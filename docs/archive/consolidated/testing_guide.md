@@ -57,7 +57,7 @@ class TestTemplateTool:
     def test_successful_execution(self) -> None:
         """Test successful tool execution."""
         result = self.tool.run("test input", self.tenant, self.workspace)
-        
+
         assert result.success
         assert result.data is not None
         assert "processed_text" in result.data
@@ -65,7 +65,7 @@ class TestTemplateTool:
     def test_input_validation(self) -> None:
         """Test input validation."""
         result = self.tool.run("", self.tenant, self.workspace)
-        
+
         assert not result.success
         assert "must be a non-empty string" in result.error
 
@@ -73,7 +73,7 @@ class TestTemplateTool:
         """Test tenant isolation."""
         result1 = self.tool.run("test", "tenant1", self.workspace)
         result2 = self.tool.run("test", "tenant2", self.workspace)
-        
+
         assert result1.success
         assert result2.success
         assert result1.data["tenant_specific_result"] != result2.data["tenant_specific_result"]
@@ -101,16 +101,16 @@ class TestMemoryService:
     def test_store_content_success(self) -> None:
         """Test successful content storage."""
         result = self.service.store_content("test content", "tenant", "workspace")
-        
+
         assert result.success
         assert result.data["stored"] is True
 
     def test_store_content_failure(self) -> None:
         """Test content storage failure."""
         self.mock_qdrant.upsert.side_effect = Exception("Database error")
-        
+
         result = self.service.store_content("test content", "tenant", "workspace")
-        
+
         assert not result.success
         assert "Database error" in result.error
 ```
@@ -138,9 +138,9 @@ class TestAgentFactory:
         """Test successful agent creation."""
         mock_agent = Mock()
         mock_agent_class.return_value = mock_agent
-        
+
         agent = self.factory.create_agent("mission_orchestrator")
-        
+
         assert agent is not None
         mock_agent_class.assert_called_once()
 ```
@@ -189,13 +189,13 @@ def test_openai_integration(mock_openai: Mock) -> None:
     """Test OpenAI integration with mocked client."""
     mock_client = Mock()
     mock_openai.return_value = mock_client
-    
+
     # Configure mock response
     mock_response = Mock()
     mock_response.choices = [Mock()]
     mock_response.choices[0].message.content = "Mock response"
     mock_client.chat.completions.create.return_value = mock_response
-    
+
     # Test your code
     result = your_function()
     assert result.success
@@ -211,11 +211,11 @@ def test_memory_service(mock_qdrant_class: Mock) -> None:
     """Test memory service with mocked database."""
     mock_client = Mock()
     mock_qdrant_class.return_value = mock_client
-    
+
     # Configure mock responses
     mock_client.search.return_value = []
     mock_client.upsert.return_value = Mock()
-    
+
     # Test your code
     service = MemoryService()
     result = service.search_content("query", "tenant", "workspace")
@@ -271,10 +271,10 @@ Use the TestUtils class for consistent StepResult assertions:
 def test_tool_execution(test_utils: TestUtils) -> None:
     """Test tool execution with proper assertions."""
     result = tool.run("input", "tenant", "workspace")
-    
+
     # Assert success with expected data keys
     test_utils.assert_step_result_success(result, ["processed_text", "word_count"])
-    
+
     # Or assert failure with expected error
     test_utils.assert_step_result_failure(result, "Invalid input")
 ```
@@ -307,7 +307,7 @@ def test_execution_time() -> None:
     start_time = time.time()
     result = tool.run("input", "tenant", "workspace")
     execution_time = time.time() - start_time
-    
+
     assert result.success
     assert execution_time < 5.0  # Should complete within 5 seconds
 ```
@@ -324,12 +324,12 @@ def test_memory_usage() -> None:
     """Test memory usage during operation."""
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss
-    
+
     result = tool.run("input", "tenant", "workspace")
-    
+
     final_memory = process.memory_info().rss
     memory_increase = final_memory - initial_memory
-    
+
     assert result.success
     assert memory_increase < 100 * 1024 * 1024  # Less than 100MB increase
 ```
@@ -345,7 +345,7 @@ def test_exception_handling() -> None:
     """Test exception handling."""
     with patch.object(tool, '_process_data', side_effect=Exception("Test error")):
         result = tool.run("input", "tenant", "workspace")
-        
+
         assert not result.success
         assert "Test error" in result.error
 ```
@@ -359,7 +359,7 @@ def test_network_error() -> None:
     """Test network error handling."""
     with patch('requests.get', side_effect=ConnectionError("Network error")):
         result = tool.run("input", "tenant", "workspace")
-        
+
         assert not result.success
         assert "Network error" in result.error
 ```
@@ -388,7 +388,7 @@ def random_content() -> str:
     """Generate random content for testing."""
     import random
     import string
-    
+
     words = ["test", "content", "analysis", "sentiment", "political"]
     return " ".join(random.choices(words, k=10))
 ```
@@ -456,11 +456,11 @@ Organize tests by functionality and use classes for related tests:
 ```python
 class TestContentAnalysis:
     """Test content analysis functionality."""
-    
+
     def test_political_topic_detection(self) -> None:
         """Test political topic detection."""
         pass
-    
+
     def test_sentiment_analysis(self) -> None:
         """Test sentiment analysis."""
         pass
@@ -484,7 +484,7 @@ Document complex tests and edge cases:
 ```python
 def test_edge_case_empty_input() -> None:
     """Test edge case: empty input string.
-    
+
     This test verifies that the tool handles empty input strings
     gracefully by returning a validation error rather than crashing.
     """
@@ -551,13 +551,13 @@ pytest -s
 def test_debug_example() -> None:
     """Example of debugging test failures."""
     result = tool.run("input", "tenant", "workspace")
-    
+
     # Print debug information
     print(f"Result: {result}")
     print(f"Success: {result.success}")
     print(f"Error: {result.error}")
     print(f"Data: {result.data}")
-    
+
     assert result.success
 ```
 

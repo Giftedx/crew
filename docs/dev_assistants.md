@@ -18,6 +18,13 @@ This consolidated guide replaces the former `docs/dev_assistants/CLAUDE.md` and 
 
 Ultimate Discord Intelligence Bot (aka Giftedx Crew) is a tenant‑aware Discord intelligence and ingestion platform. It ingests public media, applies grounded analysis, and serves answers through cost‑guarded model routing with reliability, provenance and privacy controls.
 
+**Current Statistics** (verified November 3, 2025):
+
+- **111 tools** exported from `tools/__init__.py::__all__`
+- **18 agents** registered in `crew_components/tool_registry.py`
+- **7 pipeline phases** in `pipeline_components/orchestrator.py`
+- **10 tool categories**: Observability (26), Analysis (23), Memory (23), Ingestion (13), Verification (10), Social Monitoring (5), Other (5), Discord (4), Web Automation (1), Integration (1)
+
 ## Core Principles for Automated Changes
 
 1. Minimize Root Clutter – prefer adding/altering files under `src/`, `docs/`, or `scripts/`.

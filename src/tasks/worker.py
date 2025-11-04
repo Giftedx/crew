@@ -19,7 +19,7 @@ except ImportError:
     ArqRedis = None  # type: ignore[assignment,misc]
     RedisSettings = None  # type: ignore[assignment,misc]
 
-from src.tasks.arq_config import get_arq_settings
+from tasks.arq_config import get_arq_settings
 
 
 logger = logging.getLogger(__name__)
@@ -93,3 +93,13 @@ class ArqWorker:
             "max_jobs": self.settings["max_jobs"],
             "timeout": self.settings["timeout"],
         }
+
+
+if __name__ == "__main__":
+    # Simple CLI entrypoint for `python -m tasks.worker`
+    try:
+        worker = ArqWorker()
+        asyncio.run(worker.start())
+    except Exception as exc:
+        logger.error(f"Arq worker failed to start: {exc}")
+        raise

@@ -65,7 +65,7 @@ Doctor
 ### 📊 Development Mode Features Active
 
 - **Mock LLM Responses**: ✅ Enabled
-- **Mock Vector Store**: ✅ Enabled  
+- **Mock Vector Store**: ✅ Enabled
 - **Mock OAuth Flows**: ✅ Enabled
 - **Mock Discord API**: ✅ Enabled
 - **Development Logging**: ✅ Enabled

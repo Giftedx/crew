@@ -38,25 +38,25 @@ log_error() {
 # Check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
-    
+
     # Check if Docker is available
     if ! command -v docker &> /dev/null; then
         log_error "Docker is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check if Docker Compose is available
     if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
         log_error "Docker Compose is not installed or not in PATH"
         exit 1
     fi
-    
+
     # Check if environment file exists
     if [ ! -f "$ENV_FILE" ]; then
         log_warning "Environment file $ENV_FILE not found, creating template..."
         create_env_template
     fi
-    
+
     log_success "Prerequisites check passed"
 }
 
@@ -124,70 +124,70 @@ REQUEST_TIMEOUT_SECONDS=30
 JWT_SECRET_KEY=your_jwt_secret_key_here
 ENCRYPTION_KEY=your_encryption_key_here
 EOF
-    
+
     log_warning "Please edit $ENV_FILE with your actual credentials before proceeding"
 }
 
 # Build and start services
 deploy_services() {
     log_info "Deploying services..."
-    
+
     # Pull latest images
     log_info "Pulling latest Docker images..."
     docker-compose -f "$DOCKER_COMPOSE_FILE" pull
-    
+
     # Build custom images
     log_info "Building custom images..."
     docker-compose -f "$DOCKER_COMPOSE_FILE" build --no-cache
-    
+
     # Start services
     log_info "Starting services..."
     docker-compose -f "$DOCKER_COMPOSE_FILE" up -d
-    
+
     log_success "Services deployed successfully"
 }
 
 # Wait for services to be healthy
 wait_for_services() {
     log_info "Waiting for services to be healthy..."
-    
+
     # Wait for PostgreSQL
     log_info "Waiting for PostgreSQL..."
     timeout 60 bash -c 'until docker-compose -f docker-compose.creator-ops.yml exec -T postgres pg_isready -U postgres; do sleep 2; done'
-    
+
     # Wait for Redis
     log_info "Waiting for Redis..."
     timeout 60 bash -c 'until docker-compose -f docker-compose.creator-ops.yml exec -T redis-creator-ops redis-cli ping; do sleep 2; done'
-    
+
     # Wait for Qdrant
     log_info "Waiting for Qdrant..."
     timeout 60 bash -c 'until curl -f http://localhost:6333/health; do sleep 2; done'
-    
+
     # Wait for MinIO
     log_info "Waiting for MinIO..."
     timeout 60 bash -c 'until curl -f http://localhost:9000/minio/health/live; do sleep 2; done'
-    
+
     # Wait for API service
     log_info "Waiting for Creator Operations API..."
     timeout 60 bash -c 'until curl -f http://localhost:8001/health; do sleep 2; done'
-    
+
     log_success "All services are healthy"
 }
 
 # Run database migrations
 run_migrations() {
     log_info "Running database migrations..."
-    
+
     # This would run Alembic migrations if they exist
     # docker-compose -f "$DOCKER_COMPOSE_FILE" exec creator-ops-api alembic upgrade head
-    
+
     log_success "Database migrations completed"
 }
 
 # Initialize monitoring
 initialize_monitoring() {
     log_info "Initializing monitoring and observability..."
-    
+
     # Start monitoring
     python3 -c "
 import sys
@@ -197,7 +197,7 @@ monitor = get_production_monitor()
 result = monitor.start_monitoring(interval=30)
 print('✅ Monitoring started:', 'SUCCESS' if result.success else 'FAILED')
 "
-    
+
     # Test metrics collection
     python3 -c "
 import sys
@@ -208,17 +208,17 @@ result = monitor.get_comprehensive_metrics()
 print('📊 Metrics collection:', 'SUCCESS' if result.success else 'FAILED')
 print('🏥 Health Status:', result.data.get('health_status', 'unknown'))
 "
-    
+
     log_success "Monitoring initialized successfully"
 }
 
 # Run health checks
 run_health_checks() {
     log_info "Running comprehensive health checks..."
-    
+
     # Check all services
     services=("postgres" "redis-creator-ops" "qdrant" "minio" "creator-ops-api" "creator-ops-worker")
-    
+
     for service in "${services[@]}"; do
         log_info "Checking $service..."
         if docker-compose -f "$DOCKER_COMPOSE_FILE" ps "$service" | grep -q "Up"; then
@@ -228,10 +228,10 @@ run_health_checks() {
             exit 1
         fi
     done
-    
+
     # Test API endpoints
     log_info "Testing API endpoints..."
-    
+
     # Health endpoint
     if curl -f http://localhost:8001/health > /dev/null 2>&1; then
         log_success "API health endpoint is responding"
@@ -239,14 +239,14 @@ run_health_checks() {
         log_error "API health endpoint is not responding"
         exit 1
     fi
-    
+
     # Metrics endpoint
     if curl -f http://localhost:8001/metrics > /dev/null 2>&1; then
         log_success "Metrics endpoint is responding"
     else
         log_warning "Metrics endpoint is not responding"
     fi
-    
+
     log_success "All health checks passed"
 }
 
@@ -285,7 +285,7 @@ display_summary() {
 # Main deployment function
 main() {
     log_info "Starting Ultimate Content Intelligence Ecosystem deployment..."
-    
+
     check_prerequisites
     deploy_services
     wait_for_services

@@ -28,4 +28,3 @@ fi
 echo "🚀 Running autointel diagnostic with venv Python..."
 echo ""
 PYTHONPATH=/home/crew/src .venv/bin/python3 scripts/diagnose_autointel.py "$@"
-

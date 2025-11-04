@@ -24,7 +24,7 @@ content_types:
         analysis_agent: "analysis_specialist"
         verification_agent: "verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     tiktok:
       type: "video"
       platform: "tiktok"
@@ -45,7 +45,7 @@ content_types:
         analysis_agent: "enhanced_social_media_archivist"
         verification_agent: "advanced_verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     twitch:
       type: "video"
       platform: "twitch"
@@ -66,7 +66,7 @@ content_types:
         analysis_agent: "live_stream_analysis_specialist"
         verification_agent: "verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     instagram:
       type: "video"
       platform: "instagram"
@@ -110,7 +110,7 @@ content_types:
         analysis_agent: "analysis_specialist"
         verification_agent: "verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     music:
       type: "audio"
       platform: "music"
@@ -154,7 +154,7 @@ content_types:
         analysis_agent: "analysis_specialist"
         verification_agent: "advanced_verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     social_post:
       type: "text"
       platform: "social"
@@ -175,7 +175,7 @@ content_types:
         analysis_agent: "enhanced_social_media_archivist"
         verification_agent: "advanced_verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     reddit_post:
       type: "text"
       platform: "reddit"
@@ -219,7 +219,7 @@ content_types:
         analysis_agent: "image_analysis_specialist"
         verification_agent: "advanced_verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     infographic:
       type: "image"
       platform: "web"
@@ -263,7 +263,7 @@ content_types:
         analysis_agent: "live_stream_analysis_specialist"
         verification_agent: "verification_specialist"
         quality_agent: "quality_assurance_specialist"
-    
+
     thread:
       type: "mixed"
       platform: "social"
@@ -323,13 +323,13 @@ routing:
     analysis_agent: "analysis_specialist"
     verification_agent: "verification_specialist"
     quality_agent: "quality_assurance_specialist"
-  
+
   # Fallback routing for failed processing
   fallback_routing:
     analysis_agent: "enhanced_analysis_specialist"
     verification_agent: "advanced_verification_specialist"
     quality_agent: "quality_assurance_specialist"
-  
+
   # Emergency routing for critical content
   emergency_routing:
     analysis_agent: "mission_orchestrator"
@@ -354,7 +354,7 @@ classification:
     instagram:
       - "instagram.com/"
       - "instagr.am/"
-  
+
   # Content type detection based on metadata
   metadata_detection:
     video_indicators:
@@ -390,7 +390,7 @@ performance:
     image:
       cache_duration: 14400  # 4 hours
       cache_size_limit: 1000  # items
-  
+
   # Processing optimization
   optimization:
     parallel_processing: true

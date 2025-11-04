@@ -16,7 +16,7 @@ Final Answer:
   "timeline_anchors": [...],
 }
 
-Agent: Analysis Cartographer  
+Agent: Analysis Cartographer
 Final Answer:
 {
   "insights": <extracted_insights>,  # ❌ Invalid JSON placeholders
@@ -57,8 +57,8 @@ Final Answer:
 **AFTER:**
 
 ```python
-"STEP 2: YOU MUST CALL AudioTranscriptionTool(file_path=<extracted_path>). 
-DO NOT generate placeholder text like 'Your transcribed text goes here'. 
+"STEP 2: YOU MUST CALL AudioTranscriptionTool(file_path=<extracted_path>).
+DO NOT generate placeholder text like 'Your transcribed text goes here'.
 DO NOT respond until the tool returns actual transcript data."
 ```
 
@@ -138,18 +138,18 @@ STEP 4: YOU MUST CALL FactCheckTool(claim=<claim_text>) for each selected claim.
 ```python
 def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, Any]) -> None:
     """Detect when agents generate placeholder/mock responses instead of calling tools."""
-    
+
     # Transcription validation
     if task_name == "transcription" and "transcript" in output_data:
         transcript = str(output_data["transcript"])
-        
+
         if len(transcript) < 100:
             self.logger.error(
                 f"❌ TOOL EXECUTION FAILURE: transcript too short ({len(transcript)} chars). "
                 f"Agent likely generated placeholder instead of calling AudioTranscriptionTool!"
             )
             self.metrics.counter("autointel_placeholder_detected", ...).inc()
-        
+
         # Check for placeholder patterns
         placeholder_patterns = [
             "your transcribed text goes here",
@@ -163,7 +163,7 @@ def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, A
                     f"❌ TOOL EXECUTION FAILURE: Detected placeholder text '{pattern}' in transcript!"
                 )
                 self.metrics.counter("autointel_placeholder_detected", ...).inc()
-    
+
     # Analysis validation (detects <extracted_insights> placeholders)
     if task_name == "analysis":
         for field in ["insights", "themes", "fallacies", "perspectives"]:
@@ -174,7 +174,7 @@ def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, A
                         self.logger.error(
                             f"❌ TOOL EXECUTION FAILURE: Detected placeholder '{pattern}' in {field}!"
                         )
-                        
+
     # Verification validation (detects empty arrays)
     if task_name == "verification":
         verified_claims = output_data.get("verified_claims", [])
@@ -183,7 +183,7 @@ def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, A
                 "⚠️  SUSPICIOUS: verified_claims is empty. "
                 "Verify ClaimExtractorTool was actually called!"
             )
-        
+
         # Detect generic claims (not specific to video content)
         generic_patterns = ["methodologies", "environmental issues"]
         for claim in verified_claims:
@@ -206,7 +206,7 @@ def _detect_placeholder_responses(self, task_name: str, output_data: dict[str, A
 **Line Count Changes:**
 
 - Transcription task description: +6 lines
-- Analysis task description: +7 lines  
+- Analysis task description: +7 lines
 - Verification task description: +5 lines
 - Integration task description: +8 lines
 - New method `_detect_placeholder_responses`: +120 lines

@@ -12,8 +12,12 @@ via environment variables.
 
 from __future__ import annotations
 
+import importlib.machinery
+import importlib.util
 import os
 import sys
+import sysconfig
+import types
 from pathlib import Path
 
 
@@ -22,8 +26,95 @@ ROOT = Path(__file__).resolve().parent
 SRC = ROOT / "src"
 if SRC.exists():
     src_path = str(SRC)
+    # Capture stdlib 'platform' BEFORE adding src to path
+    std_platform = None
+    # Prefer robust load from stdlib path to avoid accidentally grabbing the local package
+    try:
+        stdlib_dir = Path(sysconfig.get_paths().get("stdlib", Path(os.__file__).resolve().parent))
+        platform_py = stdlib_dir / "platform.py"
+        if platform_py.exists():
+            loader = importlib.machinery.SourceFileLoader("platform", str(platform_py))
+            spec = importlib.util.spec_from_loader("platform", loader)
+            if spec is not None:
+                module = importlib.util.module_from_spec(spec)
+                assert module is not None
+                loader.exec_module(module)  # type: ignore[arg-type]
+                std_platform = module
+    except Exception:  # pragma: no cover - best-effort bootstrap
+        std_platform = None
+    # Fallbacks only if robust load failed
+    if std_platform is None:
+        if "platform" in sys.modules and hasattr(sys.modules["platform"], "system"):
+            # If a valid stdlib-like platform is already loaded, use it
+            std_platform = sys.modules["platform"]
+        else:
+            try:
+                import platform as _std_platform  # type: ignore
+
+                std_platform = _std_platform if hasattr(_std_platform, "system") else None
+            except Exception:
+                std_platform = None
+
+    # Ensure stdlib platform is registered early so subsequent imports see it
+    if std_platform is not None:
+        sys.modules["platform"] = std_platform
+
+    # Now add src/ to path
     if src_path not in sys.path:
+        # Ensure our 'src/' takes precedence over stdlib lookups
         sys.path.insert(0, src_path)
+
+    # Build or augment a 'platform' package that exposes stdlib attributes while
+    # acting as a package for our repo's 'platform/*' submodules.
+    plat_dir = SRC / "platform"
+    plat_init = plat_dir / "__init__.py"
+    if plat_init.exists() and std_platform is not None:
+        try:
+            # Safer and more robust than replacing the module: augment the stdlib
+            # module in-place to behave as a package. This avoids rare edge cases
+            # where other libraries keep references to the original module object.
+            std_platform.__package__ = "platform"
+            std_platform.__path__ = [str(plat_dir)]  # mark as package for submodule imports
+            std_platform.__spec__ = importlib.machinery.ModuleSpec(name="platform", loader=None, is_package=True)
+            sys.modules["platform"] = std_platform
+        except Exception as e:  # Fallback to proxy creation if in-place augment fails
+            try:
+                proxy = types.ModuleType("platform")
+                # Copy ALL stdlib attributes so dependencies like urllib3/zstandard/pydantic work
+                for name in dir(std_platform):
+                    if not name.startswith("_"):
+                        from contextlib import suppress
+
+                        with suppress(Exception):
+                            setattr(proxy, name, getattr(std_platform, name))
+                # Also copy critical private/dunder attrs that libs may use
+                for attr in [
+                    "__file__",
+                    "__name__",
+                    "__doc__",
+                    "__package__",
+                    "__loader__",
+                    "__spec__",
+                ]:
+                    if hasattr(std_platform, attr):
+                        from contextlib import suppress
+
+                        with suppress(Exception):
+                            setattr(proxy, attr, getattr(std_platform, attr))
+                # Override package traits for submodule imports
+                proxy.__package__ = "platform"
+                proxy.__path__ = [str(plat_dir)]
+                proxy.__spec__ = importlib.machinery.ModuleSpec(name="platform", loader=None, is_package=True)
+                # Bind the proxy into sys.modules
+                sys.modules["platform"] = proxy
+            except Exception as e2:
+                # Log the error for debugging but continue
+                import warnings
+
+                warnings.warn(
+                    f"Failed to create platform proxy: {e} / fallback error: {e2}",
+                    stacklevel=2,
+                )
 
 # 2) Disable auto-loading of external pytest plugins by default.
 # This avoids ImportPathMismatch and binary-dep import errors during collection.

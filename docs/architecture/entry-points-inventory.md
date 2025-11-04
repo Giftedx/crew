@@ -1,6 +1,13 @@
 # Entry Points Inventory
 
-**Date**: 2025-10-18  
+**Date**: November 3, 2025
+**Current Implementation** (verified):
+
+- **Cache**: `src/platform/cache/multi_level_cache.py` (production)
+- **Memory**: 4 providers (Qdrant, Neo4j, Mem0, HippoRAG)
+- **Routing**: `src/platform/llm/openrouter_service/` (primary)
+- **Pipeline**: `src/ultimate_discord_intelligence_bot/pipeline_components/orchestrator.py` (7 phases)
+
 **Purpose**: Document active vs. deprecated entry points for consolidation roadmap
 
 ## Caching Subsystems

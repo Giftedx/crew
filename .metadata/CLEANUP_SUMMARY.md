@@ -72,4 +72,3 @@
 - Large data directories (crew_data, benchmarks) are artifacts from testing
 - Archive directory contains historical/experimental code
 - All Python cache cleaned automatically
-

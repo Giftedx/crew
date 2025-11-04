@@ -19,7 +19,7 @@ from platform.core.step_result import StepResult
 from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING
 
-from .._base import BaseTool
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 if TYPE_CHECKING:

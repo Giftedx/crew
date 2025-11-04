@@ -1,7 +1,7 @@
 # Cache Platform Migration Guide
 
-**ADR Reference**: ADR-0001 (Cache Platform Standardization)  
-**Status**: In Progress  
+**ADR Reference**: ADR-0001 (Cache Platform Standardization)
+**Status**: In Progress
 **Target Completion**: Phase 1
 
 ## Overview

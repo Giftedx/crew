@@ -5,6 +5,13 @@ status: migrated
 last_moved: 2025-09-02
 ---
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Pipeline**: 7 phases (download, transcription, content routing, quality filtering, lightweight processing, analysis, finalization)
+- **Orchestrator**: pipeline_components/orchestrator.py (1637 lines)
+- **Early Exit**: 3 checkpoints via config/early_exit.yaml
+- **Concurrency**: Async support with tenant-aware context
+
 ## Overview
 
 This document captures the proposed enhancements to increase concurrency within the media processing pipeline while preserving correctness, idempotency, and resource efficiency.

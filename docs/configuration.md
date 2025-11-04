@@ -1,3 +1,14 @@
+# Configuration Reference
+
+**Current Implementation** (verified November 3, 2025):
+
+- **Tools**: 111 across 9 categories (tools/**init**.py::**all**)
+- **Agents**: 18 specialized agents (crew_components/tool_registry.py)
+- **Pipeline**: 7 phases (pipeline_components/orchestrator.py)
+- **Architecture**: 3-layer (Platform/Domains/App)
+
+This document provides comprehensive documentation for all configuration files and their options. Configuration controls system behavior, feature flags, tenant settings, and security policies.
+
 ## Feature Flags
 
 ### Core System Feature Flags
@@ -681,7 +692,7 @@ Feature flags are controlled via environment variables and can be overridden in 
 These flags control which crew implementation is used:
 
 - `ENABLE_LEGACY_CREW=false` - Enable legacy crew variants
-- `ENABLE_CREW_MODULAR=false` - Enable modular crew system  
+- `ENABLE_CREW_MODULAR=false` - Enable modular crew system
 - `ENABLE_CREW_REFACTORED=false` - Enable refactored crew system
 - `ENABLE_CREW_NEW=false` - Enable new crew system
 
