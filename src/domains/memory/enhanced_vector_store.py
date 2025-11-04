@@ -170,6 +170,8 @@ class EnhancedVectorStore(VectorStore):
             self.client.create_payload_index(
                 collection_name=collection_name, field_name="workspace", field_type=qmodels.PayloadSchemaType.KEYWORD
             )
+            # Store namespace-to-physical-name mapping for future lookups
+            self._physical_names[namespace] = collection_name
             logger.info(f"Created enhanced collection with hybrid search: {collection_name}")
             return True
         except Exception as e:
@@ -337,6 +339,15 @@ class EnhancedVectorStore(VectorStore):
         except Exception as e:
             logger.error(f"Failed to get collection stats for {collection_name}: {e}")
             return {}
+
+    def clear_similarity_cache(self) -> None:
+        """Clear any cached similarity computations.
+
+        Currently a no-op, but provides the interface expected by
+        CreatorIntelligenceCollectionManager. Future implementations
+        may cache query results or similarity scores.
+        """
+        logger.info("Similarity cache clear requested (no-op: caching not yet implemented)")
 
 
 def create_enhanced_vector_store(url: str | None = None, api_key: str | None = None) -> EnhancedVectorStore:

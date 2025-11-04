@@ -472,6 +472,16 @@ class TestEnhancedVectorStoreMocked:
         # Results should be list (may be empty in mock)
         assert isinstance(results, list)
 
+    def test_clear_similarity_cache_exists(self, mock_store):
+        """Test that clear_similarity_cache method exists and can be called."""
+        store, _mock_client = mock_store
+
+        # Should not raise AttributeError
+        store.clear_similarity_cache()
+
+        # Method should be callable
+        assert callable(getattr(store, "clear_similarity_cache", None))
+
     def test_get_collection_stats_calls_qdrant(self, mock_store):
         """Test that get_collection_stats calls Qdrant properly."""
         from unittest.mock import MagicMock
