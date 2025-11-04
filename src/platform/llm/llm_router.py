@@ -486,7 +486,7 @@ class LLMRouter:
         bad_numeric = False
         norm_sq = 0.0
         for v in features:
-            if not isinstance(v, (int, float)) or math.isinf(v) or math.isnan(v):
+            if not isinstance(v, int | float) or math.isinf(v) or math.isnan(v):
                 bad_numeric = True
                 continue
             norm_sq += float(v) * float(v)
@@ -854,7 +854,7 @@ class LLMRouter:
         current_time = time.time()
         total_entries = len(self._routing_cache)
         expired_entries = 0
-        for (_, timestamp) in self._routing_cache.values():
+        for _, timestamp in self._routing_cache.values():
             if current_time - timestamp > self._routing_cache_ttl:
                 expired_entries += 1
         active_entries = total_entries - expired_entries
