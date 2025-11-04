@@ -419,7 +419,7 @@ class OAuthManager:
             }
             healthy_credentials = 0
             expired_credentials = 0
-            for _platform, credentials in self.credentials.items():
+            for credentials in self.credentials.values():
                 if credentials.is_expired():
                     expired_credentials += 1
                 else:

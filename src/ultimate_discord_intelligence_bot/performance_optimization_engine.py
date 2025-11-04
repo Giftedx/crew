@@ -198,7 +198,7 @@ class PerformanceOptimizationEngine:
                     )
             if "capacity_forecasts" in predictive_results:
                 forecasts = predictive_results["capacity_forecasts"].get("forecasts", {})
-                for _forecast_name, forecast in forecasts.items():
+                for forecast in forecasts.values():
                     if hasattr(forecast, "projected_breach_time") and forecast.projected_breach_time:
                         opportunities.append(
                             {
@@ -666,7 +666,7 @@ class PerformanceOptimizationEngine:
         """Get recent auto-tuning adjustments for reporting."""
         adjustments = []
         try:
-            for _config_name, config in self.auto_tuning_configs.items():
+            for config in self.auto_tuning_configs.values():
                 adjustments.append(
                     {
                         "parameter": config.parameter_name,

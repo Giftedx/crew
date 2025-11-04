@@ -153,7 +153,7 @@ class MemoryPool:
     def _cleanup_idle_resources(self):
         """Remove idle resources from pools."""
         current_time = time.time()
-        for _resource_type, pool in self._pools.items():
+        for pool in self._pools.values():
             idle_resources = [r for r in pool if current_time - r.last_used > self.max_idle_time]
 
             for resource in idle_resources:

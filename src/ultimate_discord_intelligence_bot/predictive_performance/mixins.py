@@ -498,7 +498,7 @@ class ScenarioGenerationMixin:
                             "confidence": warning.confidence.value,
                         }
                     )
-            for _name, forecast in capacity_forecasts.items():
+            for forecast in capacity_forecasts.values():
                 if forecast.projected_breach_time:
                     recommendations.append(
                         {

@@ -353,7 +353,7 @@ class PerformanceOptimizer:
         """
         total_improvements = {}
         successful_optimizations = 0
-        for _strategy_name, result in optimization_results.items():
+        for result in optimization_results.values():
             if result.get("success", False) and "estimated_improvement" in result:
                 improvements = result["estimated_improvement"]
                 for metric, improvement in improvements.items():

@@ -397,7 +397,7 @@ class DependencyResolverTool(BaseTool):
         dependencies = {task["id"]: set(task.get("dependencies", [])) for task in tasks}
 
         # Calculate in-degrees
-        for _task_id, deps in dependencies.items():
+        for deps in dependencies.values():
             for dep in deps:
                 if dep in in_degree:
                     in_degree[dep] += 1

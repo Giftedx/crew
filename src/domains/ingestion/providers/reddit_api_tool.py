@@ -104,19 +104,18 @@ class RedditAPITool(BaseTool[StepResult]):
         """Fetch posts from a subreddit."""
         try:
             subreddit = self.reddit.subreddit(subreddit_name)
-            posts = []
-            for submission in subreddit.hot(limit=limit):
-                posts.append(
-                    {
-                        "id": submission.id,
-                        "title": submission.title,
-                        "author": str(submission.author) if submission.author else None,
-                        "score": submission.score,
-                        "num_comments": submission.num_comments,
-                        "url": submission.url,
-                        "permalink": submission.permalink,
-                    }
-                )
+            posts = [
+                {
+                    "id": submission.id,
+                    "title": submission.title,
+                    "author": str(submission.author) if submission.author else None,
+                    "score": submission.score,
+                    "num_comments": submission.num_comments,
+                    "url": submission.url,
+                    "permalink": submission.permalink,
+                }
+                for submission in subreddit.hot(limit=limit)
+            ]
             return StepResult.ok(data={"subreddit": subreddit_name, "posts": posts})
         except Exception as e:
             return self._handle_error(
@@ -126,17 +125,16 @@ class RedditAPITool(BaseTool[StepResult]):
     def _search_subreddit(self, query: str, limit: int) -> StepResult:
         """Search across Reddit."""
         try:
-            results = []
-            for submission in self.reddit.subreddit("all").search(query, limit=limit):
-                results.append(
-                    {
-                        "id": submission.id,
-                        "title": submission.title,
-                        "subreddit": str(submission.subreddit),
-                        "score": submission.score,
-                        "url": submission.url,
-                    }
-                )
+            results = [
+                {
+                    "id": submission.id,
+                    "title": submission.title,
+                    "subreddit": str(submission.subreddit),
+                    "score": submission.score,
+                    "url": submission.url,
+                }
+                for submission in self.reddit.subreddit("all").search(query, limit=limit)
+            ]
             return StepResult.ok(data={"query": query, "results": results})
         except Exception as e:
             return self._handle_error(
@@ -147,17 +145,16 @@ class RedditAPITool(BaseTool[StepResult]):
         """Fetch a user's posts."""
         try:
             user = self.reddit.redditor(username)
-            posts = []
-            for submission in user.submissions.new(limit=limit):
-                posts.append(
-                    {
-                        "id": submission.id,
-                        "title": submission.title,
-                        "subreddit": str(submission.subreddit),
-                        "score": submission.score,
-                        "url": submission.url,
-                    }
-                )
+            posts = [
+                {
+                    "id": submission.id,
+                    "title": submission.title,
+                    "subreddit": str(submission.subreddit),
+                    "score": submission.score,
+                    "url": submission.url,
+                }
+                for submission in user.submissions.new(limit=limit)
+            ]
             return StepResult.ok(data={"username": username, "posts": posts})
         except Exception as e:
             return self._handle_error(

@@ -854,7 +854,7 @@ class LLMRouter:
         current_time = time.time()
         total_entries = len(self._routing_cache)
         expired_entries = 0
-        for _, (_, timestamp) in self._routing_cache.items():
+        for (_, timestamp) in self._routing_cache.values():
             if current_time - timestamp > self._routing_cache_ttl:
                 expired_entries += 1
         active_entries = total_entries - expired_entries

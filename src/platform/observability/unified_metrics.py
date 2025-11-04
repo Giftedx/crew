@@ -380,7 +380,7 @@ class UnifiedMetricsCollector:
             end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(hours=hours)
             filtered_metrics = []
-            for _metric_key, metrics_list in self._metrics_store.items():
+            for metrics_list in self._metrics_store.values():
                 for metric in metrics_list:
                     if metric.timestamp < start_time or metric.timestamp > end_time:
                         continue
@@ -486,7 +486,7 @@ class UnifiedMetricsCollector:
             prometheus_lines = []
             end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(hours=hours)
-            for _metric_key, metrics_list in self._metrics_store.items():
+            for metrics_list in self._metrics_store.values():
                 for metric in metrics_list:
                     if metric.timestamp < start_time or metric.timestamp > end_time:
                         continue
@@ -561,7 +561,7 @@ class UnifiedMetricsCollector:
             csv_lines = ["timestamp,metric_name,value,metric_type,category,labels,metadata"]
             end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(hours=hours)
-            for _metric_key, metrics_list in self._metrics_store.items():
+            for metrics_list in self._metrics_store.values():
                 for metric in metrics_list:
                     if metric.timestamp < start_time or metric.timestamp > end_time:
                         continue
