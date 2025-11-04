@@ -9,14 +9,17 @@ It wraps the unified configuration system to provide the expected interface.
 from __future__ import annotations
 
 import os
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .base import BaseConfig
 from .feature_flags import FeatureFlags
 from .paths import PathConfig
 from .unified import UnifiedConfig, get_config
 from .validation import validate_configuration
+
+
+if TYPE_CHECKING:
+    from pathlib import Path  # type: ignore[F401] - for typing only
 
 
 class Settings:
@@ -192,7 +195,7 @@ class Settings:
     def __getattr__(self, name: str) -> Any:
         """Dynamic attribute access for feature flags and other settings."""
         # Try feature flags first (ENABLE_*)
-        if name.startswith("ENABLE_") or name.startswith("enable_"):
+        if name.startswith(("ENABLE_", "enable_")):
             flag_name = name.replace("ENABLE_", "").replace("enable_", "").upper()
             return self.feature_flags.is_enabled(flag_name)
 
@@ -270,7 +273,7 @@ def _export_settings():
 
     # Export feature flags
     for flag_name, flag_value in settings.feature_flags.__dict__.items():
-        if flag_name.startswith("enable_") or flag_name.startswith("ENABLE_"):
+        if flag_name.startswith(("enable_", "ENABLE_")):
             globals()[flag_name.upper()] = flag_value
 
 

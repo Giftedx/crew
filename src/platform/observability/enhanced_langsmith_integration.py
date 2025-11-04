@@ -6,6 +6,7 @@ to complement the existing OpenTelemetry observability infrastructure.
 
 from __future__ import annotations
 
+import importlib.util as importlib_util
 import logging
 import time
 import uuid
@@ -24,14 +25,14 @@ else:
     _LSClient = Any
     _LSExample = Any
 try:
-    from langsmith import Client as _RuntimeClient
-    from langsmith.schemas import Example as _RuntimeExample
-
-    LANGSMITH_AVAILABLE = True
-    logger.info("LangSmith integration available")
-except ImportError:
+    LANGSMITH_AVAILABLE = importlib_util.find_spec("langsmith") is not None
+    if LANGSMITH_AVAILABLE:
+        logger.info("LangSmith integration available")
+    else:
+        logger.debug("LangSmith not available - specialized LLM tracing disabled")
+except Exception:
     LANGSMITH_AVAILABLE = False
-    logger.debug("LangSmith not available - specialized LLM tracing disabled")
+    logger.debug("LangSmith detection failed - specialized LLM tracing disabled")
 
 
 class LangSmithObservabilityManager:

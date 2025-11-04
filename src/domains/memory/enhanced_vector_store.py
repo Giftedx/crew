@@ -57,10 +57,44 @@ class EnhancedVectorStore(VectorStore):
     """Enhanced vector store with hybrid search and optimization features."""
 
     def __init__(self, url: str | None = None, api_key: str | None = None):
-        """Initialize with enhanced Qdrant features."""
-        super().__init__(url, api_key)
+        """Initialize enhanced vector store with Qdrant backend.
+
+        Args:
+            url: Qdrant server URL (or ":memory:" for in-memory instance)
+            api_key: Optional API key for authentication
+        """
+        # Initialize parent class (takes no arguments)
+        super().__init__()
+
+        # Initialize namespace mapping for tenant isolation
+        self._physical_names: dict[str, str] = {}
+
+        # Initialize hybrid search configuration
         self.hybrid_config = HybridSearchConfig()
-        self._check_qdrant_capabilities()
+
+        # Initialize Qdrant client if available
+        self.client: _QdrantClient | None = None
+        self._sparse_vectors_supported: bool = False
+
+        if QDRANT_AVAILABLE:
+            try:
+                from qdrant_client import QdrantClient as _QC
+
+                if url == ":memory:":
+                    self.client = _QC(location=":memory:")
+                    logger.info("Initialized in-memory Qdrant client")
+                elif url:
+                    self.client = _QC(url=url, api_key=api_key)
+                    logger.info(f"Initialized Qdrant client for {url}")
+                else:
+                    self.client = _QC(host="localhost", port=6333)
+                    logger.info("Initialized local Qdrant client (localhost:6333)")
+                self._check_qdrant_capabilities()
+            except Exception as e:
+                logger.error(f"Failed to initialize Qdrant client: {e}")
+                self.client = None
+        else:
+            logger.warning("Qdrant not available - enhanced features disabled")
 
     def _check_qdrant_capabilities(self) -> None:
         """Check available Qdrant features and log capabilities."""
@@ -94,7 +128,8 @@ class EnhancedVectorStore(VectorStore):
         self, namespace: str, dimension: int, enable_sparse: bool = True, quantization: bool = True
     ) -> bool:
         """Create collection optimized for hybrid search."""
-        if not QDRANT_AVAILABLE:
+        if not QDRANT_AVAILABLE or self.client is None:
+            logger.warning("Qdrant not available or client not initialized")
             return False
         collection_name = self._physical_names.get(namespace, namespace.replace(":", "__"))
         try:
@@ -135,6 +170,8 @@ class EnhancedVectorStore(VectorStore):
             self.client.create_payload_index(
                 collection_name=collection_name, field_name="workspace", field_type=qmodels.PayloadSchemaType.KEYWORD
             )
+            # Store namespace-to-physical-name mapping for future lookups
+            self._physical_names[namespace] = collection_name
             logger.info(f"Created enhanced collection with hybrid search: {collection_name}")
             return True
         except Exception as e:
@@ -151,7 +188,8 @@ class EnhancedVectorStore(VectorStore):
         filter_conditions: dict[str, Any] | None = None,
     ) -> list[SearchResult]:
         """Perform hybrid search combining dense and sparse vectors."""
-        if not QDRANT_AVAILABLE:
+        if not QDRANT_AVAILABLE or self.client is None:
+            logger.warning("Qdrant not available or client not initialized")
             return []
         collection_name = self._physical_names.get(namespace, namespace.replace(":", "__"))
         try:
@@ -266,7 +304,8 @@ class EnhancedVectorStore(VectorStore):
 
     def get_collection_stats(self, namespace: str) -> dict[str, Any]:
         """Get enhanced collection statistics."""
-        if not QDRANT_AVAILABLE:
+        if not QDRANT_AVAILABLE or self.client is None:
+            logger.warning("Qdrant not available or client not initialized")
             return {}
         collection_name = self._physical_names.get(namespace, namespace.replace(":", "__"))
         try:
@@ -300,6 +339,15 @@ class EnhancedVectorStore(VectorStore):
         except Exception as e:
             logger.error(f"Failed to get collection stats for {collection_name}: {e}")
             return {}
+
+    def clear_similarity_cache(self) -> None:
+        """Clear any cached similarity computations.
+
+        Currently a no-op, but provides the interface expected by
+        CreatorIntelligenceCollectionManager. Future implementations
+        may cache query results or similarity scores.
+        """
+        logger.info("Similarity cache clear requested (no-op: caching not yet implemented)")
 
 
 def create_enhanced_vector_store(url: str | None = None, api_key: str | None = None) -> EnhancedVectorStore:

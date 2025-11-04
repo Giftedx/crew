@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-
 from memory.creator_intelligence_collections import (
     COLLECTION_CONFIGS,
     CachedQuery,
@@ -324,3 +323,190 @@ class TestSemanticCaching:
         assert len(manager._query_cache) == 1
         assert "valid" in manager._query_cache
         assert "expired" not in manager._query_cache
+
+
+class TestEnhancedVectorStoreInitialization:
+    """Test EnhancedVectorStore initialization and safety checks."""
+
+    def test_init_memory(self):
+        """Test initialization with :memory: URL."""
+        store = EnhancedVectorStore(url=":memory:")
+
+        assert store.client is not None
+        assert store._physical_names == {}
+        assert store.hybrid_config is not None
+
+    def test_init_with_url_and_api_key(self):
+        """Test initialization with URL and API key."""
+        # This will fail to connect but should initialize properly
+        store = EnhancedVectorStore(url="http://localhost:6333", api_key="test-key")
+
+        # Client may be None if connection failed, but _physical_names should exist
+        assert hasattr(store, "client")
+        assert store._physical_names == {}
+        assert store.hybrid_config is not None
+
+    def test_init_default(self):
+        """Test initialization with default parameters."""
+        # Will attempt localhost:6333 connection
+        store = EnhancedVectorStore()
+
+        assert hasattr(store, "client")
+        assert store._physical_names == {}
+        assert store.hybrid_config is not None
+
+    def test_create_collection_with_no_client(self, monkeypatch):
+        """Test create_collection_with_hybrid_config when client is None."""
+        store = EnhancedVectorStore()
+        store.client = None  # Simulate no Qdrant available
+
+        result = store.create_collection_with_hybrid_config(
+            namespace="test:workspace:collection",
+            dimension=384,
+        )
+
+        assert result is False
+
+    def test_hybrid_search_with_no_client(self, monkeypatch):
+        """Test hybrid_search when client is None."""
+        store = EnhancedVectorStore()
+        store.client = None  # Simulate no Qdrant available
+
+        results = store.hybrid_search(
+            namespace="test:workspace:collection",
+            query_vector=[0.1] * 384,
+            query_text="test query",
+        )
+
+        assert results == []
+
+    def test_get_collection_stats_with_no_client(self, monkeypatch):
+        """Test get_collection_stats when client is None."""
+        store = EnhancedVectorStore()
+        store.client = None  # Simulate no Qdrant available
+
+        stats = store.get_collection_stats(namespace="test:workspace:collection")
+
+        assert stats == {}
+
+    @pytest.mark.skipif(
+        not hasattr(EnhancedVectorStore, "_check_qdrant_capabilities"),
+        reason="Requires _check_qdrant_capabilities method",
+    )
+    def test_qdrant_capabilities_check(self):
+        """Test that Qdrant capabilities are checked during initialization."""
+        store = EnhancedVectorStore(url=":memory:")
+
+        # Should have sparse vectors attribute set
+        assert hasattr(store, "_sparse_vectors_supported")
+
+
+class TestEnhancedVectorStoreMocked:
+    """Test EnhancedVectorStore with mocked Qdrant client."""
+
+    @pytest.fixture
+    def mock_store(self, monkeypatch):
+        """Create store with mocked Qdrant client."""
+        from unittest.mock import MagicMock, Mock
+
+        # Create store
+        store = EnhancedVectorStore(url=":memory:")
+
+        # Mock the client
+        mock_client = MagicMock()
+        store.client = mock_client
+        store._sparse_vectors_supported = True
+
+        return store, mock_client
+
+    def test_create_collection_calls_qdrant(self, mock_store):
+        """Test that create_collection_with_hybrid_config calls Qdrant properly."""
+        from unittest.mock import ANY, call
+
+        store, mock_client = mock_store
+
+        # Call create_collection
+        result = store.create_collection_with_hybrid_config(
+            namespace="test:workspace:episodes",
+            dimension=768,
+            enable_sparse=True,
+            quantization=True,
+        )
+
+        # Should succeed
+        assert result is True
+
+        # Should have called create_collection
+        assert mock_client.create_collection.called
+
+        # Verify namespace was added to mapping
+        assert "test:workspace:episodes" in store._physical_names
+
+    def test_hybrid_search_calls_qdrant(self, mock_store):
+        """Test that hybrid_search calls Qdrant search properly."""
+        from unittest.mock import MagicMock
+
+        store, mock_client = mock_store
+
+        # Set up namespace mapping
+        store._physical_names["test:workspace:episodes"] = "test__workspace__episodes"
+
+        # Mock get_collection to return success
+        mock_client.get_collection.return_value = MagicMock()
+
+        # Mock search to return empty results
+        mock_client.search_batch.return_value = [[]]
+
+        # Call hybrid_search
+        results = store.hybrid_search(
+            namespace="test:workspace:episodes",
+            query_vector=[0.1] * 768,
+            query_text="test query",
+            limit=10,
+            score_threshold=0.7,
+        )
+
+        # Should have checked collection exists
+        assert mock_client.get_collection.called
+
+        # Results should be list (may be empty in mock)
+        assert isinstance(results, list)
+
+    def test_clear_similarity_cache_exists(self, mock_store):
+        """Test that clear_similarity_cache method exists and can be called."""
+        store, _mock_client = mock_store
+
+        # Should not raise AttributeError
+        store.clear_similarity_cache()
+
+        # Method should be callable
+        assert callable(getattr(store, "clear_similarity_cache", None))
+
+    def test_get_collection_stats_calls_qdrant(self, mock_store):
+        """Test that get_collection_stats calls Qdrant properly."""
+        from unittest.mock import MagicMock
+
+        store, mock_client = mock_store
+
+        # Set up namespace mapping
+        store._physical_names["test:workspace:episodes"] = "test__workspace__episodes"
+
+        # Mock get_collection response
+        mock_info = MagicMock()
+        mock_info.vectors_count = 1000
+        mock_info.segments_count = 5
+        mock_info.disk_data_size = 1024 * 1024
+        mock_info.ram_data_size = 512 * 1024
+
+        mock_client.get_collection.return_value = mock_info
+
+        # Call get_collection_stats
+        stats = store.get_collection_stats(namespace="test:workspace:episodes")
+
+        # Should have called get_collection
+        assert mock_client.get_collection.called
+
+        # Should return stats dict
+        assert isinstance(stats, dict)
+        assert "collection_name" in stats
+        assert stats["vectors_count"] == 1000

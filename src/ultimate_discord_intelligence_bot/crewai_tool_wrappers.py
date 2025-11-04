@@ -677,7 +677,7 @@ class CrewAIToolWrapper(BaseTool):
                 for k, v in final_kwargs.items():
                     if isinstance(v, str):
                         param_summary[k] = f"{len(v)} chars" if len(v) > 50 else f"'{v}'"
-                    elif isinstance(v, (list, dict)):
+                    elif isinstance(v, list | dict):
                         param_summary[k] = f"{len(v)} items"
                     else:
                         param_summary[k] = str(v)[:50]
@@ -817,50 +817,11 @@ class CrewAIToolWrapper(BaseTool):
                 },
             )
 
-    def _validate_tool_dependencies(self) -> dict[str, Any]:
-        """Validate that tool dependencies are available before execution."""
-        missing_deps = []
-        config_issues = []
-        tool_cls = self._wrapped_tool.__class__.__name__
-        if "YouTube" in tool_cls or "YtDlp" in tool_cls or "Download" in tool_cls:
-            import shutil
-
-            if not shutil.which("yt-dlp"):
-                missing_deps.append("yt-dlp binary not found on PATH")
-        if "Discord" in tool_cls:
-            webhook_url = getattr(self._wrapped_tool, "webhook_url", None)
-            if not webhook_url or webhook_url.startswith("dummy"):
-                config_issues.append("Discord webhook URL not configured")
-        if "OpenAI" in tool_cls or "Transcription" in tool_cls:
-            import os
-
-            if not os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY", "").startswith("dummy"):
-                config_issues.append("OpenAI API key not configured")
-        if "Pipeline" in tool_cls:
-            try:
-                from ..pipeline_components.orchestrator import ContentPipeline
-            except ImportError:
-                missing_deps.append("ContentPipeline not available")
-        return {
-            "dependencies_valid": len(missing_deps) == 0 and len(config_issues) == 0,
-            "missing_dependencies": missing_deps,
-            "configuration_issues": config_issues,
-        }
-
-    def _analyze_tool_error(self, error: Exception, args: tuple, kwargs: dict) -> str:
-        """Analyze tool execution errors to provide helpful debugging information."""
-        error_msg = str(error)
-        if "missing" in error_msg.lower() and "argument" in error_msg.lower():
-            return f"Missing required argument. Error: {error_msg}"
-        elif "unexpected keyword argument" in error_msg.lower():
-            return f"Invalid argument provided. Error: {error_msg}"
-        elif "takes" in error_msg and "positional argument" in error_msg:
-            return f"Wrong number of arguments. Error: {error_msg}"
-        else:
-            return f"Unknown argument error: {error_msg}"
+    # (removed duplicate early implementations of _validate_tool_dependencies and
+    #  _analyze_tool_error; consolidated into the single versions below)
 
     def _validate_tool_dependencies(self) -> dict[str, Any]:
-        """Validate that tool dependencies are available."""
+        """Validate that tool dependencies are available (consolidated checks)."""
         validation_result = {
             "tool_class": self._wrapped_tool.__class__.__name__,
             "dependencies_valid": True,
@@ -868,25 +829,63 @@ class CrewAIToolWrapper(BaseTool):
             "configuration_issues": [],
         }
         try:
-            required_attrs = ["name", "description"]
-            for attr in required_attrs:
+            tool_class = self._wrapped_tool.__class__.__name__
+
+            # Structural sanity checks
+            for attr in ("name", "description"):
                 if not hasattr(self._wrapped_tool, attr):
                     validation_result["configuration_issues"].append(f"Missing required attribute: {attr}")
             if not (hasattr(self._wrapped_tool, "run") or hasattr(self._wrapped_tool, "_run")):
                 validation_result["configuration_issues"].append("Tool missing both 'run' and '_run' methods")
-            tool_class = self._wrapped_tool.__class__.__name__
-            if tool_class in ["AudioTranscriptionTool", "TextAnalysisTool", "FactCheckTool"]:
+
+            # Binary and environment checks
+            if any(x in tool_class for x in ("YouTube", "YtDlp", "Download")):
+                import shutil
+
+                if not shutil.which("yt-dlp"):
+                    validation_result["missing_dependencies"].append("yt-dlp binary not found on PATH")
+
+            # Discord configuration: allow env var or instance attribute
+            if "Discord" in tool_class:
                 import os
 
-                if not os.getenv("OPENAI_API_KEY") and (not os.getenv("OPENROUTER_API_KEY")):
+                webhook_env = os.getenv("DISCORD_WEBHOOK")
+                webhook_attr = getattr(self._wrapped_tool, "webhook_url", None)
+                if not (webhook_env or (isinstance(webhook_attr, str) and webhook_attr.startswith("http"))):
+                    validation_result["configuration_issues"].append("Discord webhook URL not configured")
+
+            # OpenAI/OpenRouter API keys for LLM-backed tools
+            if any(
+                x in tool_class
+                for x in (
+                    "OpenAI",
+                    "Transcription",
+                    "AudioTranscription",
+                    "TextAnalysis",
+                    "FactCheck",
+                    "LogicalFallacy",
+                    "DeceptionScoring",
+                    "TruthScoring",
+                    "PerspectiveSynthesizer",
+                    "MemoryStorage",
+                    "GraphMemory",
+                )
+            ):
+                import os
+
+                if not (os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")):
                     validation_result["missing_dependencies"].append(
                         "API key required (OPENAI_API_KEY or OPENROUTER_API_KEY)"
                     )
-            if tool_class in ["DiscordPostTool", "DiscordPrivateAlertTool"]:
-                import os
 
-                if not os.getenv("DISCORD_WEBHOOK"):
-                    validation_result["missing_dependencies"].append("DISCORD_WEBHOOK environment variable required")
+            # Pipeline availability without importing unused symbols
+            if "Pipeline" in tool_class:
+                import importlib.util
+
+                spec = importlib.util.find_spec("ultimate_discord_intelligence_bot.pipeline_components.orchestrator")
+                if spec is None:
+                    validation_result["missing_dependencies"].append("ContentPipeline not available")
+
             validation_result["dependencies_valid"] = (
                 len(validation_result["missing_dependencies"]) == 0
                 and len(validation_result["configuration_issues"]) == 0

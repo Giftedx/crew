@@ -92,7 +92,7 @@ def resolve_retry_attempts(call_arg: int | None = None) -> int:
             logging.getLogger(__name__).warning("Invalid RETRY_MAX_ATTEMPTS=%s; falling back to defaults", raw_env)
     _config: Any | None = None
     try:
-        from platform.config.configuration import get_config
+        from platform.config.configuration import get_config  # project's "platform" package, not stdlib
 
         _config = get_config()
     except Exception:

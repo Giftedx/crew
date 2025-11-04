@@ -147,14 +147,12 @@ class AdaptiveDecisionTree:
                         path.confidence = node.confidence
                         path.reasoning = f"Fast-path rule matched at {node.node_id}: {node.action}"
                         return StepResult.ok(data=path)
-                    elif node.next_nodes:
-                        current_node_id = node.next_nodes[0]
+                    next_node = node.next_nodes[0] if node.next_nodes else None
+                    if next_node:
+                        current_node_id = next_node
                         continue
                 if node.next_nodes:
-                    if len(node.next_nodes) > 1:
-                        current_node_id = node.next_nodes[1]
-                    else:
-                        current_node_id = node.next_nodes[0]
+                    current_node_id = node.next_nodes[1] if len(node.next_nodes) > 1 else node.next_nodes[0]
                 else:
                     path.final_decision = {"action": "respond", "confidence": 0.5, "node_id": "default"}
                     path.confidence = 0.5

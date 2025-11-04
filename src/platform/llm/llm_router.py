@@ -9,8 +9,6 @@ Enhanced Features:
 - Performance metrics integration for continuous optimization
 - Enhanced bandit algorithms with cost sensitivity
 
-import logging
-
 Feature flags:
 - ENABLE_BANDIT_ROUTING=1 (existing bandit routing)
 - ENABLE_COST_AWARE_ROUTING=1 (cost-aware optimization)
@@ -38,10 +36,14 @@ import time
 from collections import deque
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from platform.llm.routing.bandit_router import ThompsonBanditRouter
-from platform.llm.routing.linucb_router import LinUCBRouter
-from platform.llm.routing.router_registry import RewardNormalizer, get_tenant_router, record_selection
-from platform.llm.routing.vw_bandit_router import VWBanditRouter
+from platform.llm.routing.bandit_router import ThompsonBanditRouter  # project's "platform" package, not stdlib
+from platform.llm.routing.linucb_router import LinUCBRouter  # project's "platform" package, not stdlib
+from platform.llm.routing.router_registry import (
+    RewardNormalizer,
+    get_tenant_router,
+    record_selection,
+)  # project's "platform" package, not stdlib
+from platform.llm.routing.vw_bandit_router import VWBanditRouter  # project's "platform" package, not stdlib
 from typing import TYPE_CHECKING, Any
 
 
@@ -486,7 +488,7 @@ class LLMRouter:
         bad_numeric = False
         norm_sq = 0.0
         for v in features:
-            if not isinstance(v, (int, float)) or math.isinf(v) or math.isnan(v):
+            if not isinstance(v, int | float) or math.isinf(v) or math.isnan(v):
                 bad_numeric = True
                 continue
             norm_sq += float(v) * float(v)
@@ -854,7 +856,7 @@ class LLMRouter:
         current_time = time.time()
         total_entries = len(self._routing_cache)
         expired_entries = 0
-        for (_, timestamp) in self._routing_cache.values():
+        for _, timestamp in self._routing_cache.values():
             if current_time - timestamp > self._routing_cache_ttl:
                 expired_entries += 1
         active_entries = total_entries - expired_entries
