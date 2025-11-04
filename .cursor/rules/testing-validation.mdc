@@ -44,7 +44,7 @@ class TestMyTool:
         """Test successful tool execution."""
         tool = MyTool()
         result = tool._run(sample_content, "test_tenant", "test_workspace")
-        
+
         assert result.status == "success"
         assert result.data is not None
 
@@ -52,7 +52,7 @@ class TestMyTool:
         """Test error handling for missing input."""
         tool = MyTool()
         result = tool._run("", "test_tenant", "test_workspace")
-        
+
         assert result.status == "bad_request"
         assert "missing" in result.error
 
@@ -60,10 +60,10 @@ class TestMyTool:
     def test_network_error_handling(self, mock_get, sample_content):
         """Test network error handling."""
         mock_get.side_effect = ConnectionError("Network unreachable")
-        
+
         tool = MyTool()
         result = tool._run(sample_content, "test_tenant", "test_workspace")
-        
+
         assert result.status == "retryable"
         assert "connection" in result.error.lower()
 ```
@@ -78,11 +78,11 @@ Test individual functions in isolation:
 def test_url_validator():
     """Test URL validation logic."""
     from ultimate_discord_intelligence_bot.utils.validators import is_valid_url
-    
+
     # Valid URLs
     assert is_valid_url("https://youtube.com/watch?v=123")
     assert is_valid_url("https://www.twitch.tv/videos/123")
-    
+
     # Invalid URLs
     assert not is_valid_url("")
     assert not is_valid_url("not-a-url")
@@ -97,7 +97,7 @@ Test component interactions:
 @pytest.mark.integration
 class TestContentPipeline:
     """Integration tests for content processing pipeline."""
-    
+
     @pytest.fixture(autouse=True)
     def setup_services(self):
         """Setup required services for integration tests."""
@@ -109,14 +109,14 @@ class TestContentPipeline:
     async def test_full_pipeline_execution(self):
         """Test complete content processing pipeline."""
         from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
-        
+
         pipeline = ContentPipeline()
         result = await pipeline.process(
             url="https://youtube.com/watch?v=test123",
             tenant="test_tenant",
             workspace="test_workspace"
         )
-        
+
         assert result.status == "success"
         assert "analysis" in result.data
 ```
@@ -134,27 +134,27 @@ class TestErrorPaths:
         with patch.dict(os.environ, {'OPENAI_API_KEY': 'invalid_key'}):
             tool = MyTool()
             result = tool._run("test input", "tenant", "workspace")
-            
+
             assert result.status == "unauthorized"
 
     def test_rate_limit_handling(self):
         """Test rate limit error handling."""
         with patch('openai.ChatCompletion.create') as mock_create:
             mock_create.side_effect = openai.error.RateLimitError("Rate limit exceeded")
-            
+
             tool = MyTool()
             result = tool._run("test input", "tenant", "workspace")
-            
+
             assert result.status == "rate_limited"
 
     def test_timeout_handling(self):
         """Test timeout error handling."""
         with patch('requests.get') as mock_get:
             mock_get.side_effect = requests.exceptions.Timeout("Request timeout")
-            
+
             tool = MyTool()
             result = tool._run("test input", "tenant", "workspace")
-            
+
             assert result.status == "retryable"
 ```
 
@@ -167,24 +167,24 @@ For async functions, use pytest-asyncio:
 async def test_async_content_processing():
     """Test async content processing."""
     processor = AsyncContentProcessor()
-    
+
     result = await processor.process_content(
         content="test content",
         tenant="test_tenant"
     )
-    
+
     assert result.status == "success"
 
 @pytest.mark.asyncio
 async def test_concurrent_processing():
     """Test concurrent content processing."""
     processor = AsyncContentProcessor()
-    
+
     tasks = [
         processor.process_content(f"content_{i}", "tenant", "workspace")
         for i in range(5)
     ]
-    
+
     results = await asyncio.gather(*tasks)
     assert all(r.status == "success" for r in results)
 ```
@@ -197,10 +197,10 @@ async def test_concurrent_processing():
 def test_agent_configuration():
     """Test agent is properly configured."""
     from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
-    
+
     crew = UltimateDiscordIntelligenceBotCrew()
     agent = crew.content_moderator_agent()
-    
+
     assert agent.role == "Content Moderator"
     assert agent.verbose is True
     assert len(agent.tools) > 0
@@ -209,7 +209,7 @@ def test_agent_tool_assignment():
     """Test tools are properly assigned to agents."""
     crew = UltimateDiscordIntelligenceBotCrew()
     agent = crew.fact_checker_agent()
-    
+
     tool_names = [tool.name for tool in agent.tools]
     assert "fact_check_tool" in tool_names
 ```
@@ -221,7 +221,7 @@ def test_task_configuration():
     """Test task is properly configured."""
     crew = UltimateDiscordIntelligenceBotCrew()
     task = crew.content_analysis_task()
-    
+
     assert task.description is not None
     assert task.expected_output is not None
     assert task.agent is not None
@@ -268,7 +268,7 @@ def mock_youtube_api():
             }
         }]
     }
-    
+
     with patch('googleapiclient.discovery.build') as mock_build:
         mock_service = Mock()
         mock_service.search().list().execute.return_value = mock_response
@@ -286,28 +286,28 @@ import time
 def test_processing_performance():
     """Test processing stays within performance bounds."""
     tool = MyTool()
-    
+
     start_time = time.time()
     result = tool._run("test content", "tenant", "workspace")
     execution_time = time.time() - start_time
-    
+
     assert execution_time < 5.0  # Should complete within 5 seconds
     assert result.status == "success"
 
 def test_memory_usage():
     """Test memory usage stays reasonable."""
     import psutil
-    
+
     process = psutil.Process()
     initial_memory = process.memory_info().rss
-    
+
     # Execute memory-intensive operation
     tool = MemoryIntensiveTool()
     result = tool._run("large dataset", "tenant", "workspace")
-    
+
     final_memory = process.memory_info().rss
     memory_increase = final_memory - initial_memory
-    
+
     # Should not increase memory by more than 100MB
     assert memory_increase < 100 * 1024 * 1024
 ```
@@ -376,7 +376,7 @@ markers =
     integration: marks tests as integration tests
     slow: marks tests as slow running
     unit: marks tests as unit tests
-addopts = 
+addopts =
     -v
     --tb=short
     --strict-markers

@@ -72,12 +72,12 @@ class BackgroundIntelligenceWorker:
         self, url: str, depth: str, webhook_url: str, **kwargs
     ) -> str:
         """Start analysis in background, returns workflow_id immediately."""
-        
+
     async def _execute_workflow_background(
         self, workflow_id: str, state: dict
     ) -> None:
         """Execute CrewAI workflow with no time limits."""
-        
+
     def get_workflow_status(self, workflow_id: str) -> dict | None:
         """Get current or completed workflow status."""
 ```

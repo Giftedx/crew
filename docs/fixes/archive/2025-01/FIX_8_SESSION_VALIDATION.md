@@ -36,7 +36,7 @@ def _is_session_valid(self, interaction: Any) -> bool:
         # Check if interaction has a webhook and if the session is open
         if not hasattr(interaction, 'followup'):
             return False
-        
+
         # Check if the underlying webhook has a valid session
         if hasattr(interaction.followup, '_adapter'):
             adapter = interaction.followup._adapter
@@ -45,7 +45,7 @@ def _is_session_valid(self, interaction: Any) -> bool:
                 # aiohttp session has a 'closed' property
                 if hasattr(session, 'closed'):
                     return not session.closed
-        
+
         # If we can't determine session state, assume it might work
         return True
     except Exception:
@@ -65,7 +65,7 @@ async def _send_progress_update(self, interaction: Any, message: str, current: i
         if not self._is_session_valid(interaction):
             self.logger.warning(f"Session closed, cannot send progress update: {message}")
             return
-        
+
         # ... rest of progress update logic
 ```
 
@@ -81,7 +81,7 @@ async def _send_error_response(self, interaction: Any, stage: str, error: str) -
         if not self._is_session_valid(interaction):
             self.logger.error(f"Session closed, cannot send error response for {stage}: {error}")
             return
-        
+
         # ... attempt to send error
     except Exception:
         # Fallback with session check
@@ -105,7 +105,7 @@ async def _execute_specialized_communication_reporting(...):
             # Log the results instead
             self.logger.info(f"Specialized Intelligence Results (session closed):\n{synthesis_result}")
             return
-        
+
         # ... rest of reporting logic
 ```
 

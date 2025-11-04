@@ -516,9 +516,9 @@ if __name__ == "__main__":
             await asyncio.sleep(0.1)
         print("✅ Simulation complete!")
         analysis_result = monitor.run_ai_routing_optimization_analysis(agent_name)
-        print(f"\n🎯 Analysis Status: {analysis_result['status']}"
-        print(f"📊 AI Enhancement Score: {analysis_result['ai_enhancement_score']:.2f}"
-        print(f"💡 Recommendations Generated: {analysis_result['recommendations_count']}"
+        print(f"\n🎯 Analysis Status: {analysis_result['status']}")
+        print(f"📊 AI Enhancement Score: {analysis_result['ai_enhancement_score']:.2f}")
+        print(f"💡 Recommendations Generated: {analysis_result['recommendations_count']}")
         print("\n✨ AI-Enhanced Performance Monitoring: OPERATIONAL! ✨")
         return analysis_result
 

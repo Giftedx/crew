@@ -11,8 +11,8 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
-from platform.config.configuration import get_config
-from typing import TYPE_CHECKING
+import os
+from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
@@ -23,8 +23,25 @@ except Exception:
     RedisCache = None
 
 
+def _env_cfg() -> Any:
+    """Lightweight, dependency-free config shim for first-run and tests.
+
+    Avoids importing the heavy configuration system (and pydantic) so this
+    module can be used in minimal environments like the doctor command.
+    """
+
+    class _Cfg:
+        enable_cache_vector = os.getenv("ENABLE_CACHE_VECTOR", "1").strip().lower() in {"1", "true", "yes", "on"}
+        rate_limit_redis_url = os.getenv("RATE_LIMIT_REDIS_URL") or os.getenv("REDIS_URL")
+        default_embedding_model = os.getenv("DEFAULT_EMBEDDING_MODEL", "memory:sha256")
+        cache_ttl_retrieval = int(os.getenv("CACHE_TTL_RETRIEVAL", "300"))
+
+    return _Cfg()
+
+
 def embed(texts: Iterable[str], model_hint: str | None = None) -> list[list[float]]:
-    cfg = get_config()
+    # Use lightweight env-based cfg to prevent import-time errors if optional deps are missing
+    cfg = _env_cfg()
     use_cache = bool(
         getattr(cfg, "enable_cache_vector", True) and getattr(cfg, "rate_limit_redis_url", None) and RedisCache
     )

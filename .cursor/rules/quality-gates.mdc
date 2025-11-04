@@ -7,7 +7,7 @@ description: Quality gates, CI workflows, and developer checklist
 All changes must pass these gates before merge:
 
 ```bash
-make format     # Auto-fix style & imports  
+make format     # Auto-fix style & imports
 make lint       # Lint check (CI style)
 make type       # Static type check
 make test       # Run full test suite

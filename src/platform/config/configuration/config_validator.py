@@ -403,22 +403,27 @@ class ConfigValidator:
                     )
                 )
 
-            for visibility, route_config in visibility_routes.items():
-                if visibility not in {"public", "private"}:
-                    errors.append(
-                        ValidationError(
-                            "archive",
-                            f"routes.{content_type}.{visibility}",
-                            f"Invalid visibility: {visibility}",
-                        )
-                    )
+            # Handle both legacy dict structure and new route structure
+            if not isinstance(visibility_routes, dict):
+                continue  # Skip non-dict entries
 
-                if "channel_id" not in route_config:
-                    errors.append(
+            for visibility, route_config in visibility_routes.items():
+                # Route config might be a dict with 'enabled', 'destination', etc. or old 'channel_id' structure
+                if not isinstance(route_config, dict):
+                    continue  # Skip non-dict route configs
+
+                # Only validate channel_id if this looks like the old structure
+                if (
+                    visibility in {"public", "private"}
+                    and "channel_id" not in route_config
+                    and "destination" not in route_config
+                ):
+                    # This might be using the new structure or is incomplete
+                    warnings.append(
                         ValidationError(
                             "archive",
                             f"routes.{content_type}.{visibility}",
-                            "Missing channel_id",
+                            "Route config should have either 'channel_id' (legacy) or 'destination' (new)",
                         )
                     )
 
@@ -439,12 +444,22 @@ class ConfigValidator:
                     )
                 )
 
-            if "interval" in settings and settings["interval"] <= 0:
-                errors.append(
+            # Settings should be a dict with 'interval' and 'priority'
+            if isinstance(settings, dict):
+                if "interval" in settings and settings["interval"] <= 0:
+                    errors.append(
+                        ValidationError(
+                            "poller",
+                            f"intervals.{platform}.interval",
+                            "Interval must be positive",
+                        )
+                    )
+            elif not isinstance(settings, int | dict):
+                warnings.append(
                     ValidationError(
                         "poller",
-                        f"intervals.{platform}.interval",
-                        "Interval must be positive",
+                        f"intervals.{platform}",
+                        "Settings should be a dict with 'interval' and 'priority' keys",
                     )
                 )
 

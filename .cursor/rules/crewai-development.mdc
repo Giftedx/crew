@@ -20,7 +20,7 @@ content_moderator:
   system_template: |
     You are {role}.
     Your goal is: {goal}
-    
+
     Context: {context}
 ```
 
@@ -66,9 +66,9 @@ class MyTool(BaseTool):
     args_schema: Type[BaseModel] = MyToolInput
 
     def _run(
-        self, 
-        content: str, 
-        tenant: str, 
+        self,
+        content: str,
+        tenant: str,
         workspace: str
     ) -> StepResult:
         """Execute the tool logic."""
@@ -203,7 +203,7 @@ content_moderator:
 def _run(self, content: str) -> StepResult:
     if not content:
         return StepResult.fail("missing_content")  # Agent will see this error
-    
+
     # Tool processing...
     return StepResult.ok(data=result)
 ```
@@ -216,7 +216,7 @@ def _run(self, content: str) -> StepResult:
 def test_content_moderator():
     crew = UltimateDiscordIntelligenceBotCrew()
     agent = crew.content_moderator_agent()
-    
+
     # Test agent configuration
     assert agent.role == "Content Moderator"
     assert len(agent.tools) > 0
@@ -229,7 +229,7 @@ def test_content_moderator():
 async def test_crew_execution():
     crew = UltimateDiscordIntelligenceBotCrew()
     inputs = {"content": "test content"}
-    
+
     result = crew.crew().kickoff(inputs=inputs)
     assert result is not None
 ```
@@ -279,7 +279,7 @@ logger = logging.getLogger(__name__)
 
 def _run(self, input_data: str) -> StepResult:
     logger.info(f"Executing {self.name} with input length: {len(input_data)}")
-    
+
     try:
         result = process_data(input_data)
         logger.info(f"Tool {self.name} completed successfully")

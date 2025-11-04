@@ -1,7 +1,7 @@
 # Fix #9: Cost Tracking Integration - Implementation Plan
 
-**Date:** 2025-01-03  
-**Status:** IN PROGRESS  
+**Date:** 2025-01-03
+**Status:** IN PROGRESS
 **Impact:** MEDIUM - Enables production cost monitoring and budget enforcement
 
 ---
@@ -143,7 +143,7 @@ with track_request_budget(total_limit=1.50, per_task_limits={"analysis": 0.75}):
 
 ### Step 1: Add Cost Tracking to Workflow Start (30 lines)
 
-**File:** `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`  
+**File:** `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`
 **Location:** `execute_autonomous_intelligence_workflow()` method (lines ~1036)
 
 **Add:**
@@ -161,20 +161,20 @@ async def execute_autonomous_intelligence_workflow(
     self, interaction, url, depth="standard", tenant_ctx=None
 ):
     # ... existing setup ...
-    
+
     # Determine budget based on depth
     budget_limits = self._get_budget_limits(depth)
-    
+
     # Track request-scoped costs
     workflow_id = f"autointel_{int(time.time())}_{hash(url) % 10000}"
-    
+
     with track_request_budget(
         total_limit=budget_limits["total"],
         per_task_limits=budget_limits["per_task"]
     ):
         # Execute workflow
         result = await self._execute_crew_workflow(...)
-        
+
         # Get cost summary
         tracker = current_request_tracker()
         if tracker:
@@ -183,7 +183,7 @@ async def execute_autonomous_intelligence_workflow(
                 "per_task_spent": tracker.per_task_spent,
                 "budget_utilization": tracker.total_spent / budget_limits["total"] * 100
             }
-            
+
             # Log if significant cost
             if tracker.total_spent > 0.50:  # $0.50 threshold
                 await interaction.followup.send(
@@ -199,7 +199,7 @@ async def execute_autonomous_intelligence_workflow(
 ```python
 def _get_budget_limits(self, depth: str) -> dict[str, Any]:
     """Get budget limits based on analysis depth."""
-    
+
     # Budget tiers by depth
     budgets = {
         "quick": {
@@ -250,7 +250,7 @@ def _get_budget_limits(self, depth: str) -> dict[str, Any]:
             }
         }
     }
-    
+
     return budgets.get(depth, budgets["standard"])
 ```
 
@@ -268,14 +268,14 @@ CrewAI doesn't expose per-call cost data directly, so we'll:
 
 ```python
 def _estimate_task_cost(
-    self, 
-    task_type: str, 
-    model: str, 
-    input_length: int, 
+    self,
+    task_type: str,
+    model: str,
+    input_length: int,
     output_length: int
 ) -> Decimal:
     """Estimate task cost based on token usage."""
-    
+
     # Pricing per 1K tokens (USD)
     pricing = {
         "gpt-4": {"input": 0.03, "output": 0.06},
@@ -284,16 +284,16 @@ def _estimate_task_cost(
         "claude-3-opus": {"input": 0.015, "output": 0.075},
         "claude-3-sonnet": {"input": 0.003, "output": 0.015},
     }
-    
+
     model_pricing = pricing.get(model, {"input": 0.01, "output": 0.03})
-    
+
     # Estimate tokens (rough: 1 token ≈ 4 chars)
     input_tokens = input_length // 4
     output_tokens = output_length // 4
-    
+
     input_cost = (input_tokens / 1000) * model_pricing["input"]
     output_cost = (output_tokens / 1000) * model_pricing["output"]
-    
+
     return Decimal(str(input_cost + output_cost))
 ```
 
@@ -302,12 +302,12 @@ def _estimate_task_cost(
 ```python
 def _task_completion_callback(self, task_output: Any) -> None:
     """Enhanced callback with cost tracking."""
-    
+
     # ... existing JSON extraction ...
-    
+
     # Extract model info if available
     model_used = os.getenv("OPENAI_MODEL_NAME", "gpt-4o")
-    
+
     # Estimate cost based on output length
     output_text = str(task_output.raw)
     estimated_cost = self._estimate_task_cost(
@@ -316,7 +316,7 @@ def _task_completion_callback(self, task_output: Any) -> None:
         input_length=len(self._last_input or ""),
         output_length=len(output_text)
     )
-    
+
     # Record cost
     record_llm_cost(
         operation_id=f"{self._workflow_id}_{task_name}",
@@ -329,7 +329,7 @@ def _task_completion_callback(self, task_output: Any) -> None:
         tenant_id=self._tenant_ctx.tenant_id if self._tenant_ctx else None,
         workspace_id=self._tenant_ctx.workspace_id if self._tenant_ctx else None
     )
-    
+
     # Update request tracker
     tracker = current_request_tracker()
     if tracker:
@@ -347,12 +347,12 @@ def setup_tenant_budgets():
     """Configure budgets for known tenants."""
     from core.cost_tracker import set_tenant_budget
     from decimal import Decimal
-    
+
     # Default budget for all tenants
     default_daily = Decimal("20.00")   # $20/day
     default_monthly = Decimal("500.00")  # $500/month
     default_hourly = Decimal("5.00")   # $5/hour
-    
+
     # Set default
     set_tenant_budget(
         tenant_id="default",
@@ -360,7 +360,7 @@ def setup_tenant_budgets():
         max_monthly_cost=default_monthly,
         max_hourly_cost=default_hourly
     )
-    
+
     # Override for specific tenants (from config)
     tenant_overrides = {
         "guild_123456": {  # High-volume server
@@ -374,7 +374,7 @@ def setup_tenant_budgets():
             "hourly": Decimal("1.00")
         }
     }
-    
+
     for tenant_id, limits in tenant_overrides.items():
         set_tenant_budget(
             tenant_id=tenant_id,
@@ -394,20 +394,20 @@ def setup_tenant_budgets():
 @bot.hybrid_command(name="costReport", description="View cost report for this server")
 async def cost_report_command(ctx):
     """Generate cost report for current tenant."""
-    
+
     # Get tenant from guild
     tenant_id = f"guild_{ctx.guild.id}" if ctx.guild else "dm"
-    
+
     # Get cost summary (last 7 days)
     end_time = time.time()
     start_time = end_time - (7 * 24 * 3600)
-    
+
     summary = get_cost_summary(
         start_time=start_time,
         end_time=end_time,
         tenant_id=tenant_id
     )
-    
+
     # Format report
     report = f"""
 📊 **Cost Report - Last 7 Days**
@@ -419,33 +419,33 @@ async def cost_report_command(ctx):
 
 **By Operation:**
 """
-    
+
     for op_type, cost in sorted(
-        summary.cost_by_operation_type.items(), 
-        key=lambda x: x[1], 
+        summary.cost_by_operation_type.items(),
+        key=lambda x: x[1],
         reverse=True
     ):
         report += f"• {op_type}: ${cost:.2f}\n"
-    
+
     # Get budget status
     budget_status = get_cost_tracker().get_budget_status(tenant_id)
-    
+
     if "error" not in budget_status:
         report += f"""
 **Budget Status:**
 • Daily: ${budget_status['daily_cost']:.2f} / ${budget_status['daily_budget']:.2f} ({budget_status['daily_utilization']*100:.1f}%)
 • Monthly: ${budget_status['monthly_cost']:.2f} / ${budget_status['monthly_budget']:.2f} ({budget_status['monthly_utilization']*100:.1f}%)
 """
-    
+
     await ctx.send(report)
 
 
 @bot.hybrid_command(name="exportCostReport", description="Export detailed cost report")
 async def export_cost_report_command(ctx, days: int = 7):
     """Export comprehensive cost report."""
-    
+
     report = export_cost_report(days=days)
-    
+
     # Send as file if too long
     if len(report) > 1900:
         import io
@@ -550,5 +550,5 @@ async def export_cost_report_command(ctx, days: int = 7):
 6. Add tests and validation
 7. Update documentation
 
-**Priority:** MEDIUM (enables cost control but not blocking)  
+**Priority:** MEDIUM (enables cost control but not blocking)
 **Estimated Effort:** ~3-4 hours for full implementation

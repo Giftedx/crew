@@ -13,7 +13,7 @@ bias_detection:
         - "socialist policies"
         - "capitalist exploitation"
       weight: 0.15
-      
+
     ideological_framing:
       description: "Framing that promotes specific ideologies"
       keywords:
@@ -22,7 +22,7 @@ bias_detection:
         - "leftist propaganda"
         - "right-wing rhetoric"
       weight: 0.15
-      
+
     one_sided_evidence:
       description: "Presenting only evidence supporting one viewpoint"
       patterns:
@@ -30,7 +30,7 @@ bias_detection:
         - "ignores Y perspective"
         - "selective evidence"
       weight: 0.20
-      
+
     strawman_arguments:
       description: "Misrepresenting opposing arguments"
       patterns:
@@ -38,14 +38,14 @@ bias_detection:
         - "misrepresents position"
         - "oversimplifies opposition"
       weight: 0.10
-      
+
     false_balance:
       description: "Giving equal weight to unequal arguments"
       patterns:
         - "both sides equally valid"
         - "equal time for all views"
       weight: 0.15
-      
+
     omission_bias:
       description: "Systematically omitting important information"
       patterns:
@@ -53,7 +53,7 @@ bias_detection:
         - "omits key facts"
         - "selective reporting"
       weight: 0.05
-      
+
     selection_bias:
       description: "Biased source selection"
       patterns:
@@ -61,7 +61,7 @@ bias_detection:
         - "ignores Y sources"
         - "selective citations"
       weight: 0.10
-      
+
     emotional_manipulation:
       description: "Using emotional language to influence"
       keywords:
@@ -78,13 +78,13 @@ viewpoint_diversity:
     - "various viewpoints presented"
     - "different opinions considered"
     - "balanced analysis"
-    
+
   low_diversity_indicators:
     - "only one perspective"
     - "single viewpoint"
     - "unilateral analysis"
     - "one-sided argument"
-    
+
   diversity_thresholds:
     high: 0.8
     medium: 0.5
@@ -96,12 +96,12 @@ framing_analysis:
     - "framed positively for X"
     - "beneficial for Y"
     - "advantages of Z"
-    
+
   negative_framing_indicators:
     - "framed negatively for X"
     - "harmful to Y"
     - "disadvantages of Z"
-    
+
   neutral_framing_indicators:
     - "neutral presentation"
     - "balanced framing"
@@ -116,7 +116,7 @@ evidence_balance:
     - "confirms"
     - "validates"
     - "supports"
-    
+
   opposing_evidence_indicators:
     - "refutes"
     - "contradicts"
@@ -124,7 +124,7 @@ evidence_balance:
     - "challenges"
     - "questions"
     - "undermines"
-    
+
   balance_calculation:
     method: "ratio_analysis"
     threshold: 0.3  # Minimum ratio for balanced evidence
@@ -138,12 +138,12 @@ source_diversity:
     - "ngo"
     - "corporate"
     - "individual"
-    
+
   diversity_indicators:
     - "diverse sources cited"
     - "multiple source types"
     - "varied perspectives"
-    
+
   bias_indicators:
     - "single source cited"
     - "only X sources"
@@ -155,7 +155,7 @@ scoring:
     low: 0.3
     medium: 0.6
     high: 0.8
-    
+
   individual_metric_thresholds:
     partisan_language: 0.5
     ideological_framing: 0.5
@@ -172,12 +172,12 @@ mitigation:
     - "flag_for_review"
     - "add_balancing_perspective"
     - "include_disclaimer"
-    
+
   medium_bias_content:
     - "suggest_alternative_sources"
     - "add_context_warning"
     - "encourage_critical_thinking"
-    
+
   low_bias_content:
     - "monitor_trends"
     - "track_improvements"
@@ -188,13 +188,13 @@ reporting:
   bias_dashboard:
     enabled: true
     update_frequency: "daily"
-    
+
   metrics:
     - "bias_score_distribution"
     - "trend_analysis"
     - "source_comparison"
     - "mitigation_effectiveness"
-    
+
   alerts:
     high_bias_threshold: 0.8
     trend_analysis: true

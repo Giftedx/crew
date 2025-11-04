@@ -187,4 +187,3 @@ synthesize_personality:
   human_input: false
   async_execution: false
   output_file: output/persona_synthesis_{subject}_{timestamp}.md
-

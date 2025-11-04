@@ -186,12 +186,12 @@ from obs import tracing
 with tracing.span("content_analysis") as span:
     span.set_attribute("content_id", "analysis_123")
     span.set_attribute("platform", "youtube")
-    
+
     # Nested span
     with tracing.span("download_content") as download_span:
         download_span.set_attribute("url", content_url)
         result = await download_content(content_url)
-    
+
     # Another nested span
     with tracing.span("transcribe_content") as transcribe_span:
         transcribe_span.set_attribute("file_path", result.file_path)
@@ -261,7 +261,7 @@ def collect_system_metrics():
     cpu_percent = psutil.cpu_percent()
     memory = psutil.virtual_memory()
     disk = psutil.disk_usage('/')
-    
+
     metrics.SYSTEM_CPU_PERCENT.set(cpu_percent)
     metrics.SYSTEM_MEMORY_USAGE.set(memory.percent)
     metrics.SYSTEM_DISK_USAGE.set(disk.percent)
@@ -401,13 +401,13 @@ class StructuredFormatter(logging.Formatter):
             "tenant": getattr(record, "tenant", None),
             "workspace": getattr(record, "workspace", None),
         }
-        
+
         # Add extra fields
         if hasattr(record, "__dict__"):
             for key, value in record.__dict__.items():
                 if key not in ["name", "msg", "args", "levelname", "levelno", "pathname", "filename", "module", "lineno", "funcName", "created", "msecs", "relativeCreated", "thread", "threadName", "processName", "process", "getMessage"]:
                     log_entry[key] = value
-        
+
         return json.dumps(log_entry)
 ```
 
@@ -485,7 +485,7 @@ def test_tool_execution_metrics(mock_metric):
     # Test that metrics are recorded
     tool = MyTool()
     tool._run("test_input")
-    
+
     mock_metric.labels.assert_called_with(
         tool="my_tool",
         tenant="test"
@@ -503,10 +503,10 @@ def test_structured_logging():
     with patch('logging.getLogger') as mock_logger:
         logger = Mock()
         mock_logger.return_value = logger
-        
+
         # Call function that logs
         my_function()
-        
+
         # Verify structured logging
         logger.info.assert_called_once()
         call_args = logger.info.call_args

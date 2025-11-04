@@ -1,5 +1,12 @@
 # OpenRouter Service Enhancements - Complete Implementation
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Service**: Unified OpenRouter service at platform/llm/openrouter_service
+- **Routing Policy**: LinUCBDiagBandit (platform/rl/core/policies/linucb.py)
+- **Caching**: Multi-level cache with semantic caching support
+- **Pipeline Integration**: 7-phase orchestration support
+
 ## Overview
 
 This document provides a comprehensive overview of the OpenRouter service enhancements implemented across Phases 2-4, including service layer consolidation, performance optimization, and advanced features integration.

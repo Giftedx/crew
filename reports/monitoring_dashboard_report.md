@@ -10,7 +10,7 @@ This report summarizes the creation of Grafana dashboards for real-time performa
 
 ### Created Dashboards
 - **Performance Overview**: 1 dashboard
-- **Workflow Performance**: 1 dashboard  
+- **Workflow Performance**: 1 dashboard
 - **Alerts & Thresholds**: 1 dashboard
 
 ### Total Panels Created

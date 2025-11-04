@@ -276,13 +276,13 @@ from ultimate_discord_intelligence_bot.governance import ModelSpecEnforcer
 class GovernedAgent:
     def __init__(self):
         self.model_spec = ModelSpecEnforcer()
-    
+
     def process_instruction(self, instruction: str, context: dict):
         # Apply governance checks
         result = self.model_spec.evaluate_instruction(instruction, context)
         if not result.success:
             return self.handle_refusal(result.error)
-        
+
         # Continue with normal processing
         return self.execute_instruction(instruction)
 ```

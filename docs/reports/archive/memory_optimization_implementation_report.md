@@ -80,7 +80,7 @@ class MemoryPool:
             pooled_resource.is_active = True
             self._active_resources[id(pooled_resource.resource)] = pooled_resource
             return pooled_resource.resource
-        
+
         # Create a new resource
         factory = self._resource_factories[resource_type]
         resource = factory(*args, **kwargs)
@@ -92,17 +92,17 @@ class MemoryPool:
 ```python
 def analyze_memory_usage(self) -> dict[str, Any]:
     profile = self.create_memory_profile()
-    
+
     # Calculate trends
     memory_trend = self._calculate_memory_trend(recent_profiles)
     growth_rate = self._calculate_growth_rate(recent_profiles)
-    
+
     # Identify memory issues
     issues = self._identify_memory_issues(profile)
-    
+
     # Generate recommendations
     recommendations = self._generate_recommendations(profile, issues)
-    
+
     return {
         "current_profile": profile.__dict__,
         "memory_trend": memory_trend,

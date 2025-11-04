@@ -328,39 +328,39 @@ from ultimate_discord_intelligence_bot.autonomous_orchestrator import Autonomous
 async def test_all_stages_receive_context():
     """Validate that all crew stages receive proper context."""
     orchestrator = AutonomousIntelligenceOrchestrator()
-    
+
     # Track context population calls
     context_calls = []
     original_populate = orchestrator._populate_agent_tool_context
-    
+
     def track_populate(agent, context):
         context_calls.append({
             "agent": getattr(agent, "role", "unknown"),
             "has_data": bool(context and len(context) > 0),
         })
         return original_populate(agent, context)
-    
+
     orchestrator._populate_agent_tool_context = track_populate
-    
+
     # Mock interaction
     interaction = Mock()
     interaction.guild_id = "test_guild"
     interaction.channel.name = "test_channel"
-    
+
     # Execute with real URL (will use mocked pipeline internally)
     await orchestrator.execute_autonomous_intelligence_workflow(
         interaction,
         url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         depth="standard"
     )
-    
+
     # Should have context population for all crew stages
     assert len(context_calls) >= 10, f"Only {len(context_calls)} context calls (expected 10+)"
-    
+
     # All calls should have data
     for call in context_calls:
         assert call["has_data"], f"Agent {call['agent']} received empty context!"
-    
+
     print(f"✅ All {len(context_calls)} stages received context data")
 ```
 
@@ -415,7 +415,7 @@ If fixes cause issues:
 ## Estimated Time
 
 - Critical fixes (1-3): 2 hours
-- Medium priority (4-7): 2 hours  
+- Medium priority (4-7): 2 hours
 - Low priority (8-10): 1 hour
 - Testing: 1 hour
 - **Total: ~6 hours**

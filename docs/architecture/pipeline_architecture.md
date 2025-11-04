@@ -22,26 +22,26 @@ graph TD
     J -->|Continue| K[Analysis Phase]
     K --> L[Finalize Phase]
     L --> M[Intelligence Report]
-    
+
     subgraph "Parallel Execution"
         K1[Debate Analysis]
         K2[Fact Checking]
         K3[Fallacy Detection]
         K4[Perspective Analysis]
     end
-    
+
     K --> K1
     K --> K2
     K --> K3
     K --> K4
-    
+
     subgraph "Storage Tasks"
         S1[Memory Storage]
         S2[Graph Storage]
         S3[HippoRAG Storage]
         S4[Discord Notification]
     end
-    
+
     L --> S1
     L --> S2
     L --> S3
@@ -542,21 +542,21 @@ content_types:
     completeness_threshold: 0.70
     informativeness_threshold: 0.75
     pipeline: enhanced_analysis
-    
+
   news:
     quality_threshold: 0.80
     coherence_threshold: 0.75
     completeness_threshold: 0.80
     informativeness_threshold: 0.85
     pipeline: fact_checking_focused
-    
+
   educational:
     quality_threshold: 0.70
     coherence_threshold: 0.75
     completeness_threshold: 0.80
     informativeness_threshold: 0.80
     pipeline: comprehension_focused
-    
+
   entertainment:
     quality_threshold: 0.60
     coherence_threshold: 0.60
@@ -605,3 +605,10 @@ content_types:
 - **Sentiment Analysis**: Advanced emotional analysis
 - **Network Analysis**: Content relationship mapping
 - **Temporal Analysis**: Time-series content analysis
+
+
+---
+
+**Last Updated**: November 3, 2025
+**Pipeline Phases**: 7 core phases (download → transcription → content routing → quality filtering → analysis/lightweight → finalization)
+**Status**: Verified against current orchestrator.py implementation (1637 lines)

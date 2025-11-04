@@ -61,7 +61,7 @@ class TenantRegistry:
                         created_at = default_utc_now()
             else:
                 try:
-                    created_at = datetime.fromtimestamp(float(created_raw), tz=UTC)
+                    created_at = datetime.fromtimestamp(float(created_raw or 0), tz=UTC)
                 except Exception:
                     created_at = default_utc_now()
             tenant = Tenant(

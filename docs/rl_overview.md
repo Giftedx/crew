@@ -1,5 +1,12 @@
 # Reinforcement Learning Overview
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Primary Policy**: `LinUCBDiagBandit` in `src/platform/rl/core/policies/linucb.py` (154 lines)
+- **RL Layer**: `src/platform/rl/` (contextual bandits for LLM routing)
+- **Integration**: Active in LLM provider selection and model routing
+- **Feature Flags**: `ENABLE_TRAJECTORY_EVALUATION`, `ENABLE_TRAJECTORY_FEEDBACK_LOOP`
+
 The system learns from usage to improve model routing, prompting and retrieval
 while respecting safety, cost and latency constraints.
 

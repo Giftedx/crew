@@ -135,28 +135,28 @@ The helper method (lines 148-180) implements a simple cache-or-create pattern:
 ```python
 def _get_or_create_agent(self, agent_name: str) -> Any:
     """Get agent from coordinators cache or create and cache it.
-    
+
     CRITICAL: This ensures agents are created ONCE and reused across stages.
     Repeated calls to crew_instance.agent_method() create FRESH agents with
     EMPTY tools, bypassing context population. Always use this method.
     """
     if not hasattr(self, "agent_coordinators"):
         self.agent_coordinators = {}
-    
+
     # Return cached agent if available
     if agent_name in self.agent_coordinators:
         self.logger.debug(f"✅ Reusing cached agent: {agent_name}")
         return self.agent_coordinators[agent_name]
-    
+
     # Create new agent and cache it
     if not hasattr(self, "crew_instance") or self.crew_instance is None:
         from .crew import UltimateDiscordIntelligenceBotCrew
         self.crew_instance = UltimateDiscordIntelligenceBotCrew()
-    
+
     agent_method = getattr(self.crew_instance, agent_name, None)
     if not agent_method:
         raise ValueError(f"Unknown agent: {agent_name}")
-    
+
     agent = agent_method()
     self.agent_coordinators[agent_name] = agent
     self.logger.info(f"✨ Created and cached new agent: {agent_name}")
@@ -313,11 +313,11 @@ make test
 
 ## 👥 Credits
 
-**Analysis & Fix**: AI Assistant (Claude)  
-**Date**: October 2, 2025  
-**Issue Reported By**: User (crew repository)  
-**Files Modified**: `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`  
-**Lines Changed**: 13 replacements across 7,134 total lines  
+**Analysis & Fix**: AI Assistant (Claude)
+**Date**: October 2, 2025
+**Issue Reported By**: User (crew repository)
+**Files Modified**: `src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py`
+**Lines Changed**: 13 replacements across 7,134 total lines
 
 ---
 

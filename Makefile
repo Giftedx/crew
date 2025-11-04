@@ -9,6 +9,7 @@ PKG := ultimate_discord_intelligence_bot
 .PHONY: install dev lint format format-check type test eval docs pre-commit deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run deep-clean organize-root maintain-archive config-validate health health-dashboard health-report metrics metrics-api metrics-dashboard metrics-test
 .PHONY: docs-strict
 .PHONY: ops-queue
+.PHONY: run-api run-api-dev
 .PHONY: test-fast ci-fast agent-evals-ci
 .PHONY: ensure-venv uv-lock uv-sync uv-bootstrap
 .PHONY: install dev lint format format-check type type-changed type-baseline type-baseline-update test eval docs pre-commit hooks deprecations deprecations-json deprecations-strict deprecations-badge guards ci-all clean clean-dry-run clean-bytecode deep-clean warn-venv organize-root maintain-archive
@@ -94,6 +95,14 @@ run-discord-enhanced:
 run-crew:
 	$(PYTHON) -m ultimate_discord_intelligence_bot.setup_cli run crew
 
+# Launch FastAPI server locally (uses uvicorn). Requires runtime deps only.
+run-api:
+	$(PYTHON) scripts/run_api.py --host 0.0.0.0 --port 8000
+
+# Launch FastAPI server with auto-reload (development convenience)
+run-api-dev:
+	$(PYTHON) scripts/run_api.py --host 0.0.0.0 --port 8000 --reload
+
 docker-build:
 	docker build -t $(IMAGE) .
 
@@ -151,12 +160,20 @@ test:
 
 # Fast local CI sweep (quick feedback loop)
 test-fast:
-	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	$(PYTHON) -m pytest -q -c pytest.ini \
+		tests/unit/core/test_http_utils.py \
+		tests/unit/core/test_guards_http_requests.py \
+		tests/unit/core/test_vector_store_dimension.py \
+		tests/unit/core/test_vector_store_namespace.py
 
 # Run the fast test sweep with a clean environment for retry precedence tests
 .PHONY: test-fast-clean-env
 test-fast-clean-env:
-	env -u RETRY_MAX_ATTEMPTS PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	env -u RETRY_MAX_ATTEMPTS PYTHONPATH=src $(PYTHON) -m pytest -q -c pytest.ini \
+		tests/unit/core/test_http_utils.py \
+		tests/unit/core/test_guards_http_requests.py \
+		tests/unit/core/test_vector_store_dimension.py \
+		tests/unit/core/test_vector_store_namespace.py
 
 ci-fast: docs guards test-fast agent-evals-ci
 
@@ -264,7 +281,7 @@ uv-bootstrap:
 .PHONY: compliance
 compliance:  ## Run compliance audits (HTTP + StepResult)
 	@cd src/ultimate_discord_intelligence_bot && python3 core/http_compliance_audit.py
-	@cd src/ultimate_discord_intelligence_bot && python3 tools/step_result_auditor.py
+	@cd src/ultimate_discord_intelligence_bot && PYTHONPATH=../.. python3 tools/step_result_auditor.py
 
 .PHONY: compliance-fix
 compliance-fix:  ## Auto-fix simple compliance issues

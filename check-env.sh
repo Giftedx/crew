@@ -19,7 +19,7 @@ echo -e "${GREEN}✓ .env file exists${NC}\n"
 check_var() {
     local var_name=$1
     local required=$2
-    
+
     if grep -q "^${var_name}=..*" .env 2>/dev/null && ! grep -q "^${var_name}=.*placeholder" .env 2>/dev/null; then
         value=$(grep "^${var_name}=" .env | cut -d= -f2 | head -c 20)
         echo -e "${GREEN}✓${NC} $var_name is set (${value}...)"
@@ -42,7 +42,7 @@ discord_ok=$?
 check_var "OPENROUTER_API_KEY" "optional"
 openrouter_ok=$?
 
-check_var "OPENAI_API_KEY" "optional"  
+check_var "OPENAI_API_KEY" "optional"
 openai_ok=$?
 
 echo ""

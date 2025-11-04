@@ -18,7 +18,7 @@ The Multi-Agent Orchestration Platform is **85-90% complete** with all core func
 **Problem**: Multiple router implementations causing confusion and maintenance overhead:
 
 - `src/core/router.py` (82 lines) - Basic router
-- `src/core/llm_router.py` (1100+ lines) - Advanced cost-aware router  
+- `src/core/llm_router.py` (1100+ lines) - Advanced cost-aware router
 - `src/ai/routing/` - Multiple bandit routers (Thompson, LinUCB, VW)
 - `src/ai/adaptive_ai_router.py`, `enhanced_ai_router.py`, `performance_router.py` - Additional implementations
 

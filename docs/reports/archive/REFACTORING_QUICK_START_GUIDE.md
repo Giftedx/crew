@@ -1,7 +1,7 @@
 # Refactoring Quick Start Guide
 
-**Companion to**: `STRATEGIC_REFACTORING_PLAN_2025.md`  
-**Purpose**: Tactical guide for immediate implementation  
+**Companion to**: `STRATEGIC_REFACTORING_PLAN_2025.md`
+**Purpose**: Tactical guide for immediate implementation
 **Last Updated**: October 31, 2025
 
 ---
@@ -57,7 +57,7 @@ class CrewTask:
 
 class CrewExecutor(ABC):
     """Abstract base for crew executors."""
-    
+
     @abstractmethod
     async def execute(
         self,
@@ -66,12 +66,12 @@ class CrewExecutor(ABC):
     ) -> StepResult:
         """Execute a crew task."""
         ...
-    
+
     @abstractmethod
     async def validate_task(self, task: CrewTask) -> StepResult:
         """Validate task before execution."""
         ...
-    
+
     @abstractmethod
     async def cleanup(self) -> None:
         """Cleanup resources after execution."""
@@ -79,7 +79,7 @@ class CrewExecutor(ABC):
 
 class CrewFactory(ABC):
     """Abstract factory for creating crews."""
-    
+
     @abstractmethod
     def create_executor(
         self,
@@ -88,7 +88,7 @@ class CrewFactory(ABC):
     ) -> CrewExecutor:
         """Create a crew executor."""
         ...
-    
+
     @abstractmethod
     def get_available_executors(self) -> list[str]:
         """Get list of available executor types."""
@@ -118,30 +118,30 @@ logger = structlog.get_logger(__name__)
 
 class UnifiedCrewExecutor(CrewExecutor):
     """Unified implementation consolidating all crew execution logic."""
-    
+
     def __init__(self, config: CrewConfig):
         self.config = config
         self.metrics = get_metrics()
-    
+
     async def execute(
         self,
         task: CrewTask,
         config: CrewConfig
     ) -> StepResult:
         """Execute a crew task with full observability."""
-        
+
         logger.info(
             "crew_execution_started",
             task_id=task.task_id,
             task_type=task.task_type,
             tenant_id=config.tenant_id
         )
-        
+
         # Validate task
         validation = await self.validate_task(task)
         if not validation.success:
             return validation
-        
+
         # Execute with retries
         for attempt in range(config.max_retries):
             try:
@@ -153,10 +153,10 @@ class UnifiedCrewExecutor(CrewExecutor):
                         "attempt": str(attempt + 1)
                     }
                 ).inc()
-                
+
                 # Execute task logic
                 result = await self._execute_internal(task, config)
-                
+
                 if result.success:
                     logger.info(
                         "crew_execution_success",
@@ -164,14 +164,14 @@ class UnifiedCrewExecutor(CrewExecutor):
                         attempt=attempt + 1
                     )
                     return result
-                
+
                 # Check if retryable
                 if not result.retryable:
                     return result
-                
+
                 # Wait before retry
                 await asyncio.sleep(2 ** attempt)
-                
+
             except Exception as e:
                 logger.error(
                     "crew_execution_error",
@@ -179,52 +179,52 @@ class UnifiedCrewExecutor(CrewExecutor):
                     error=str(e),
                     attempt=attempt + 1
                 )
-                
+
                 if attempt == config.max_retries - 1:
                     return StepResult.fail(
                         f"Crew execution failed after {config.max_retries} attempts: {e}",
                         error_category=ErrorCategory.EXECUTION,
                         retryable=False
                     )
-        
+
         return StepResult.fail(
             "Crew execution failed after max retries",
             error_category=ErrorCategory.EXECUTION,
             retryable=False
         )
-    
+
     async def _execute_internal(
         self,
         task: CrewTask,
         config: CrewConfig
     ) -> StepResult:
         """Internal execution logic (to be migrated from existing crew.py)."""
-        
+
         # TODO: Migrate execution logic from crew.py
         # This is where the actual CrewAI orchestration happens
-        
+
         return StepResult.ok(
             result={"status": "completed"},
             metadata={"task_id": task.task_id}
         )
-    
+
     async def validate_task(self, task: CrewTask) -> StepResult:
         """Validate task before execution."""
-        
+
         if not task.task_id:
             return StepResult.fail(
                 "Task ID is required",
                 error_category=ErrorCategory.VALIDATION
             )
-        
+
         if not task.description:
             return StepResult.fail(
                 "Task description is required",
                 error_category=ErrorCategory.VALIDATION
             )
-        
+
         return StepResult.ok(result={"validated": True})
-    
+
     async def cleanup(self) -> None:
         """Cleanup resources."""
         logger.info("crew_executor_cleanup", tenant_id=self.config.tenant_id)
@@ -253,12 +253,12 @@ def migrate_file(file_path: Path):
     """Migrate a single file."""
     content = file_path.read_text()
     modified = False
-    
+
     for pattern in OLD_PATTERNS:
         if re.search(pattern, content):
             content = re.sub(pattern, NEW_IMPORT, content)
             modified = True
-    
+
     if modified:
         file_path.write_text(content)
         print(f"✅ Migrated: {file_path}")
@@ -266,7 +266,7 @@ def migrate_file(file_path: Path):
 def main():
     """Migrate all Python files."""
     src_dir = Path("src")
-    
+
     for py_file in src_dir.rglob("*.py"):
         if "crew_core" not in str(py_file):
             migrate_file(py_file)
@@ -318,17 +318,17 @@ class OrchestrationContext:
 @runtime_checkable
 class OrchestratorProtocol(Protocol):
     """Base protocol for all orchestrators."""
-    
+
     @property
     def layer(self) -> OrchestrationLayer:
         """The orchestration layer this belongs to."""
         ...
-    
+
     @property
     def name(self) -> str:
         """Orchestrator name."""
         ...
-    
+
     async def orchestrate(
         self,
         context: OrchestrationContext,
@@ -339,19 +339,19 @@ class OrchestratorProtocol(Protocol):
 
 class BaseOrchestrator(ABC):
     """Base class for orchestrators."""
-    
+
     def __init__(self, layer: OrchestrationLayer, name: str):
         self._layer = layer
         self._name = name
-    
+
     @property
     def layer(self) -> OrchestrationLayer:
         return self._layer
-    
+
     @property
     def name(self) -> str:
         return self._name
-    
+
     @abstractmethod
     async def orchestrate(
         self,
@@ -382,10 +382,10 @@ logger = structlog.get_logger(__name__)
 
 class OrchestrationFacade:
     """Unified entry point for all orchestration."""
-    
+
     def __init__(self):
         self._orchestrators: dict[str, OrchestratorProtocol] = {}
-    
+
     def register(self, orchestrator: OrchestratorProtocol) -> None:
         """Register an orchestrator."""
         key = f"{orchestrator.layer.value}.{orchestrator.name}"
@@ -395,7 +395,7 @@ class OrchestrationFacade:
             layer=orchestrator.layer.value,
             name=orchestrator.name
         )
-    
+
     def get(
         self,
         layer: OrchestrationLayer,
@@ -404,7 +404,7 @@ class OrchestrationFacade:
         """Get an orchestrator."""
         key = f"{layer.value}.{name}"
         return self._orchestrators.get(key)
-    
+
     async def orchestrate(
         self,
         layer: OrchestrationLayer,
@@ -413,29 +413,29 @@ class OrchestrationFacade:
         **kwargs
     ) -> StepResult:
         """Orchestrate via specific orchestrator."""
-        
+
         orchestrator = self.get(layer, name)
         if not orchestrator:
             return StepResult.fail(
                 f"Orchestrator not found: {layer.value}.{name}"
             )
-        
+
         logger.info(
             "orchestration_started",
             layer=layer.value,
             name=name,
             tenant_id=context.tenant_id
         )
-        
+
         result = await orchestrator.orchestrate(context, **kwargs)
-        
+
         logger.info(
             "orchestration_completed",
             layer=layer.value,
             name=name,
             success=result.success
         )
-        
+
         return result
 
 # Global facade instance
@@ -470,24 +470,24 @@ def universal_tool(
     output_schema: dict
 ):
     """Decorator to create framework-agnostic tools."""
-    
+
     def decorator(func: Callable) -> Any:
-        
+
         @wraps(func)
         class UniversalToolImpl:
             """Auto-generated universal tool."""
-            
+
             def __init__(self):
                 self.name = name
                 self.category = category
                 self.description = description
                 self.input_schema = input_schema
                 self.output_schema = output_schema
-            
+
             async def execute(self, **kwargs) -> StepResult:
                 """Execute the tool."""
                 return await func(**kwargs)
-            
+
             def to_crewai_tool(self):
                 """Convert to CrewAI tool."""
                 from crewai.tools import Tool
@@ -496,12 +496,12 @@ def universal_tool(
                     description=self.description,
                     func=lambda **kw: asyncio.run(self.execute(**kw))
                 )
-            
+
             def to_langgraph_tool(self):
                 """Convert to LangGraph tool."""
                 # Implementation here
                 pass
-            
+
             def to_autogen_function(self):
                 """Convert to AutoGen function."""
                 return {
@@ -509,9 +509,9 @@ def universal_tool(
                     "description": self.description,
                     "parameters": self.input_schema
                 }
-        
+
         return UniversalToolImpl()
-    
+
     return decorator
 
 # Usage example
@@ -548,14 +548,14 @@ class RoutingStrategy(Enum):
 @runtime_checkable
 class Router(Protocol):
     """Router protocol."""
-    
+
     async def select(self, context: dict) -> Any:
         """Select backend."""
         ...
 
 class RouterFactory:
     """Factory for creating routers."""
-    
+
     @staticmethod
     def create(
         strategy: RoutingStrategy,
@@ -563,17 +563,17 @@ class RouterFactory:
         **kwargs
     ) -> Router:
         """Create a router."""
-        
+
         if strategy == RoutingStrategy.RANDOM:
             from core.routing.strategies.random import RandomRouter
             return RandomRouter(backends)
-        
+
         elif strategy == RoutingStrategy.BANDIT:
             from core.routing.strategies.bandit import BanditRouter
             return BanditRouter(backends, **kwargs)
-        
+
         # Add more strategies...
-        
+
         else:
             raise ValueError(f"Unknown strategy: {strategy}")
 
@@ -597,18 +597,18 @@ from core.singleton import Singleton
 
 class FrameworkRegistry(metaclass=Singleton):
     """Global registry for framework adapters."""
-    
+
     def __init__(self):
         self._adapters = {}
-    
+
     def register(self, name: str, adapter):
         """Register a framework adapter."""
         self._adapters[name] = adapter
-    
+
     def get(self, name: str) -> Optional[Any]:
         """Get a framework adapter."""
         return self._adapters.get(name)
-    
+
     def list_frameworks(self) -> list[str]:
         """List registered frameworks."""
         return list(self._adapters.keys())
@@ -622,7 +622,7 @@ def register_frameworks():
     from ai.frameworks.crewai_adapter import CrewAIAdapter
     from ai.frameworks.langgraph_adapter import LangGraphAdapter
     from ai.frameworks.autogen_adapter import AutoGenAdapter
-    
+
     registry.register("crewai", CrewAIAdapter())
     registry.register("langgraph", LangGraphAdapter())
     registry.register("autogen", AutoGenAdapter())
@@ -678,10 +678,10 @@ from ultimate_discord_intelligence_bot.crew_core import (
 @pytest.mark.asyncio
 async def test_crew_executor_validation():
     """Test task validation."""
-    
+
     config = CrewConfig(tenant_id="test")
     executor = UnifiedCrewExecutor(config)
-    
+
     # Invalid task (no ID)
     task = CrewTask(
         task_id="",
@@ -691,17 +691,17 @@ async def test_crew_executor_validation():
         agent_requirements=[],
         tool_requirements=[]
     )
-    
+
     result = await executor.validate_task(task)
     assert not result.success
 
 @pytest.mark.asyncio
 async def test_crew_executor_execution():
     """Test task execution."""
-    
+
     config = CrewConfig(tenant_id="test", max_retries=1)
     executor = UnifiedCrewExecutor(config)
-    
+
     task = CrewTask(
         task_id="test-1",
         task_type="analysis",
@@ -710,7 +710,7 @@ async def test_crew_executor_execution():
         agent_requirements=["analyst"],
         tool_requirements=["search"]
     )
-    
+
     result = await executor.execute(task, config)
     # Add assertions based on expected behavior
 ```
@@ -730,16 +730,16 @@ from core.orchestration import (
 @pytest.mark.asyncio
 async def test_orchestration_facade_registration():
     """Test orchestrator registration."""
-    
+
     facade = get_orchestration_facade()
-    
+
     # Create mock orchestrator
     from core.orchestration.domain.content_orchestrator import ContentOrchestrator
     orchestrator = ContentOrchestrator()
-    
+
     # Register
     facade.register(orchestrator)
-    
+
     # Retrieve
     retrieved = facade.get(OrchestrationLayer.DOMAIN, "content")
     assert retrieved is not None
@@ -747,21 +747,21 @@ async def test_orchestration_facade_registration():
 @pytest.mark.asyncio
 async def test_orchestration_execution():
     """Test orchestration execution."""
-    
+
     facade = get_orchestration_facade()
     context = OrchestrationContext(
         tenant_id="test",
         request_id="req-123",
         metadata={}
     )
-    
+
     result = await facade.orchestrate(
         OrchestrationLayer.DOMAIN,
         "content",
         context,
         url="https://example.com/video"
     )
-    
+
     assert result.success
 ```
 

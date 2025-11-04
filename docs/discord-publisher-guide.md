@@ -79,21 +79,21 @@ def publish_for_tenant(tenant: str, message: str) -> bool:
     """Publish message for specific tenant."""
     # Check if publishing is enabled
     from ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
-    
+
     flags = FeatureFlags.from_env()
     if not flags.is_enabled("ENABLE_DISCORD_PUBLISHING"):
         print(f"Discord publishing disabled for tenant {tenant}")
         return False
-    
+
     # Use tenant-specific webhook if available
     webhook_url = os.getenv(f"DISCORD_WEBHOOK_URL_{tenant.upper()}")
     if not webhook_url:
         webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
-    
+
     if not webhook_url:
         print(f"No webhook URL configured for tenant {tenant}")
         return False
-    
+
     # Publish message
     return post_to_discord(message, webhook_url=webhook_url)
 ```
@@ -229,7 +229,7 @@ def post_with_retry(message: str, max_retries: int = 3) -> bool:
             print(f"Attempt {attempt + 1} failed: {e}")
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)  # Exponential backoff
-    
+
     return False
 ```
 
@@ -241,11 +241,11 @@ def post_with_retry(message: str, max_retries: int = 3) -> bool:
 def test_discord_publisher():
     """Test Discord publisher functionality."""
     from scripts.post_to_discord import post_to_discord
-    
+
     # Test dry run
     result = post_to_discord("Test message", dry_run=True)
     assert result is True
-    
+
     # Test with disabled flag
     import os
     os.environ["ENABLE_DISCORD_PUBLISHING"] = "false"
@@ -256,7 +256,7 @@ def test_webhook_validation():
     """Test webhook URL validation."""
     import os
     from scripts.post_to_discord import post_to_discord
-    
+
     # Test with invalid webhook
     os.environ["DISCORD_WEBHOOK_URL"] = "invalid_url"
     result = post_to_discord("Test message")
@@ -270,11 +270,11 @@ def test_discord_integration():
     """Test actual Discord integration."""
     import os
     from scripts.post_to_discord import post_to_discord
-    
+
     # Set up test webhook
     os.environ["ENABLE_DISCORD_PUBLISHING"] = "true"
     os.environ["DISCORD_WEBHOOK_URL"] = "YOUR_TEST_WEBHOOK_URL"
-    
+
     # Test actual publishing
     result = post_to_discord("Integration test message")
     assert result is True
@@ -312,17 +312,17 @@ logger = logging.getLogger(__name__)
 def publish_with_logging(message: str, tenant: str) -> bool:
     """Publish with comprehensive logging."""
     logger.info(f"Publishing message for tenant {tenant}")
-    
+
     try:
         success = post_to_discord(message)
-        
+
         if success:
             logger.info(f"Successfully published message for tenant {tenant}")
         else:
             logger.warning(f"Failed to publish message for tenant {tenant}")
-        
+
         return success
-        
+
     except Exception as e:
         logger.error(f"Error publishing message for tenant {tenant}: {e}")
         return False
@@ -348,7 +348,7 @@ def publish_with_logging(message: str, tenant: str) -> bool:
    ```bash
    # Check if publishing is enabled
    echo $ENABLE_DISCORD_PUBLISHING
-   
+
    # Enable publishing
    export ENABLE_DISCORD_PUBLISHING=true
    ```
@@ -358,7 +358,7 @@ def publish_with_logging(message: str, tenant: str) -> bool:
    ```bash
    # Check webhook URL
    echo $DISCORD_WEBHOOK_URL
-   
+
    # Set webhook URL
    export DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/YOUR_WEBHOOK
    ```
@@ -368,7 +368,7 @@ def publish_with_logging(message: str, tenant: str) -> bool:
    ```python
    # Test webhook connectivity
    import requests
-   
+
    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
    try:
        response = requests.get(webhook_url, timeout=5)

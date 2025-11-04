@@ -1,7 +1,7 @@
 # /autointel Command Critical Diagnosis and Fix
 
-**Date**: October 2, 2025  
-**Status**: 🔴 CRITICAL - Command fundamentally broken  
+**Date**: October 2, 2025
+**Status**: 🔴 CRITICAL - Command fundamentally broken
 **Command**: `/autointel url:https://www.youtube.com/watch?v=xtFiJ8AVdW0 depth:Experimental - Cutting-Edge AI`
 
 ## Executive Summary
@@ -88,7 +88,7 @@ def update_context(self, context: dict[str, Any]) -> None:
         print(f"🔄 Updating tool context with keys: {list(context.keys())}")
         if "transcript" in context:
             print(f"   📝 transcript: {len(context['transcript'])} chars")
-    
+
     self._shared_context.update(context or {})
 ```
 
@@ -144,10 +144,10 @@ Add to `AutonomousIntelligenceOrchestrator` class:
 ```python
 def _populate_tool_context(self, agents: list[Any], context_data: dict[str, Any]) -> None:
     """Populate shared context on all tools before crew execution.
-    
+
     CRITICAL: This ensures tools receive actual data instead of empty context.
     Must be called before EVERY crew.kickoff() to prevent data flow failures.
-    
+
     Args:
         agents: List of CrewAI agents whose tools need context
         context_data: Dictionary of data to populate (transcript, metadata, etc.)
@@ -155,7 +155,7 @@ def _populate_tool_context(self, agents: list[Any], context_data: dict[str, Any]
     if not context_data:
         self.logger.warning("_populate_tool_context called with empty context_data")
         return
-        
+
     for agent in agents:
         if hasattr(agent, 'tools'):
             for tool in agent.tools:
@@ -176,7 +176,7 @@ analysis_task = Task(
     description=dedent("""
         Perform comprehensive content analysis on the provided video content.
         Access the full transcript and metadata via your tools' shared context.
-        
+
         Required analysis:
         - Linguistic patterns and key themes
         - Sentiment analysis across timeline
@@ -217,7 +217,7 @@ crew_result = await asyncio.to_thread(planning_crew.kickoff)
 
 # Transcription (~line 1707)
 self._populate_tool_context([transcription_agent], {
-    "transcript": raw_transcript, 
+    "transcript": raw_transcript,
     "media_info": media_info
 })
 crew_result = await asyncio.to_thread(transcription_crew.kickoff)

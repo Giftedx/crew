@@ -74,4 +74,3 @@ Successfully consolidated all framework integrations into organized, logical loc
 - Run test suite: `pytest tests/ -k "crewai|qdrant|dspy|llamaindex|mem0|hipporag"`
 - Update framework imports
 - Document framework locations
-

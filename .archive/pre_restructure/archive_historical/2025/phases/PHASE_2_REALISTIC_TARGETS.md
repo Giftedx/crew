@@ -1,10 +1,10 @@
 # Phase 2: Realistic Extraction Targets (Based on Actual Code Analysis)
 
-**Date:** January 5, 2025 (Post-Phase 1 Completion)  
-**Status:** 📋 Planning - Ready to Execute  
-**Phase:** 2 of 3  
-**Current Baseline:** 4,960 lines (173 methods, 168 private)  
-**Target:** <4,000 lines (~960 line reduction, ~19.4%)  
+**Date:** January 5, 2025 (Post-Phase 1 Completion)
+**Status:** 📋 Planning - Ready to Execute
+**Phase:** 2 of 3
+**Current Baseline:** 4,960 lines (173 methods, 168 private)
+**Target:** <4,000 lines (~960 line reduction, ~19.4%)
 **Timeline:** 4-5 weeks (Weeks 5-9)
 
 ---
@@ -48,9 +48,9 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 - `_execute_specialized_research_synthesis()`
 - ... and ~25 more `_execute_*` methods
 
-**Extraction Complexity:** HIGH (many interdependencies)  
-**Priority:** MEDIUM (can defer to later)  
-**Estimated Lines:** 800-1,000 lines  
+**Extraction Complexity:** HIGH (many interdependencies)
+**Priority:** MEDIUM (can defer to later)
+**Estimated Lines:** 800-1,000 lines
 **Recommended Action:** Extract subset in Phase 2, remainder in Phase 3
 
 ---
@@ -77,10 +77,10 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 14. Recommendation synthesis
 15. Timeline aggregation
 
-**Extraction Complexity:** MEDIUM  
-**Priority:** **HIGH** (clear boundary, well-defined responsibility)  
-**Estimated Lines:** 300-400 lines  
-**Recommended Week:** Week 5 (first extraction)  
+**Extraction Complexity:** MEDIUM
+**Priority:** **HIGH** (clear boundary, well-defined responsibility)
+**Estimated Lines:** 300-400 lines
+**Recommended Week:** Week 5 (first extraction)
 **Test Plan:** 60+ tests (4 per method)
 
 **Why This Is Top Priority:**
@@ -110,10 +110,10 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 9. Memory sync operations
 10. Memory result formatting
 
-**Extraction Complexity:** MEDIUM-HIGH (external dependencies on memory services)  
-**Priority:** MEDIUM  
-**Estimated Lines:** 200-300 lines  
-**Recommended Week:** Week 6  
+**Extraction Complexity:** MEDIUM-HIGH (external dependencies on memory services)
+**Priority:** MEDIUM
+**Estimated Lines:** 200-300 lines
+**Recommended Week:** Week 6
 **Test Plan:** 40+ tests with mocked memory backends
 
 ---
@@ -137,10 +137,10 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 11. Pipeline metadata enrichment
 12. Pipeline result formatting
 
-**Extraction Complexity:** MEDIUM  
-**Priority:** MEDIUM  
-**Estimated Lines:** 200-300 lines  
-**Recommended Week:** Week 7  
+**Extraction Complexity:** MEDIUM
+**Priority:** MEDIUM
+**Estimated Lines:** 200-300 lines
+**Recommended Week:** Week 7
 **Test Plan:** 48+ tests (4 per method)
 
 ---
@@ -163,10 +163,10 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 10. `_create_error_embed()` → delegates to `discord_helpers.create_error_embed()`
 11. ... and more delegation wrappers
 
-**Extraction Complexity:** LOW (already delegating)  
-**Priority:** LOW (minimal value, already clean)  
-**Estimated Lines:** 100-150 lines (mostly simple delegation wrappers)  
-**Recommended Action:** **NOT worth extracting** (would create extra indirection)  
+**Extraction Complexity:** LOW (already delegating)
+**Priority:** LOW (minimal value, already clean)
+**Estimated Lines:** 100-150 lines (mostly simple delegation wrappers)
+**Recommended Action:** **NOT worth extracting** (would create extra indirection)
 **Alternative:** Consider inlining these delegation wrappers directly in workflow methods
 
 ---
@@ -187,8 +187,8 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 8. Methods delegating to `workflow_planners`
 9. Methods delegating to `analytics_calculators`
 
-**Extraction Complexity:** N/A (already extracted)  
-**Priority:** **SKIP** (already handled in Phase 1)  
+**Extraction Complexity:** N/A (already extracted)
+**Priority:** **SKIP** (already handled in Phase 1)
 **Recommended Action:** Keep as-is (clean delegation pattern)
 
 ---
@@ -208,10 +208,10 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 7. Error context building
 8. Recovery logging
 
-**Extraction Complexity:** MEDIUM-HIGH (critical path logic)  
-**Priority:** MEDIUM  
-**Estimated Lines:** 150-200 lines  
-**Recommended Week:** Week 8  
+**Extraction Complexity:** MEDIUM-HIGH (critical path logic)
+**Priority:** MEDIUM
+**Estimated Lines:** 150-200 lines
+**Recommended Week:** Week 8
 **Test Plan:** 32+ tests (retry scenarios, fallback paths, circuit breaker states)
 
 ---
@@ -234,9 +234,9 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 10. Schema enforcement
 11. ... and more knowledge processing
 
-**Extraction Complexity:** MEDIUM  
-**Priority:** LOW-MEDIUM (some already delegating)  
-**Estimated Lines:** 200-250 lines (some already delegating, remainder ~100-150)  
+**Extraction Complexity:** MEDIUM
+**Priority:** LOW-MEDIUM (some already delegating)
+**Estimated Lines:** 200-250 lines (some already delegating, remainder ~100-150)
 **Recommended Week:** Week 8-9 (if time allows)
 
 ---
@@ -258,9 +258,9 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 9. Threat analysis
 10. ... and ~10 more analysis coordinators
 
-**Extraction Complexity:** MEDIUM-HIGH  
-**Priority:** MEDIUM (defer to Phase 3)  
-**Estimated Lines:** 400-500 lines  
+**Extraction Complexity:** MEDIUM-HIGH
+**Priority:** MEDIUM (defer to Phase 3)
+**Estimated Lines:** 400-500 lines
 **Recommended Action:** Extract subset in Phase 2 (2-3 methods), remainder in Phase 3
 
 ---
@@ -282,9 +282,9 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 9. Context initialization
 10. ... and more system coordination
 
-**Extraction Complexity:** MEDIUM  
-**Priority:** LOW (mostly already delegating or simple)  
-**Estimated Lines:** 150-200 lines (actual ~50-100 after excluding delegations)  
+**Extraction Complexity:** MEDIUM
+**Priority:** LOW (mostly already delegating or simple)
+**Estimated Lines:** 150-200 lines (actual ~50-100 after excluding delegations)
 **Recommended Action:** Keep as-is or defer to Phase 3
 
 ---
@@ -549,6 +549,6 @@ Phase 2 continues the orchestrator decomposition, targeting an additional ~960 l
 
 ---
 
-*Document created: January 5, 2025*  
-*Based on actual code analysis of autonomous_orchestrator.py (4,960 lines, 173 methods)*  
+*Document created: January 5, 2025*
+*Based on actual code analysis of autonomous_orchestrator.py (4,960 lines, 173 methods)*
 *Next: Create PHASE_2_WEEK_5_KICKOFF.md with result synthesizers extraction plan*

@@ -200,7 +200,7 @@ async def _execute_with_early_status(
     timeout_minutes: int = 10
 ):
     """Execute long-running workflow with early status message."""
-    
+
     # Schedule early status message
     async def send_early_status():
         await asyncio.sleep(timeout_minutes * 60)
@@ -213,10 +213,10 @@ async def _execute_with_early_status(
             )
         except Exception as e:
             logger.warning(f"Could not send early status: {e}")
-    
+
     # Run both concurrently
     status_task = asyncio.create_task(send_early_status())
-    
+
     try:
         result = await execute_fn()
         status_task.cancel()  # Cancel status if we finish early
@@ -233,7 +233,7 @@ async def _get_fallback_webhook(self, interaction):
     """Get channel webhook for fallback after token expiry."""
     if not hasattr(interaction, 'channel'):
         return None
-        
+
     try:
         webhooks = await interaction.channel.webhooks()
         for webhook in webhooks:

@@ -27,15 +27,19 @@ class RedisBackend:
         self.key_prefix = key_prefix
 
         try:
-            self.client = redis.from_url(redis_url, decode_responses=True)
+            self._redis_client = redis.from_url(redis_url, decode_responses=True)
             # Test connection
-            self.client.ping()
+            self._redis_client.ping()
             self.available = True
             logger.info("Redis backend connected successfully")
         except (RedisConnectionError, RedisError) as e:
             logger.warning(f"Failed to connect to Redis: {e}")
-            self.client = None
+            self._redis_client = None
             self.available = False
+
+    @property
+    def client(self):  # backward-compatible accessor (do not use for HTTP)
+        return self._redis_client
 
     def get_tokens(self, key: str) -> int | None:
         """Get current token count for a key."""
@@ -43,7 +47,7 @@ class RedisBackend:
             return None
 
         try:
-            result = self.client.hget(f"{self.key_prefix}:{key}", "tokens")
+            result = self._redis_client.hget(f"{self.key_prefix}:{key}", "tokens")
             return int(result) if result is not None else None
         except Exception as e:
             logger.error(f"Error getting tokens for {key}: {e}")
@@ -55,8 +59,8 @@ class RedisBackend:
             return False
 
         try:
-            self.client.hset(f"{self.key_prefix}:{key}", "tokens", tokens)
-            self.client.expire(f"{self.key_prefix}:{key}", ttl)
+            self._redis_client.hset(f"{self.key_prefix}:{key}", "tokens", tokens)
+            self._redis_client.expire(f"{self.key_prefix}:{key}", ttl)
             return True
         except Exception as e:
             logger.error(f"Error setting tokens for {key}: {e}")
@@ -68,7 +72,7 @@ class RedisBackend:
             return None
 
         try:
-            return self.client.hincrby(f"{self.key_prefix}:{key}", "tokens", amount)
+            return self._redis_client.hincrby(f"{self.key_prefix}:{key}", "tokens", amount)
         except Exception as e:
             logger.error(f"Error incrementing tokens for {key}: {e}")
             return None
@@ -79,7 +83,7 @@ class RedisBackend:
             return None
 
         try:
-            return self.client.hincrby(f"{self.key_prefix}:{key}", "tokens", -amount)
+            return self._redis_client.hincrby(f"{self.key_prefix}:{key}", "tokens", -amount)
         except Exception as e:
             logger.error(f"Error decrementing tokens for {key}: {e}")
             return None
@@ -90,7 +94,7 @@ class RedisBackend:
             return False
 
         try:
-            self.client.hset(f"{self.key_prefix}:{key}", "last_refill", timestamp)
+            self._redis_client.hset(f"{self.key_prefix}:{key}", "last_refill", timestamp)
             return True
         except Exception as e:
             logger.error(f"Error setting last refill for {key}: {e}")
@@ -102,7 +106,7 @@ class RedisBackend:
             return None
 
         try:
-            result = self.client.hget(f"{self.key_prefix}:{key}", "last_refill")
+            result = self._redis_client.hget(f"{self.key_prefix}:{key}", "last_refill")
             return float(result) if result is not None else None
         except Exception as e:
             logger.error(f"Error getting last refill for {key}: {e}")
@@ -114,7 +118,7 @@ class RedisBackend:
             return False
 
         try:
-            return bool(self.client.delete(f"{self.key_prefix}:{key}"))
+            return bool(self._redis_client.delete(f"{self.key_prefix}:{key}"))
         except Exception as e:
             logger.error(f"Error deleting key {key}: {e}")
             return False
@@ -125,7 +129,7 @@ class RedisBackend:
             return []
 
         try:
-            return self.client.keys(f"{self.key_prefix}:{pattern}")
+            return self._redis_client.keys(f"{self.key_prefix}:{pattern}")
         except Exception as e:
             logger.error(f"Error getting keys with pattern {pattern}: {e}")
             return []
@@ -136,7 +140,7 @@ class RedisBackend:
             return {}
 
         try:
-            result = self.client.hmget(f"{self.key_prefix}:{key}", "tokens", "last_refill")
+            result = self._redis_client.hmget(f"{self.key_prefix}:{key}", "tokens", "last_refill")
             return {
                 "tokens": int(result[0]) if result[0] is not None else None,
                 "last_refill": float(result[1]) if result[1] is not None else None,
@@ -151,7 +155,7 @@ class RedisBackend:
             return False
 
         try:
-            self.client.ping()
+            self._redis_client.ping()
             return True
         except Exception as e:
             logger.error(f"Redis health check failed: {e}")
@@ -164,7 +168,7 @@ class RedisBackend:
             return {"status": "unavailable"}
 
         try:
-            info = self.client.info()
+            info = self._redis_client.info()
             return {
                 "status": "available",
                 "connected_clients": info.get("connected_clients", 0),

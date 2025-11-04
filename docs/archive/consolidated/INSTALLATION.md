@@ -88,7 +88,7 @@ Includes: MkDocs, MkDocs-Material, Mkdocstrings
    ```bash
    # Minimal installation
    pip install ultimate-discord-intelligence-bot
-   
+
    # Or full installation
    pip install ultimate-discord-intelligence-bot[all]
    ```

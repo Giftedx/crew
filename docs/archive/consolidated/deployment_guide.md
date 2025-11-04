@@ -404,11 +404,11 @@ docker-compose exec [service-name] ping [target-service]
    ```bash
    # Pull latest changes
    git pull origin main
-   
+
    # Rebuild and restart services
    docker-compose build
    docker-compose up -d
-   
+
    # Run health checks
    python3 scripts/deploy_production.py --environment production
    ```

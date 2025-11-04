@@ -7,41 +7,41 @@ All tools should follow this comprehensive documentation pattern:
 ```python
 class MyTool(BaseTool[StepResult]):
     """Brief one-line description of what this tool does.
-    
+
     Detailed description of the tool's purpose, capabilities, and when to use it.
     Include any important considerations, limitations, or dependencies.
-    
+
     Args:
         content: Content to process (str or dict)
         tenant: Tenant identifier for data isolation
         workspace: Workspace identifier for organization
         **kwargs: Additional tool-specific parameters
-    
+
     Returns:
         StepResult with processed data and metadata
-    
+
     Raises:
         StepResult.fail: If processing fails for any reason
-        
+
     Example:
         >>> tool = MyTool()
         >>> result = tool._run("content", "tenant1", "workspace1")
         >>> assert result.success
         >>> print(result.data)
     """
-    
+
     name: str = "Tool Display Name"
     description: str = "Brief description for agent selection"
-    
+
     def _run(self, content: str, tenant: str, workspace: str, **kwargs) -> StepResult:
         """Process content with comprehensive error handling and context.
-        
+
         Args:
             content: The content to process
             tenant: Tenant identifier for isolation
             workspace: Workspace identifier
             **kwargs: Additional parameters
-            
+
         Returns:
             StepResult with processed data or error information
         """
@@ -80,8 +80,8 @@ class MyTool(BaseTool[StepResult]):
 
 ```python
 from ultimate_discord_intelligence_bot.step_result import (
-    StepResult, 
-    ErrorCategory, 
+    StepResult,
+    ErrorCategory,
     ErrorContext
 )
 

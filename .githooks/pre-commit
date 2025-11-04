@@ -37,19 +37,20 @@ if ! make lint; then
 fi
 
 echo "🧪 Running fast tests..."
-if [ "${RUN_PRECOMMIT_TESTS:-0}" != "1" ]; then
-    echo "⚠️  Skipping fast tests by default (set RUN_PRECOMMIT_TESTS=1 to enable)."
-    echo "   Tip: run 'make test-fast' locally when deps are installed."
-else
-    if ! make test-fast; then
-        echo "❌ Fast tests failed"
-        exit 1
-    fi
+if ! make test-fast; then
+    echo "❌ Fast tests failed"
+    exit 1
 fi
 
 echo "🔧 Running compliance checks..."
 if command -v "$PYTHON" >/dev/null 2>&1; then
-    # StepResult usage advisory (informational only; enforced by repo scripts and tests)
+    # Use the robust Python compliance validator for requests usage
+    if ! "$PYTHON" scripts/validate_http_wrappers_usage.py; then
+        echo "❌ Direct 'requests' usage detected by validator (use core.http_utils)"
+        exit 1
+    fi
+
+    # Check for missing StepResult usage in tools
     if find src/ultimate_discord_intelligence_bot/tools/ -name "*.py" -not -name "_base.py" -not -name "__init__.py" -exec grep -l "def _run" {} \; | xargs grep -L "StepResult" 2>/dev/null; then
         echo "⚠️  Warning: Some tools may not be using StepResult pattern"
     fi

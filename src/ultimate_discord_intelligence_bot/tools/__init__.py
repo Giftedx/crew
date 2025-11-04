@@ -118,7 +118,9 @@ MAPPING = {
     "DiscordPostTool": ".discord_post_tool",
     "DiscordPrivateAlertTool": ".discord_private_alert_tool",
     "DiscordQATool": ".discord_qa_tool",
-    "DriveUploadTool": ".drive_upload_tool",
+    # Drive uploaders (full + bypass)
+    "DriveUploadTool": ".integration.drive_upload_tool",
+    "DriveUploadToolBypass": ".integration.drive_upload_tool_bypass",
     "LeaderboardTool": "domains.intelligence.analysis.leaderboard_tool",
     "MultiPlatformMonitorTool": ".multi_platform_monitor_tool",
     "SocialMediaMonitorTool": ".social_media_monitor_tool",
@@ -166,6 +168,7 @@ __all__ = [
     "DiscordPrivateAlertTool",
     "DiscordQATool",
     "DriveUploadTool",
+    "DriveUploadToolBypass",
     "EarlyExitConditionsTool",
     "EnhancedAnalysisTool",
     "EscalationManagementTool",

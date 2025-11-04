@@ -1,8 +1,8 @@
 # Week 4 Baseline Test - In Progress
 
-**Status**: RUNNING  
-**Started**: $(date)  
-**Terminal ID**: 3c018249-34c1-4c53-a14b-427988606740  
+**Status**: RUNNING
+**Started**: $(date)
+**Terminal ID**: 3c018249-34c1-4c53-a14b-427988606740
 **Expected Duration**: ~5-10 minutes
 
 ## Test Details

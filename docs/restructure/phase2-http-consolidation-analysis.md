@@ -55,4 +55,3 @@
 4. Update all `core.http.*` imports to `platform.http.*`
 5. Delete empty `core/http/` directory
 6. Test HTTP functionality
-

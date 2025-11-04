@@ -1,5 +1,9 @@
 # Semantic Cache Prefetch & Instrumentation
 
+**Implementation**: `src/platform/cache/multi_level_cache.py` (verified November 3, 2025)
+**Integration**: `src/platform/llm/` (LLM routing layer with semantic cache support)
+**Feature Flag**: `ENABLE_SEMANTIC_CACHE` (environment variable)
+
 This document explains the semantic cache integration and related metrics introduced in `OpenRouterService`.
 
 ## Overview

@@ -71,15 +71,15 @@ export QUALITY_MIN_OVERALL=0.6
 ### Full Pipeline (High Quality)
 
 ```
-Download → Transcription → Quality Assessment (PASS) → Analysis → 
-Fallacy Detection → Perspective Synthesis → Memory Storage → 
+Download → Transcription → Quality Assessment (PASS) → Analysis →
+Fallacy Detection → Perspective Synthesis → Memory Storage →
 Graph Memory → Discord Posting
 ```
 
 ### Lightweight Pipeline (Low Quality)
 
 ```
-Download → Transcription → Quality Assessment (FAIL) → 
+Download → Transcription → Quality Assessment (FAIL) →
 Lightweight Memory Storage → Done
 ```
 
@@ -195,7 +195,7 @@ if result.success:
     should_process = quality_data["should_process"]
     quality_score = quality_data["overall_score"]
     bypass_reason = quality_data.get("bypass_reason", "")
-    
+
     if not should_process:
         print(f"Low quality: {bypass_reason} (score: {quality_score:.2f})")
 ```

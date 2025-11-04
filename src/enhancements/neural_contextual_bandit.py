@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 logger = logging.getLogger(__name__)

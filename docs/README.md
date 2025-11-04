@@ -54,18 +54,18 @@ async def main():
         enable_prompt_optimization=True,
         enable_discord_publishing=True,
     )
-    
+
     # Initialize and use the pipeline
     pipeline = UnifiedPipeline(config)
     await pipeline.initialize()
-    
+
     result = await pipeline.process_content(
         content="Analyze this debate about climate change",
         content_type="analysis",
         tenant="user123",
         workspace="workspace1",
     )
-    
+
     print(f"Result: {result.data}")
     await pipeline.shutdown()
 

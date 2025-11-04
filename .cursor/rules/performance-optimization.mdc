@@ -36,7 +36,7 @@ class ResourceManager:
     async def __aenter__(self):
         self.resource = await acquire_resource()
         return self.resource
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.resource.cleanup()
 ```
@@ -69,7 +69,7 @@ async def optimized_query(tenant: str, workspace: str) -> StepResult:
     async with get_db_pool().acquire() as conn:
         # Use prepared statements
         result = await conn.fetch(
-            "SELECT * FROM content WHERE tenant = $1 AND workspace = $2", 
+            "SELECT * FROM content WHERE tenant = $1 AND workspace = $2",
             tenant, workspace
         )
         return StepResult.ok(data=result)
@@ -94,13 +94,13 @@ from ultimate_discord_intelligence_bot.services.openrouter_service import OpenRo
 
 async def batch_llm_requests(prompts: list[str]) -> StepResult:
     service = OpenRouterService()
-    
+
     # Group by model and batch
     batched_requests = group_by_model(prompts)
     results = await asyncio.gather(*[
         service.batch_complete(batch) for batch in batched_requests
     ])
-    
+
     return StepResult.ok(data=flatten_results(results))
 ```
 
@@ -116,7 +116,7 @@ async def batch_llm_requests(prompts: list[str]) -> StepResult:
 ### Performance Thresholds
 
 - Tool execution: < 2 seconds for interactive commands
-- LLM requests: < 10 seconds with proper timeout handling  
+- LLM requests: < 10 seconds with proper timeout handling
 - Database queries: < 500ms with connection pooling
 - Memory usage: < 1GB per worker process
 

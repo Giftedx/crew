@@ -78,7 +78,7 @@ while true; do
     show_menu
     read -p "$(echo -e ${GREEN}Select option:${NC} )" choice
     echo ""
-    
+
     case $choice in
         1)
             echo -e "${GREEN}Starting services (interactive mode)...${NC}"
@@ -131,13 +131,13 @@ while true; do
             echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
             echo ""
             echo -e "${BLUE}[STEP 1/4]${NC} Starting Docker infrastructure..."
-            
+
             # Copy environment and start infrastructure
             if [ -f .env ]; then
                 cp .env ops/deployment/docker/.env
                 echo -e "${GREEN}[OK]${NC} Environment file synchronized"
             fi
-            
+
             cd ops/deployment/docker
             if command -v docker-compose &> /dev/null; then
                 docker-compose --env-file .env up -d postgresql redis qdrant minio prometheus grafana alertmanager
@@ -145,20 +145,20 @@ while true; do
                 docker compose --env-file .env up -d postgresql redis qdrant minio prometheus grafana alertmanager
             fi
             cd - > /dev/null
-            
+
             echo -e "${GREEN}[OK]${NC} Infrastructure services started"
             echo ""
-            
+
             # Wait for services to be ready
             echo -e "${BLUE}[STEP 2/4]${NC} Waiting for services to be ready..."
             sleep 5
             echo -e "${GREEN}[OK]${NC} Services ready"
             echo ""
-            
+
             # Start API Server in background with all features
             echo -e "${BLUE}[STEP 3/4]${NC} Starting API Server with comprehensive features..."
             source .venv/bin/activate
-            
+
             # Export ALL feature flags for maximum capabilities
             export ENABLE_HTTP_METRICS=true
             export ENABLE_PROMETHEUS_ENDPOINT=true
@@ -210,14 +210,14 @@ while true; do
             export ENABLE_SOCIAL_GRAPH_ANALYSIS=true
             export ENABLE_NARRATIVE_TRACKING=true
             export ENABLE_CREATOR_INTELLIGENCE=true
-            
+
             # Start API server in background
             nohup python -m uvicorn server.app:app --host 0.0.0.0 --port 8080 --reload \
                 > logs/api-server.log 2>&1 &
             API_PID=$!
             echo -e "${GREEN}[OK]${NC} API Server started (PID: $API_PID)"
             echo ""
-            
+
             # Start Enhanced Discord Bot with all features
             echo -e "${BLUE}[STEP 4/4]${NC} Starting Discord Bot (Enhanced - All Features)..."
             echo -e "${CYAN}[FEATURES]${NC} Enabled capabilities:"
@@ -241,13 +241,13 @@ while true; do
             echo -e "  ✓ Social graph & narrative tracking"
             echo -e "  ✓ 84+ specialized AI tools"
             echo ""
-            
+
             # Start Discord bot in background
             nohup make run-discord-enhanced > logs/discord-bot.log 2>&1 &
             BOT_PID=$!
             echo -e "${GREEN}[OK]${NC} Discord Bot started (PID: $BOT_PID)"
             echo ""
-            
+
             # Success summary
             echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
             echo -e "${CYAN}   FULL STACK SUCCESSFULLY DEPLOYED${NC}"

@@ -302,12 +302,12 @@ class JSONFormatter(logging.Formatter):
             'function': record.funcName,
             'line': record.lineno
         }
-        
+
         if hasattr(record, 'tenant'):
             log_entry['tenant'] = record.tenant
         if hasattr(record, 'workspace'):
             log_entry['workspace'] = record.workspace
-            
+
         return json.dumps(log_entry)
 ```
 
@@ -424,7 +424,7 @@ receivers:
    ```bash
    # Analyze tables
    psql -d udi_db -c "ANALYZE;"
-   
+
    # Vacuum database
    psql -d udi_db -c "VACUUM;"
    ```
@@ -578,7 +578,7 @@ sysctl -p
    # Check memory usage
    free -h
    ps aux --sort=-%mem | head
-   
+
    # Check for memory leaks
    python -m ultimate_discord_intelligence_bot.scripts.memory_analysis
    ```
@@ -588,7 +588,7 @@ sysctl -p
    ```bash
    # Check database connectivity
    psql -h localhost -U postgres -c "SELECT 1;"
-   
+
    # Check connection pool
    python -m ultimate_discord_intelligence-bot.scripts.db_health
    ```
@@ -598,7 +598,7 @@ sysctl -p
    ```bash
    # Check rate limit status
    curl http://localhost:8000/health/rate_limits
-   
+
    # Adjust rate limiting
    export OPENROUTER_RATE_LIMIT=100
    ```
@@ -695,7 +695,7 @@ def log_security_event(event_type, details):
    ```bash
    # Check system status
    systemctl status ultimate-discord-intelligence-bot
-   
+
    # Check data integrity
    python -m ultimate_discord_intelligence_bot.scripts.integrity_check
    ```
@@ -712,7 +712,7 @@ def log_security_event(event_type, details):
    ```bash
    # Run health checks
    curl http://localhost:8000/health
-   
+
    # Run integration tests
    pytest tests/integration/
    ```

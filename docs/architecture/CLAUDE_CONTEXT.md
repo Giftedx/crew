@@ -7,6 +7,13 @@ last_moved: 2025-09-02
 
 ## Claude Assistant Development Guide
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Tools**: 111 across 9 categories (Observability: 26, Analysis: 23, Memory: 23, Acquisition/Ingestion: 19, Verification: 10, Discord: 4, Social Monitoring: 3, Web Automation: 1, Other: 2)
+- **Agents**: 18 specialized roles in crew_components/tool_registry.py
+- **Pipeline**: 7 phases (download, transcription, content routing, quality filtering, lightweight processing, analysis, finalization)
+- **Architecture**: 3-layer design (Platform, Domains, App)
+
 > Relocated from repository root to `docs/architecture/` during the documentation restructure. Update any bookmarks pointing to the old path.
 
 <!-- START ORIGINAL CONTENT -->

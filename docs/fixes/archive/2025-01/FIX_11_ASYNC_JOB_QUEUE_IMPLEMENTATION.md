@@ -1,8 +1,8 @@
 # Fix #11: Async Job Queue for Pipeline API - Implementation Plan
 
-**Date:** 2025-01-03  
-**Priority:** MEDIUM  
-**Status:** IN PROGRESS  
+**Date:** 2025-01-03
+**Priority:** MEDIUM
+**Status:** IN PROGRESS
 **Estimated Effort:** ~250 lines
 
 ---
@@ -180,24 +180,24 @@ async def _execute_job(job_id: str, queue: JobQueue, tool: PipelineTool) -> None
     job = queue.get_job(job_id)
     if not job:
         return
-    
+
     try:
         # Update status to running
         queue.update_status(job_id, JobStatus.RUNNING, started_at=datetime.utcnow())
-        
+
         # Execute pipeline
         ctx = TenantContext(tenant_id=job.tenant_id, workspace_id=job.workspace_id)
         with with_tenant(ctx):
             result: StepResult = await tool._run_async(job.url, job.quality)
-        
+
         # Update with result
         queue.update_status(
-            job_id, 
+            job_id,
             JobStatus.COMPLETED,
             result=result.to_dict(),
             completed_at=datetime.utcnow()
         )
-    
+
     except Exception as exc:
         # Update with error
         queue.update_status(
@@ -224,18 +224,18 @@ enable_pipeline_job_queue: bool = Field(False, alias="ENABLE_PIPELINE_JOB_QUEUE"
 ```python
 def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
     # Existing /pipeline/run endpoint (keep for backward compatibility)
-    
+
     # NEW: Check ENABLE_PIPELINE_JOB_QUEUE flag
     try:
         job_queue_enabled = bool(getattr(settings, "enable_pipeline_job_queue"))
     except Exception:
         job_queue_enabled = False
-    
+
     if job_queue_enabled:
         # Initialize job queue (singleton)
         from server.job_queue import JobQueue
         queue = JobQueue()
-        
+
         # Register async endpoints
         # POST /pipeline/jobs
         # GET /pipeline/jobs/{job_id}
@@ -262,7 +262,7 @@ def register_pipeline_routes(app: FastAPI, settings: Any) -> None:
    ```python
    # In JobQueue class methods
    from obs.metrics import get_metrics
-   
+
    get_metrics().counter("pipeline_jobs_created_total", labels={"tenant": tenant_id})
    get_metrics().counter("pipeline_jobs_completed_total", labels={"status": status})
    get_metrics().histogram("pipeline_job_duration_seconds", duration)
@@ -441,13 +441,13 @@ def test_create_job():
     queue = JobQueue()
     job_id = queue.create_job(url="https://...", quality="1080p", ...)
     assert job_id.startswith("job_")
-    
+
 def test_job_status_transitions():
     queue = JobQueue()
     job_id = queue.create_job(...)
     queue.update_status(job_id, JobStatus.RUNNING)
     assert queue.get_job(job_id).status == JobStatus.RUNNING
-    
+
 def test_job_expiry():
     queue = JobQueue()
     job_id = queue.create_job(...)
@@ -465,7 +465,7 @@ async def test_create_and_poll_job():
     response = await client.post("/pipeline/jobs", json={"url": "..."})
     assert response.status_code == 201
     job_id = response.json()["job_id"]
-    
+
     # Poll until complete
     while True:
         response = await client.get(f"/pipeline/jobs/{job_id}")
@@ -473,7 +473,7 @@ async def test_create_and_poll_job():
         if status in ["completed", "failed"]:
             break
         await asyncio.sleep(1)
-    
+
     # Verify result
     assert response.json()["result"]["success"] is True
 ```
