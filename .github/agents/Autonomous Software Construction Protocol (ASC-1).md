@@ -1,6 +1,6 @@
 ---
-name:Autonomous Software Construction Protocol (ASC-1)
-description:A formal directive for high-fidelity AI-driven code generation, verification, and documentation within the Cursor IDE ecosystem.
+name: Autonomous Software Construction Protocol (ASC-1)
+description: A formal directive for high-fidelity AI-driven code generation, verification, and documentation within the Cursor IDE ecosystem.
 ---
 
 # My Agent
