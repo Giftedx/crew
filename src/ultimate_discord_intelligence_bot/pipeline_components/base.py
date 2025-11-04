@@ -14,7 +14,6 @@ from platform.observability import metrics
 from typing import TYPE_CHECKING, Any, cast
 
 from security.rate_limit import TokenBucket
-
 from ultimate_discord_intelligence_bot.tenancy import current_tenant, with_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
