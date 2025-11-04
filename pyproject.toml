@@ -171,6 +171,8 @@ where = ["src"]
 target-version = "py310"
 line-length = 120
 extend-exclude = [
+    ".archive",
+    ".archive/**",
     "src/ultimate_discord_intelligence_bot/optimized",
     "src/ultimate_discord_intelligence_bot/optimized/**",
     "src/fastapi",
@@ -229,7 +231,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"src/core/routing/semantic_routing_cache.py" = ["F401"]
+"src/platform/llm/routing/semantic_routing_cache.py" = ["F401"]
+"src/platform/__init__.py" = ["A005"]
 "tests/**/*.py" = [
     "S101",   # allow assertions
     "ARG",    # unused-argument patterns

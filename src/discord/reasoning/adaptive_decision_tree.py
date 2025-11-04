@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
-from .token_interpreter import InterpretedTokens
-
 
 if TYPE_CHECKING:
     from platform.llm.providers.openrouter.adaptive_routing import AdaptiveRoutingManager
     from platform.prompts.engine import PromptEngine
+
+    from .token_interpreter import InterpretedTokens
 logger = logging.getLogger(__name__)
 
 
@@ -147,14 +147,12 @@ class AdaptiveDecisionTree:
                         path.confidence = node.confidence
                         path.reasoning = f"Fast-path rule matched at {node.node_id}: {node.action}"
                         return StepResult.ok(data=path)
-                    elif node.next_nodes:
-                        current_node_id = node.next_nodes[0]
+                    next_node = node.next_nodes[0] if node.next_nodes else None
+                    if next_node:
+                        current_node_id = next_node
                         continue
                 if node.next_nodes:
-                    if len(node.next_nodes) > 1:
-                        current_node_id = node.next_nodes[1]
-                    else:
-                        current_node_id = node.next_nodes[0]
+                    current_node_id = node.next_nodes[1] if len(node.next_nodes) > 1 else node.next_nodes[0]
                 else:
                     path.final_decision = {"action": "respond", "confidence": 0.5, "node_id": "default"}
                     path.confidence = 0.5
@@ -199,7 +197,7 @@ class AdaptiveDecisionTree:
     async def _llm_reasoning(self, tokens: InterpretedTokens, metadata: dict[str, Any]) -> StepResult[dict[str, Any]]:
         """Perform LLM-based reasoning for complex cases."""
         try:
-            prompt = f"\nYou are evaluating a Discord message to determine if an AI bot should respond.\n\nMESSAGE INTENT: {tokens.intent.primary_intent}\nACTION TYPE: {tokens.action.action_type}\nPRIORITY: {tokens.action.priority}\nURGENCY: {tokens.context.urgency}\nSENTIMENT: {tokens.context.sentiment}\nIS DIRECT MENTION: {bool(metadata.get('mentions'))}\nUSER OPTED IN: {metadata.get('user_opt_in_status', False)}\n\nAnalyze this message and provide a JSON response with:\n- should_respond: boolean\n- confidence: float (0.0 to 1.0)\n- reasoning: string explaining your decision\n- recommended_priority: string (\"high\", \"medium\", \"low\")\n\nRespond with ONLY valid JSON, no additional text.\n"
+            prompt = f'\nYou are evaluating a Discord message to determine if an AI bot should respond.\n\nMESSAGE INTENT: {tokens.intent.primary_intent}\nACTION TYPE: {tokens.action.action_type}\nPRIORITY: {tokens.action.priority}\nURGENCY: {tokens.context.urgency}\nSENTIMENT: {tokens.context.sentiment}\nIS DIRECT MENTION: {bool(metadata.get("mentions"))}\nUSER OPTED IN: {metadata.get("user_opt_in_status", False)}\n\nAnalyze this message and provide a JSON response with:\n- should_respond: boolean\n- confidence: float (0.0 to 1.0)\n- reasoning: string explaining your decision\n- recommended_priority: string ("high", "medium", "low")\n\nRespond with ONLY valid JSON, no additional text.\n'
             model_suggestion = await self.routing_manager.suggest_model(
                 task_type="decision_making", context={"complexity": "high", "requires_reasoning": True}
             )

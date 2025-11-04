@@ -15,7 +15,7 @@ from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from .adaptive_decision_tree import AdaptiveDecisionTree
-from .token_interpreter import ContextualTokenInterpreter, InterpretedTokens
+from .token_interpreter import ContextualTokenInterpreter
 
 
 if TYPE_CHECKING:
@@ -25,6 +25,8 @@ if TYPE_CHECKING:
     from domains.memory import MemoryService
     from ultimate_discord_intelligence_bot.knowledge.context_builder import UnifiedContextBuilder
     from ultimate_discord_intelligence_bot.knowledge.retrieval_engine import UnifiedRetrievalEngine
+
+    from .token_interpreter import InterpretedTokens
 logger = logging.getLogger(__name__)
 
 
@@ -143,6 +145,8 @@ class HierarchicalReasoningEngine:
                     return StepResult.fail(f"Decision making failed: {decision_result.error}")
                 decision = decision_result.data
             planning_result = await self._response_generation_layer_planning(reasoning_ctx, decision)
+            if not planning_result.success:
+                logger.warning(f"Response planning reported issue: {planning_result.error}")
             reasoning_result = ReasoningResult(
                 should_respond=decision.get("should_respond", False),
                 confidence=decision.get("confidence", 0.0),
@@ -276,15 +280,19 @@ class HierarchicalReasoningEngine:
                 return StepResult.ok(
                     data={"should_respond": False, "confidence": 1.0, "reasoning": "Message marked for ignoring"}
                 )
-            if not user_opt_in_status and tokens.context.urgency != "critical":
-                if not message_data.get("mentions") and tokens.action.priority < 7:
-                    return StepResult.ok(
-                        data={
-                            "should_respond": False,
-                            "confidence": 0.8,
-                            "reasoning": "User not opted in and message not high priority",
-                        }
-                    )
+            if (
+                not user_opt_in_status
+                and tokens.context.urgency != "critical"
+                and not message_data.get("mentions")
+                and tokens.action.priority < 7
+            ):
+                return StepResult.ok(
+                    data={
+                        "should_respond": False,
+                        "confidence": 0.8,
+                        "reasoning": "User not opted in and message not high priority",
+                    }
+                )
             should_respond = True
             confidence = tokens.confidence_score
             if tokens.context.urgency in ["critical", "high"]:

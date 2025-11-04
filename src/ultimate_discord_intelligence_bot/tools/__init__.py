@@ -262,7 +262,7 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
 
     try:
         # Handle both relative (starting with '.') and absolute imports
-        if mod.startswith('.'):
+        if mod.startswith("."):
             module_path = f"{__name__}{mod}"
         else:
             # Absolute import (e.g., 'domains.intelligence.analysis.social_graph_analysis_tool')

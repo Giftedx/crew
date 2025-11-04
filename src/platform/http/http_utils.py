@@ -11,9 +11,6 @@ affect behavior (e.g. retrying_* uses facade `resilient_*`).
 
 from __future__ import annotations
 
-
-_patched_resilient_post = globals().get("resilient_post")
-_patched_resilient_get = globals().get("resilient_get")
 import contextlib
 import random as random
 import time as time
@@ -54,6 +51,11 @@ except Exception:
 
     def get_settings():
         return _FallbackSettings()
+
+
+# Capture any pre-existing monkeypatched functions after imports but before defining new ones
+_patched_resilient_post = globals().get("resilient_post")
+_patched_resilient_get = globals().get("resilient_get")
 
 
 def _load_retry_config() -> dict[str, int | None]:
@@ -419,7 +421,7 @@ def cached_get(
         ttl = int(ttl_seconds)
     else:
         ttl_from_settings = getattr(settings, "http_cache_ttl_seconds", None)
-        if isinstance(ttl_from_settings, (int, float)) and int(ttl_from_settings) > 0:
+        if isinstance(ttl_from_settings, int | float) and int(ttl_from_settings) > 0:
             ttl = int(ttl_from_settings)
         else:
             try:

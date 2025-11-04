@@ -12,13 +12,13 @@ Key features:
 
 Feature flags:
 - ENABLE_SEMANTIC_ROUTING_CACHE=1: Enable semantic cache (default: enabled)
-- ENABLE_SEMANTIC_CACHE_SHADOW=1: Shadow mode for validation (logs but doesn't affect routing)
-- SEMANTIC_CACHE_SIMILARITY_THRESHOLD=0.85: Minimum similarity for cache hit
-- ROUTING_CACHE_MAX_SIZE=1000: Maximum cache entries (LRU eviction)
-- ROUTING_CACHE_TTL=600: TTL in seconds
+- SEMANTIC_ROUTING_CACHE_SHADOW=1: Shadow mode for validation (logs but doesn't affect routing)
+- SEMANTIC_ROUTING_CACHE_THRESHOLD=0.85: Minimum similarity for cache hit
+- SEMANTIC_ROUTING_CACHE_MAX_SIZE=1000: Maximum cache entries (LRU eviction)
+- SEMANTIC_ROUTING_CACHE_TTL=3600: TTL in seconds
 
 Usage:
-    cache = SemanticRoutingCache(similarity_threshold=0.85, cache_size=1000, ttl_seconds=600)
+    cache = SemanticRoutingCache(similarity_threshold=0.85, cache_size=1000, ttl_seconds=3600)
 
     # Store routing decision
     cache.set(query_text="Summarize this article...", model="gpt-4", context={...}, metadata={...})

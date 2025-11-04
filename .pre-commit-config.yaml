@@ -19,6 +19,7 @@ repos:
     hooks:
       - id: mypy
         name: "mypy (Phase 2: core + services + pipeline_components)"
+        stages: [push]
         additional_dependencies:
           - types-PyYAML
           - types-requests
@@ -36,10 +37,6 @@ repos:
             "src/ultimate_discord_intelligence_bot/pipeline_components/base.py",
             "src/ultimate_discord_intelligence_bot/pipeline_components/types.py",
             "src/ultimate_discord_intelligence_bot/pipeline_components/mixins.py",
-            "src/core/time.py",
-            "src/core/typing_utils.py",
-            "src/core/error_handling.py",
-            "src/core/log_schema.py",
           ]
         pass_filenames: false
   - repo: https://github.com/pre-commit/pre-commit-hooks

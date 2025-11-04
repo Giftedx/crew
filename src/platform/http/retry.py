@@ -9,7 +9,7 @@ import threading
 import time
 import warnings
 from datetime import date
-from platform.observability import metrics as _metrics
+from platform.observability import metrics as _metrics  # project's "platform" package, not stdlib
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -17,6 +17,7 @@ import requests
 
 from .config import DEFAULT_HTTP_RETRY_ATTEMPTS, HTTP_RATE_LIMITED, REQUEST_TIMEOUT_SECONDS
 from .requests_wrappers import resilient_get, resilient_post
+from .retry_config import resolve_retry_attempts
 
 
 if TYPE_CHECKING:
@@ -284,9 +285,6 @@ def http_request_with_retry(
             span.set_attribute("retry.give_up", False)
             span.set_attribute("retry.final_attempts", attempts)
             return resp
-
-
-from .retry_config import resolve_retry_attempts
 
 
 def retrying_post(

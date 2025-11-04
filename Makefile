@@ -151,7 +151,7 @@ test:
 
 # Fast local CI sweep (quick feedback loop)
 test-fast:
-	$(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
+	PYTHONPATH=src $(PYTHON) -m pytest -q -c .config/pytest.ini -k "http_utils or guards_http_requests or vector_store_dimension or vector_store_namespace"
 
 # Run the fast test sweep with a clean environment for retry precedence tests
 .PHONY: test-fast-clean-env
