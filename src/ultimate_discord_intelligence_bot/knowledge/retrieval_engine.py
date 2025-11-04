@@ -236,7 +236,7 @@ class UnifiedRetrievalEngine:
     def _best_of_each_fusion(self, source_groups: dict[str, list[RankedResult]]) -> list[RankedResult]:
         """Take the best result from each source"""
         fused_results = []
-        for _source, results in source_groups.items():
+        for results in source_groups.values():
             if not results:
                 continue
             best_result = max(results, key=lambda x: x.confidence)

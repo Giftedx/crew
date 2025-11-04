@@ -296,7 +296,7 @@ class AdvancedPerformanceAnalyticsAlertManager:
             schedule: Schedule that was executed
         """
         try:
-            for _policy_id, policy in self.alert_policies.items():
+            for policy in self.alert_policies.values():
                 if not policy.enabled:
                     continue
                 if await self._evaluate_policy_conditions(policy, monitoring_result, schedule):

@@ -123,7 +123,7 @@ class PerformanceMonitor:
             category_metrics = self.baseline_config.get_metrics_by_category(category)
             summary["metrics_by_category"][category.value] = []
 
-            for metric_name, _baseline in category_metrics.items():
+            for metric_name in category_metrics.keys():
                 if metric_name in self.metrics_history:
                     # Get latest value
                     latest_value = (

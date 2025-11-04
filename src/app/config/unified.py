@@ -189,7 +189,7 @@ class UnifiedConfig:
     def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         result = {}
-        for field_name, _field_info in self.__dataclass_fields__.items():
+        for field_name in self.__dataclass_fields__.keys():
             value = getattr(self, field_name)
             if field_name == "custom_settings":
                 result.update(value)

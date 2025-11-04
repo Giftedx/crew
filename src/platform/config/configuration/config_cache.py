@@ -95,7 +95,7 @@ class ConfigCache:
         valid_entries = 0
         expired_entries = 0
 
-        for _cache_key, timestamp in self._cache_timestamps.items():
+        for timestamp in self._cache_timestamps.values():
             if current_time - timestamp < self.cache_ttl:
                 valid_entries += 1
             else:

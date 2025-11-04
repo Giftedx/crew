@@ -286,7 +286,7 @@ class TrendForecastingTool(BaseTool[StepResult]):
         forecasts = []
         time.time()
         market_cycles = self._detect_market_cycles(trend_data)
-        for _cycle_id, cycle_data in market_cycles.items():
+        for cycle_data in market_cycles.values():
             cycle_type = cycle_data["cycle_type"]
             cycle_duration = cycle_data["cycle_duration"]
             current_phase = cycle_data["current_phase"]

@@ -218,7 +218,7 @@ class CreatorIntelligenceCollectionManager:
         try:
             initialized = []
             failed = []
-            for _collection_type, config in COLLECTION_CONFIGS.items():
+            for config in COLLECTION_CONFIGS.values():
                 namespace = self._get_namespace(tenant, workspace, config.name)
                 if namespace in self._initialized_collections:
                     logger.info(f"Collection {namespace} already initialized")

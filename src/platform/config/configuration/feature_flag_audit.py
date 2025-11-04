@@ -202,7 +202,7 @@ class FeatureFlagAuditor:
             if base not in base_groups:
                 base_groups[base] = []
             base_groups[base].append(name)
-        for _base, flags in base_groups.items():
+        for flags in base_groups.values():
             if len(flags) > 1:
                 redundant_groups.append(flags)
         return redundant_groups
@@ -215,7 +215,7 @@ class FeatureFlagAuditor:
             if flag.category not in category_groups:
                 category_groups[flag.category] = []
             category_groups[flag.category].append(flag.name)
-        for _category, flags in category_groups.items():
+        for flags in category_groups.values():
             if len(flags) > 2:
                 groupable.append(flags)
         return groupable
@@ -228,7 +228,7 @@ class FeatureFlagAuditor:
             "DISABLE_": [name for name in flag_names if name.startswith("DISABLE_")],
             "ALLOW_": [name for name in flag_names if name.startswith("ALLOW_")],
         }
-        for _pattern, flags in patterns.items():
+        for flags in patterns.values():
             if len(flags) > 0 and len(flags) < len(flag_names) * 0.8:
                 inconsistent.extend(flags)
         return inconsistent

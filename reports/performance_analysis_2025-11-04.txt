@@ -1,0 +1,57 @@
+================================================================================
+PERFORMANCE ANALYSIS REPORT
+================================================================================
+
+Total Issues Found: 229
+
+Issues by Type:
+--------------------------------------------------------------------------------
+  PERF203: 116 - Try-except in loop (High Impact - 30-50% overhead)
+  PERF401: 104 - Inefficient list building (Medium Impact - 20-40% slower)
+  PERF403:   8 - Inefficient dict building (Medium Impact - 15-30% slower)
+  PERF402:   1 - Manual list copy (Low Impact - 5-10% slower)
+
+Issues by Severity:
+--------------------------------------------------------------------------------
+  High      : 116
+  Low       :   1
+  Medium    : 112
+
+Top 10 Files with Most Issues:
+--------------------------------------------------------------------------------
+   7 issues: src/ultimate_discord_intelligence_bot/creator_ops/integrations/instagram_client.py
+   5 issues: src/domains/intelligence/verification/fact_check_tool.py
+   5 issues: src/platform/config/configuration/feature_flag_audit.py
+   4 issues: src/features/sponsor_assistant/sponsor_compliance_service.py
+   4 issues: src/ultimate_discord_intelligence_bot/autonomous_orchestrator.py
+   4 issues: src/ultimate_discord_intelligence_bot/creator_ops/integrations/x_client.py
+   4 issues: src/ultimate_discord_intelligence_bot/performance_optimization_engine.py
+   3 issues: src/performance/cache_warmer.py
+   3 issues: src/platform/realtime/websocket_service.py
+   3 issues: src/ultimate_discord_intelligence_bot/creator_ops/features/live_clip_radar.py
+
+================================================================================
+RECOMMENDED ACTIONS
+================================================================================
+
+Priority 1 - Safe Auto-Fixes (Can apply immediately):
+  1. Run: python3 -m ruff check --select PERF401 --fix src/
+     → Fixes inefficient list building with comprehensions
+
+  2. Run: python3 -m ruff check --select PERF403 --fix src/
+     → Fixes inefficient dict building with comprehensions
+
+  3. Run: python3 -m ruff check --select PERF102 --fix src/
+     → Fixes inefficient dict iteration
+
+Priority 2 - Requires Manual Review:
+  1. PERF203 (try-except in loops) - Requires case-by-case analysis
+     → Review each instance to maintain error handling behavior
+     → Consider refactoring to use StepResult pattern
+
+After applying fixes:
+  - Run test suite: make test-fast
+  - Run benchmarks: python3 benchmarks/performance_benchmarks.py
+  - Compare with baselines in memory_profiling_results.json
+
+================================================================================

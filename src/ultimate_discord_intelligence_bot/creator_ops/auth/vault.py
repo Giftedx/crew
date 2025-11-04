@@ -138,7 +138,7 @@ class SecretsVault:
         """
         try:
             secret_keys = []
-            for env_key, _ in os.environ.items():
+            for env_key in os.environ.keys():
                 if env_key.startswith("CREATOR_OPS_SECRET_"):
                     secret_name = env_key.replace("CREATOR_OPS_SECRET_", "").lower()
                     secret_keys.append(secret_name)

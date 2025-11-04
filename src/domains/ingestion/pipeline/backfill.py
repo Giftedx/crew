@@ -118,19 +118,18 @@ def enqueue_backfill(plan: BackfillPlan, queue: PriorityQueue) -> int:
     items = enumerate_youtube_recent_videos(plan.uploader_handle, plan.since_iso, limit=plan.limit)
     if not items:
         return 0
-    jobs: list[ingest_pipeline.IngestJob] = []
-    for it in items:
-        jobs.append(
-            ingest_pipeline.IngestJob(
-                source="youtube",
-                external_id=it["external_id"],
-                url=it["url"],
-                tenant=plan.tenant,
-                workspace=plan.workspace,
-                tags=[],
-                visibility="public",
-            )
+    jobs: list[ingest_pipeline.IngestJob] = [
+        ingest_pipeline.IngestJob(
+            source="youtube",
+            external_id=it["external_id"],
+            url=it["url"],
+            tenant=plan.tenant,
+            workspace=plan.workspace,
+            tags=[],
+            visibility="public",
         )
+        for it in items
+    ]
     queue.enqueue_bulk(jobs)
     return len(jobs)
 
