@@ -7,7 +7,7 @@ DEPRECATED TOOLS:
 
 - mem0_memory_tool.py → Use Mem0Plugin via UnifiedMemoryService
 - memory_storage_tool.py → Use UnifiedMemoryService directly
-- graph_memory_tool.py → Use GraphPlugin via UnifiedMemoryService  
+- graph_memory_tool.py → Use GraphPlugin via UnifiedMemoryService
 - hipporag_continual_memory_tool.py → Use HippoRAGPlugin via UnifiedMemoryService
 - memory_compaction_tool.py → Use UnifiedMemoryService.compact()
 

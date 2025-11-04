@@ -1,5 +1,12 @@
 # Task Queue Architecture
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Task System**: Arq with Redis backend
+- **Worker**: `src/tasks/worker.py`
+- **Queue Service**: `src/tasks/queue_service.py`
+- **Pipeline Integration**: Async video processing support
+
 This document describes the asynchronous task queue system using Arq for background job processing.
 
 ## Overview

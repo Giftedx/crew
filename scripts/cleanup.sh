@@ -22,7 +22,7 @@ echo ""
 cleanup_item() {
     local item="$1"
     local description="$2"
-    
+
     if [[ -e "${item}" ]]; then
         if [[ "${DRY_RUN}" == "true" ]]; then
             echo "  [DRY RUN] Would remove: ${item}"

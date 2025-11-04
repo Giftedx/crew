@@ -346,26 +346,26 @@ if PROMETHEUS_AVAILABLE:
     # Helpers to avoid duplicate registration errors when modules are imported under
     # different names (e.g., "src.obs.metrics" vs "obs.metrics") during tests.
     def _get_or_create_counter(name: str, documentation: str, labelnames: list[str] | tuple[str, ...]):
-        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
         if isinstance(existing, Counter):  # reuse existing
             return existing
         try:
             return Counter(name, documentation, labelnames)
         except Exception:
             # Concurrent creation or prior registration under another import path
-            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
             if existing:
                 return existing
             raise
 
     def _get_or_create_gauge(name: str, documentation: str, labelnames: list[str] | tuple[str, ...]):
-        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
         if isinstance(existing, Gauge):
             return existing
         try:
             return Gauge(name, documentation, labelnames)
         except Exception:
-            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
             if existing:
                 return existing
             raise
@@ -376,13 +376,13 @@ if PROMETHEUS_AVAILABLE:
         labelnames: list[str] | tuple[str, ...],
         **kwargs: Any,
     ):
-        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+        existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
         if isinstance(existing, PrometheusHistogram):
             return existing
         try:
             return PrometheusHistogram(name, documentation, labelnames, **kwargs)
         except Exception:
-            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)  # type: ignore[attr-defined]
+            existing = getattr(REGISTRY, "_names_to_collectors", {}).get(name)
             if existing:
                 return existing
             raise

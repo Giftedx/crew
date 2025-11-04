@@ -27,7 +27,7 @@ LAZY_TOOL_MAPPING = {
     },
     "MultiPlatformDownloadTool": {
         "class": "MultiPlatformDownloadTool",
-        "module": "ultimate_discord_intelligence_bot.tools.acquisition.multi_platform_download_tool",
+        "module": "domains.ingestion.providers.multi_platform_download_tool",
         "dependencies": ["yt_dlp"],
     },
     "YtDlpDownloadTool": {

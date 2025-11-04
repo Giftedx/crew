@@ -12,37 +12,37 @@ All critical and secondary issues in the `/autointel` workflow have been identif
 
 ### ✅ Fix #1: Task Description Rewrites (PRIMARY)
 
-**File**: `autonomous_orchestrator.py` lines 2240, 2335  
-**Problem**: Agents analyzed task descriptions instead of video content  
-**Solution**: Rewrote as clear instructions ("You are the X Director...")  
+**File**: `autonomous_orchestrator.py` lines 2240, 2335
+**Problem**: Agents analyzed task descriptions instead of video content
+**Solution**: Rewrote as clear instructions ("You are the X Director...")
 **Impact**: Agents now operate on actual transcript data, not task metadata
 
 ### ✅ Fix #2: Remove Field() Schema Metadata (PRIMARY)
 
-**File**: `crewai_tool_wrappers.py` lines 147-160  
-**Problem**: LLM passed schema dicts `{'description': '...', 'type': 'str'}` instead of values  
-**Solution**: Replaced `Field(None, description="...")` with plain `None`  
+**File**: `crewai_tool_wrappers.py` lines 147-160
+**Problem**: LLM passed schema dicts `{'description': '...', 'type': 'str'}` instead of values
+**Solution**: Replaced `Field(None, description="...")` with plain `None`
 **Impact**: LLM omits parameters, aliasing logic populates from shared_context
 
 ### ✅ Fix #3: Schema Dict Detection (DEFENSE-IN-DEPTH)
 
-**File**: `crewai_tool_wrappers.py` line 301  
-**Problem**: No validation to detect malformed LLM tool calls  
-**Solution**: Added detection for schema dicts, unwrap to None for aliasing  
+**File**: `crewai_tool_wrappers.py` line 301
+**Problem**: No validation to detect malformed LLM tool calls
+**Solution**: Added detection for schema dicts, unwrap to None for aliasing
 **Impact**: Prevents cascading failures, provides diagnostic logging
 
 ### ✅ Fix #4: TimelineTool video_id Aliasing (SECONDARY)
 
-**File**: `crewai_tool_wrappers.py` lines 441-447  
-**Problem**: video_id parameter extraction failed - `error='video_id'`  
-**Solution**: Added aliasing from `media_info['video_id']`  
+**File**: `crewai_tool_wrappers.py` lines 441-447
+**Problem**: video_id parameter extraction failed - `error='video_id'`
+**Solution**: Added aliasing from `media_info['video_id']`
 **Impact**: TimelineTool receives video_id, timeline events persist correctly
 
 ### ✅ Fix #5: MCPCallTool Namespace Documentation (SECONDARY)
 
-**File**: `mcp_call_tool.py` lines 60-63  
-**Problem**: 'analysis' namespace returns 'unknown_or_forbidden' with no context  
-**Solution**: Added documentation comment explaining namespace not implemented  
+**File**: `mcp_call_tool.py` lines 60-63
+**Problem**: 'analysis' namespace returns 'unknown_or_forbidden' with no context
+**Solution**: Added documentation comment explaining namespace not implemented
 **Impact**: Error is understood, guidance provided for resolution
 
 ---
@@ -163,8 +163,8 @@ python3 -m py_compile \
 
 ### Lesson #1: Task Descriptions Are Instructions
 
-**Don't**: Write task descriptions like content to analyze  
-**Do**: Write clear behavioral instructions for agents  
+**Don't**: Write task descriptions like content to analyze
+**Do**: Write clear behavioral instructions for agents
 **Example**:
 
 - ❌ "Conduct comprehensive information verification..."
@@ -172,35 +172,35 @@ python3 -m py_compile \
 
 ### Lesson #2: Pydantic Field() Confuses LLMs
 
-**Don't**: Use `Field(None, description="helpful text")` for optional parameters  
-**Do**: Use plain `None` and rely on aliasing logic  
+**Don't**: Use `Field(None, description="helpful text")` for optional parameters
+**Do**: Use plain `None` and rely on aliasing logic
 **Why**: CrewAI LLMs interpret Field() as schema metadata, not data containers
 
 ### Lesson #3: Defense-in-Depth Validation
 
-**Don't**: Assume LLM tool calls are always well-formed  
-**Do**: Add detection for common malformations (schema dicts, empty strings)  
+**Don't**: Assume LLM tool calls are always well-formed
+**Do**: Add detection for common malformations (schema dicts, empty strings)
 **Why**: Prevents cascading failures with clear diagnostic logging
 
 ### Lesson #4: Comprehensive Parameter Aliasing
 
-**Don't**: Expect LLM to extract nested data structures  
-**Do**: Add aliasing for all common patterns (media_info['video_id'], etc.)  
+**Don't**: Expect LLM to extract nested data structures
+**Do**: Add aliasing for all common patterns (media_info['video_id'], etc.)
 **Why**: LLM sees flat shared_context, not nested structures
 
 ### Lesson #5: Document Limitations Explicitly
 
-**Don't**: Leave missing features as mysterious errors  
-**Do**: Add clear comments explaining what's not implemented and why  
+**Don't**: Leave missing features as mysterious errors
+**Do**: Add clear comments explaining what's not implemented and why
 **Why**: Saves future developer time, provides guidance for resolution
 
 ---
 
 ## ✅ Sign-Off
 
-**All fixes implemented**: ✅  
-**Syntax validated**: ✅  
-**Documentation complete**: ✅  
+**All fixes implemented**: ✅
+**Syntax validated**: ✅
+**Documentation complete**: ✅
 **Ready for testing**: ✅
 
 **Status**: 🚀 **READY FOR COMPREHENSIVE END-TO-END TESTING**

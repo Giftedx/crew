@@ -7,7 +7,8 @@ https://discord.com/developers/docs/reference#cdn-endpoints
 
 from __future__ import annotations
 
-import aiohttp
+import asyncio
+from platform.http.http_utils import retrying_get
 
 
 API_BASE = "https://discord.com/api/v10"
@@ -28,12 +29,13 @@ async def fetch_attachment(
     """
     headers = {"Authorization": f"Bot {token}"}
     url = f"{API_BASE}/channels/{channel_id}/messages/{message_id}"
-    async with (
-        aiohttp.ClientSession() as session,
-        session.get(url, headers=headers) as resp,
-    ):
-        resp.raise_for_status()
-        data = await resp.json()
+    # Use synchronous HTTP wrapper in a thread to comply with guardrails
+    resp = await asyncio.to_thread(retrying_get, url, headers=headers)
+    resp.raise_for_status()
+    try:
+        data = resp.json()
+    except Exception:
+        data = {}
     attachments = data.get("attachments", [])
     if attachment_id is None:
         return attachments[0] if attachments else {}

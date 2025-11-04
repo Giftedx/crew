@@ -7,7 +7,7 @@ This directory is deprecated per ADR-0001 (Cache Platform) and ADR-0005 (Analyti
 - Cache optimization: `core/cache/multi_level_cache.py`
 - Analytics: `src/ultimate_discord_intelligence_bot/observability/`
 
-**Migration Status**: Pending  
+**Migration Status**: Pending
 **Target Removal**: TBD
 
 **Reason**: Duplicate cache optimization and warming logic; consolidating to unified cache layer.

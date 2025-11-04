@@ -4,27 +4,27 @@
 
 ### #1: Auto-discovering Feature Extractor
 
-**File:** `src/ai/routing/feature_engineering.py` (347 lines)  
-**What:** Extracts 18-dimensional feature vectors for routing decisions  
+**File:** `src/ai/routing/feature_engineering.py` (347 lines)
+**What:** Extracts 18-dimensional feature vectors for routing decisions
 **Impact:** Context-aware routing (urgent→fast, quality→accurate)
 
-### #2: RL Quality Threshold Optimizer  
+### #2: RL Quality Threshold Optimizer
 
-**File:** `src/ai/routing/rl_quality_threshold_optimizer.py` (289 lines)  
-**What:** Epsilon-greedy RL optimizing quality thresholds (8 configs)  
+**File:** `src/ai/routing/rl_quality_threshold_optimizer.py` (289 lines)
+**What:** Epsilon-greedy RL optimizing quality thresholds (8 configs)
 **Impact:** 30-60% cost savings on low-value content
 
 ### #3: Semantic Routing Cache
 
-**File:** `src/ai/routing/semantic_routing_cache.py` (358 lines)  
-**What:** Embedding-based cache (Redis + in-memory LRU)  
+**File:** `src/ai/routing/semantic_routing_cache.py` (358 lines)
+**What:** Embedding-based cache (Redis + in-memory LRU)
 **Impact:** 15-25% latency reduction on similar content
 
 ### #4: Cold-Start Model Priors
 
-**File:** `src/ai/routing/cold_start_priors.py` (264 lines)  
-**Data:** `model_benchmarks.json` (30+ models)  
-**What:** Intelligent initial estimates for new models  
+**File:** `src/ai/routing/cold_start_priors.py` (264 lines)
+**Data:** `model_benchmarks.json` (30+ models)
+**What:** Intelligent initial estimates for new models
 **Impact:** Avoid 50-100 wasted exploration calls per model
 
 ### #5: HippoRAG Continual Learning Instrumentation
@@ -36,7 +36,7 @@
 - Modified: `hipporag_continual_memory_tool.py` (+120 lines)
 - Modified: `orchestrator.py` (+40 lines)
 
-**What:** Complete observability for HippoRAG memory system  
+**What:** Complete observability for HippoRAG memory system
 **Impact:** Metrics, dashboard, alerts for indexing performance
 
 ### #6: Cross-System Backpressure Coordinator
@@ -49,7 +49,7 @@
 - Modified: `app.py` (+5 lines)
 - Modified: `circuit_breaker_canonical.py` (+40 lines)
 
-**What:** Centralized backpressure coordination (≥2 circuits OR >80% load)  
+**What:** Centralized backpressure coordination (≥2 circuits OR >80% load)
 **Impact:** Prevents cascading failures, graceful degradation
 
 ---
@@ -92,21 +92,21 @@
 **Routing Flow:**
 
 ```
-Request → Feature Extractor → Semantic Cache → Cold-Start Priors 
+Request → Feature Extractor → Semantic Cache → Cold-Start Priors
        → Contextual Bandit → RL Threshold Optimizer → Processing
 ```
 
 **Resilience Flow:**
 
 ```
-Circuit Breakers → Backpressure Coordinator → FastAPI Middleware 
+Circuit Breakers → Backpressure Coordinator → FastAPI Middleware
                 → Pipeline Orchestrator → Request Rejection (503)
 ```
 
 **Observability Flow:**
 
 ```
-HippoRAG Operations → Prometheus Metrics → Grafana Dashboard 
+HippoRAG Operations → Prometheus Metrics → Grafana Dashboard
                    → Prometheus Alerts → Operator Notifications
 ```
 
@@ -320,32 +320,32 @@ python scripts/test_backpressure.py --simulate-failures 3
 
 ### Feature Extractor Issues
 
-**Problem:** Missing feature dimensions  
+**Problem:** Missing feature dimensions
 **Solution:** Check context dict has required fields; extractor uses defaults for missing values
 
 ### RL Optimizer Not Learning
 
-**Problem:** Q-values not changing  
+**Problem:** Q-values not changing
 **Solution:** Ensure `update_from_result()` called after each request; check learning_rate >0
 
 ### Semantic Cache Low Hit Rate
 
-**Problem:** <10% hit rate after 7 days  
+**Problem:** <10% hit rate after 7 days
 **Solution:** Lower similarity threshold from 0.95 to 0.90; check embedding quality
 
 ### Cold-Start Priors Inaccurate
 
-**Problem:** Prior differs from actual by >50%  
+**Problem:** Prior differs from actual by >50%
 **Solution:** Update model_benchmarks.json with fresh benchmark data
 
 ### HippoRAG Metrics Not Appearing
 
-**Problem:** No metrics in Prometheus  
+**Problem:** No metrics in Prometheus
 **Solution:** Check HippoRAG library installed; verify metrics registration; check namespace
 
 ### Backpressure Stuck Active
 
-**Problem:** Backpressure doesn't exit after recovery  
+**Problem:** Backpressure doesn't exit after recovery
 **Solution:** Check circuit breakers closed; verify 30s delay passed; check system load <80%
 
 ---
@@ -429,9 +429,9 @@ grep "HippoRAG" logs/app.log | tail -20
 
 ---
 
-**Last Updated:** 2025  
-**Status:** ✅ Production-ready  
-**Total LOC:** 2,770+ lines across 18 files  
-**Metrics Added:** 30+ Prometheus metrics  
-**Dashboards:** 1 Grafana dashboard  
+**Last Updated:** 2025
+**Status:** ✅ Production-ready
+**Total LOC:** 2,770+ lines across 18 files
+**Metrics Added:** 30+ Prometheus metrics
+**Dashboards:** 1 Grafana dashboard
 **Alerts:** 7 Prometheus alerts

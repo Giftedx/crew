@@ -291,7 +291,7 @@ class DashboardIntegrationService:
                 if cache_time and (datetime.now(timezone.utc) - cache_time).seconds < self.config.cache_ttl:
                     logger.debug(f"Returning cached dashboard data: {dashboard_id}")
                     return StepResult.ok(data=self._dashboard_cache[cache_key])
-            dashboard_data = {
+            dashboard_data: dict[str, Any] = {
                 "dashboard_id": dashboard_id,
                 "title": dashboard.title,
                 "description": dashboard.description,

@@ -91,4 +91,3 @@ Only 1 subdirectory remains:
 - Phase 2.8: Final verification (check remaining imports, test suite)
 - Phase 3: Consolidate `src/ai/` (71 files) and `src/obs/` (18 files)
 - Update imports from `core.{module}.*` to `platform.{target}.*` or `domains.{target}.*`
-

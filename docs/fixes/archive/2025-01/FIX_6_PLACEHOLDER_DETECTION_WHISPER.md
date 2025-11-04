@@ -213,7 +213,7 @@ Transcript: <Full 5000+ word transcription of actual video audio>
 ❌ Aliasing skipped (non-empty string detected)
 ❌ Tool receives placeholder instead of actual transcript
 ❌ ClaimExtractor returns 0 claims
-❌ LogicalFallacyTool returns 0 fallacies  
+❌ LogicalFallacyTool returns 0 fallacies
 ❌ Complete verification failure
 ❌ Whisper crashes with numba error
 ❌ 24-word metadata fallback used

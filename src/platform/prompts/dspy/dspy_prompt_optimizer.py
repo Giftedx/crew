@@ -3,7 +3,7 @@ from platform.core.settings import settings
 
 import dspy
 
-from src.ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 logger = logging.getLogger(__name__)

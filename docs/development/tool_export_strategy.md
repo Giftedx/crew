@@ -61,7 +61,7 @@ class MyAnalysisInput(BaseModel):
 class MyAnalysisTool(BaseTool):
     name: str = "my_analysis"
     description: str = "Analyzes content for specific patterns"
-    
+
     def _run(self, content: str) -> StepResult:
         try:
             # Tool implementation
@@ -124,15 +124,15 @@ MAPPING = {
     # Core analysis/download
     "AudioTranscriptionTool": ".audio_transcription_tool",
     "CharacterProfileTool": ".character_profile_tool",
-    
+
     # RAG & Retrieval
     "LCSummarizeTool": ".lc_summarize_tool",
     "OfflineRAGTool": ".offline_rag_tool",
-    
+
     # MCP & Research
     "MCPCallTool": ".mcp_call_tool",
     "ResearchAndBriefTool": ".research_and_brief_tool",
-    
+
     # Social media + downloaders
     "InstagramDownloadTool": ".yt_dlp_download_tool",
     "YouTubeDownloadTool": ".yt_dlp_download_tool",
@@ -167,13 +167,13 @@ def _make_stub(_tool_name: str, _error: Exception):
     class _MissingDependencyTool:
         name = _tool_name
         description = f"{_tool_name} is unavailable due to missing dependencies"
-        
+
         def _run(self, *args, **kwargs) -> StepResult:
             return StepResult.fail(
-                error=f"{_tool_name} is unavailable", 
+                error=f"{_tool_name} is unavailable",
                 details=str(_error)
             )
-    
+
     _MissingDependencyTool.__name__ = _tool_name
     return _MissingDependencyTool
 ```
@@ -195,7 +195,7 @@ Always validate inputs using Pydantic models:
 class MyToolInput(BaseModel):
     content: str = Field(..., description="Content to process", min_length=1)
     max_length: int = Field(default=1000, description="Maximum length", gt=0)
-    
+
     @validator('content')
     def validate_content(cls, v):
         if not v.strip():
@@ -212,10 +212,10 @@ def _run(self, content: str) -> StepResult:
     try:
         if not content:
             return StepResult.fail("Content is required")
-        
+
         result = self._process_content(content)
         return StepResult.ok(data=result)
-        
+
     except ValueError as e:
         return StepResult.fail(f"Invalid input: {e}")
     except Exception as e:
@@ -243,20 +243,20 @@ Include comprehensive docstrings:
 ```python
 class MyAnalysisTool(BaseTool):
     """Advanced content analysis tool.
-    
+
     This tool provides comprehensive analysis of text content including:
     - Sentiment analysis
     - Topic extraction
     - Key phrase identification
     - Readability scoring
-    
+
     Args:
         content: The text content to analyze
         options: Optional analysis configuration
-        
+
     Returns:
         StepResult containing analysis results
-        
+
     Example:
         >>> tool = MyAnalysisTool()
         >>> result = tool._run("Sample text content")
@@ -280,14 +280,14 @@ class TestMyAnalysisTool:
     def test_successful_analysis(self):
         tool = MyAnalysisTool()
         result = tool._run("Sample content")
-        
+
         assert result.success
         assert "analysis" in result.data
-    
+
     def test_empty_content(self):
         tool = MyAnalysisTool()
         result = tool._run("")
-        
+
         assert not result.success
         assert "required" in result.error
 ```
@@ -299,10 +299,10 @@ Test tool integration with agents:
 ```python
 def test_agent_with_tool():
     from ultimate_discord_intelligence_bot.crew import UltimateDiscordIntelligenceBotCrew
-    
+
     crew = UltimateDiscordIntelligenceBotCrew()
     agent = crew.analysis_agent()
-    
+
     assert MyAnalysisTool in [type(tool) for tool in agent.tools]
 ```
 
@@ -314,7 +314,7 @@ def test_agent_with_tool():
 
    ```python
    import warnings
-   
+
    class DeprecatedTool(BaseTool):
        def __init__(self):
            warnings.warn(
@@ -348,7 +348,7 @@ OldTool has been deprecated in favor of NewTool which provides better performanc
    ```python
    # Old
    from ultimate_discord_intelligence_bot.tools import OldTool
-   
+
    # New
    from ultimate_discord_intelligence_bot.tools import NewTool
    ```
@@ -358,7 +358,7 @@ OldTool has been deprecated in favor of NewTool which provides better performanc
    ```python
    # Old
    result = old_tool._run(input_data)
-   
+
    # New
    result = new_tool._run(input_data, new_option=True)
    ```
@@ -368,7 +368,7 @@ OldTool has been deprecated in favor of NewTool which provides better performanc
    ```python
    # Old
    tools=[wrap_tool_for_crewai(OldTool())]
-   
+
    # New
    tools=[wrap_tool_for_crewai(NewTool())]
    ```
@@ -423,7 +423,7 @@ class MyAnalysisTool(BaseTool):
         self._metrics = get_metrics()
         self._success_counter = self._metrics.counter("my_analysis_success_total")
         self._error_counter = self._metrics.counter("my_analysis_error_total")
-    
+
     def _run(self, content: str) -> StepResult:
         try:
             result = self._process_content(content)

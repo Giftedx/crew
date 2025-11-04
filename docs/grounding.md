@@ -1,5 +1,12 @@
 # Grounding Guarantees
 
+**Current Implementation** (verified November 3, 2025):
+
+- **Configuration**: `config/grounding.yaml` (tenant-aware citation requirements)
+- **Grounding Package**: `src/grounding/` (evidence gathering and verification)
+- **Citation Utils**: Automated numeric bracketed citation formatting
+- **Verification Tools**: 10 tools in Verification category (9% of 111 total tools)
+
 The grounding layer ensures every user answer is backed by verifiable
 evidence. Answers reference sources via citations and a lightweight verifier
 checks that minimum citation counts are satisfied.
@@ -22,11 +29,11 @@ The moon has no substantial atmosphere. [1][2][3]
 
 Rules:
 
-* Order reflects the order of the `Evidence` sequence passed into the contract.
-* Citation indices are 1-indexed and contiguous (no gaps, no repeats).
-* Empty evidence list -> no citation tail appended.
-* Formatting is applied centrally by `grounding.citation_utils.append_numeric_citations`.
-* The helper is idempotent; supplying an answer already suffixed with the
+- Order reflects the order of the `Evidence` sequence passed into the contract.
+- Citation indices are 1-indexed and contiguous (no gaps, no repeats).
+- Empty evidence list -> no citation tail appended.
+- Formatting is applied centrally by `grounding.citation_utils.append_numeric_citations`.
+- The helper is idempotent; supplying an answer already suffixed with the
   correct tail will not duplicate it.
 
 Deviation from this format will cause governance tests to fail; construct or

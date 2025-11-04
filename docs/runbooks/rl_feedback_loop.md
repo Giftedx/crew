@@ -63,7 +63,7 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
 
 ### RLFeedbackProcessingFailures
 
-**Severity**: Page  
+**Severity**: Page
 **Trigger**: Failures detected in last 15 minutes
 
 **Investigation**:
@@ -95,7 +95,7 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
 
 ### RLFeedbackQueueDepthHigh / RLFeedbackQueueDepthCritical
 
-**Severity**: Ticket / Page  
+**Severity**: Ticket / Page
 **Trigger**: Queue depth > 25 (ticket) or > 100 (page) for 15/10 minutes
 
 **Investigation**:
@@ -128,7 +128,7 @@ curl -s http://localhost:9090/api/v1/query?query=rl_feedback_queue_depth | jq '.
 
 ### RLFeedbackProcessingStalled
 
-**Severity**: Page  
+**Severity**: Page
 **Trigger**: Queue depth > 0 but no items processed in 30 minutes
 
 **Investigation**:

@@ -12,41 +12,41 @@ graph TB
         MA[Memory API]
         MS[Memory Store]
     end
-    
+
     subgraph "Vector Storage Layer"
         VS[Vector Store]
         QD[Qdrant Client]
         LRU[LRU Cache]
     end
-    
+
     subgraph "Graph Memory Layer"
         GM[Graph Memory]
         KG[Knowledge Graph]
     end
-    
+
     subgraph "Continual Learning Layer"
         HR[HippoRAG]
         CL[Continual Learning]
     end
-    
+
     subgraph "Storage Backend"
         SQL[SQLite]
         QDDB[Qdrant Database]
         REDIS[Redis Cache]
     end
-    
+
     MA --> MS
     MA --> VS
     MA --> GM
     MA --> HR
-    
+
     VS --> QD
     VS --> LRU
     VS --> REDIS
-    
+
     GM --> KG
     HR --> CL
-    
+
     MS --> SQL
     QD --> QDDB
     LRU --> REDIS
@@ -81,10 +81,10 @@ def store(
     """Store text and metadata in both SQLite and vector store."""
     # Privacy filtering
     clean, _ = privacy_filter.filter_text(text, {"tenant": tenant})
-    
+
     # Generate embedding
     vec = embeddings.embed([clean])[0]
-    
+
     # Store in SQLite
     item = MemoryItem(
         id=None,
@@ -97,7 +97,7 @@ def store(
         updated_at=now
     )
     item_id = store.store(item)
-    
+
     # Store in vector store
     vstore.upsert_vectors(
         vectors=[vec],
@@ -113,7 +113,7 @@ def store(
         tenant=tenant,
         workspace=workspace
     )
-    
+
     return item_id
 ```
 
@@ -151,22 +151,22 @@ class LRUCache:
         self._access_order: deque[str] = deque()
         self._hits = 0
         self._misses = 0
-    
+
     def get(self, key: str) -> Any | None:
         """Get item from cache with LRU update."""
         if key not in self._cache:
             self._misses += 1
             return None
-        
+
         value, timestamp, ttl = self._cache[key]
         current_time = time.time()
-        
+
         # Check expiration
         if current_time - timestamp > ttl:
             del self._cache[key]
             self._misses += 1
             return None
-        
+
         # Update access order
         self._access_order.remove(key)
         self._access_order.append(key)
@@ -201,15 +201,15 @@ async def batch_upsert(
     if batch_size is None:
         vector_dim = len(vectors[0]) if vectors else 768
         effective_batch_size = self._get_adaptive_batch_size(namespace, vector_dim)
-    
+
     # Process in batches
     for offset in range(0, len(vectors), effective_batch_size):
         batch_vectors = vectors[offset:offset + effective_batch_size]
         batch_payloads = payloads[offset:offset + effective_batch_size]
-        
+
         # Store batch
         self._store_batch(batch_points, physical)
-        
+
         # Log progress
         if len(vectors) > 1000 and offset % (effective_batch_size * 10) == 0:
             progress = (offset / len(vectors)) * 100
@@ -239,17 +239,17 @@ async def compact_and_deduplicate(
     """Compact memory by removing duplicate vectors."""
     # Fetch all vectors
     all_vectors = await self._fetch_all_vectors_for_compaction(physical, batch_size)
-    
+
     # Find duplicates using cosine similarity
     duplicates = await self._find_duplicate_vectors(all_vectors, similarity_threshold)
-    
+
     # Remove duplicates
     ids_to_remove = [dup["duplicate_id"] for dup in duplicates]
     deletion_result = await self.batch_delete(ids_to_remove, tenant, workspace)
-    
+
     # Calculate space savings
     space_saved_percent = (len(ids_to_remove) / len(all_vectors)) * 100
-    
+
     return StepResult(
         success=True,
         data={
@@ -287,10 +287,10 @@ CREATE TABLE memory_items (
     metadata TEXT
 );
 
-CREATE INDEX idx_memory_items_tenant_workspace 
+CREATE INDEX idx_memory_items_tenant_workspace
 ON memory_items(tenant, workspace);
 
-CREATE INDEX idx_memory_items_created_at 
+CREATE INDEX idx_memory_items_created_at
 ON memory_items(created_at);
 ```
 
@@ -313,7 +313,7 @@ class GraphMemory:
         self.nodes: dict[str, dict] = {}  # Entity nodes
         self.edges: dict[str, dict] = {}  # Relationship edges
         self.temporal: dict[str, list] = {}  # Temporal relationships
-    
+
     def add_relationship(
         self,
         source: str,
@@ -324,7 +324,7 @@ class GraphMemory:
     ):
         """Add temporal relationship to graph."""
         edge_id = f"{source}->{target}:{relationship_type}"
-        
+
         self.edges[edge_id] = {
             "source": source,
             "target": target,
@@ -332,7 +332,7 @@ class GraphMemory:
             "confidence": confidence,
             "created_at": timestamp
         }
-        
+
         # Add temporal tracking
         if edge_id not in self.temporal:
             self.temporal[edge_id] = []
@@ -361,7 +361,7 @@ class HippoRAGMemory:
         self.memory_traces: dict[str, list] = {}
         self.consolidation_threshold = 0.8
         self.forgetting_threshold = 0.2
-    
+
     async def update_memory(
         self,
         content: str,
@@ -377,29 +377,29 @@ class HippoRAGMemory:
             "timestamp": time.time(),
             "access_count": 0
         }
-        
+
         # Store trace
         trace_id = self._generate_trace_id(content, context)
         if trace_id not in self.memory_traces:
             self.memory_traces[trace_id] = []
         self.memory_traces[trace_id].append(trace)
-        
+
         # Check for consolidation
         if len(self.memory_traces[trace_id]) > 3:
             await self._consolidate_memory(trace_id)
-    
+
     async def _consolidate_memory(self, trace_id: str):
         """Consolidate related memory traces."""
         traces = self.memory_traces[trace_id]
-        
+
         # Calculate consolidation score
         consolidation_score = sum(t["importance"] for t in traces) / len(traces)
-        
+
         if consolidation_score > self.consolidation_threshold:
             # Consolidate into long-term memory
             consolidated = self._merge_traces(traces)
             await self._store_long_term_memory(consolidated)
-            
+
             # Clear working memory
             self.memory_traces[trace_id] = []
 ```
@@ -446,7 +446,7 @@ class CacheMetrics:
     evictions: int = 0
     total_saved_cost: float = 0.0
     total_saved_latency_ms: float = 0.0
-    
+
     @property
     def hit_rate(self) -> float:
         """Calculate cache hit rate."""
@@ -493,11 +493,11 @@ def _generate_cache_key(
     vector_hash = hashlib.md5(
         json.dumps(query_vector[:10] + query_vector[-10:]).encode()
     ).hexdigest()[:8]
-    
+
     filter_hash = hashlib.md5(
         json.dumps(filters or {}, sort_keys=True).encode()
     ).hexdigest()[:8]
-    
+
     return f"{tenant}:{workspace}:{vector_hash}:{limit}:{filter_hash}"
 ```
 
@@ -514,7 +514,7 @@ class QdrantConnectionPool:
         self.timeout = timeout
         self._clients: dict[str, QdrantClient] = {}
         self._lock = threading.Lock()
-    
+
     def get_client(self, url: str) -> QdrantClient:
         """Get or create pooled client for URL."""
         with self._lock:
@@ -522,7 +522,7 @@ class QdrantConnectionPool:
                 client = self._clients[url]
                 if self._is_client_healthy(client):
                     return client
-            
+
             # Create new client
             client = QdrantClient(
                 url=url,
@@ -542,7 +542,7 @@ class QdrantConnectionPool:
 def _get_adaptive_batch_size(self, namespace: str, vector_dim: int) -> int:
     """Get adaptive batch size based on vector dimension and performance."""
     base_batch_size = self._batch_size
-    
+
     # Adjust based on vector dimension
     if vector_dim > LARGE_EMBEDDING_DIM:
         batch_size = min(base_batch_size // 2, SMALL_BATCH_SIZE)
@@ -550,7 +550,7 @@ def _get_adaptive_batch_size(self, namespace: str, vector_dim: int) -> int:
         batch_size = min(base_batch_size, MEDIUM_BATCH_SIZE)
     else:
         batch_size = base_batch_size
-    
+
     # Adjust based on performance history
     recent_ops = list(self._performance_history)[-10:]
     if recent_ops:
@@ -559,7 +559,7 @@ def _get_adaptive_batch_size(self, namespace: str, vector_dim: int) -> int:
             batch_size = max(1, int(batch_size / ADAPTIVE_BATCH_FACTOR))
         elif avg_duration < 100:  # Fast operations
             batch_size = int(batch_size * ADAPTIVE_BATCH_FACTOR)
-    
+
     return batch_size
 ```
 
@@ -571,7 +571,7 @@ def _get_adaptive_batch_size(self, namespace: str, vector_dim: int) -> int:
 async def _schedule_compaction(self, tenant: str, workspace: str):
     """Schedule memory compaction based on usage patterns."""
     namespace = f"{tenant}:{workspace}"
-    
+
     # Check if compaction is needed
     collection_info = await self._get_collection_info(namespace)
     if collection_info.get("points_count", 0) > 10000:
@@ -615,12 +615,12 @@ async def health_check(self) -> dict[str, Any]:
         "tenant_isolation": await self._check_tenant_isolation(),
         "performance": await self._check_performance_health()
     }
-    
+
     overall_health = all(
-        status.get("healthy", False) 
+        status.get("healthy", False)
         for status in health_status.values()
     )
-    
+
     return {
         "overall_health": overall_health,
         "components": health_status,
@@ -684,18 +684,18 @@ memory:
     cache_size: 1000
     cache_ttl: 300
     compaction_threshold: 0.98
-    
+
   memory_store:
     backup_interval: 3600
     retention_days: 365
     max_items_per_tenant: 100000
-    
+
   cache:
     enabled: true
     default_ttl: 300
     max_size: 10000
     redis_url: redis://localhost:6379
-    
+
   performance:
     max_concurrent_operations: 10
     batch_processing_enabled: true
@@ -717,10 +717,10 @@ def store_with_privacy_filter(
     """Store content with privacy filtering."""
     # Apply privacy filter
     clean_text, privacy_report = privacy_filter.filter_text(
-        text, 
+        text,
         {"tenant": tenant, "workspace": workspace}
     )
-    
+
     # Store filtered content
     item_id = store(
         store=memory_store,
@@ -729,7 +729,7 @@ def store_with_privacy_filter(
         workspace=workspace,
         text=clean_text
     )
-    
+
     return item_id, privacy_report
 ```
 
@@ -740,9 +740,9 @@ def check_tenant_access(tenant: str, workspace: str, user_context: dict) -> bool
     """Check if user has access to tenant/workspace."""
     user_tenant = user_context.get("tenant")
     user_workspace = user_context.get("workspace")
-    
+
     return (
-        user_tenant == tenant and 
+        user_tenant == tenant and
         user_workspace == workspace
     )
 ```
@@ -757,7 +757,7 @@ class RetentionPolicy:
         self.name = name
         self.days = days
         self.auto_delete = auto_delete
-    
+
     def should_retain(self, created_at: str) -> bool:
         """Check if item should be retained."""
         created_date = datetime.fromisoformat(created_at)
@@ -813,3 +813,58 @@ DEFAULT_POLICIES = {
 - **Pattern Recognition**: Long-term pattern learning
 - **Memory Prediction**: Predictive memory management
 - **Adaptive Forgetting**: Intelligent memory forgetting
+
+### 6. Mem0 Integration (`src/domains/memory/continual/mem0/`)
+
+**Purpose:** Continual learning with user preferences and learned patterns
+
+**Key Features:**
+
+- **User Preference Storage**: Long-term user preference management
+- **Pattern Learning**: Automatic pattern recognition and storage
+- **Semantic Recall**: Query-based memory retrieval
+- **Qdrant Backend**: Vector storage for efficient similarity search
+
+**Implementation:**
+
+```python
+class Mem0MemoryService:
+    """Service wrapper for Mem0 to manage user preferences and learned patterns."""
+
+    def __init__(self):
+        qdrant_url = _get_setting("QDRANT_URL", "http://localhost:6333")
+        self.memory = Memory(
+            config={
+                "vector_store": {
+                    "provider": "qdrant",
+                    "config": {"url": qdrant_url}
+                }
+            }
+        )
+
+    def remember(self, content: str, user_id: str, metadata: dict | None = None) -> StepResult:
+        """Store a memory or preference for a user."""
+        result = self.memory.add(content, user_id=user_id, metadata=metadata or {})
+        return StepResult.ok(data=result)
+
+    def recall(self, query: str, user_id: str, limit: int = 10) -> StepResult:
+        """Recall memories or preferences for a user based on a query."""
+        results = self.memory.search(query, user_id=user_id, limit=limit)
+        return StepResult.ok(data=results)
+```
+
+**Plugin Architecture:**
+
+- **mem0_plugin.py**: Plugin interface for Mem0 integration
+- **mem0_memory_tool.py**: Tool wrapper for CrewAI/LangChain integration
+- **mem0_service.py**: Core Mem0 service implementation
+
+**Tool Integration:**
+
+Available as `Mem0MemoryTool` in the tool registry for agent access.
+
+---
+
+**Last Updated**: November 3, 2025
+**Memory Providers**: Qdrant (vector), Neo4j (graph), Mem0 (continual), HippoRAG (continual)
+**Status**: Verified against current implementation in `src/domains/memory/`

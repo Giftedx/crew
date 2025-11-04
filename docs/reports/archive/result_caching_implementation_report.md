@@ -75,13 +75,13 @@ class ResultCache:
         if key not in self._cache:
             self._misses += 1
             return None
-        
+
         entry = self._cache[key]
         if entry.is_expired():
             del self._cache[key]
             self._misses += 1
             return None
-        
+
         entry.touch()
         self._hits += 1
         return entry.value
@@ -103,16 +103,16 @@ def _run(self, content: str, analysis_type: str = "basic") -> StepResult:
 def analyze_tool_performance(self, tool_name: str) -> dict[str, Any]:
     pattern = self.get_usage_pattern(tool_name)
     strategy = self.get_caching_strategy(tool_name)
-    
+
     should_cache = (
         pattern.call_count > 5 and
         pattern.avg_execution_time > 0.1 and
         pattern.hit_rate < 80
     )
-    
+
     optimal_ttl = self._calculate_optimal_ttl(pattern)
     priority = self._calculate_priority(pattern)
-    
+
     return {
         "should_cache": should_cache,
         "optimal_ttl": optimal_ttl,

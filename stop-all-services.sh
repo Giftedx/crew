@@ -36,23 +36,23 @@ if [ -d "logs/services" ]; then
         if [ -f "$pidfile" ]; then
             pid=$(cat "$pidfile")
             service_name=$(basename "$pidfile" .pid)
-            
+
             if ps -p "$pid" > /dev/null 2>&1; then
                 log_info "Stopping $service_name (PID: $pid)..."
                 kill "$pid" 2>/dev/null || true
                 sleep 1
-                
+
                 # Force kill if still running
                 if ps -p "$pid" > /dev/null 2>&1; then
                     log_warning "Force stopping $service_name..."
                     kill -9 "$pid" 2>/dev/null || true
                 fi
-                
+
                 log_success "$service_name stopped"
             else
                 log_warning "$service_name not running (PID: $pid)"
             fi
-            
+
             rm "$pidfile"
         fi
     done
@@ -80,7 +80,7 @@ if pgrep -f "ultimate_discord_intelligence_bot" > /dev/null; then
     log_info "Stopping Discord Bot processes..."
     pkill -f "ultimate_discord_intelligence_bot" || true
     sleep 1
-    
+
     # Force kill if needed
     if pgrep -f "ultimate_discord_intelligence_bot" > /dev/null; then
         log_warning "Force stopping Discord Bot..."
@@ -110,7 +110,7 @@ if command -v docker &> /dev/null; then
     else
         COMPOSE_CMD=""
     fi
-    
+
     if [ -n "$COMPOSE_CMD" ]; then
         if [ -f "ops/deployment/docker/docker-compose.yml" ]; then
             log_info "Stopping Docker Compose services..."

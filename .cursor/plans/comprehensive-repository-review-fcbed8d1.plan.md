@@ -73,20 +73,20 @@ async def profile_pipeline():
 def main():
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     asyncio.run(profile_pipeline())
-    
+
     profiler.disable()
-    
+
     # Save profile data
     Path("profiling").mkdir(exist_ok=True)
     profiler.dump_stats("profiling/orchestrator.prof")
-    
+
     # Generate analysis
     stats = pstats.Stats(profiler)
     stats.strip_dirs()
     stats.sort_stats('cumulative')
-    
+
     # Top 30 functions by cumulative time
     with open("profiling/orchestrator_analysis.txt", "w") as f:
         stats.stream = f
@@ -135,14 +135,14 @@ from memory.vector_store import EnhancedVectorStore
 async def profile_vector_operations():
     """Profile vector store operations."""
     store = EnhancedVectorStore()
-    
+
     # Test data
     test_content = {
         "text": "Sample content for embedding and storage",
         "metadata": {"source": "test", "type": "benchmark"}
     }
     test_embedding = [0.1] * 768  # Typical embedding dimension
-    
+
     # Profile store operations
     await store.store_vectors(
         vectors=[test_embedding] * 100,
@@ -150,7 +150,7 @@ async def profile_vector_operations():
         tenant="benchmark",
         workspace="profiling"
     )
-    
+
     # Profile search operations
     await store.search_similar(
         query_vector=test_embedding,
@@ -158,7 +158,7 @@ async def profile_vector_operations():
         tenant="benchmark",
         workspace="profiling"
     )
-    
+
     # Profile batch operations
     await store.batch_upsert(
         vectors=[test_embedding] * 500,
@@ -166,24 +166,24 @@ async def profile_vector_operations():
         tenant="benchmark",
         workspace="profiling"
     )
-    
+
     return store
 
 def main():
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     asyncio.run(profile_vector_operations())
-    
+
     profiler.disable()
-    
+
     Path("profiling").mkdir(exist_ok=True)
     profiler.dump_stats("profiling/memory.prof")
-    
+
     stats = pstats.Stats(profiler)
     stats.strip_dirs()
     stats.sort_stats('cumulative')
-    
+
     with open("profiling/memory_analysis.txt", "w") as f:
         stats.stream = f
         stats.print_stats(30)
@@ -223,38 +223,38 @@ def profile_routing_decisions():
         "claude-3-sonnet": None,
         "gpt-3.5-turbo": None,
     }
-    
+
     router = LLMRouter(mock_clients)
-    
+
     # Simulate 100 routing decisions
     test_messages = [
         {"role": "user", "content": f"Test query {i}"}
         for i in range(100)
     ]
-    
+
     for messages in test_messages:
         router.select_model(
             messages=messages,
             context={"complexity": "medium", "budget": 1.0}
         )
-    
+
     return router
 
 def main():
     profiler = cProfile.Profile()
     profiler.enable()
-    
+
     profile_routing_decisions()
-    
+
     profiler.disable()
-    
+
     Path("profiling").mkdir(exist_ok=True)
     profiler.dump_stats("profiling/routing.prof")
-    
+
     stats = pstats.Stats(profiler)
     stats.strip_dirs()
     stats.sort_stats('cumulative')
-    
+
     with open("profiling/routing_analysis.txt", "w") as f:
         stats.stream = f
         stats.print_stats(30)
@@ -368,13 +368,13 @@ Implement `asyncio.TaskGroup` for parallel execution and optimize I/O-bound oper
 async def _run_pipeline(self, ctx, url, quality):
     # Download
     drive_result = await self._download_stage(url, quality)
-    
+
     # Transcribe
     transcription_result = await self._transcribe_stage(drive_result)
-    
+
     # Analyze
     analysis_result = await self._analyze_stage(transcription_result)
-    
+
     # Store
     storage_result = await self._storage_stage(analysis_result)
 ```
@@ -385,7 +385,7 @@ async def _run_pipeline(self, ctx, url, quality):
 async def _run_pipeline(self, ctx, url, quality):
     # Download must complete first
     drive_result = await self._download_stage(url, quality)
-    
+
     # Transcribe and metadata extraction can run in parallel
     async with asyncio.TaskGroup() as tg:
         transcribe_task = tg.create_task(
@@ -394,10 +394,10 @@ async def _run_pipeline(self, ctx, url, quality):
         metadata_task = tg.create_task(
             self._extract_metadata(drive_result)
         )
-    
+
     transcription_result = transcribe_task.result()
     metadata = metadata_task.result()
-    
+
     # Multiple analysis types can run in parallel
     async with asyncio.TaskGroup() as tg:
         debate_task = tg.create_task(
@@ -409,7 +409,7 @@ async def _run_pipeline(self, ctx, url, quality):
         fallacy_task = tg.create_task(
             self._fallacy_detection(transcription_result)
         )
-    
+
     # Aggregate results
     analysis_result = self._aggregate_analysis(
         debate_task.result(),
@@ -417,7 +417,7 @@ async def _run_pipeline(self, ctx, url, quality):
         fallacy_task.result(),
         metadata
     )
-    
+
     # Storage and Discord notification in parallel
     async with asyncio.TaskGroup() as tg:
         storage_task = tg.create_task(
@@ -426,7 +426,7 @@ async def _run_pipeline(self, ctx, url, quality):
         discord_task = tg.create_task(
             self._send_discord_notification(analysis_result)
         )
-    
+
     return storage_task.result()
 ```
 
@@ -438,10 +438,10 @@ async def _run_pipeline_with_error_handling(self, ctx, url, quality):
         async with asyncio.TaskGroup() as tg:
             task1 = tg.create_task(operation1())
             task2 = tg.create_task(operation2())
-        
+
         # All tasks completed successfully
         return self._combine_results(task1.result(), task2.result())
-        
+
     except* ConnectionError as eg:
         # Handle all ConnectionErrors from any task
         logger.error(f"Connection errors: {eg.exceptions}")
@@ -449,7 +449,7 @@ async def _run_pipeline_with_error_handling(self, ctx, url, quality):
             error="Network connectivity issues",
             custom_status="retryable"
         )
-    
+
     except* ValueError as eg:
         # Handle all ValueErrors
         logger.error(f"Validation errors: {eg.exceptions}")
@@ -508,7 +508,7 @@ _pool_lock = threading.Lock()
 
 class QdrantConnectionPool:
     """Connection pool for Qdrant clients with health checking."""
-    
+
     def __init__(self, max_size: int = 10, timeout: float = 30.0):
         self.max_size = max_size
         self.timeout = timeout
@@ -516,7 +516,7 @@ class QdrantConnectionPool:
         self._lock = threading.Lock()
         self._health_check_interval = 60.0  # seconds
         self._last_health_check = 0.0
-    
+
     def get_client(self, url: str) -> QdrantClient:
         """Get or create pooled client for URL."""
         with self._lock:
@@ -525,7 +525,7 @@ class QdrantConnectionPool:
             if current_time - self._last_health_check > self._health_check_interval:
                 self._perform_health_check()
                 self._last_health_check = current_time
-            
+
             # Return existing healthy client
             if url in self._clients:
                 client = self._clients[url]
@@ -534,7 +534,7 @@ class QdrantConnectionPool:
                 else:
                     # Remove unhealthy client
                     del self._clients[url]
-            
+
             # Create new client
             if url in (":memory:", "memory://"):
                 client = DummyClient()
@@ -546,10 +546,10 @@ class QdrantConnectionPool:
                     prefer_grpc=True,
                     grpc_port=6334
                 )
-            
+
             self._clients[url] = client
             return client
-    
+
     def _is_client_healthy(self, client: QdrantClient) -> bool:
         """Check if client connection is healthy."""
         try:
@@ -558,17 +558,17 @@ class QdrantConnectionPool:
             return True
         except Exception:
             return False
-    
+
     def _perform_health_check(self) -> None:
         """Check health of all pooled clients."""
         unhealthy = []
         for url, client in self._clients.items():
             if not self._is_client_healthy(client):
                 unhealthy.append(url)
-        
+
         for url in unhealthy:
             del self._clients[url]
-    
+
     def close_all(self) -> None:
         """Close all pooled connections."""
         with self._lock:
@@ -609,7 +609,7 @@ from contextlib import asynccontextmanager
 
 class HTTPConnectionPool:
     """Async HTTP connection pool with configurable limits."""
-    
+
     def __init__(
         self,
         limit: int = 100,
@@ -622,7 +622,7 @@ class HTTPConnectionPool:
         self.ttl_dns_cache = ttl_dns_cache
         self.timeout = timeout or aiohttp.ClientTimeout(total=30)
         self._session: Optional[aiohttp.ClientSession] = None
-    
+
     @asynccontextmanager
     async def get_session(self):
         """Get or create session with connection pooling."""
@@ -633,17 +633,17 @@ class HTTPConnectionPool:
                 ttl_dns_cache=self.ttl_dns_cache,
                 enable_cleanup_closed=True
             )
-            
+
             self._session = aiohttp.ClientSession(
                 connector=connector,
                 timeout=self.timeout
             )
-        
+
         try:
             yield self._session
         finally:
             pass  # Keep session alive for reuse
-    
+
     async def close(self):
         """Close the session and cleanup connections."""
         if self._session and not self._session.closed:
@@ -670,7 +670,7 @@ http:
     limit_per_host: 30  # Per-host connections
     dns_cache_ttl: 300  # DNS cache TTL in seconds
     timeout: 30  # Default timeout in seconds
-    
+
   retry:
     max_attempts: 3
     backoff_factor: 2.0
@@ -723,13 +723,13 @@ class CacheMetrics:
     evictions: int = 0
     total_saved_cost: float = 0.0
     total_saved_latency_ms: float = 0.0
-    
+
     @property
     def hit_rate(self) -> float:
         """Calculate cache hit rate."""
         total = self.hits + self.misses
         return self.hits / total if total > 0 else 0.0
-    
+
     def to_dict(self) -> dict[str, Any]:
         """Convert metrics to dictionary."""
         return {
@@ -743,7 +743,7 @@ class CacheMetrics:
 
 class LLMCache:
     """Redis-backed LLM request/response cache with TTL."""
-    
+
     def __init__(
         self,
         redis_url: str = "redis://localhost:6379",
@@ -754,7 +754,7 @@ class LLMCache:
         self.default_ttl = default_ttl
         self.namespace = namespace
         self.metrics = CacheMetrics()
-        
+
         if REDIS_AVAILABLE:
             try:
                 self.redis_client = redis.from_url(
@@ -774,7 +774,7 @@ class LLMCache:
             logger.warning("Redis library not installed, caching disabled")
             self.redis_client = None
             self.enabled = False
-    
+
     def _generate_cache_key(
         self,
         messages: list[dict[str, str]],
@@ -790,13 +790,13 @@ class LLMCache:
             "temperature": temperature,
             "extra": sorted(kwargs.items())
         }
-        
+
         # Generate hash
         cache_str = json.dumps(cache_dict, sort_keys=True)
         hash_digest = hashlib.sha256(cache_str.encode()).hexdigest()[:16]
-        
+
         return f"{self.namespace}:{model}:{hash_digest}"
-    
+
     async def get(
         self,
         messages: list[dict[str, str]],
@@ -806,31 +806,31 @@ class LLMCache:
         """Retrieve cached response if available."""
         if not self.enabled:
             return None
-        
+
         cache_key = self._generate_cache_key(messages, model, **kwargs)
-        
+
         try:
             cached_data = self.redis_client.get(cache_key)
             if cached_data:
                 self.metrics.hits += 1
                 cached = json.loads(cached_data)
-                
+
                 # Track cost savings
                 self.metrics.total_saved_cost += cached.get("estimated_cost", 0.0)
                 self.metrics.total_saved_latency_ms += cached.get("latency_ms", 0.0)
-                
+
                 logger.debug(f"Cache HIT for model={model}")
                 return cached
             else:
                 self.metrics.misses += 1
                 logger.debug(f"Cache MISS for model={model}")
                 return None
-                
+
         except (RedisError, Exception) as e:
             logger.error(f"Cache get error: {e}")
             self.metrics.misses += 1
             return None
-    
+
     async def set(
         self,
         messages: list[dict[str, str]],
@@ -842,10 +842,10 @@ class LLMCache:
         """Store response in cache with TTL."""
         if not self.enabled:
             return False
-        
+
         cache_key = self._generate_cache_key(messages, model, **kwargs)
         ttl = ttl or self.default_ttl
-        
+
         try:
             # Add metadata
             cache_value = {
@@ -853,7 +853,7 @@ class LLMCache:
                 "cached_at": time.time(),
                 "ttl": ttl
             }
-            
+
             self.redis_client.setex(
                 cache_key,
                 ttl,
@@ -861,16 +861,16 @@ class LLMCache:
             )
             logger.debug(f"Cached response for model={model}, ttl={ttl}s")
             return True
-            
+
         except (RedisError, Exception) as e:
             logger.error(f"Cache set error: {e}")
             return False
-    
+
     async def invalidate_pattern(self, pattern: str) -> int:
         """Invalidate all keys matching pattern."""
         if not self.enabled:
             return 0
-        
+
         try:
             keys = self.redis_client.keys(f"{self.namespace}:{pattern}")
             if keys:
@@ -882,7 +882,7 @@ class LLMCache:
         except (RedisError, Exception) as e:
             logger.error(f"Cache invalidation error: {e}")
             return 0
-    
+
     def get_metrics(self) -> dict[str, Any]:
         """Get current cache metrics."""
         return self.metrics.to_dict()
@@ -900,7 +900,7 @@ class LLMRouter:
         self.clients = clients
         self.cache = LLMCache()  # Initialize cache
         # ... existing initialization
-    
+
     async def chat(
         self,
         messages: list[dict[str, str]],
@@ -911,7 +911,7 @@ class LLMRouter:
         """Route LLM request with caching."""
         # Select model
         selected_model = model or self.select_model(messages, **kwargs)
-        
+
         # Check cache first
         if use_cache:
             cached_response = await self.cache.get(
@@ -924,12 +924,12 @@ class LLMRouter:
                     cached=True,
                     **cached_response
                 )
-        
+
         # Cache miss - call LLM
         start_time = time.time()
         result = await self.clients[selected_model].chat(messages, **kwargs)
         latency_ms = (time.time() - start_time) * 1000
-        
+
         # Cache the response
         if use_cache and result.success:
             await self.cache.set(
@@ -942,7 +942,7 @@ class LLMRouter:
                 },
                 **kwargs
             )
-        
+
         return result
 ```
 
@@ -955,7 +955,7 @@ llm_cache:
   redis_url: ${REDIS_URL:-redis://localhost:6379}
   default_ttl: 3600  # 1 hour
   namespace: "llm_cache_v1"
-  
+
   # Model-specific TTL
   ttl_by_model:
     gpt-4: 7200  # 2 hours
@@ -976,7 +976,7 @@ class EnhancedVectorStore:
         self._search_cache: dict[str, tuple[list[Any], float]] = {}
         self._cache_ttl = 300  # 5 minutes
         self._cache_max_size = 1000
-    
+
     def _generate_search_cache_key(
         self,
         query_vector: list[float],
@@ -991,13 +991,13 @@ class EnhancedVectorStore:
         vector_hash = hashlib.md5(
             json.dumps(vector_sample).encode()
         ).hexdigest()[:8]
-        
+
         filter_hash = hashlib.md5(
             json.dumps(filters or {}, sort_keys=True).encode()
         ).hexdigest()[:8]
-        
+
         return f"{tenant}:{workspace}:{vector_hash}:{limit}:{filter_hash}"
-    
+
     async def search_similar(
         self,
         query_vector: list[float],
@@ -1011,12 +1011,12 @@ class EnhancedVectorStore:
         cache_key = self._generate_search_cache_key(
             query_vector, limit, tenant, workspace, filters
         )
-        
+
         # Check cache
         if use_cache and cache_key in self._search_cache:
             results, timestamp = self._search_cache[cache_key]
             age = time.time() - timestamp
-            
+
             if age < self._cache_ttl:
                 logger.debug(f"Vector search cache HIT (age={age:.1f}s)")
                 return StepResult.ok(
@@ -1024,12 +1024,12 @@ class EnhancedVectorStore:
                     cached=True,
                     cache_age_seconds=age
                 )
-        
+
         # Cache miss - perform search
         results = await self._perform_search(
             query_vector, limit, tenant, workspace, filters
         )
-        
+
         # Cache results
         if use_cache and results.success:
             # Implement LRU eviction if cache is full
@@ -1040,9 +1040,9 @@ class EnhancedVectorStore:
                     key=lambda k: self._search_cache[k][1]
                 )
                 del self._search_cache[oldest_key]
-            
+
             self._search_cache[cache_key] = (results.data["results"], time.time())
-        
+
         return results
 ```
 
@@ -1058,7 +1058,7 @@ class LLMRouter:
         # ... existing init
         self._routing_cache: dict[str, tuple[str, float]] = {}
         self._routing_cache_ttl = 600  # 10 minutes
-    
+
     def _generate_routing_cache_key(
         self,
         messages: list[dict[str, str]],
@@ -1068,15 +1068,15 @@ class LLMRouter:
         # Extract complexity indicators
         message_text = " ".join(msg["content"] for msg in messages)
         text_length = len(message_text)
-        
+
         # Bucket text length for cache efficiency
         length_bucket = (text_length // 500) * 500
-        
+
         complexity = context.get("complexity", "medium")
         budget = context.get("budget", 1.0)
-        
+
         return f"{complexity}:{length_bucket}:{budget}"
-    
+
     def select_model(
         self,
         messages: list[dict[str, str]],
@@ -1085,26 +1085,26 @@ class LLMRouter:
     ) -> str:
         """Select model with routing decision caching."""
         context = context or {}
-        
+
         # Check routing cache
         if use_cache:
             cache_key = self._generate_routing_cache_key(messages, context)
             if cache_key in self._routing_cache:
                 model, timestamp = self._routing_cache[cache_key]
                 age = time.time() - timestamp
-                
+
                 if age < self._routing_cache_ttl:
                     logger.debug(f"Routing cache HIT: {model}")
                     return model
-        
+
         # Cache miss - perform routing decision
         model = self._perform_model_selection(messages, context)
-        
+
         # Cache decision
         if use_cache:
             cache_key = self._generate_routing_cache_key(messages, context)
             self._routing_cache[cache_key] = (model, time.time())
-        
+
         return model
 ```
 
@@ -1138,13 +1138,13 @@ class EnhancedVectorStore:
                 batch_size = SMALL_BATCH_SIZE
             else:
                 batch_size = MEDIUM_BATCH_SIZE
-        
+
         total_vectors = len(vectors)
         batches = [
             (vectors[i:i+batch_size], payloads[i:i+batch_size])
             for i in range(0, total_vectors, batch_size)
         ]
-        
+
         results = []
         for batch_vectors, batch_payloads in batches:
             result = await self._upsert_batch(
@@ -1154,7 +1154,7 @@ class EnhancedVectorStore:
                 workspace
             )
             results.append(result)
-        
+
         return StepResult.ok(
             total_upserted=total_vectors,
             batches=len(batches),
@@ -1178,7 +1178,7 @@ async def compact_and_deduplicate(
     """Compact memory by removing duplicates."""
     # Fetch all vectors for tenant/workspace
     all_vectors = await self._fetch_all_vectors(tenant, workspace)
-    
+
     # Find duplicates using cosine similarity
     duplicates = []
     for i, vec1 in enumerate(all_vectors):
@@ -1189,12 +1189,12 @@ async def compact_and_deduplicate(
             )
             if similarity > similarity_threshold:
                 duplicates.append((vec1["id"], vec2["id"], similarity))
-    
+
     # Remove duplicates (keep first, remove second)
     ids_to_remove = [dup[1] for dup in duplicates]
     if ids_to_remove:
         await self._delete_vectors(ids_to_remove, tenant, workspace)
-    
+
     return StepResult.ok(
         duplicates_found=len(duplicates),
         vectors_removed=len(ids_to_remove),
@@ -1224,7 +1224,7 @@ The Ultimate Discord Intelligence Bot uses a CrewAI-based multi-agent system wit
 
 ### 1. Mission Orchestrator Agent
 **Role:** Coordinates the entire analysis pipeline
-**Tools:** 
+**Tools:**
 - `pipeline_tool` - Triggers content ingestion pipeline
 - `memory_query_tool` - Queries stored analysis results
 **Backstory:** [From agents.yaml]

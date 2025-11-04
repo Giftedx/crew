@@ -17,7 +17,7 @@ entities:
       platform_handles:
         type: map<string, string>
         required: false
-        description: Map of platform names to handles (e.g., {"youtube": "@h3podcast", "twitch": "hasanabi"})
+        description: "Map of platform names to handles (e.g., {\"youtube\": \"@h3podcast\", \"twitch\": \"hasanabi\"})"
       primary_platform:
         type: string
         required: false

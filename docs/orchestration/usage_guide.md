@@ -1,18 +1,18 @@
 # Orchestration Framework - Usage Guide
 
-**Version**: 1.0  
-**Last Updated**: October 31, 2025  
-**Phase**: 1.2 Complete ✅  
+**Version**: 1.0
+**Last Updated**: October 31, 2025
+**Phase**: 1.2 Complete ✅
 **Status**: Production Ready
 
 ---
 
 ## 🚀 Quick Navigation
 
-**New to orchestration?** → Start with [Quick Start](#quick-start)  
-**Migrating an orchestrator?** → Jump to [Migration Patterns](#migration-patterns)  
-**Need API reference?** → See [API Reference](#api-reference)  
-**Stuck on an error?** → Check [Troubleshooting](#troubleshooting)  
+**New to orchestration?** → Start with [Quick Start](#quick-start)
+**Migrating an orchestrator?** → Jump to [Migration Patterns](#migration-patterns)
+**Need API reference?** → See [API Reference](#api-reference)
+**Stuck on an error?** → Check [Troubleshooting](#troubleshooting)
 **Want to understand layers?** → Read [Layer Assignment Guide](#layer-assignment-guide)
 
 ---
@@ -57,11 +57,11 @@ The orchestration framework is a unified, hierarchical system for managing compl
 
 ### Key Benefits
 
-✅ **Consistency** - All orchestrators follow same patterns  
-✅ **Discoverability** - Centralized registration and lookup  
-✅ **Observability** - Built-in structured logging and metrics  
-✅ **Lifecycle Management** - Proper initialization and cleanup  
-✅ **Type Safety** - Protocol-based design with type hints  
+✅ **Consistency** - All orchestrators follow same patterns
+✅ **Discoverability** - Centralized registration and lookup
+✅ **Observability** - Built-in structured logging and metrics
+✅ **Lifecycle Management** - Proper initialization and cleanup
+✅ **Type Safety** - Protocol-based design with type hints
 ✅ **Testability** - Clean separation of concerns
 
 ---
@@ -93,7 +93,7 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class MyOrchestrator(BaseOrchestrator):
     """My awesome orchestrator."""
-    
+
     def __init__(self):
         super().__init__(
             layer=OrchestrationLayer.DOMAIN,  # Choose appropriate layer
@@ -101,7 +101,7 @@ class MyOrchestrator(BaseOrchestrator):
             orchestration_type=OrchestrationType.SEQUENTIAL,  # Choose type
         )
         # Your initialization here
-    
+
     async def orchestrate(
         self,
         context: OrchestrationContext,
@@ -109,14 +109,14 @@ class MyOrchestrator(BaseOrchestrator):
     ) -> StepResult:
         """Execute orchestration logic."""
         self._log_orchestration_start(context, **kwargs)
-        
+
         # Your orchestration logic here
         result_data = {"status": "success", "message": "Hello, World!"}
-        
+
         result = StepResult.ok(result=result_data)
         self._log_orchestration_end(context, result)
         return result
-    
+
     async def cleanup(self) -> None:
         """Clean up resources (optional)."""
         pass
@@ -320,7 +320,7 @@ Each pattern is production-tested with comprehensive validation.
 class MyWorkflowOrchestrator:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-    
+
     async def execute_workflow(
         self,
         interaction: Any,
@@ -346,14 +346,14 @@ from ultimate_discord_intelligence_bot.step_result import StepResult
 
 class MyWorkflowOrchestrator(BaseOrchestrator):
     """My workflow orchestrator."""
-    
+
     def __init__(self):
         super().__init__(
             layer=OrchestrationLayer.DOMAIN,
             name="my_workflow",
             orchestration_type=OrchestrationType.SEQUENTIAL,
         )
-    
+
     async def orchestrate(
         self,
         context: OrchestrationContext,
@@ -361,19 +361,19 @@ class MyWorkflowOrchestrator(BaseOrchestrator):
     ) -> StepResult:
         """Execute orchestration logic."""
         self._log_orchestration_start(context, **kwargs)
-        
+
         # Extract parameters from kwargs
         interaction = kwargs.get("interaction")
         content_url = kwargs.get("content_url")
         depth = kwargs.get("depth", "standard")
-        
+
         # Business logic (unchanged)
         result = await self._analyze(content_url, depth)
-        
+
         # Send Discord message (unchanged)
         if interaction:
             await interaction.send(f"Analysis: {result}")
-        
+
         # Return StepResult
         result = StepResult.ok(
             result={
@@ -464,13 +464,13 @@ class MyMonitoringOrchestrator:
         self._health_data = {}
         # START TASKS IN __init__ - WRONG!
         asyncio.create_task(self._monitoring_loop())
-    
+
     async def _monitoring_loop(self):
         """Background monitoring task."""
         while True:  # Infinite loop - no shutdown mechanism!
             await self._check_health()
             await asyncio.sleep(60)
-    
+
     async def execute_with_monitoring(self, func, *args):
         """Execute with monitoring."""
         return await func(*args)
@@ -490,7 +490,7 @@ import asyncio
 
 class MyMonitoringOrchestrator(BaseOrchestrator):
     """My monitoring orchestrator."""
-    
+
     def __init__(self):
         super().__init__(
             layer=OrchestrationLayer.INFRASTRUCTURE,
@@ -501,19 +501,19 @@ class MyMonitoringOrchestrator(BaseOrchestrator):
         self._shutdown_event = asyncio.Event()
         self._monitoring_task = None
         self._monitoring_started = False
-    
+
     def _start_monitoring(self) -> None:
         """Start background monitoring (lazy initialization)."""
         if self._monitoring_started:
             return
-        
+
         try:
             self._monitoring_task = asyncio.create_task(self._monitoring_loop())
             self._monitoring_started = True
         except RuntimeError:
             # No event loop yet - will start on first orchestrate() call
             pass
-    
+
     async def _monitoring_loop(self):
         """Background monitoring task with graceful shutdown."""
         while not self._shutdown_event.is_set():
@@ -528,7 +528,7 @@ class MyMonitoringOrchestrator(BaseOrchestrator):
                 continue  # Normal - just continue monitoring
             except Exception as e:
                 self.logger.error("monitoring_error", error=str(e))
-    
+
     async def orchestrate(
         self,
         context: OrchestrationContext,
@@ -538,11 +538,11 @@ class MyMonitoringOrchestrator(BaseOrchestrator):
         # Start monitoring on first call
         if not self._monitoring_started:
             self._start_monitoring()
-        
+
         self._log_orchestration_start(context, **kwargs)
-        
+
         operation = kwargs.get("operation", "execute")
-        
+
         if operation == "execute":
             func = kwargs.get("func")
             args = kwargs.get("args", ())
@@ -555,15 +555,15 @@ class MyMonitoringOrchestrator(BaseOrchestrator):
                 f"Unknown operation: {operation}",
                 error_category=ErrorCategory.VALIDATION,
             )
-        
+
         self._log_orchestration_end(context, result)
         return result
-    
+
     async def cleanup(self) -> None:
         """Clean shutdown with timeout protection."""
         # Signal shutdown
         self._shutdown_event.set()
-        
+
         # Wait for task to complete (with timeout)
         if self._monitoring_task and not self._monitoring_task.done():
             try:
@@ -650,25 +650,25 @@ class MyCoordinationOrchestrator:
         from my_app.router_a import get_router_a
         from my_app.router_b import get_router_b
         from my_app.manager import get_manager
-        
+
         self._router_a = router_a or get_router_a()
         self._router_b = router_b or get_router_b()
         self._manager = manager or get_manager()
-        
+
         self._queues = {"a": deque(), "b": deque()}
-        
+
         # Global singleton
         global _instance
         _instance = self
-    
+
     def start(self):
         """Start background tasks."""
         asyncio.create_task(self._processing_loop())
-    
+
     def submit_signal(self, component, data):
         """Submit a signal."""
         self._queues[component].append(data)
-    
+
     def get_metrics(self):
         """Get metrics."""
         return {"signals": len(self._queues["a"]) + len(self._queues["b"])}
@@ -699,7 +699,7 @@ if TYPE_CHECKING:
 
 class MyCoordinationOrchestrator(BaseOrchestrator):
     """My coordination orchestrator."""
-    
+
     def __init__(
         self,
         router_a: "RouterA | None" = None,
@@ -711,16 +711,16 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
             name="my_coordination",
             orchestration_type=OrchestrationType.COORDINATION,
         )
-        
+
         # Lazy-loaded dependencies (stored as None)
         self._router_a = router_a
         self._router_b = router_b
         self._manager = manager
-        
+
         self._queues = {"a": deque(), "b": deque()}
         self._shutdown_event = asyncio.Event()
         self._tasks_started = False
-    
+
     # Lazy getters for dependencies
     @property
     def router_a(self) -> "RouterA":
@@ -728,21 +728,21 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
             from my_app.router_a import get_router_a
             self._router_a = get_router_a()
         return self._router_a
-    
+
     @property
     def router_b(self) -> "RouterB":
         if self._router_b is None:
             from my_app.router_b import get_router_b
             self._router_b = get_router_b()
         return self._router_b
-    
+
     @property
     def manager(self) -> "Manager":
         if self._manager is None:
             from my_app.manager import get_manager
             self._manager = get_manager()
         return self._manager
-    
+
     def _start_background_tasks(self) -> None:
         """Start background processing tasks (lazy initialization)."""
         if self._tasks_started:
@@ -752,7 +752,7 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
             self._tasks_started = True
         except RuntimeError:
             pass  # Will start on first orchestrate() call
-    
+
     async def _processing_loop(self):
         """Background processing with shutdown support."""
         while not self._shutdown_event.is_set():
@@ -761,9 +761,9 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
                 while queue:
                     signal = queue.popleft()
                     await self._process_signal(component, signal)
-            
+
             await asyncio.sleep(1)
-    
+
     async def orchestrate(
         self,
         context: OrchestrationContext,
@@ -773,18 +773,18 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
         # Start background tasks on first call
         if not self._tasks_started:
             self._start_background_tasks()
-        
+
         self._log_orchestration_start(context, **kwargs)
-        
+
         # Operation routing
         operation = kwargs.get("operation", "submit_signal")
-        
+
         if operation == "submit_signal":
             component = kwargs.get("component")
             data = kwargs.get("data")
             self._queues[component].append(data)
             result = StepResult.ok(result={"queued": True})
-        
+
         elif operation == "get_metrics":
             metrics = {
                 "signals": sum(len(q) for q in self._queues.values()),
@@ -792,24 +792,24 @@ class MyCoordinationOrchestrator(BaseOrchestrator):
                 "queue_b": len(self._queues["b"]),
             }
             result = StepResult.ok(result=metrics)
-        
+
         elif operation == "start":
             self._start_background_tasks()
             result = StepResult.ok(result={"status": "started"})
-        
+
         elif operation == "stop":
             self._shutdown_event.set()
             result = StepResult.ok(result={"status": "stopped"})
-        
+
         else:
             result = StepResult.fail(
                 f"Unknown operation: {operation}",
                 error_category=ErrorCategory.VALIDATION,
             )
-        
+
         self._log_orchestration_end(context, result)
         return result
-    
+
     async def cleanup(self) -> None:
         """Clean shutdown."""
         self._shutdown_event.set()
@@ -907,7 +907,7 @@ class MyOrchestrator(BaseOrchestrator):
     def __init__(self):
         super().__init__(...)
         self._task_started = False
-    
+
     def _start_task(self) -> None:
         if self._task_started:
             return
@@ -916,7 +916,7 @@ class MyOrchestrator(BaseOrchestrator):
             self._task_started = True
         except RuntimeError:
             pass  # Will start on first orchestrate() call
-    
+
     async def orchestrate(self, context, **kwargs):
         if not self._task_started:
             self._start_task()
@@ -932,7 +932,7 @@ class MyOrchestrator(BaseOrchestrator):
     def __init__(self):
         super().__init__(...)
         self._shutdown_event = asyncio.Event()
-    
+
     async def _background_loop(self):
         while not self._shutdown_event.is_set():
             # Do work
@@ -943,7 +943,7 @@ class MyOrchestrator(BaseOrchestrator):
                 )
             except asyncio.TimeoutError:
                 continue
-    
+
     async def cleanup(self):
         self._shutdown_event.set()
         # Wait for tasks with timeout
@@ -956,7 +956,7 @@ class MyOrchestrator(BaseOrchestrator):
 ```python
 async def cleanup(self) -> None:
     self._shutdown_event.set()
-    
+
     if self._task and not self._task.done():
         try:
             await asyncio.wait_for(self._task, timeout=5.0)
@@ -1017,7 +1017,7 @@ orch = get_orchestrator()
 ```python
 async def orchestrate(self, context, **kwargs):
     operation = kwargs.get("operation", "default")
-    
+
     if operation == "execute":
         return await self._execute(context, **kwargs)
     elif operation == "get_status":
@@ -1057,10 +1057,10 @@ def router(self):
 async def orchestrate(self, context, **kwargs):
     # BaseOrchestrator automatically filters conflicting kwargs
     self._log_orchestration_start(context, **kwargs)
-    
+
     # Your logic
     result = StepResult.ok(result={...})
-    
+
     self._log_orchestration_end(context, result)
     return result
 ```
@@ -1110,25 +1110,25 @@ class BaseOrchestrator(ABC):
         orchestration_type: OrchestrationType,
     ):
         """Initialize orchestrator.
-        
+
         Args:
             layer: Orchestration layer (DOMAIN, APPLICATION, INFRASTRUCTURE)
             name: Unique orchestrator name
             orchestration_type: Type of orchestration
         """
-    
+
     @property
     def layer(self) -> OrchestrationLayer:
         """Get orchestration layer."""
-    
+
     @property
     def name(self) -> str:
         """Get orchestrator name."""
-    
+
     @property
     def orchestration_type(self) -> OrchestrationType:
         """Get orchestration type."""
-    
+
     @abstractmethod
     async def orchestrate(
         self,
@@ -1136,36 +1136,36 @@ class BaseOrchestrator(ABC):
         **kwargs: Any,
     ) -> StepResult:
         """Execute orchestration logic.
-        
+
         Args:
             context: Orchestration context
             **kwargs: Operation-specific parameters
-            
+
         Returns:
             StepResult with execution outcome
         """
-    
+
     async def can_orchestrate(
         self,
         context: OrchestrationContext,
         **kwargs: Any,
     ) -> bool:
         """Check if can orchestrate (optional override).
-        
+
         Returns:
             True if can orchestrate, False otherwise
         """
-    
+
     async def cleanup(self) -> None:
         """Clean up resources (optional override)."""
-    
+
     def _log_orchestration_start(
         self,
         context: OrchestrationContext,
         **kwargs: Any,
     ) -> None:
         """Log orchestration start (use in orchestrate())."""
-    
+
     def _log_orchestration_end(
         self,
         context: OrchestrationContext,
@@ -1187,13 +1187,13 @@ class OrchestrationContext:
     trace_id: str | None = None  # Trace ID for distributed tracing
     parent_orchestrator: str | None = None  # Parent orchestrator name
     orchestration_depth: int = 0  # Depth in hierarchy
-    
+
     def create_child_context(self, parent_name: str) -> "OrchestrationContext":
         """Create child context for nested orchestration.
-        
+
         Args:
             parent_name: Parent orchestrator name
-            
+
         Returns:
             New context with incremented depth
         """
@@ -1207,47 +1207,47 @@ Unified entry point for all orchestration.
 class OrchestrationFacade:
     def register(self, orchestrator: OrchestratorProtocol) -> None:
         """Register an orchestrator.
-        
+
         Args:
             orchestrator: Orchestrator instance
-            
+
         Raises:
             ValueError: If orchestrator with same name already registered
         """
-    
+
     def unregister(self, name: str) -> None:
         """Unregister an orchestrator.
-        
+
         Args:
             name: Orchestrator name
-            
+
         Raises:
             ValueError: If orchestrator not found
         """
-    
+
     def get(self, name: str) -> OrchestratorProtocol | None:
         """Get orchestrator by name.
-        
+
         Args:
             name: Orchestrator name
-            
+
         Returns:
             Orchestrator instance or None if not found
         """
-    
+
     def get_by_layer(
         self,
         layer: OrchestrationLayer,
     ) -> Sequence[OrchestratorProtocol]:
         """Get all orchestrators in a layer.
-        
+
         Args:
             layer: Orchestration layer
-            
+
         Returns:
             List of orchestrators in layer
         """
-    
+
     async def orchestrate(
         self,
         orchestrator_name: str,
@@ -1255,19 +1255,19 @@ class OrchestrationFacade:
         **kwargs: Any,
     ) -> StepResult:
         """Execute orchestration via facade.
-        
+
         Args:
             orchestrator_name: Name of orchestrator to execute
             context: Orchestration context
             **kwargs: Operation-specific parameters
-            
+
         Returns:
             StepResult from orchestration
         """
-    
+
     def list_orchestrators(self) -> dict[str, dict]:
         """List all registered orchestrators.
-        
+
         Returns:
             Dict mapping name to orchestrator info
         """

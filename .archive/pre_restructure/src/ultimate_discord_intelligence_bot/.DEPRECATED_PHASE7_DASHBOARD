@@ -70,10 +70,10 @@ router = APIRouter()
 async def get_performance_data():
     """Get comprehensive performance data."""
     analytics = get_analytics_service()
-    
+
     health = analytics.get_system_health()
     metrics = analytics.get_performance_metrics()
-    
+
     return {
         "health": health.data if health.ok else {},
         "metrics": metrics.data if metrics.ok else {},
@@ -85,7 +85,7 @@ async def get_recommendations():
     """Get optimization recommendations."""
     analytics = get_analytics_service()
     health = analytics.get_system_health()
-    
+
     return {
         "recommendations": health.data.get("recommendations", [])
         if health.ok else []
@@ -159,7 +159,7 @@ MIGRATION STEPS
    ```python
    # Remove
    from ultimate_discord_intelligence_bot.performance_dashboard import PerformanceDashboard
-   
+
    # Add
    from ultimate_discord_intelligence_bot.observability import get_analytics_service
    ```
@@ -169,7 +169,7 @@ MIGRATION STEPS
    ```python
    # Remove
    dashboard = PerformanceDashboard() or get_performance_dashboard()
-   
+
    # Add
    analytics = get_analytics_service()
    ```
@@ -180,7 +180,7 @@ MIGRATION STEPS
    # Old
    metrics = dashboard.get_comprehensive_metrics()
    cache_hit_rate = metrics["cache_performance"]["hit_rate"]
-   
+
    # New
    perf_result = analytics.get_performance_metrics()
    cache_hit_rate = perf_result.data["cache_hit_rate"] if perf_result.ok else 0.0

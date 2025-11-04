@@ -12,7 +12,7 @@ import logging
 import time
 from copy import deepcopy
 from dataclasses import dataclass, field
-from platform.flags import enabled
+from platform.config.flags import enabled
 from typing import Any
 
 import yaml

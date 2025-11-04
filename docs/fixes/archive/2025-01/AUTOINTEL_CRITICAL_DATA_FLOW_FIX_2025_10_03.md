@@ -242,17 +242,17 @@ def test_global_context_flow():
         reset_global_crew_context,
         get_global_crew_context,
     )
-    
+
     reset_global_crew_context()
-    
+
     # Simulate Task 1 tool updating context
     tool1 = CrewAIToolWrapper(MockDownloadTool())
     tool1.update_context({"file_path": "/test/video.mp4", "media_info": {"title": "Test"}})
-    
+
     # Simulate Task 2 tool reading context
     tool2 = CrewAIToolWrapper(MockTranscriptionTool())
     global_ctx = get_global_crew_context()
-    
+
     assert "file_path" in global_ctx
     assert global_ctx["file_path"] == "/test/video.mp4"
     assert "media_info" in global_ctx
@@ -265,16 +265,16 @@ def test_autointel_e2e_with_real_url():
     """End-to-end test with actual YouTube URL."""
     # Mock Discord interaction
     interaction = MockDiscordInteraction()
-    
+
     orchestrator = AutonomousOrchestrator()
-    
+
     # Execute /autointel command
     await orchestrator.execute_autointel(
         interaction=interaction,
         url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",  # Rick Roll for testing
         depth="standard",  # Just acquisition + transcription + analysis
     )
-    
+
     # Verify task chain executed successfully
     # - Acquisition downloaded video
     # - Transcription got file_path from context
@@ -337,7 +337,7 @@ Negligible - the global context dictionary is small (typically <10 keys) and ope
 
 ## Author
 
-GitHub Copilot (AI Programming Assistant)  
+GitHub Copilot (AI Programming Assistant)
 Date: October 3, 2025
 
 ---

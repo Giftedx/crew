@@ -1,6 +1,6 @@
 # /autointel Command - IMMEDIATE Diagnostic Steps
 
-**Status**: 🔴 Critical failures reported  
+**Status**: 🔴 Critical failures reported
 **Your Command**: `/autointel url:https://www.youtube.com/watch?v=xtFiJ8AVdW0 depth:Experimental - Cutting-Edge AI`
 
 ---

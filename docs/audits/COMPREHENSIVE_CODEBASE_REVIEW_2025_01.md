@@ -1,8 +1,8 @@
 # Comprehensive Codebase Review & Refactoring Plan
 
-**Date**: January 2025  
-**Project**: Ultimate Discord Intelligence Bot  
-**Review Protocol**: Followed `.github/prompts/review.prompt.md`  
+**Date**: January 2025
+**Project**: Ultimate Discord Intelligence Bot
+**Review Protocol**: Followed `.github/prompts/review.prompt.md`
 **Status**: Architecture Consolidation 75-80% Complete, Migration 45-60% Complete
 
 ---
@@ -70,9 +70,9 @@ download → transcription → analysis → memory → Discord posting
 
 ```python
 StepResult.ok/skip/fail/uncertain(
-    data, 
-    step="<phase>", 
-    error_category=ErrorCategory.*, 
+    data,
+    step="<phase>",
+    error_category=ErrorCategory.*,
     retryable=bool
 )
 ```
@@ -165,7 +165,7 @@ src/ultimate_discord_intelligence_bot/services/
 ├── cache.py (RedisLLMCache, make_key)
 ├── cache_optimizer.py ✅ .deprecated marker exists
 ├── rl_cache_optimizer.py ✅ .deprecated marker exists
-│   └── 7 classes: CacheStrategy, CacheEntry, CacheContext, 
+│   └── 7 classes: CacheStrategy, CacheEntry, CacheContext,
 │       CacheAction, CacheReward, CacheOptimizationBandit, RLCacheOptimizer
 └── cache_shadow_harness.py (shadow testing harness)
 
@@ -720,9 +720,9 @@ grep -r "import archive" src/ --include="*.py"
 
 #### 1. Complete Cache Migration (ADR-0001)
 
-**Category**: Infrastructure Consolidation  
-**Impact Score**: 9/10  
-**Integration Effort**: MEDIUM  
+**Category**: Infrastructure Consolidation
+**Impact Score**: 9/10
+**Integration Effort**: MEDIUM
 
 **Key Benefits**:
 
@@ -761,16 +761,16 @@ namespace = get_cache_namespace(tenant="acme", workspace="main")
 - Cache hit rate variance < 5% (shadow mode)
 - All tools using UnifiedCache facade
 
-**Timeline**: 1-2 weeks  
+**Timeline**: 1-2 weeks
 **Priority**: **CRITICAL**
 
 ---
 
 #### 2. Complete Routing Migration (ADR-0003)
 
-**Category**: Infrastructure Consolidation  
-**Impact Score**: 10/10  
-**Integration Effort**: HIGH  
+**Category**: Infrastructure Consolidation
+**Impact Score**: 10/10
+**Integration Effort**: HIGH
 
 **Key Benefits**:
 
@@ -824,16 +824,16 @@ result = await service.route(
 - Routing decision quality parity (shadow mode validation)
 - All RL capabilities preserved in plugins
 
-**Timeline**: 2-3 weeks  
+**Timeline**: 2-3 weeks
 **Priority**: **CRITICAL**
 
 ---
 
 #### 3. Complete Memory Migration (ADR-0002)
 
-**Category**: Infrastructure Consolidation  
-**Impact Score**: 8/10  
-**Integration Effort**: MEDIUM-HIGH  
+**Category**: Infrastructure Consolidation
+**Impact Score**: 8/10
+**Integration Effort**: MEDIUM-HIGH
 
 **Key Benefits**:
 
@@ -850,15 +850,15 @@ result = await service.route(
    # src/ultimate_discord_intelligence_bot/memory/__init__.py
    from memory.vector_store import VectorStore
    from ultimate_discord_intelligence_bot.tenancy import with_tenant, mem_ns
-   
+
    class UnifiedMemoryService:
        def __init__(self):
            self.store = VectorStore()
-       
+
        def upsert(self, tenant, workspace, records, creator):
            ns = mem_ns(TenantContext(tenant, workspace), creator)
            return self.store.upsert(namespace=ns, records=records)
-       
+
        def query(self, tenant, workspace, vector, top_k, creator):
            ns = mem_ns(TenantContext(tenant, workspace), creator)
            return self.store.query(namespace=ns, vector=vector, limit=top_k)
@@ -902,16 +902,16 @@ result = memory.upsert(tenant="acme", workspace="main", records=docs, creator="p
 - **Recommendation**: **PLUGIN** for Mem0, HippoRAG (unique value)
 - **Deprecate**: memory_compaction_tool (subsumed by VectorStore maintenance)
 
-**Timeline**: 2-3 weeks  
+**Timeline**: 2-3 weeks
 **Priority**: **CRITICAL**
 
 ---
 
 #### 4. Complete Orchestration Migration (ADR-0004)
 
-**Category**: Infrastructure Consolidation  
-**Impact Score**: 8/10  
-**Integration Effort**: MEDIUM  
+**Category**: Infrastructure Consolidation
+**Impact Score**: 8/10
+**Integration Effort**: MEDIUM
 
 **Key Benefits**:
 
@@ -926,14 +926,14 @@ result = memory.upsert(tenant="acme", workspace="main", records=docs, creator="p
 
    ```python
    from enum import Enum
-   
+
    class OrchestrationStrategy(Enum):
        AUTONOMOUS = "autonomous"
        FALLBACK = "fallback"
        HIERARCHICAL = "hierarchical"
        MONITORING = "monitoring"
        RESILIENCE = "resilience"
-   
+
    class StrategyInterface(Protocol):
        async def execute_workflow(self, tasks: list) -> StepResult: ...
    ```
@@ -953,7 +953,7 @@ result = memory.upsert(tenant="acme", workspace="main", records=docs, creator="p
                OrchestrationStrategy.HIERARCHICAL: HierarchicalStrategy(),
                # ...
            }
-       
+
        async def execute(self, strategy: OrchestrationStrategy, tasks: list):
            return await self.strategies[strategy].execute_workflow(tasks)
    ```
@@ -975,7 +975,7 @@ orch = get_orchestrator(OrchestrationStrategy.FALLBACK)
 result = await orch.execute_workflow(tasks)
 ```
 
-**Timeline**: 2-3 weeks  
+**Timeline**: 2-3 weeks
 **Priority**: **CRITICAL**
 
 ---
@@ -984,9 +984,9 @@ result = await orch.execute_workflow(tasks)
 
 #### 5. Consolidate Performance Monitoring (ADR-0005)
 
-**Category**: Analytics Consolidation  
-**Impact Score**: 7/10  
-**Integration Effort**: MEDIUM  
+**Category**: Analytics Consolidation
+**Impact Score**: 7/10
+**Integration Effort**: MEDIUM
 
 **Key Benefits**:
 
@@ -1009,7 +1009,7 @@ result = await orch.execute_workflow(tasks)
    from performance_dashboard import PerformanceDashboard
    dash = PerformanceDashboard()
    metrics = dash._analyze_step_results()  # anti-pattern
-   
+
    # AFTER (through analytics facade)
    from ultimate_discord_intelligence_bot.observability import get_analytics_service
    analytics = get_analytics_service()
@@ -1027,16 +1027,16 @@ result = await orch.execute_workflow(tasks)
 
 5. **Update AdvancedPerformanceAnalyticsTool** to use facade
 
-**Timeline**: 2-3 weeks  
+**Timeline**: 2-3 weeks
 **Priority**: **HIGH**
 
 ---
 
 #### 6. Extract Enhanced Bandit Logic into Plugins
 
-**Category**: RL Enhancement  
-**Impact Score**: 8/10  
-**Integration Effort**: LOW  
+**Category**: RL Enhancement
+**Impact Score**: 8/10
+**Integration Effort**: LOW
 
 **Key Benefits**:
 
@@ -1057,16 +1057,16 @@ result = await orch.execute_workflow(tasks)
    ```python
    # openrouter_service/plugins/bandits.py
    from abc import ABC, abstractmethod
-   
+
    class BanditPlugin(ABC):
        @abstractmethod
        def select_arm(self, context: dict) -> str:
            pass
-       
+
        @abstractmethod
        def update(self, arm: str, reward: float, context: dict):
            pass
-   
+
    class EnhancedLinUCBPlugin(BanditPlugin):
        # Extract logic from advanced_contextual_bandits.py
        pass
@@ -1102,16 +1102,16 @@ class EnhancedLinUCBPlugin(BanditPlugin):
         return np.array(features)
 ```
 
-**Timeline**: 1 week  
+**Timeline**: 1 week
 **Priority**: **HIGH**
 
 ---
 
 #### 7. Enhance Prompt Compression with Adaptive Strategies
 
-**Category**: LLM Optimization  
-**Impact Score**: 7/10  
-**Integration Effort**: LOW  
+**Category**: LLM Optimization
+**Impact Score**: 7/10
+**Integration Effort**: LOW
 
 **Key Benefits**:
 
@@ -1129,9 +1129,9 @@ class EnhancedLinUCBPlugin(BanditPlugin):
        def compress(self, prompt: str, target_tokens: int, strategy: str = "auto"):
            if strategy == "auto":
                strategy = self._select_strategy(prompt, target_tokens)
-           
+
            return self.strategies[strategy].compress(prompt, target_tokens)
-       
+
        def _select_strategy(self, prompt, target_tokens):
            # Analyze prompt characteristics
            if self._is_code_heavy(prompt):
@@ -1151,7 +1151,7 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 
 4. **A/B test** adaptive vs fixed compression
 
-**Timeline**: 1 week  
+**Timeline**: 1 week
 **Priority**: **HIGH**
 
 ---
@@ -1160,9 +1160,9 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 
 #### 8. Expand AgentEvals Trajectory Analysis
 
-**Category**: Observability  
-**Impact Score**: 6/10  
-**Integration Effort**: LOW  
+**Category**: Observability
+**Impact Score**: 6/10
+**Integration Effort**: LOW
 
 **Key Benefits**:
 
@@ -1178,16 +1178,16 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 3. Add dashboard visualizations
 4. Automated anomaly detection on trajectories
 
-**Timeline**: 1-2 weeks  
+**Timeline**: 1-2 weeks
 **Priority**: **MEDIUM**
 
 ---
 
 #### 9. Evaluate LangGraph for Complex Workflows
 
-**Category**: Agent Framework Enhancement  
-**Impact Score**: 7/10  
-**Integration Effort**: MEDIUM  
+**Category**: Agent Framework Enhancement
+**Impact Score**: 7/10
+**Integration Effort**: MEDIUM
 
 **Key Benefits**:
 
@@ -1209,7 +1209,7 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 - ✅ Long-running, resumable workflows
 - ❌ Simple linear agent chains (use CrewAI)
 
-**Timeline**: 2-3 weeks (pilot + evaluation)  
+**Timeline**: 2-3 weeks (pilot + evaluation)
 **Priority**: **MEDIUM**
 
 ---
@@ -1282,10 +1282,10 @@ class EnhancedLinUCBPlugin(BanditPlugin):
 
 ### Timeline Summary
 
-**Week 1-2**: Quick wins + Cache migration  
-**Week 3-5**: Memory + Orchestration migrations  
-**Week 6-8**: Routing + Analytics migrations  
-**Week 9-11**: LangGraph evaluation + cleanup  
+**Week 1-2**: Quick wins + Cache migration
+**Week 3-5**: Memory + Orchestration migrations
+**Week 6-8**: Routing + Analytics migrations
+**Week 9-11**: LangGraph evaluation + cleanup
 **Week 12**: Final validation + documentation
 
 **Total**: 12 weeks (3 months) to complete consolidation
@@ -1385,7 +1385,7 @@ jobs:
           ! grep -r "from ai.routing" src/ --include="*.py"
           ! grep -r "from performance" src/ --include="*.py"
           ! grep -r "from archive" src/ --include="*.py"
-      
+
       - name: Check for .deprecated files
         run: |
           # Fail if any .deprecated files exist
@@ -1441,7 +1441,7 @@ The project is **production-ready** with **strong fundamentals**. Completing the
 
 ---
 
-**Review conducted by**: AI Principal Engineer  
-**Methodology**: #sequentialthinking + #Context7 research + workspace analysis  
-**Tools used**: semantic_search, grep_search, file_search, read_file, vscode-websearch, Context7 documentation lookup  
+**Review conducted by**: AI Principal Engineer
+**Methodology**: #sequentialthinking + #Context7 research + workspace analysis
+**Tools used**: semantic_search, grep_search, file_search, read_file, vscode-websearch, Context7 documentation lookup
 **Total analysis time**: Comprehensive multi-phase review per protocol

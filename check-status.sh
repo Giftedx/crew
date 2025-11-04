@@ -40,7 +40,7 @@ if [ -d "logs/services" ] && [ -n "$(ls -A logs/services/*.pid 2>/dev/null)" ]; 
         if [ -f "$pidfile" ]; then
             pid=$(cat "$pidfile")
             service_name=$(basename "$pidfile" .pid)
-            
+
             if ps -p "$pid" > /dev/null 2>&1; then
                 uptime=$(ps -o etime= -p "$pid" | tr -d ' ')
                 log_success "$service_name (PID: $pid, uptime: $uptime)"
@@ -101,14 +101,14 @@ check_port 3000 "Grafana"
 echo -e "\n${BLUE}=== Configuration ===${NC}"
 if [ -f ".env" ]; then
     log_success ".env file exists"
-    
+
     # Check critical keys
     if grep -q "DISCORD_BOT_TOKEN=.*[^-placeholder]" .env 2>/dev/null; then
         log_success "DISCORD_BOT_TOKEN configured"
     else
         log_warning "DISCORD_BOT_TOKEN not configured"
     fi
-    
+
     if grep -q "OPENROUTER_API_KEY=.*[^-placeholder]" .env 2>/dev/null || grep -q "OPENAI_API_KEY=.*[^-placeholder]" .env 2>/dev/null; then
         log_success "LLM API key configured"
     else
@@ -122,7 +122,7 @@ fi
 echo -e "\n${BLUE}=== Environment ===${NC}"
 if [ -d ".venv" ]; then
     log_success "Virtual environment exists"
-    
+
     if [ -f ".venv/bin/python" ]; then
         python_version=$(.venv/bin/python --version 2>&1)
         log_success "Python: $python_version"

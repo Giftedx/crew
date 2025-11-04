@@ -1,7 +1,7 @@
 # PostHog Telemetry Fix Applied
 
-**Date:** October 6, 2025  
-**Issue:** CrewAI PostHog telemetry causing connection errors to `us.i.posthog.com:443`  
+**Date:** October 6, 2025
+**Issue:** CrewAI PostHog telemetry causing connection errors to `us.i.posthog.com:443`
 **Status:** ✅ FIXED
 
 ## What Was Changed

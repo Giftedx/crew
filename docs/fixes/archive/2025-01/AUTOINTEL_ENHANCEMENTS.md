@@ -183,7 +183,7 @@ Everything from Comprehensive, plus:
 ### Comprehensive Investigation
 
 ```
-/autointel url:https://twitter.com/example/status/123 depth:Comprehensive  
+/autointel url:https://twitter.com/example/status/123 depth:Comprehensive
 ```
 
 ### Experimental AI Features
@@ -197,7 +197,7 @@ Everything from Comprehensive, plus:
 ### Speed Improvements
 
 - **Standard**: ~3 minutes (10 stages)
-- **Deep**: ~8 minutes (15 stages)  
+- **Deep**: ~8 minutes (15 stages)
 - **Comprehensive**: ~15 minutes (20 stages)
 - **Experimental**: ~25 minutes (25 stages)
 

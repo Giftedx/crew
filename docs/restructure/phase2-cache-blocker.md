@@ -26,4 +26,3 @@
 1. Continue with other Phase 2 consolidations (http/, rl/, observability/)
 2. Return to cache consolidation after locating/creating bounded_cache
 3. Alternative: Move core/cache files to platform/cache/ and fix imports later
-

@@ -7,12 +7,12 @@ and analysis results to Discord channels.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from dataclasses import dataclass
+from platform.http.http_utils import retrying_post
 from typing import Any
-
-import aiohttp
 
 from ..step_result import StepResult
 from ..tenancy.helpers import require_tenant
@@ -262,20 +262,23 @@ class ArtifactPublisher:
             if not self.config.webhook_url:
                 return StepResult.fail("No webhook URL configured")
 
-            async with (
-                aiohttp.ClientSession() as session,
-                session.post(
-                    self.config.webhook_url,
-                    json=content,
-                    headers={"Content-Type": "application/json"},
-                ) as response,
-            ):
-                if response.status == 200:
-                    response_data = await response.json()
-                    return StepResult.ok(data={"message_id": response_data.get("id")})
-                else:
-                    error_text = await response.text()
-                    return StepResult.fail(f"Webhook failed: {response.status} - {error_text}")
+            # Use resilient HTTP wrapper (runs in a thread) to comply with guardrails
+            resp = await asyncio.to_thread(
+                retrying_post,
+                self.config.webhook_url,
+                json_payload=content,
+                headers={"Content-Type": "application/json"},
+            )
+            if 200 <= getattr(resp, "status_code", 0) < 300:
+                try:
+                    response_data = resp.json()
+                except Exception:
+                    response_data = {}
+                return StepResult.ok(data={"message_id": response_data.get("id")})
+            else:
+                return StepResult.fail(
+                    f"Webhook failed: {getattr(resp, 'status_code', 0)} - {getattr(resp, 'text', '')}"
+                )
 
         except Exception as e:
             logger.error("Webhook publishing failed: %s", str(e))

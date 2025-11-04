@@ -44,28 +44,28 @@ analysis_agent = crew_instance.analysis_cartographer()  # ANOTHER fresh agent - 
 ```python
 def _get_or_create_agent(self, agent_name: str) -> Any:
     """Get agent from coordinators cache or create and cache it.
-    
+
     CRITICAL: This ensures agents are created ONCE and reused across stages.
     Repeated calls to crew_instance.agent_method() create FRESH agents with
     EMPTY tools, bypassing context population. Always use this method.
     """
     if not hasattr(self, "agent_coordinators"):
         self.agent_coordinators = {}
-    
+
     # Return cached agent if available
     if agent_name in self.agent_coordinators:
         self.logger.debug(f"✅ Reusing cached agent: {agent_name}")
         return self.agent_coordinators[agent_name]
-    
+
     # Create new agent and cache it
     if not hasattr(self, "crew_instance") or self.crew_instance is None:
         from .crew import UltimateDiscordIntelligenceBotCrew
         self.crew_instance = UltimateDiscordIntelligenceBotCrew()
-    
+
     agent_method = getattr(self.crew_instance, agent_name, None)
     if not agent_method:
         raise ValueError(f"Unknown agent: {agent_name}")
-    
+
     agent = agent_method()
     self.agent_coordinators[agent_name] = agent
     self.logger.info(f"✨ Created and cached new agent: {agent_name}")
@@ -91,7 +91,7 @@ analysis_agent = self._get_or_create_agent("analysis_cartographer")
 
 - ✅ `_execute_specialized_behavioral_profiling` (lines 2774-2775)
 - ✅ `_execute_specialized_knowledge_integration` (lines 2596-2598)
-- ✅ `_execute_fact_analysis` (lines 2711-2712)  
+- ✅ `_execute_fact_analysis` (lines 2711-2712)
 - ✅ `_execute_specialized_research_synthesis` (lines 2848-2849)
 
 ## How The Working Mechanism Functions
@@ -103,7 +103,7 @@ analysis_agent = self._get_or_create_agent("analysis_cartographer")
    ```python
    class CrewAIToolWrapper(BaseTool):
        _shared_context: dict[str, Any]  # Stores data here
-       
+
        def update_context(self, context: dict[str, Any]) -> None:
            self._shared_context.update(context or {})
    ```
@@ -128,7 +128,7 @@ analysis_agent = self._get_or_create_agent("analysis_cartographer")
                if v not in (None, "", [], {}):  # Only override with meaningful values
                    merged_kwargs[k] = v
            final_kwargs = merged_kwargs
-       
+
        # Alias transcript → text for TextAnalysisTool
        if "text" in allowed and "text" not in final_kwargs and transcript_data:
            final_kwargs["text"] = transcript_data

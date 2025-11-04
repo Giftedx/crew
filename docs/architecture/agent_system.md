@@ -2,7 +2,13 @@
 
 ## Overview
 
-The Ultimate Discord Intelligence Bot uses a CrewAI-based multi-agent system with 14 specialized agents orchestrated for autonomous content analysis. This system provides comprehensive intelligence gathering, analysis, verification, and community engagement capabilities across multiple platforms.
+The Ultimate Discord Intelligence Bot uses a CrewAI-based multi-agent system with **18 specialized agents** orchestrated for autonomous content analysis. This system provides comprehensive intelligence gathering, analysis, verification, and community engagement capabilities across multiple platforms.
+
+**Agent Count**: 18 unique agent roles (verified from `src/ultimate_discord_intelligence_bot/crew_components/tool_registry.py`)
+
+**Tool Assignment**: Agents are assigned tools via `get_tools_for_agent()` method in ToolRegistry
+
+**CrewAI Integration**: All tools are wrapped for CrewAI compatibility via `wrap_tool_for_crewai()`
 
 ## System Architecture
 
@@ -11,37 +17,37 @@ graph TB
     subgraph "Mission Orchestration Layer"
         MO[Mission Orchestrator]
     end
-    
+
     subgraph "Content Acquisition Layer"
         AS[Acquisition Specialist]
         TE[Transcription Engineer]
     end
-    
+
     subgraph "Analysis & Intelligence Layer"
         AC[Analysis Cartographer]
         VD[Verification Director]
         RIA[Risk Intelligence Analyst]
         PA[Persona Archivist]
     end
-    
+
     subgraph "Knowledge Management Layer"
         KI[Knowledge Integrator]
         RS[Signal Recon Specialist]
         TIS[Trend Intelligence Scout]
     end
-    
+
     subgraph "Community & Communication Layer"
         CL[Community Liaison]
         ARG[Argument Strategist]
         IBC[Intelligence Briefing Curator]
         PSM[Personality Synthesis Manager]
     end
-    
+
     subgraph "System Operations Layer"
         SRO[System Reliability Officer]
         RS2[Research Synthesist]
     end
-    
+
     MO --> AS
     MO --> TE
     MO --> AC
@@ -61,9 +67,30 @@ graph TB
 
 ## Agent Catalog
 
+**Note**: The system currently supports 18 unique agent roles as defined in the ToolRegistry. The catalog below documents the core agents with their detailed specifications. Complete agent role list from tool_registry.py:
+
+1. mission_orchestrator
+2. executive_supervisor
+3. workflow_manager
+4. autonomous_mission_coordinator
+5. acquisition_specialist
+6. transcription_engineer
+7. analysis_cartographer
+8. verification_director
+9. risk_intelligence_analyst
+10. persona_archivist
+11. knowledge_integrator
+12. signal_recon_specialist
+13. trend_intelligence_scout
+14. research_synthesist
+15. intelligence_briefing_curator
+16. argument_strategist
+17. system_reliability_officer
+18. community_liaison
+
 ### 1. Mission Orchestrator Agent
 
-**Role:** Autonomy Mission Orchestrator  
+**Role:** Autonomy Mission Orchestrator
 **Goal:** Coordinate end-to-end missions, sequencing depth, specialists, and budgets.
 
 **Backstory:**
@@ -101,9 +128,124 @@ graph TB
 
 ---
 
-### 2. Acquisition Specialist
+### 2. Executive Supervisor
 
-**Role:** Acquisition Specialist  
+**Role:** Executive Supervisor
+**Goal:** Provide high-level oversight and strategic decision-making for mission execution.
+
+**Backstory:**
+> You oversee the entire mission landscape from a strategic vantage point, ensuring alignment with organizational goals and intervening when missions require executive decisions. You synthesize perspectives, manage priorities, and ensure resource allocation supports critical objectives.
+
+**Key Responsibilities:**
+
+- Strategic mission oversight and prioritization
+- Executive decision-making for mission escalations
+- Cross-mission coordination and resource optimization
+- Performance evaluation and strategic adjustments
+- Stakeholder communication and reporting
+
+**Performance Metrics:**
+
+- Accuracy Target: 92%
+- Reasoning Quality: 92%
+- Response Completeness: 88%
+- Tool Usage Efficiency: 88%
+
+**Primary Tools:**
+
+- `advanced_performance_analytics_tool` - Performance analysis
+- `timeline_tool` - Strategic timeline management
+- `perspective_synthesizer_tool` - Multi-agent perspective synthesis
+
+**Reasoning Framework:**
+
+- Style: Strategic
+- Confidence Threshold: 80%
+- Uncertainty Handling: Explicit quantification
+- Verification Requirements: Multiple sources
+
+---
+
+### 3. Workflow Manager
+
+**Role:** Workflow Manager
+**Goal:** Optimize mission workflows and ensure efficient task sequencing and resource utilization.
+
+**Backstory:**
+> You orchestrate the flow of work across agents, identifying bottlenecks, optimizing task dependencies, and ensuring smooth handoffs. You maintain workflow efficiency while adapting to changing mission requirements and resource constraints.
+
+**Key Responsibilities:**
+
+- Workflow optimization and task sequencing
+- Bottleneck identification and resolution
+- Agent coordination and handoff management
+- Resource utilization monitoring
+- Process improvement implementation
+
+**Performance Metrics:**
+
+- Accuracy Target: 90%
+- Reasoning Quality: 88%
+- Response Completeness: 86%
+- Tool Usage Efficiency: 92%
+
+**Primary Tools:**
+
+- `timeline_tool` - Workflow timeline management
+- `advanced_performance_analytics_tool` - Performance monitoring
+
+**Reasoning Framework:**
+
+- Style: Operational
+- Confidence Threshold: 75%
+- Uncertainty Handling: Explicit quantification
+- Verification Requirements: Multiple sources
+
+---
+
+### 4. Autonomous Mission Coordinator
+
+**Role:** Autonomous Mission Coordinator
+**Goal:** Coordinate fully autonomous mission execution with minimal human intervention.
+
+**Backstory:**
+> You specialize in autonomous operations, making decisions without waiting for human input. You balance speed with safety, escalating only when truly necessary while maintaining high confidence in autonomous execution.
+
+**Key Responsibilities:**
+
+- Autonomous mission planning and execution
+- Self-directed decision-making within safety boundaries
+- Automated escalation threshold management
+- Continuous learning from mission outcomes
+- Adaptive strategy refinement
+
+**Performance Metrics:**
+
+- Accuracy Target: 91%
+- Reasoning Quality: 90%
+- Response Completeness: 87%
+- Tool Usage Efficiency: 90%
+
+**Primary Tools:**
+
+- `pipeline_tool` - Autonomous pipeline triggers
+- `advanced_performance_analytics_tool` - Performance analysis
+- `timeline_tool` - Mission timeline management
+- `perspective_synthesizer_tool` - Decision synthesis
+- `mcp_call_tool` - Cross-tenant operations
+
+**Reasoning Framework:**
+
+- Style: Strategic
+- Confidence Threshold: 78%
+- Uncertainty Handling: Explicit quantification
+- Verification Requirements: Multiple sources
+
+---
+
+### 5. Acquisition Specialist
+
+**Role:** Acquisition Specialist
 **Goal:** Capture pristine source media and metadata from every supported platform.
 
 **Backstory:**
@@ -142,7 +284,7 @@ graph TB
 
 ### 3. Transcription Engineer
 
-**Role:** Transcription & Index Engineer  
+**Role:** Transcription & Index Engineer
 **Goal:** Deliver reliable transcripts, indices, and artifacts for every capture.
 
 **Backstory:**
@@ -181,7 +323,7 @@ graph TB
 
 ### 4. Analysis Cartographer
 
-**Role:** Analysis Cartographer  
+**Role:** Analysis Cartographer
 **Goal:** Map linguistic, sentiment, and thematic signals for downstream teams.
 
 **Backstory:**
@@ -220,7 +362,7 @@ graph TB
 
 ### 5. Verification Director
 
-**Role:** Verification Director  
+**Role:** Verification Director
 **Goal:** Deliver defensible verdicts and reasoning for every significant claim.
 
 **Backstory:**
@@ -259,7 +401,7 @@ graph TB
 
 ### 6. Risk Intelligence Analyst
 
-**Role:** Risk Intelligence Analyst  
+**Role:** Risk Intelligence Analyst
 **Goal:** Translate verification outputs into longitudinal trust and deception metrics.
 
 **Backstory:**
@@ -298,7 +440,7 @@ graph TB
 
 ### 7. Persona Archivist
 
-**Role:** Persona Archivist  
+**Role:** Persona Archivist
 **Goal:** Maintain living dossiers with behavior, sentiment, and trust milestones.
 
 **Backstory:**
@@ -337,7 +479,7 @@ graph TB
 
 ### 8. Knowledge Integrator
 
-**Role:** Knowledge Integration Steward  
+**Role:** Knowledge Integration Steward
 **Goal:** Preserve mission intelligence across vector, graph, and continual memory.
 
 **Backstory:**
@@ -377,7 +519,7 @@ graph TB
 
 ### 9. Signal Recon Specialist
 
-**Role:** Signal Recon Specialist  
+**Role:** Signal Recon Specialist
 **Goal:** Track cross-platform discourse and sentiment to inform verification priorities.
 
 **Backstory:**
@@ -416,7 +558,7 @@ graph TB
 
 ### 10. Trend Intelligence Scout
 
-**Role:** Trend Intelligence Scout  
+**Role:** Trend Intelligence Scout
 **Goal:** Detect and prioritize new content requiring rapid ingestion.
 
 **Backstory:**
@@ -455,7 +597,7 @@ graph TB
 
 ### 11. Community Liaison
 
-**Role:** Community Liaison  
+**Role:** Community Liaison
 **Goal:** Answer community questions with current, verified intelligence.
 
 **Backstory:**
@@ -493,7 +635,7 @@ graph TB
 
 ### 12. Argument Strategist
 
-**Role:** Argument Strategist  
+**Role:** Argument Strategist
 **Goal:** Build resilient narratives, steelman claims, and prep debate-ready briefs.
 
 **Backstory:**
@@ -532,7 +674,7 @@ graph TB
 
 ### 13. System Reliability Officer
 
-**Role:** System Reliability Officer  
+**Role:** System Reliability Officer
 **Goal:** Guard pipeline health, budgets, and operational visibility.
 
 **Backstory:**
@@ -571,7 +713,7 @@ graph TB
 
 ### 14. Research Synthesist
 
-**Role:** Research Synthesist  
+**Role:** Research Synthesist
 **Goal:** Assemble deep background briefs that contextualize missions and emerging narratives.
 
 **Backstory:**
@@ -611,7 +753,7 @@ graph TB
 
 ### 15. Intelligence Briefing Curator
 
-**Role:** Intelligence Briefing Curator  
+**Role:** Intelligence Briefing Curator
 **Goal:** Deliver polished, shareable intelligence packets that condense mission outcomes and next steps.
 
 **Backstory:**
@@ -651,7 +793,7 @@ graph TB
 
 ### 16. Personality Synthesis Manager
 
-**Role:** Personality Synthesis Manager  
+**Role:** Personality Synthesis Manager
 **Goal:** Synthesize and maintain cohesive personality profiles across agents and outputs.
 
 **Backstory:**
@@ -709,17 +851,17 @@ graph TD
     B --> C[transcribe_and_index_media]
     C --> D[map_transcript_insights]
     D --> E[verify_priority_claims]
-    
+
     E --> F[Risk Intelligence Analysis]
     E --> G[Persona Archiving]
     E --> H[Knowledge Integration]
-    
+
     I[Signal Recon] --> E
     J[Trend Intelligence] --> B
-    
+
     K[Community Liaison] --> L[Argument Strategy]
     M[Intelligence Briefing] --> N[Personality Synthesis]
-    
+
     O[System Reliability] --> P[Research Synthesis]
 ```
 
@@ -803,3 +945,9 @@ Each agent tracks:
 - **Predictive Analytics**: Proactive issue detection
 - **Natural Language Interfaces**: Conversational agent interaction
 - **Autonomous Optimization**: Self-improving system performance
+
+---
+
+**Last Updated**: November 3, 2025
+**Agent Count**: 18 unique roles (verified from tool_registry.py)
+**Status**: Updated with current agent roster and tool assignments

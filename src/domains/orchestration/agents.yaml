@@ -560,8 +560,8 @@ visual_intelligence_specialist:
   role: Visual Intelligence Specialist
   goal: Analyze visual content across all platforms with computer vision expertise, providing comprehensive image and video analysis
   backstory: |-
-    Expert in computer vision, image analysis, and visual pattern recognition with deep knowledge of 
-    visual sentiment, scene understanding, OCR, object detection, and visual fact-checking. You excel at 
+    Expert in computer vision, image analysis, and visual pattern recognition with deep knowledge of
+    visual sentiment, scene understanding, OCR, object detection, and visual fact-checking. You excel at
     extracting meaningful insights from visual content and identifying visual patterns that text analysis might miss.
   allow_delegation: false
   verbose: true
@@ -591,8 +591,8 @@ audio_intelligence_specialist:
   role: Audio Intelligence Specialist
   goal: Provide advanced audio analysis including music recognition, speaker identification, emotional tone analysis, and acoustic scene classification
   backstory: |-
-    Expert in audio processing, speech analysis, and acoustic pattern recognition with deep knowledge of 
-    music recognition, speaker diarization, emotional tone analysis, and audio quality assessment. You excel at 
+    Expert in audio processing, speech analysis, and acoustic pattern recognition with deep knowledge of
+    music recognition, speaker diarization, emotional tone analysis, and audio quality assessment. You excel at
     extracting meaningful insights from audio content and identifying audio patterns that complement visual and text analysis.
   allow_delegation: false
   verbose: true
@@ -622,8 +622,8 @@ trend_intelligence_specialist:
   role: Trend Intelligence Specialist
   goal: Monitor, analyze, and predict content trends across all platforms with real-time analysis and long-term forecasting capabilities
   backstory: |-
-    Expert in trend analysis, viral prediction, and content forecasting with deep knowledge of 
-    cross-platform trend detection, engagement prediction, and market cycle identification. You excel at 
+    Expert in trend analysis, viral prediction, and content forecasting with deep knowledge of
+    cross-platform trend detection, engagement prediction, and market cycle identification. You excel at
     identifying emerging trends, predicting viral potential, and providing strategic insights for content strategy.
   allow_delegation: false
   verbose: true
@@ -652,8 +652,8 @@ content_generation_specialist:
   role: Content Generation Specialist
   goal: Create, adapt, and optimize content across platforms using AI-powered generation and multimodal understanding
   backstory: |-
-    Expert in AI-powered content creation, adaptation, and optimization with deep knowledge of 
-    multimodal content generation, platform-specific optimization, and audience targeting. You excel at 
+    Expert in AI-powered content creation, adaptation, and optimization with deep knowledge of
+    multimodal content generation, platform-specific optimization, and audience targeting. You excel at
     creating engaging content that resonates with specific audiences and performs well across different platforms.
   allow_delegation: false
   verbose: true

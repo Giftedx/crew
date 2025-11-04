@@ -69,7 +69,7 @@ if isinstance(self._shared_context, dict) and self._shared_context:
         or self._shared_context.get("text")
         or ""
     )
-    
+
     # Map transcript to 'text' parameter (TextAnalysisTool, LogicalFallacyTool, etc.)
     if "text" in allowed and "text" not in final_kwargs and transcript_data:
         final_kwargs["text"] = transcript_data

@@ -119,8 +119,8 @@ response = client.responses.create(
 
    ```text
    <general_solution>
-   Please write a high-quality, general-purpose solution using the standard tools available. 
-   Do not create helper scripts or workarounds to accomplish the task more efficiently. 
+   Please write a high-quality, general-purpose solution using the standard tools available.
+   Do not create helper scripts or workarounds to accomplish the task more efficiently.
    Implement a solution that works correctly for all valid inputs, not just test cases.
    Focus on understanding the problem requirements and implementing the correct algorithm.
    </general_solution>
@@ -130,8 +130,8 @@ response = client.responses.create(
 
    ```text
    <default_to_action>
-   By default, implement changes rather than only suggesting them. If the user's intent 
-   is unclear, infer the most useful likely action and proceed, using tools to discover 
+   By default, implement changes rather than only suggesting them. If the user's intent
+   is unclear, infer the most useful likely action and proceed, using tools to discover
    any missing details instead of guessing.
    </default_to_action>
    ```
@@ -140,8 +140,8 @@ response = client.responses.create(
 
    ```text
    <do_not_act_before_instructions>
-   Don't jump into implementation or file changes unless clearly instructed to make 
-   modifications. When the user's intent is ambiguous, default to providing information, 
+   Don't jump into implementation or file changes unless clearly instructed to make
+   modifications. When the user's intent is ambiguous, default to providing information,
    conducting research, and offering recommendations rather than taking action.
    </do_not_act_before_instructions>
    ```
@@ -152,10 +152,10 @@ response = client.responses.create(
 
 ```text
 <context_management>
-Your context window will automatically compress when approaching its limit, allowing you 
-to continue indefinitely from where you left off. Therefore, don't stop tasks prematurely 
-due to token budget concerns. If approaching your token budget limit, save your current 
-progress and state to memory before the context window refreshes. Always be as persistent 
+Your context window will automatically compress when approaching its limit, allowing you
+to continue indefinitely from where you left off. Therefore, don't stop tasks prematurely
+due to token budget concerns. If approaching your token budget limit, save your current
+progress and state to memory before the context window refreshes. Always be as persistent
 and autonomous as possible, completing tasks fully even when the end of your budget approaches.
 </context_management>
 ```
@@ -166,8 +166,8 @@ and autonomous as possible, completing tasks fully even when the end of your bud
 
 ```text
 <use_parallel_tool_calls>
-For maximum efficiency, whenever you perform multiple independent operations, invoke all 
-relevant tools simultaneously rather than sequentially. Prioritize calling tools in 
+For maximum efficiency, whenever you perform multiple independent operations, invoke all
+relevant tools simultaneously rather than sequentially. Prioritize calling tools in
 parallel whenever possible.
 </use_parallel_tool_calls>
 ```
@@ -178,9 +178,9 @@ parallel whenever possible.
 
 ```text
 <investigate_before_answering>
-Never speculate about code you haven't opened. If the user refers to a specific file, 
-you MUST read the file before responding. Ensure you investigate and read relevant files 
-BEFORE answering questions about the codebase. Never make claims about code before 
+Never speculate about code you haven't opened. If the user refers to a specific file,
+you MUST read the file before responding. Ensure you investigate and read relevant files
+BEFORE answering questions about the codebase. Never make claims about code before
 investigating, unless you are certain of the correct answer.
 </investigate_before_answering>
 ```
@@ -318,8 +318,8 @@ Text:
 
 ```text
 ❌ Create an analytics dashboard
-✅ Create an analytics dashboard. Include as many relevant features and interactions 
-   as possible. Go beyond the basics to create a fully-featured implementation with 
+✅ Create an analytics dashboard. Include as many relevant features and interactions
+   as possible. Go beyond the basics to create a fully-featured implementation with
    user authentication, real-time updates, customizable widgets, and export functionality.
 ```
 
@@ -327,7 +327,7 @@ Text:
 
 ```text
 ❌ Don't use ellipses
-✅ Your response will be read aloud by a text-to-speech engine, so never use ellipses 
+✅ Your response will be read aloud by a text-to-speech engine, so never use ellipses
    as the text-to-speech engine doesn't know how to pronounce them.
 ```
 
@@ -485,7 +485,7 @@ prompt_engine.create_prompt(
 ```python
 # Enable parallel tool calls for efficiency
 <use_parallel_tool_calls>
-Whenever you intend to call multiple tools and there are no dependencies between 
+Whenever you intend to call multiple tools and there are no dependencies between
 the tool calls, make all of the independent tool calls in parallel.
 </use_parallel_tool_calls>
 ```
