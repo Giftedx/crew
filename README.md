@@ -251,6 +251,33 @@ RATE_LIMIT_REQUESTS_PER_MINUTE=60
 RATE_LIMIT_BURST_SIZE=10
 ```
 
+#### Performance Optimization
+
+The codebase includes comprehensive performance analysis and optimization tools. See [Performance Initiative Summary](docs/PERFORMANCE_INITIATIVE_SUMMARY.md) for details.
+
+**Quick Performance Check**:
+```bash
+# Analyze performance issues
+python3 scripts/performance_improvements.py --report
+
+# Check for performance regressions
+python3 -m ruff check src --select PERF
+```
+
+**Documentation**:
+- [Performance Improvement Recommendations](docs/PERFORMANCE_IMPROVEMENT_RECOMMENDATIONS.md) - Comprehensive analysis of 258 performance issues
+- [Performance Best Practices](docs/PERFORMANCE_BEST_PRACTICES.md) - Best practices for high-performance Python code
+- [Performance Fixes Applied](docs/PERFORMANCE_FIXES_APPLIED.md) - Summary of automated fixes
+
+**Benchmarking**:
+```bash
+# Run performance benchmarks
+python3 benchmarks/performance_benchmarks.py
+
+# Profile tool imports
+python3 profile_tool_imports.py
+```
+
 ## 🎯 Usage
 
 ### Discord Commands
