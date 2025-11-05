@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from platform.cache.tool_cache_decorator import cache_tool_result
 from platform.core.step_result import StepResult
 from platform.observability.metrics import get_metrics
 
@@ -74,6 +75,7 @@ class TranscriptIndexTool(BaseTool[StepResult]):
             context.append(text)
         return " ".join(context)
 
+    @cache_tool_result(namespace="tool:transcript_index", ttl=7200)
     def _run(self, transcript: str, video_id: str | None = None) -> StepResult:
         """Run indexing with optional video_id (falls back to shared context)."""
         if not video_id:

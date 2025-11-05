@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from platform.cache.tool_cache_decorator import cache_tool_result
 from platform.core.step_result import StepResult
 from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
@@ -107,6 +108,7 @@ class VectorSearchTool(BaseTool[StepResult]):
                 else:
                     raise RuntimeError("Qdrant client does not support collection creation APIs") from None
 
+    @cache_tool_result(namespace="tool:vector_search", ttl=3600)
     def _run(self, query: str, limit: int = 3, collection: str | None = None) -> StepResult:
         target = collection or self.collection
         physical = self._physical_name(target)

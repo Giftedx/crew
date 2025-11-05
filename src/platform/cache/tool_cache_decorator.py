@@ -91,9 +91,7 @@ def cache_tool_result(
             try:
                 cached_value = cache.get(operation, {})
                 if cached_value is not None:
-                    metrics.counter(
-                        "tool_cache_hits_total", labels={"namespace": namespace}
-                    ).inc()
+                    metrics.counter("tool_cache_hits_total", labels={"namespace": namespace}).inc()
                     logger.debug(f"Cache hit for {namespace}: {cache_key[:8]}")
 
                     # Return cached data with cache metadata
@@ -111,9 +109,7 @@ def cache_tool_result(
                 # Continue to execute function on cache error
 
             # Cache miss - execute function
-            metrics.counter(
-                "tool_cache_misses_total", labels={"namespace": namespace}
-            ).inc()
+            metrics.counter("tool_cache_misses_total", labels={"namespace": namespace}).inc()
             logger.debug(f"Cache miss for {namespace}: {cache_key[:8]}")
 
             result = func(*args, **kwargs)

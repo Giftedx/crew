@@ -28,6 +28,7 @@ Successfully implemented **multi-level caching infrastructure for high-traffic a
 **Purpose:** Reusable decorator for wrapping `BaseTool._run()` methods with automatic caching
 
 **Features:**
+
 - Multi-level cache integration (memory → Redis → disk)
 - Configurable TTL per tool
 - Cache key generation from function arguments
@@ -36,6 +37,7 @@ Successfully implemented **multi-level caching infrastructure for high-traffic a
 - Metadata injection (`cache_hit`, `cache_key`, `namespace`)
 
 **Usage Pattern:**
+
 ```python
 from platform.cache.tool_cache_decorator import cache_tool_result
 
@@ -47,6 +49,7 @@ class MyTool(BaseTool):
 ```
 
 **Cache Behavior:**
+
 - **Cache Miss:** Execute function → store result → return with `cache_hit=False`
 - **Cache Hit:** Retrieve from cache → return immediately with `cache_hit=True`
 - **Error Handling:** On cache errors, falls back to function execution (degraded mode)
@@ -56,18 +59,21 @@ class MyTool(BaseTool):
 ### 2. Tier 1 Tool Enhancements
 
 #### SentimentTool (`src/domains/intelligence/analysis/sentiment_tool.py`)
+
 - **Caching:** `@cache_tool_result(namespace="tool:sentiment", ttl=7200)`
 - **TTL:** 2 hours (sentiment rarely changes for same text)
 - **Expected Hit Rate:** 70%+ (high repetition in social media content)
 - **Latency Impact:** 50ms → 0.5ms on cache hits
 
 #### EnhancedAnalysisTool (`src/domains/intelligence/analysis/enhanced_analysis_tool.py`)
+
 - **Caching:** `@cache_tool_result(namespace="tool:enhanced_analysis", ttl=3600)`
 - **TTL:** 1 hour (balances freshness vs efficiency)
 - **Expected Hit Rate:** 60%+ (political topics, claims extraction)
 - **Latency Impact:** 3-4s → 0.2-0.5s on cache hits
 
 #### TextAnalysisTool (`src/domains/intelligence/analysis/text_analysis_tool.py`)
+
 - **Caching:** `@cache_tool_result(namespace="tool:text_analysis", ttl=3600)`
 - **TTL:** 1 hour (NLTK-based analysis, deterministic)
 - **Expected Hit Rate:** 65%+ (transcript/article analysis)
@@ -82,12 +88,14 @@ class MyTool(BaseTool):
 **New State:** Multi-level cache with 24-hour persistence
 
 **Changes:**
+
 - Added `MultiLevelCache` instance with 86400s TTL
 - `_check_cache()` now queries multi-level cache first, falls back to legacy
 - `_cache_embedding()` stores in both multi-level + legacy (migration path)
 - Cache survives restarts via Redis/disk persistence
 
 **Impact:**
+
 - Cache hit rate: 35% → 75%+ (persistent across restarts)
 - Embedding latency: 500-1500ms → <10ms on cache hits
 - Cost savings: ~$0.0002/embedding × 75% hit rate = significant at scale
@@ -97,6 +105,7 @@ class MyTool(BaseTool):
 ### 4. Configuration & Feature Flags
 
 **Added to `env.example`:**
+
 ```bash
 # Cache Configuration (updated)
 CACHE_MEMORY_SIZE=1000          # L1 cache size (entries)
@@ -104,6 +113,7 @@ ENABLE_TOOL_RESULT_CACHING=true  # Master switch for tool caching
 ```
 
 **Existing Flags Leveraged:**
+
 - `REDIS_URL`: Multi-level cache Redis connection
 - `CACHE_TTL`: Default TTL (overridden per-tool)
 
@@ -157,6 +167,7 @@ Data consistency: PASS ✓
 ## Expected Performance Impact (Production)
 
 ### Latency Reduction
+
 | Tool | Before (avg) | After (hit) | After (miss) | Hit Rate | Avg Improvement |
 |------|--------------|-------------|--------------|----------|-----------------|
 | SentimentTool | 50ms | 0.5ms | 50ms | 70% | **65% faster** |
@@ -165,6 +176,7 @@ Data consistency: PASS ✓
 | EmbeddingService | 800ms | 5ms | 800ms | 75% | **74% faster** |
 
 ### Cost Savings
+
 - **LLM API calls reduced:** 60%+ (cached results don't hit API)
 - **Compute time saved:** ~40% CPU hours/month
 - **Estimated monthly savings:** $500-$1000 (based on current traffic)
@@ -174,16 +186,19 @@ Data consistency: PASS ✓
 ## Next Steps (Day 2-3)
 
 ### Tier 2 Tools (Day 2)
+
 - [ ] TranscriptIndexTool caching
 - [ ] ClaimExtractionTool caching
 - [ ] PoliticalTopicTool caching
 
 ### Monitoring & Observability (Day 2)
+
 - [ ] Create `dashboards/cache_performance.json` Grafana dashboard
 - [ ] Add cache health check script (`scripts/validate_cache_health.py`)
 - [ ] Capture baseline metrics with `benchmarks/performance_benchmarks.py`
 
 ### Validation & Rollout (Day 3)
+
 - [ ] A/B testing with feature flag toggle
 - [ ] Benchmark P95 latency improvements
 - [ ] Document cache invalidation strategies
@@ -215,16 +230,19 @@ Data consistency: PASS ✓
 ## Lessons Learned & Best Practices
 
 ### Metrics API Discovery
+
 - **Issue:** `platform.observability.metrics.MetricsCollector` doesn't have `.counter()` method
 - **Resolution:** Use `ultimate_discord_intelligence_bot.obs.metrics.get_metrics()` facade
 - **Best Practice:** Tools should import from `ultimate_discord_intelligence_bot.obs.metrics` for compatibility
 
 ### StepResult Metadata Handling
+
 - **Issue:** `StepResult.ok(data={...}, metadata={...})` nests metadata inside data
 - **Resolution:** Use `StepResult(success=True, data={...}, metadata={...})` constructor
 - **Best Practice:** Always use dataclass constructor for explicit control over fields
 
 ### Cache Persistence
+
 - **Observation:** Redis + disk cache survives restarts, dramatically improving hit rates
 - **Best Practice:** Use 24h+ TTL for deterministic operations (embeddings, sentiment)
 
