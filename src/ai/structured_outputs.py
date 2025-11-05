@@ -12,13 +12,15 @@ from platform.rl.structured_outputs import (
     InstructorClientFactory,
 )
 
+
 # Re-export dependencies for test mocking compatibility
 try:
-    import instructor  # noqa: F401
+    import instructor
 except ImportError:
     instructor = None  # type: ignore
 
-from platform.config.configuration import get_config  # noqa: F401
+from platform.config.configuration import get_config
+
 
 __all__ = [
     "INSTRUCTOR_AVAILABLE",

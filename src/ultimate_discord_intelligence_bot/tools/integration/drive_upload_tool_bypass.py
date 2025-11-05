@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from typing import Any, ClassVar
 
 from .._base import BaseTool

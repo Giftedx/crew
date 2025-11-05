@@ -11,7 +11,7 @@ import os
 import platform
 import shutil
 from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ._base import BaseTool
 

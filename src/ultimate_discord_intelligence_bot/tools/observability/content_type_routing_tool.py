@@ -13,7 +13,7 @@ import re
 from dataclasses import dataclass
 from platform.config.configuration import get_config
 from platform.core.step_result import ErrorCategory, StepResult
-from platform.observability.metrics import get_metrics
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 

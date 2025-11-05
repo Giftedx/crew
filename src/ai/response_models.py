@@ -26,6 +26,7 @@ from platform.rl.response_models import (
     SeverityLevel,
 )
 
+
 __all__ = [
     "ComprehensiveAnalysis",
     "ConfidenceLevel",

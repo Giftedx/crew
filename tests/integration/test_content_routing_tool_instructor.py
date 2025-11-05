@@ -38,25 +38,27 @@ class TestContentTypeRoutingToolInstructor:
     @pytest.fixture
     def mock_config_enabled(self):
         """Mock SecureConfig with Instructor enabled."""
-        with patch("content_type_routing_tool.get_config") as mock_get:
-            config = Mock()
-            config.enable_instructor = True
-            config.instructor_max_retries = 3
-            config.instructor_timeout = 30.0
-            config.openrouter_api_key = "test-api-key"
-            config.openrouter_llm_model = "anthropic/claude-3.5-sonnet"
-            mock_get.return_value = config
+        config = Mock()
+        config.enable_instructor = True
+        config.instructor_max_retries = 3
+        config.instructor_timeout = 30.0
+        config.openrouter_api_key = "test-api-key"
+        config.openrouter_llm_model = "anthropic/claude-3.5-sonnet"
+        
+        with patch("content_type_routing_tool.get_config", return_value=config), \
+             patch("platform.rl.structured_outputs.get_config", return_value=config):
             yield config
 
     @pytest.fixture
     def mock_config_disabled(self):
         """Mock SecureConfig with Instructor disabled."""
-        with patch("content_type_routing_tool.get_config") as mock_get:
-            config = Mock()
-            config.enable_instructor = False
-            config.openrouter_api_key = "test-api-key"
-            config.openrouter_llm_model = "anthropic/claude-3.5-sonnet"
-            mock_get.return_value = config
+        config = Mock()
+        config.enable_instructor = False
+        config.openrouter_api_key = "test-api-key"
+        config.openrouter_llm_model = "anthropic/claude-3.5-sonnet"
+        
+        with patch("content_type_routing_tool.get_config", return_value=config), \
+             patch("platform.rl.structured_outputs.get_config", return_value=config):
             yield config
 
     @pytest.fixture
