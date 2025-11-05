@@ -45,9 +45,10 @@ class MyAnalysisTool(BaseTool):
         return StepResult.ok(result={"analysis": result})
 ```
 
-### 3. That's It!
+### 3. That's It
 
 The decorator automatically:
+
 - ✅ Generates cache keys from method parameters
 - ✅ Handles tenant/workspace isolation
 - ✅ Manages memory + Redis storage
@@ -75,6 +76,7 @@ The decorator automatically:
 Unique identifier for this tool's cache entries. Convention: `"tool:{tool_name}"`
 
 **Examples**:
+
 - `"tool:sentiment"` - Sentiment analysis tool
 - `"tool:vector_search"` - Vector search tool
 - `"tool:transcript_index"` - Transcript indexing tool
@@ -86,6 +88,7 @@ Unique identifier for this tool's cache entries. Convention: `"tool:{tool_name}"
 Time-to-live in seconds. After this duration, cache entries expire and are re-computed.
 
 **Common Values**:
+
 - `3600` (1 hour) - Default, good for most tools
 - `7200` (2 hours) - Stable, deterministic operations (sentiment analysis, embeddings)
 - `1800` (30 minutes) - Frequently changing data
@@ -96,6 +99,7 @@ Time-to-live in seconds. After this duration, cache entries expire and are re-co
 List of parameter names to exclude from cache key generation. Useful for non-deterministic parameters like timestamps or request IDs.
 
 **Example**:
+
 ```python
 @cache_tool_result(
     namespace="tool:analysis",
@@ -145,6 +149,7 @@ From **benchmarks/cache_performance_benchmark.py** (30 iterations per tool):
 | **TextAnalysisTool** | 83.3% | 0.01ms | 89.50ms | 100% |
 
 **Key Findings**:
+
 - **83% hit rate** with realistic input patterns (5 unique inputs, 6 repetitions each)
 - **97-100% latency reduction** for cached responses
 - **2.26s total time saved** across 90 calls (TextAnalysisTool shows most dramatic improvement due to NLTK processing)
@@ -159,6 +164,7 @@ From **benchmarks/cache_performance_benchmark.py** (30 iterations per tool):
 ### 1. Always Use the Decorator on `_run` Methods
 
 **Do**:
+
 ```python
 class MyTool(BaseTool):
     @cache_tool_result(namespace="tool:my_tool", ttl=3600)
@@ -167,6 +173,7 @@ class MyTool(BaseTool):
 ```
 
 **Don't**:
+
 ```python
 class MyTool(BaseTool):
     def _run(self, text: str) -> StepResult:
@@ -179,6 +186,7 @@ class MyTool(BaseTool):
 The decorator caches `StepResult` objects. Always return `StepResult.ok(result=...)`.
 
 **Do**:
+
 ```python
 @cache_tool_result(namespace="tool:my_tool", ttl=3600)
 def _run(self, text: str) -> StepResult:
@@ -187,6 +195,7 @@ def _run(self, text: str) -> StepResult:
 ```
 
 **Don't**:
+
 ```python
 @cache_tool_result(namespace="tool:my_tool", ttl=3600)
 def _run(self, text: str) -> dict:  # Wrong return type
@@ -196,11 +205,13 @@ def _run(self, text: str) -> dict:  # Wrong return type
 ### 3. Use Descriptive Namespaces
 
 **Do**:
+
 ```python
 @cache_tool_result(namespace="tool:sentiment_analysis", ttl=7200)
 ```
 
 **Don't**:
+
 ```python
 @cache_tool_result(namespace="sa", ttl=7200)  # Too cryptic
 @cache_tool_result(namespace="tool", ttl=7200)  # Too generic
@@ -209,6 +220,7 @@ def _run(self, text: str) -> dict:  # Wrong return type
 ### 4. Choose TTL Based on Data Volatility
 
 **Do**:
+
 ```python
 # Deterministic operation → longer TTL
 @cache_tool_result(namespace="tool:text_analysis", ttl=7200)
@@ -218,6 +230,7 @@ def _run(self, text: str) -> dict:  # Wrong return type
 ```
 
 **Don't**:
+
 ```python
 # Using same TTL for everything
 @cache_tool_result(namespace="tool:*", ttl=3600)  # Not tuned to operation
@@ -272,23 +285,27 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 **Solutions**:
 
 1. **Check decorator is applied**:
+
    ```python
    # Verify decorator is present
    assert hasattr(MyTool._run, '__wrapped__')  # Decorator applied
    ```
 
 2. **Check namespace is unique**:
+
    ```python
    # Each tool should have distinct namespace
    @cache_tool_result(namespace="tool:my_unique_tool", ttl=3600)
    ```
 
 3. **Check Redis connection**:
+
    ```bash
    redis-cli PING  # Should return PONG
    ```
 
 4. **Check parameters are hashable**:
+
    ```python
    # Parameters must be JSON-serializable
    def _run(self, text: str, count: int) -> StepResult:  # ✅ Good
@@ -305,6 +322,7 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 **Solutions**:
 
 1. **Check input variation**:
+
    ```python
    # Are inputs actually repeating?
    # Log cache keys to verify
@@ -312,12 +330,14 @@ print(f"Cache hit rate: {hit_rate:.1%}")
    ```
 
 2. **Check TTL is long enough**:
+
    ```python
    # If data is accessed hours apart, increase TTL
    @cache_tool_result(namespace="tool:my_tool", ttl=7200)  # 2 hours instead of 1
    ```
 
 3. **Check for excluded parameters**:
+
    ```python
    # Exclude non-deterministic params from cache key
    @cache_tool_result(
@@ -334,6 +354,7 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 **Solutions**:
 
 1. **Invalidate cache after data changes**:
+
    ```python
    from platform.cache.multi_level_cache import MultiLevelCache
    
@@ -347,12 +368,14 @@ print(f"Cache hit rate: {hit_rate:.1%}")
    ```
 
 2. **Use shorter TTL for volatile data**:
+
    ```python
    # Data changes frequently → shorter TTL
    @cache_tool_result(namespace="tool:my_tool", ttl=1800)  # 30 minutes
    ```
 
 3. **Use versioned cache keys**:
+
    ```python
    CACHE_VERSION = "v2"  # Increment on schema changes
    
@@ -366,18 +389,21 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 **Solutions**:
 
 1. **Check memory cache size limit**:
+
    ```python
    # Cache automatically evicts LRU entries when full
    cache = MultiLevelCache(max_memory_size=1000)  # Adjust limit
    ```
 
 2. **Check Redis is available**:
+
    ```bash
    # If Redis is down, all caching happens in memory
    systemctl status redis
    ```
 
 3. **Monitor cache size**:
+
    ```python
    cache = MultiLevelCache()
    stats = cache.get_stats()
@@ -392,6 +418,7 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 **Solutions**:
 
 1. **Ensure tenant context is set**:
+
    ```python
    from ultimate_discord_intelligence_bot.tenancy import with_tenant, TenantContext
    
@@ -400,12 +427,14 @@ print(f"Cache hit rate: {hit_rate:.1%}")
    ```
 
 2. **Verify cache key includes tenant/workspace**:
+
    ```python
    # Decorator automatically includes tenant/workspace from current_tenant()
    # No additional code needed
    ```
 
 3. **Check tenant context in tests**:
+
    ```python
    def test_tenant_isolation():
        # Test different tenants get different cached results
@@ -675,6 +704,7 @@ histogram_quantile(0.95, rate(tool_cache_latency_seconds_bucket[5m]))
 ## Support
 
 For cache-related issues:
+
 - Check [Troubleshooting](#troubleshooting) section
 - Run cache health check: `python scripts/validate_cache_health.py` (if exists)
 - Review cache logs: `tail -f logs/cache.log`

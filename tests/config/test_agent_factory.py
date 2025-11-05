@@ -149,7 +149,7 @@ class TestAgentFactory:
                 assert len(cached_agents) == 1
                 assert "mission_orchestrator" in str(cached_agents[0])
 
-    @patch("ultimate_discord_intelligence_bot.config.agent_factory.get_tool_wrapper")
+    @patch("ultimate_discord_intelligence_bot.config.agent_factory.wrap_tool_for_crewai")
     def test_tool_creation(self, mock_get_tool_wrapper: Mock) -> None:
         """Test tool creation and caching."""
         mock_tool = Mock()
@@ -163,7 +163,7 @@ class TestAgentFactory:
 
     def test_tool_caching(self) -> None:
         """Test that tools are cached properly."""
-        with patch("ultimate_discord_intelligence_bot.config.agent_factory.get_tool_wrapper") as mock_get_tool_wrapper:
+        with patch("ultimate_discord_intelligence_bot.config.agent_factory.wrap_tool_for_crewai") as mock_get_tool_wrapper:
             mock_tool = Mock()
             mock_get_tool_wrapper.return_value = mock_tool
             with patch("ultimate_discord_intelligence_bot.config.agent_factory.Agent") as mock_agent_class:

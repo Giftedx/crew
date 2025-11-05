@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from app.config.agent_definitions import AgentDefinition, get_agent_definition
-from ultimate_discord_intelligence_bot.crewai_tool_wrappers import get_tool_wrapper
+from ultimate_discord_intelligence_bot.crewai_tool_wrappers import wrap_tool_for_crewai
 
 
 if TYPE_CHECKING:
@@ -144,7 +144,7 @@ class AgentFactory:
         if tool_name in self.tool_cache:
             return self.tool_cache[tool_name]
         try:
-            tool = get_tool_wrapper(tool_name)
+            tool = wrap_tool_for_crewai(tool_name)
             if tool:
                 self.tool_cache[tool_name] = tool
             return tool
