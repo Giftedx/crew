@@ -18,9 +18,11 @@ Future extensions planned:
 import logging
 import os
 from collections import Counter
+from platform.cache.tool_cache_decorator import cache_tool_result
 from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ._base import BaseTool
 
@@ -135,6 +137,7 @@ class TextAnalysisTool(BaseTool[StepResult]):
                 except Exception as exc:
                     logging.warning("Failed to download %s: %s", name, exc)
 
+    @cache_tool_result(namespace="tool:text_analysis", ttl=3600)
     def _run(self, text: str) -> StepResult:
         try:
             from ultimate_discord_intelligence_bot.models.structured_responses import (

@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import re
 import time
+from platform.cache.tool_cache_decorator import cache_tool_result
 from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ._base import AnalysisTool
 
@@ -50,6 +52,7 @@ class EnhancedAnalysisTool(AnalysisTool):
         super().__init__()
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:enhanced_analysis", ttl=3600)
     def _run(
         self,
         content: str | dict,

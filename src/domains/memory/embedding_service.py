@@ -21,6 +21,7 @@ import hashlib
 import logging
 import os
 from dataclasses import dataclass
+from platform.cache.multi_level_cache import MultiLevelCache
 from platform.core.step_result import StepResult
 from typing import Any, Literal
 
@@ -62,11 +63,16 @@ class EmbeddingService:
         """Initialize embedding service.
 
         Args:
-            cache_size: Maximum number of cached embeddings
+            cache_size: Maximum number of cached embeddings (legacy parameter, now uses multi-level cache)
         """
         self.cache_size = cache_size
+        # Legacy in-memory cache for backwards compatibility
         self._embedding_cache: dict[str, EmbeddingResult] = {}
         self._models: dict[str, Any] = {}
+        # Multi-level cache with 24-hour TTL for persistent embeddings
+        self._multi_level_cache = MultiLevelCache(
+            redis_url=os.getenv("REDIS_URL"), max_memory_size=cache_size, default_ttl=86400
+        )
 
     def embed_text(
         self, text: str, model: Literal["fast", "balanced", "quality"] = "fast", use_cache: bool = True
@@ -273,7 +279,7 @@ class EmbeddingService:
         )
 
     def _check_cache(self, text: str, model: str) -> EmbeddingResult | None:
-        """Check if embedding exists in cache.
+        """Check if embedding exists in cache (multi-level + legacy).
 
         Args:
             text: Input text
@@ -283,12 +289,32 @@ class EmbeddingService:
             Cached EmbeddingResult or None
         """
         cache_key = self._compute_cache_key(text, model)
+
+        # Check multi-level cache first (memory → Redis → disk)
+        operation = f"embedding:{model}"
+        inputs = {"text": text}
+        cached_data = self._multi_level_cache.get(operation, inputs)
+        if cached_data:
+            logger.debug(f"Multi-level cache hit for embedding (model={model})")
+            # Reconstruct EmbeddingResult from cached data
+            return EmbeddingResult(
+                embedding=cached_data["embedding"],
+                model=cached_data["model"],
+                dimension=cached_data["dimension"],
+                tokens_used=cached_data.get("tokens_used", 0),
+                cache_hit=True,
+                generation_time_ms=0.0,
+            )
+
+        # Fallback to legacy in-memory cache
         if cache_key in self._embedding_cache:
+            logger.debug(f"Legacy cache hit for embedding (model={model})")
             return self._embedding_cache[cache_key]
+
         return None
 
     def _cache_embedding(self, text: str, model: str, result: EmbeddingResult) -> None:
-        """Cache embedding result.
+        """Cache embedding result in multi-level cache + legacy cache.
 
         Args:
             text: Input text
@@ -296,6 +322,22 @@ class EmbeddingService:
             result: Embedding result to cache
         """
         cache_key = self._compute_cache_key(text, model)
+
+        # Store in multi-level cache (memory → Redis → disk)
+        operation = f"embedding:{model}"
+        inputs = {"text": text}
+        cache_value = {
+            "embedding": result.embedding,
+            "model": result.model,
+            "dimension": result.dimension,
+            "tokens_used": result.tokens_used,
+        }
+        try:
+            self._multi_level_cache.set(operation, inputs, cache_value, ttl=86400)
+        except Exception as e:
+            logger.warning(f"Failed to cache embedding in multi-level cache: {e}")
+
+        # Also store in legacy in-memory cache for backwards compatibility
         if len(self._embedding_cache) >= self.cache_size:
             first_key = next(iter(self._embedding_cache))
             del self._embedding_cache[first_key]

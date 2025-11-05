@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from platform.cache.tool_cache_decorator import cache_tool_result
 from platform.core.step_result import StepResult
 from platform.observability.metrics import get_metrics
 
@@ -32,6 +33,7 @@ class SentimentTool(BaseTool[StepResult]):
         super().__init__()
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:sentiment", ttl=7200)
     def _run(self, text: str) -> StepResult:
         positive = {"good", "great", "awesome", "love", "excellent"}
         negative = {"bad", "terrible", "awful", "hate", "poor"}

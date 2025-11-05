@@ -22,16 +22,30 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-
-
-# Ensure repo-local sitecustomize is loaded to proxy stdlib 'platform' to our package
-with contextlib.suppress(Exception):  # pragma: no cover - defensive import for CLI execution context
-    import sitecustomize as _sitecustomize  # noqa: F401
 from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+# Critical: Ensure platform proxy is set up BEFORE any imports that reference platform.core
+# This must happen before sitecustomize attempt because module execution order matters
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT / "src") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
+
+# Now run the bootstrap to augment stdlib platform module
+try:
+    from ultimate_discord_intelligence_bot.core.bootstrap import ensure_platform_proxy
+
+    ensure_platform_proxy()
+except Exception:
+    pass  # Fail silently - defensive for edge cases
+
+# Ensure repo-local sitecustomize is loaded to proxy stdlib 'platform' to our package
+with contextlib.suppress(Exception):  # pragma: no cover - defensive import for CLI execution context
+    import sitecustomize as _sitecustomize  # noqa: F401
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
