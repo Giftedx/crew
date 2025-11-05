@@ -55,6 +55,14 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+# Optional Redis for cross-tenant aggregates
+try:
+    import redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -151,9 +159,23 @@ class ColdStartPriorService:
         # Cross-tenant aggregates (populated on-demand)
         self._cross_tenant_cache: dict[str, ModelPrior] = {}
 
+        # Initialize Redis client for cross-tenant data retrieval
+        self._redis_client: Any = None
+        if self._enable_cross_tenant and REDIS_AVAILABLE:
+            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+            try:
+                self._redis_client = redis.from_url(redis_url, decode_responses=True)
+                # Test connection
+                self._redis_client.ping()
+                logger.info(f"Redis client initialized for cross-tenant priors: {redis_url}")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Redis client: {e}")
+                self._redis_client = None
+
         logger.info(
             f"ColdStartPriorService initialized: enabled={self._enabled}, "
-            f"cross_tenant={self._enable_cross_tenant}, confidence={self._prior_confidence:.2f}"
+            f"cross_tenant={self._enable_cross_tenant}, confidence={self._prior_confidence:.2f}, "
+            f"redis_available={self._redis_client is not None}"
         )
 
     def _load_benchmarks(self) -> None:
@@ -308,16 +330,78 @@ class ColdStartPriorService:
     ) -> ModelPrior:
         """Get prior from cross-tenant aggregates.
 
-        Note: This is a placeholder for future implementation.
-        Would require reading aggregate statistics from shared storage (Redis/DB).
+        Retrieves aggregate performance statistics from Redis that are computed
+        across all tenants (excluding the current tenant to avoid feedback loops).
+
+        The data is stored in Redis with key pattern:
+            bandit:cross_tenant:{model_name}
+
+        Expected data format (JSON):
+        {
+            "mean_reward": 0.85,
+            "variance": 0.02,
+            "sample_count": 500,
+            "updated_at": "2025-01-05T12:00:00Z"
+        }
         """
-        # Check cache
+        # Check in-memory cache first
         if model_name in self._cross_tenant_cache:
             return self._cross_tenant_cache[model_name]
 
-        # TODO: Implement cross-tenant aggregate retrieval from Redis/DB
-        # For now, return uniform prior
-        return ModelPrior(source="uniform", confidence=0.0)
+        # If Redis client not available, return uniform prior
+        if not self._redis_client:
+            logger.debug(f"Redis client not available for cross-tenant prior: {model_name}")
+            return ModelPrior(source="uniform", confidence=0.0)
+
+        try:
+            # Retrieve aggregate data from Redis
+            redis_key = f"bandit:cross_tenant:{model_name}"
+            raw_data = self._redis_client.get(redis_key)
+
+            if not raw_data:
+                logger.debug(f"No cross-tenant data found for model: {model_name}")
+                return ModelPrior(source="uniform", confidence=0.0)
+
+            # Parse JSON data
+            aggregate_data = json.loads(raw_data)
+
+            # Extract statistics
+            mean_reward = aggregate_data.get("mean_reward", 0.5)
+            variance = aggregate_data.get("variance", 0.25)
+            sample_count = aggregate_data.get("sample_count", 0)
+
+            # Validate data
+            if sample_count < 10:  # Require minimum sample size
+                logger.debug(
+                    f"Insufficient cross-tenant samples for {model_name}: {sample_count} < 10"
+                )
+                return ModelPrior(source="uniform", confidence=0.0)
+
+            # Create prior from aggregate data
+            prior = ModelPrior(
+                mean_reward=mean_reward,
+                variance=variance,
+                sample_count=sample_count,
+                source="cross_tenant",
+                confidence=self._prior_confidence,
+            )
+
+            # Cache the result
+            self._cross_tenant_cache[model_name] = prior
+
+            logger.info(
+                f"Loaded cross-tenant prior for {model_name}: "
+                f"mean={mean_reward:.3f}, samples={sample_count}"
+            )
+
+            return prior
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse cross-tenant data for {model_name}: {e}")
+            return ModelPrior(source="uniform", confidence=0.0)
+        except Exception as e:
+            logger.error(f"Error retrieving cross-tenant prior for {model_name}: {e}")
+            return ModelPrior(source="uniform", confidence=0.0)
 
     def _family_inheritance_prior(
         self,
@@ -418,6 +502,71 @@ class ColdStartPriorService:
         )
 
         logger.debug(f"Updated cross-tenant cache for {model_name}: mean={mean_reward:.3f}")
+
+    def store_cross_tenant_aggregate(
+        self,
+        model_name: str,
+        mean_reward: float,
+        variance: float,
+        sample_count: int,
+        ttl_seconds: int = 86400,  # 24 hours default TTL
+    ) -> bool:
+        """Store cross-tenant aggregate data to Redis.
+
+        This method persists aggregate statistics to Redis for sharing across
+        service instances and tenants. Typically called by background jobs that
+        compute aggregates from historical performance data.
+
+        Args:
+            model_name: Name of the model
+            mean_reward: Aggregated mean reward across tenants
+            variance: Aggregated variance
+            sample_count: Total number of samples in aggregate
+            ttl_seconds: Time-to-live for the data in seconds (default: 24 hours)
+
+        Returns:
+            True if successfully stored, False otherwise
+        """
+        if not self._enable_cross_tenant:
+            logger.warning("Cross-tenant mode disabled, skipping aggregate storage")
+            return False
+
+        if not self._redis_client:
+            logger.warning("Redis client not available, cannot store cross-tenant aggregate")
+            return False
+
+        try:
+            from datetime import datetime, timezone
+
+            # Prepare data
+            aggregate_data = {
+                "mean_reward": mean_reward,
+                "variance": variance,
+                "sample_count": sample_count,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+            # Store in Redis with TTL
+            redis_key = f"bandit:cross_tenant:{model_name}"
+            self._redis_client.setex(
+                redis_key,
+                ttl_seconds,
+                json.dumps(aggregate_data),
+            )
+
+            # Also update in-memory cache
+            self.update_cross_tenant_cache(model_name, mean_reward, variance, sample_count)
+
+            logger.info(
+                f"Stored cross-tenant aggregate for {model_name}: "
+                f"mean={mean_reward:.3f}, samples={sample_count}, ttl={ttl_seconds}s"
+            )
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to store cross-tenant aggregate for {model_name}: {e}")
+            return False
 
 
 __all__ = ["MODEL_FAMILIES", "BenchmarkData", "ColdStartPriorService", "ModelPrior"]
