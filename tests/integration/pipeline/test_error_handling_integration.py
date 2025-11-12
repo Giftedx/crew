@@ -1,7 +1,8 @@
 """Integration tests for error handling and tenant isolation."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestErrorHandlingIntegration:

@@ -8,6 +8,15 @@ This package intentionally avoids importing heavy, optional modules at import
 
 # Deliberately do not import optional submodules here to prevent ImportErrors
 # in lightweight test environments. Consumers should import submodules
-# explicitly. Keeping __all__ empty is acceptable.
+# explicitly.
 
-__all__: list[str] = []
+
+# Placeholder for backward compatibility
+class _LearnModule:
+    """Placeholder for learn module."""
+
+
+learn = _LearnModule()
+
+
+__all__: list[str] = ["learn"]

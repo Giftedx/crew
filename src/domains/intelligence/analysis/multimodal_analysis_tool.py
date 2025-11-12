@@ -14,13 +14,14 @@ This tool provides comprehensive multimodal analysis including:
 from __future__ import annotations
 
 import time
+from platform.cache.tool_cache_decorator import cache_tool_result
 
+from domains.intelligence.services.multimodal_understanding_service import MultimodalUnderstandingService
+from domains.intelligence.step_result import StepResult
+from domains.intelligence.tools._base import BaseTool
 from pydantic import BaseModel, Field
 
-from ..platform.observability.metrics import get_metrics
-from ..services.multimodal_understanding_service import MultimodalUnderstandingService
-from ..step_result import StepResult
-from ._base import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 class MultimodalAnalysisSchema(BaseModel):
@@ -35,6 +36,7 @@ class MultimodalAnalysisTool(BaseTool):
     description: str = "Performs a deep multimodal analysis of a video, combining vision and audio analysis to provide comprehensive insights."
     args_schema: type[BaseModel] = MultimodalAnalysisSchema
 
+    @cache_tool_result(namespace="tool:multimodal_analysis", ttl=3600)
     def _run(self, video_path: str, transcript: str) -> StepResult:
         """Executes the multimodal analysis."""
         metrics = get_metrics()

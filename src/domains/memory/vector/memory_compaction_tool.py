@@ -11,18 +11,19 @@ from __future__ import annotations
 
 import os
 import time
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, runtime_checkable
 
-from ...tenancy import current_tenant, mem_ns
-from .._base import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+from ..tenancy import current_tenant, mem_ns
+from ._base import BaseTool
 
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 try:
-    from domains.memory.vector.qdrant import get_qdrant_client
+    from domains.memory.qdrant_provider import get_qdrant_client
 except Exception:
 
     def get_qdrant_client():
@@ -78,7 +79,10 @@ class MemoryCompactionTool(BaseTool[StepResult]):
             self.client = client
         else:
             try:
-                self.client = get_qdrant_client()
+                # Lazy import to avoid circular dependency
+                from domains.memory.qdrant_provider import get_qdrant_client as _get_qdrant_client
+
+                self.client = _get_qdrant_client()
             except Exception:
                 self.client = None
         self._enable_compaction = str(os.getenv("ENABLE_MEMORY_COMPACTION", "1")).lower() in {"1", "true", "yes", "on"}

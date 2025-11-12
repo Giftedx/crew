@@ -21,9 +21,10 @@ import logging
 import os
 import time
 from functools import cached_property
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

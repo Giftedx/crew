@@ -60,6 +60,7 @@ except Exception:
 
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from .config import prompts as prompt_config
 from .crew_core import UltimateDiscordIntelligenceBotCrew
@@ -79,7 +80,6 @@ from .orchestrator import (
     system_validators,
     workflow_planners,
 )
-from .platform.observability.metrics import get_metrics
 
 
 try:
@@ -3629,3 +3629,7 @@ class AutonomousIntelligenceOrchestrator:
             }
         except Exception as e:
             return StepResult.fail(f"Content analysis failed: {e}")
+
+
+# Backward compatibility alias
+AutonomousOrchestrator = AutonomousIntelligenceOrchestrator

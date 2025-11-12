@@ -1,12 +1,12 @@
 """Integration tests for the core content pipeline workflow."""
 
 import asyncio
-from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from ultimate_discord_intelligence_bot.pipeline import ContentPipeline
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

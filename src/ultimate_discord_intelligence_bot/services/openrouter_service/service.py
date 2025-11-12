@@ -16,9 +16,10 @@ except Exception:
 from platform.cache.bounded_cache import BoundedLRUCache
 from platform.cache.unified_config import get_unified_cache_config
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from platform.rl.learning_engine import LearningEngine
 from platform.rl.litellm_router import LLMRouterSingleton
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from .adaptive_routing import AdaptiveRoutingManager
 from .tenant_semantic_cache import TenantSemanticCache
@@ -112,8 +113,9 @@ class OpenRouterService:
     ) -> None:
         config = get_config()
         settings = get_settings()
-        env_general = config.get_setting("openrouter_general_model")
-        env_analysis = config.get_setting("openrouter_analysis_model")
+        # Environment variables take precedence over config values so tests and ops overrides are honored
+        env_general = _os.getenv("OPENROUTER_GENERAL_MODEL") or config.get_setting("openrouter_general_model")
+        env_analysis = _os.getenv("OPENROUTER_ANALYSIS_MODEL") or config.get_setting("openrouter_analysis_model")
         default_map = {
             "general": [env_general or "openai/gpt-4o-mini"],
             "analysis": [env_analysis or env_general or "openai/gpt-4o-mini"],

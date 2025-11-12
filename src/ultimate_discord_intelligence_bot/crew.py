@@ -19,10 +19,13 @@ import warnings
 from domains.orchestration.crew import UltimateDiscordIntelligenceBotCrew, get_crew
 
 
+# Backward compatibility constants
+RAW_SNIPPET_MAX_LEN = 160
+
 warnings.warn(
     "ultimate_discord_intelligence_bot.crew is deprecated. Import from ultimate_discord_intelligence_bot.crew_core instead.",
     DeprecationWarning,
     stacklevel=2,
 )
 create_crew = get_crew
-__all__ = ["UltimateDiscordIntelligenceBotCrew", "create_crew"]
+__all__ = ["RAW_SNIPPET_MAX_LEN", "UltimateDiscordIntelligenceBotCrew", "create_crew"]

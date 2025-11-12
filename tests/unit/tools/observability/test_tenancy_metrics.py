@@ -1,5 +1,4 @@
-from platform.observability import metrics as metrics_mod
-
+from ultimate_discord_intelligence_bot.obs import metrics as metrics_mod
 from ultimate_discord_intelligence_bot.services import MemoryService
 
 

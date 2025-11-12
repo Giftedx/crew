@@ -11,12 +11,13 @@ Tests cover:
 """
 
 import time
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import ConnectionError, Timeout
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -50,7 +51,7 @@ class TestCreatorOpsChaos:
         """Test system behavior during database outages."""
         with patch("sqlalchemy.create_engine") as mock_create_engine:
             mock_create_engine.side_effect = Exception("Database connection failed")
-            from platform.core.store_adapter import UnifiedStoreManager
+            from ultimate_discord_intelligence_bot.core.store_adapter import UnifiedStoreManager
 
             try:
                 store_manager = UnifiedStoreManager("postgresql://test:test@localhost/test")
@@ -261,7 +262,7 @@ class TestCreatorOpsChaos:
 
     def test_health_check_during_outage(self):
         """Test health check behavior during outages."""
-        from platform.core.store_adapter import UnifiedStoreManager
+        from ultimate_discord_intelligence_bot.core.store_adapter import UnifiedStoreManager
 
         with patch("sqlalchemy.create_engine") as mock_create_engine:
             mock_engine = Mock()

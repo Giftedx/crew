@@ -6,10 +6,10 @@ Currently a stub implementation - needs full implementation.
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class VowpalWabbitBanditInput(BaseModel):

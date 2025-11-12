@@ -4,9 +4,9 @@ Basic tests for Creator Operations system.
 Simple tests that don't require heavy dependencies like torch.
 """
 
-from platform.core.step_result import StepResult
-
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestBasicCreatorOps:

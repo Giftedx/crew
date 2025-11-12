@@ -1,11 +1,11 @@
 import asyncio
 import logging
 import time
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.pipeline_components.log_pattern_middleware import LogPatternMiddleware
 from ultimate_discord_intelligence_bot.pipeline_components.middleware import StepContext
 from ultimate_discord_intelligence_bot.pipeline_components.mixins import PipelineExecutionMixin
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class _DummyPipeline:

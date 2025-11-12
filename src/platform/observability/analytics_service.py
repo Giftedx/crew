@@ -13,9 +13,10 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

@@ -42,7 +42,7 @@ except Exception:
 
 # Prefer platform.core.StepResult from our repo package; fall back to the shim if stdlib 'platform' is loaded
 try:
-    from platform.core.step_result import StepResult  # type: ignore
+    from ultimate_discord_intelligence_bot.step_result import StepResult  # type: ignore
 except Exception:  # pragma: no cover - environment-dependent import resolution
     from ultimate_discord_intelligence_bot.step_result import StepResult
 from unittest.mock import AsyncMock, MagicMock
@@ -123,7 +123,7 @@ def sample_recent_messages():
 @pytest.fixture
 def sample_personality_traits():
     """Sample personality traits for testing."""
-    from performance_optimization.src.discord.personality.personality_manager import PersonalityTraits
+    from src.discord.personality.personality_manager import PersonalityTraits
 
     return PersonalityTraits(
         humor=0.8,
@@ -140,7 +140,7 @@ def sample_personality_traits():
 @pytest.fixture
 def sample_interaction_metrics():
     """Sample interaction metrics for testing."""
-    from performance_optimization.src.discord.personality.reward_computer import InteractionMetrics
+    from src.discord.personality.reward_computer import InteractionMetrics
 
     return InteractionMetrics(
         message_id="msg123",
@@ -161,7 +161,7 @@ def sample_interaction_metrics():
 @pytest.fixture
 def sample_personality_context():
     """Sample personality context for testing."""
-    from performance_optimization.src.discord.personality.personality_manager import PersonalityContext
+    from src.discord.personality.personality_manager import PersonalityContext
 
     return PersonalityContext(
         channel_type="casual",
@@ -253,7 +253,7 @@ class TestDataFactory:
     @staticmethod
     def create_interaction_metrics(message_id="msg123", user_id="user123", engagement_level="high"):
         """Create interaction metrics."""
-        from performance_optimization.src.discord.personality.reward_computer import InteractionMetrics
+        from src.discord.personality.reward_computer import InteractionMetrics
 
         if engagement_level == "high":
             return InteractionMetrics(

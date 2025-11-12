@@ -18,9 +18,10 @@ from platform.core.circuit_breaker_canonical import (
     get_platform_circuit_breaker,
     with_circuit_breaker,
 )
-from platform.core.step_result import StepResult
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestCircuitConfig:

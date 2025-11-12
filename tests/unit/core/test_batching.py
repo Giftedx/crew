@@ -8,8 +8,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from src.scheduler.priority_queue import PriorityQueue
-from src.scheduler.scheduler import Scheduler
+from scheduler.priority_queue import PriorityQueue
+from scheduler.scheduler import Scheduler
 
 
 # Test constants

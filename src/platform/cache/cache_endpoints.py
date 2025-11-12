@@ -3,9 +3,8 @@ import os
 from platform.cache.cache_service import get_cache_service
 from typing import Any
 
-from pydantic import BaseModel
-
 from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel
 
 
 logger = logging.getLogger(__name__)

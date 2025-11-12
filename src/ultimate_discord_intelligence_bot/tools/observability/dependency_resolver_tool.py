@@ -4,11 +4,11 @@ import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 
 from crewai.tools import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -112,11 +112,11 @@ class DependencyResolverTool(BaseTool):
                 "version": "1.0",
             }
             logger.info("Dependency resolution completed successfully")
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"}).inc()
             return StepResult.success(resolution_report)
         except Exception as e:
             logger.error(f"Dependency resolution failed: {e!s}")
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"}).inc()
             return StepResult.fail(f"Dependency resolution failed: {e!s}")
         finally:
             metrics.histogram("tool_run_seconds", time.time() - start_time, labels={"tool": self.__class__.__name__})

@@ -12,9 +12,9 @@ from __future__ import annotations
 import os
 import sys
 import time
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.config_schema import validate_config
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class StartupValidator:
@@ -127,7 +127,7 @@ class StartupValidator:
                     self.add_success("Qdrant in-memory mode configured")
                 else:
                     try:
-                        from domains.memory.vector.qdrant import get_qdrant_client
+                        from domains.memory.qdrant_provider import get_qdrant_client
 
                         client = get_qdrant_client()
                         client.get_collections()

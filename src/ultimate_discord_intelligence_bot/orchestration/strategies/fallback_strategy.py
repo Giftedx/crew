@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import logging
 import uuid
-from platform.core.step_result import StepResult
-from platform.orchestration import OrchestrationContext, get_orchestration_facade
-from platform.orchestration.domain import FallbackAutonomousOrchestrator
 from typing import Any
+
+from domains.orchestration.legacy import OrchestrationContext, get_orchestration_facade
+from domains.orchestration.legacy.domain import FallbackAutonomousOrchestrator
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class FallbackStrategy:
         Returns:
             StepResult with workflow execution outcome
         """
-        from platform.observability.metrics import get_metrics
+        from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
         metrics = get_metrics()
         metrics.counter("orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "started"})

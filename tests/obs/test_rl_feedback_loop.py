@@ -1,11 +1,12 @@
 import sys
 import types
 from collections.abc import Callable
-from platform.core.step_result import StepResult
-from platform.observability import metrics
-from platform.observability.enhanced_monitoring import EnhancedMonitoringSystem
 
 import pytest
+
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.obs.enhanced_monitoring import EnhancedMonitoringSystem
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class _CounterChild:

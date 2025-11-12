@@ -18,13 +18,14 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from platform.core.step_result import StepResult
 from platform.time import default_utc_now
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ..advanced_performance_analytics_discord_integration import AdvancedPerformanceAnalyticsDiscordIntegration
 from ..advanced_performance_analytics_integration import get_performance_dashboard, run_full_performance_analysis
-from ..platform.observability.metrics import get_metrics
 from ._base import BaseTool
 
 

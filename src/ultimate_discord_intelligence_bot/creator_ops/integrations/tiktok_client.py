@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 import httpx
@@ -26,6 +25,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_models im
     TikTokVideo,
     TikTokVideoList,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

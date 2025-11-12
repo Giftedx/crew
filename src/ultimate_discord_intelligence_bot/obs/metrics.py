@@ -21,6 +21,27 @@ from functools import lru_cache
 from typing import Any, Protocol
 
 
+# Metric name constants for cache operations
+CACHE_HIT_RATE_RATIO = "cache_hit_rate_ratio"
+CACHE_HITS = "cache_hits_total"
+CACHE_MISSES = "cache_misses_total"
+CACHE_OPERATION_LATENCY = "cache_operation_duration_seconds"
+
+
+# Context manager for metric labels (no-op implementation)
+class label_ctx:
+    """Context manager for adding labels to metrics within a scope."""
+
+    def __init__(self, **labels: str) -> None:
+        self.labels = labels
+
+    def __enter__(self) -> label_ctx:
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        pass
+
+
 class _Metric(Protocol):
     def inc(self, *args: Any, **kwargs: Any) -> None: ...
 
@@ -48,6 +69,13 @@ class _NoOpMetric:
 class _MetricsFacade:
     def __init__(self, backend: Any | None) -> None:
         self._backend = backend
+
+    def __getattr__(self, name: str) -> Any:
+        """Dynamically access metrics from the backend."""
+        if self._backend and hasattr(self._backend, name):
+            return getattr(self._backend, name)
+        # Return a no-op metric for missing attributes
+        return _NoOpMetric()
 
     def _wrap_counter(self, labeled: Any) -> _Metric:
         if labeled is None:
@@ -103,6 +131,38 @@ class _MetricsFacade:
         except Exception:
             return
 
+    def increment_counter(self, name: str, value: float = 1.0, labels: dict[str, str] | None = None) -> None:
+        """Increment a counter metric, falling back to no-op if unavailable."""
+
+        counter = self.counter(name, labels=labels)
+        try:
+            counter.add(value)
+        except Exception:
+            try:
+                counter.inc(value)
+            except Exception:
+                return
+
+    def set_gauge(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
+        """Set a gauge metric value, handling missing backends gracefully."""
+
+        gauge = self.gauge(name, labels=labels)
+        try:
+            gauge.set(value)
+        except Exception:
+            try:
+                gauge.add(value)
+            except Exception:
+                return
+
+    def observe_histogram(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
+        """Record a histogram observation with safe fallbacks."""
+
+        try:
+            self.histogram(name, value, labels)
+        except Exception:
+            return
+
 
 @lru_cache(maxsize=1)
 def get_metrics() -> _MetricsFacade:
@@ -115,4 +175,11 @@ def get_metrics() -> _MetricsFacade:
         return _MetricsFacade(None)
 
 
-__all__ = ["get_metrics"]
+__all__ = [
+    "CACHE_HITS",
+    "CACHE_HIT_RATE_RATIO",
+    "CACHE_MISSES",
+    "CACHE_OPERATION_LATENCY",
+    "get_metrics",
+    "label_ctx",
+]

@@ -6,7 +6,7 @@ Docstring precedes future import per Ruff E402.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from platform import flags
+from platform.config import flags
 from typing import Any
 
 
@@ -50,8 +50,13 @@ def filter_text(
             return (text, PrivacyReport([], {}, decisions))
     payload_dec = policy_engine.check_payload(text, ctx, policy)
     decisions.append(payload_dec)
+    # Only hard-block on structural policy violations (media type, length, etc.).
+    # If the block is due to potential PII, proceed to redaction instead.
     if payload_dec.decision == "block":
-        return (text, PrivacyReport([], {}, decisions))
+        reasons = payload_dec.reasons or []
+        pii_flag = any("contains potential" in str(r) for r in reasons)
+        if not pii_flag:
+            return (text, PrivacyReport([], {}, decisions))
     engine = learning or LearningEngine()
     try:
         arm = engine.recommend(domain, ctx, ["strict", "lenient"])

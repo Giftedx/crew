@@ -13,8 +13,9 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..agents.executive_supervisor import ExecutiveSupervisorAgent
 from ..agents.workflow_manager import WorkflowManagerAgent

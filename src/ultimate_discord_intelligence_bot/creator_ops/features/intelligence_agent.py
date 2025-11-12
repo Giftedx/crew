@@ -4,7 +4,6 @@ Provides intelligent content analysis and recommendations for creators.
 """
 
 import logging
-from platform.core.step_result import StepResult
 
 from pydantic import BaseModel
 
@@ -13,6 +12,7 @@ from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfi
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import EpisodeIntelligence
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedTranscript
 from ultimate_discord_intelligence_bot.creator_ops.media.nlp import NLPResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

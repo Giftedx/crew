@@ -4,7 +4,6 @@ Handles intelligent clip selection and platform optimization.
 """
 
 import logging
-from platform.core.step_result import StepResult
 
 from crewai import Agent, Task
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models import (
@@ -13,6 +12,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_models i
     RepurposingConfig,
 )
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

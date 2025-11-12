@@ -5,7 +5,6 @@ Provides intelligent analysis and optimization for viral moment detection.
 
 import logging
 from datetime import datetime
-from platform.core.step_result import StepResult
 
 from pydantic import BaseModel
 
@@ -17,6 +16,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models im
     MonitoringConfig,
     ViralMoment,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

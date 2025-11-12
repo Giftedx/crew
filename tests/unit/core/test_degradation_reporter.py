@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from platform.observability import metrics
-
 from core import degradation_reporter as dr
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class EnabledSettings:

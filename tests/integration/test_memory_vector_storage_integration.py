@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from domains.memory.vector_store import MemoryService
+from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

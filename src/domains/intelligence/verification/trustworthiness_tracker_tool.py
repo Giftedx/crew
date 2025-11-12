@@ -6,12 +6,12 @@ import json
 import logging
 import os
 from pathlib import Path
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from platform.time import default_utc_now
 from threading import Lock
 from typing import ClassVar, TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

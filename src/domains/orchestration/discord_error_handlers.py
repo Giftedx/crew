@@ -13,14 +13,14 @@ from .discord_session_validators import is_session_valid
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 logger = logging.getLogger(__name__)
 
 
 def _get_metrics():
     """Lazy import of metrics to avoid circular dependencies."""
     try:
-        from platform.observability.metrics import get_metrics
+        from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
         return get_metrics()
     except ImportError:

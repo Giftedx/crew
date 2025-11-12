@@ -54,7 +54,7 @@ def test_openrouter_retry_giveup(monkeypatch, enable_retry):
     import platform.llm.providers.openrouter as mod
 
     monkeypatch.setattr(mod, "resilient_post", always_fail)
-    from platform.observability.metrics import HTTP_RETRY_GIVEUPS, label_ctx
+    from ultimate_discord_intelligence_bot.obs.metrics import HTTP_RETRY_GIVEUPS, label_ctx
 
     before = None
     try:

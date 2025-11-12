@@ -8,12 +8,11 @@ through a single, coherent interface.
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
+from crewai.tools import BaseTool
 from ultimate_discord_intelligence_bot.knowledge import (
     ContextConfig,
     ContextRequest,
@@ -24,6 +23,7 @@ from ultimate_discord_intelligence_bot.knowledge import (
     UnifiedMemoryService,
     UnifiedRetrievalEngine,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

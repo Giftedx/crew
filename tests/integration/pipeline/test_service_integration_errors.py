@@ -6,10 +6,11 @@ OpenRouter API, Qdrant, Redis cache, Discord API, and fallback service logic.
 """
 
 import asyncio
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestServiceIntegrationErrors:

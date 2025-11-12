@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any
 
-from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
 
+from crewai.tools import BaseTool
 from kg.creator_kg_store import CreatorKGStore
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -71,6 +72,11 @@ class SmartClipComposerTool(BaseTool):
         super().__init__()
         self.kg_store = kg_store or CreatorKGStore(":memory:")
 
+    def run(self, *args, **kwargs) -> Any:
+        """Run the smart clip composer tool."""
+        return self._run(*args, **kwargs)
+
+    @cache_tool_result(namespace="tool:smart_clip_composer", ttl=3600)
     def _run(
         self,
         episode_id: str,

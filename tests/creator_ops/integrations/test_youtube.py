@@ -10,7 +10,6 @@ Tests cover:
 - Quota management
 """
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 import pytest
@@ -18,6 +17,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestYouTubeClient:

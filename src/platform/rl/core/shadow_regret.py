@@ -52,8 +52,7 @@ class ShadowRegretTracker:
             self.cumulative_regret[policy_name] += instantaneous_regret
             if METRICS_AVAILABLE:
                 try:
-                    from platform.observability import metrics
-
+                    from ultimate_discord_intelligence_bot.obs import metrics
                     from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
                     ctx = current_tenant()

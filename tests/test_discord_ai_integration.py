@@ -10,18 +10,19 @@ import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from performance_optimization.src.discord.conversational_pipeline import ConversationalPipeline, PipelineContext
-from performance_optimization.src.discord.mcp_integration import MCPIntegrationLayer
+
+from src.discord.conversational_pipeline import ConversationalPipeline, PipelineContext
+from src.discord.mcp_integration import MCPIntegrationLayer
 
 # Import the Discord AI components
-from performance_optimization.src.discord.message_evaluator import EvaluationResult, MessageContext, MessageEvaluator
-from performance_optimization.src.discord.opt_in_manager import OptInManager
-from performance_optimization.src.discord.personality.personality_manager import (
+from src.discord.message_evaluator import EvaluationResult, MessageContext, MessageEvaluator
+from src.discord.opt_in_manager import OptInManager
+from src.discord.personality.personality_manager import (
     PersonalityContext,
     PersonalityStateManager,
     PersonalityTraits,
 )
-from performance_optimization.src.discord.personality.reward_computer import (
+from src.discord.personality.reward_computer import (
     InteractionMetrics,
     RewardComputer,
     RewardSignal,
@@ -475,7 +476,7 @@ class TestMCPIntegration:
     @pytest.fixture
     def feature_flags(self):
         """Create feature flags for testing."""
-        from performance_optimization.src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+        from src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
         return FeatureFlags()
 
@@ -545,7 +546,7 @@ class TestConfiguration:
 
     def test_feature_flags_loading(self):
         """Test feature flags loading from environment."""
-        from performance_optimization.src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+        from src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 
@@ -556,7 +557,7 @@ class TestConfiguration:
 
     def test_mcp_integration_flags(self):
         """Test MCP integration feature flags."""
-        from performance_optimization.src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
+        from src.ultimate_discord_intelligence_bot.config.feature_flags import FeatureFlags
 
         flags = FeatureFlags()
 

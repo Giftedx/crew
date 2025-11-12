@@ -6,9 +6,8 @@ from pathlib import Path
 
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
-from platform.observability import metrics
-
 from ultimate_discord_intelligence_bot.ingest import pipeline as ip
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _CounterStub:

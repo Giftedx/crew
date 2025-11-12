@@ -6,9 +6,9 @@ that handle data persistence, retrieval, and management.
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
 from typing import Any
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

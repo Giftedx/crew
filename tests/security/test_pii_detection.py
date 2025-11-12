@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from platform.core.privacy.privacy_filter import filter_text
+from platform.security.privacy.privacy_filter import filter_text
 
 
 class TestPIIDetection:

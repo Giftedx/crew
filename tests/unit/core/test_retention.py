@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from platform.core.privacy import retention
+from platform.security.privacy import retention
 
 from ingest import models
 

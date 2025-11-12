@@ -1,12 +1,12 @@
 import pytest
 
-from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
+from domains.ingestion.providers.discord_download_tool import (
     DiscordDownloadTool,
 )
-from ultimate_discord_intelligence_bot.tools.multi_platform_download_tool import (
+from domains.ingestion.providers.multi_platform_download_tool import (
     MultiPlatformDownloadTool,
 )
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+from domains.ingestion.providers.yt_dlp_download_tool import (
     InstagramDownloadTool,
     KickDownloadTool,
     RedditDownloadTool,

@@ -12,12 +12,12 @@ from __future__ import annotations
 import logging
 import threading
 from platform import http_utils
-from platform.observability.metrics import get_metrics
 from typing import Any
 
 from requests import RequestException  # http-compliance: allow-direct-requests (exception type import only)
 
 from app.config.feature_flags import FeatureFlags
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 log = logging.getLogger(__name__)

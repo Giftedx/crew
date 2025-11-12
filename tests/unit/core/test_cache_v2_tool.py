@@ -1,8 +1,8 @@
 """Tests for Cache V2 Tool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, Mock, patch
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.cache_v2_tool import CacheV2Tool
 
 

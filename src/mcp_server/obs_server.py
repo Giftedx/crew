@@ -55,7 +55,7 @@ obs_mcp = FastMCP("Observability Server") if _FASTMCP_AVAILABLE else _StubMCP("O
 def _summarize_health_impl() -> dict:
     """Return a simple health summary based on metrics availability and render()."""
     try:
-        from platform.observability import metrics
+        from ultimate_discord_intelligence_bot.obs import metrics
 
         prom_ok = bool(getattr(metrics, "PROMETHEUS_AVAILABLE", False))
         data = b""
@@ -74,7 +74,7 @@ def _summarize_health_impl() -> dict:
 def _get_counters_impl(sample_bytes: int = 1000) -> dict:
     """Return a safe counters snapshot using Prometheus exposition text (truncated)."""
     try:
-        from platform.observability import metrics
+        from ultimate_discord_intelligence_bot.obs import metrics
 
         prom_ok = bool(getattr(metrics, "PROMETHEUS_AVAILABLE", False))
         data = b""
@@ -155,7 +155,7 @@ def metrics_prom() -> str:
     if _os.getenv("ENABLE_MCP_OBS_PROM_RESOURCE", "0").lower() not in ("1", "true", "yes", "on"):
         return "prom_resource_disabled"
     try:
-        from platform.observability import metrics
+        from ultimate_discord_intelligence_bot.obs import metrics
 
         data = metrics.render()
         if isinstance(data, (bytes, bytearray)):

@@ -6,10 +6,11 @@ import os
 import re
 from collections import Counter
 from pathlib import Path
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

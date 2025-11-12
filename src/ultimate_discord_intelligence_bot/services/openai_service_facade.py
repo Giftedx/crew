@@ -38,11 +38,11 @@ Usage:
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from app.config.base import BaseConfig
 from app.config.feature_flags import FeatureFlags
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .openai_cost_monitoring import OpenAICostMonitoringService
 from .openai_function_calling import OpenAIFunctionCallingService

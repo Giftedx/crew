@@ -10,10 +10,10 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import wraps
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.caching.result_cache import ResultCache
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

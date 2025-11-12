@@ -6,6 +6,7 @@ unified metrics collection, intelligent alerting, and dashboard integration.
 See ADR-0005 for analytics consolidation architecture.
 """
 
+from .agent_metrics import AgentMetricsCollector
 from .analytics_service import (
     AnalyticsService,
     PerformanceMetrics,
@@ -47,6 +48,7 @@ from .unified_metrics import (
 
 __all__ = [
     "AgentMetric",
+    "AgentMetricsCollector",
     "AlertAction",
     "AlertCondition",
     "AlertLevel",

@@ -12,7 +12,9 @@ import asyncio
 import logging
 import time
 from contextlib import asynccontextmanager
-from platform.observability.metrics import (
+from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import (
     CACHE_COMPRESSION_RATIO,
     CACHE_COMPRESSIONS,
     CACHE_DECOMPRESSIONS,
@@ -28,7 +30,6 @@ from platform.observability.metrics import (
     CACHE_SIZE_BYTES,
     label_ctx,
 )
-from typing import Any
 
 
 logger = logging.getLogger(__name__)

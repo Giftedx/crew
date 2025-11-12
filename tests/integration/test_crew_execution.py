@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from domains.orchestration.crew import create_crew
+from ultimate_discord_intelligence_bot.crew import create_crew
 
 
 class TestCrewExecution:

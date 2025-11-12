@@ -35,7 +35,7 @@ _registry_lock = threading.Lock()
 _routers: dict[tuple[str, str], ThompsonBanditRouter] = {}
 _selection_counts: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
 try:
-    from platform.observability.metrics import get_metrics as _gm
+    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
 
     def _obtain_metrics() -> MetricsFacade | None:
         try:

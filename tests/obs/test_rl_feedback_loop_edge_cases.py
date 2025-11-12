@@ -1,8 +1,9 @@
 import sys
 import types
-from platform.observability.enhanced_monitoring import EnhancedMonitoringSystem
 
 import pytest
+
+from ultimate_discord_intelligence_bot.obs.enhanced_monitoring import EnhancedMonitoringSystem
 
 
 class _NoRouterModule(types.ModuleType):

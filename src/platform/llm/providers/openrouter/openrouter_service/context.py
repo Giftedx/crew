@@ -6,8 +6,9 @@ import contextlib
 import copy
 import logging
 import os as _os
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from ..request_budget import current_request_tracker as _crt
 from .state import RouteState

@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
 from typing import Any, Protocol, runtime_checkable
 
 import httpx
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

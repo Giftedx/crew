@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import json
 import time
-from platform.core.step_result import get_error_analyzer, get_recovery_manager
 from platform.db_optimizer import get_database_optimizer
 from platform.llm_cache import get_llm_cache
 from typing import Any
 
 from domains.memory.vector_store import VectorStore
+from ultimate_discord_intelligence_bot.step_result import get_error_analyzer, get_recovery_manager
 
 
 class PerformanceDashboard:

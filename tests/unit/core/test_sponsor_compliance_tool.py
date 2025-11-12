@@ -1,7 +1,7 @@
 from datetime import datetime
 from unittest.mock import Mock
 
-from src.ultimate_discord_intelligence_bot.tools.sponsor_compliance_tool import (
+from ultimate_discord_intelligence_bot.tools.sponsor_compliance_tool import (
     ComplianceReport,
     ComplianceViolation,
     DisclosureRecommendation,

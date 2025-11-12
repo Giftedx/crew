@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..debate_analysis_pipeline import DebateAnalysisPipeline
 from ..profiles.schema import CreatorProfile, Platforms, load_seeds
@@ -63,6 +65,7 @@ class DebateCommandTool(BaseTool[StepResult]):
         self.profile_store = profile_store or ProfileStore(":memory:")
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:debate_command", ttl=1800)
     def _run(self, command: str, **kwargs: Any) -> StepResult:
         """Dispatch debate related commands via a simple registry to reduce branches.
 

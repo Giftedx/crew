@@ -12,11 +12,11 @@ multi-modal analysis capabilities including:
 from __future__ import annotations
 
 import logging
-from platform.observability.metrics import get_metrics
 from typing import Any
 
 from fastmcp import FastMCP
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.tools.multi_modal_analysis_tool import MultiModalAnalysisTool
 
 

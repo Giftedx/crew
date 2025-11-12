@@ -10,8 +10,9 @@ import os
 import time
 from contextlib import nullcontext, suppress
 from dataclasses import dataclass
-from platform.observability import metrics, tracing
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs import metrics, tracing
 
 
 if TYPE_CHECKING:

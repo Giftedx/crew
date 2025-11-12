@@ -14,9 +14,10 @@ from __future__ import annotations
 import contextlib
 import html
 import re
-from platform.core.step_result import StepResult
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, cached_get, validate_public_https_url
-from platform.observability.metrics import get_metrics
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

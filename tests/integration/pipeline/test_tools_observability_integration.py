@@ -6,10 +6,8 @@ from typing import Any
 
 import pytest
 
-from ultimate_discord_intelligence_bot.tools.text_analysis_tool import (
+from ultimate_discord_intelligence_bot.tools import (
     TextAnalysisTool,
-)
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
     YtDlpDownloadTool,
 )
 

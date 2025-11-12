@@ -3,7 +3,6 @@ Tests for X (Twitter) API v2 client and models.
 """
 
 from datetime import datetime
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -32,6 +31,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.x_models import 
     XWebhookEvent,
     XWebhookSubscription,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestXModels:

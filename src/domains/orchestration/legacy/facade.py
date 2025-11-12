@@ -13,8 +13,9 @@ import structlog
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from platform.core.step_result import StepResult
-    from platform.orchestration.protocols import OrchestrationContext, OrchestrationLayer, OrchestratorProtocol
+
+    from domains.orchestration.legacy.protocols import OrchestrationContext, OrchestrationLayer, OrchestratorProtocol
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 logger = structlog.get_logger(__name__)
 
 
@@ -99,7 +100,7 @@ class OrchestrationFacade:
         Returns:
             StepResult from the orchestration
         """
-        from platform.core.step_result import ErrorCategory, StepResult
+        from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
         orchestrator = self.get(orchestrator_name)
         if orchestrator is None:

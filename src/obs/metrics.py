@@ -110,6 +110,15 @@ ERROR_COUNT = _MetricFamily(
 # Memory operations
 MEMORY_STORE_COUNT = _MetricFamily("memory_store_count", kind="counter", label_names=("store_type",))
 MEMORY_RETRIEVAL_COUNT = _MetricFamily("memory_retrieval_count", kind="counter", label_names=("store_type",))
+MEMORY_STORE_LATENCY = _MetricFamily("memory_store_latency_seconds", kind="histogram", label_names=("store_type",))
+MEMORY_RETRIEVAL_LATENCY = _MetricFamily(
+    "memory_retrieval_latency_seconds", kind="histogram", label_names=("store_type",)
+)
+
+# MCP tool calls
+MCP_TOOL_CALL_COUNT = _MetricFamily("mcp_tool_call_count", kind="counter", label_names=("tool_name",))
+MCP_TOOL_CALL_ERROR_COUNT = _MetricFamily("mcp_tool_call_error_count", kind="counter", label_names=("tool_name",))
+MCP_TOOL_CALL_LATENCY = _MetricFamily("mcp_tool_call_latency_seconds", kind="histogram", label_names=("tool_name",))
 
 __all__ = [
     "CONTENT_ANALYSIS_COUNT",
@@ -122,8 +131,13 @@ __all__ = [
     "DISCORD_MESSAGE_ERROR_COUNT",
     "DISCORD_MESSAGE_LATENCY",
     "ERROR_COUNT",
+    "MCP_TOOL_CALL_COUNT",
+    "MCP_TOOL_CALL_ERROR_COUNT",
+    "MCP_TOOL_CALL_LATENCY",
     "MEMORY_RETRIEVAL_COUNT",
+    "MEMORY_RETRIEVAL_LATENCY",
     "MEMORY_STORE_COUNT",
+    "MEMORY_STORE_LATENCY",
     "MODEL_ROUTING_COUNT",
     "MODEL_ROUTING_LATENCY",
     "REQUEST_COUNT",

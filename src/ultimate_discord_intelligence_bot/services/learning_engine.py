@@ -34,8 +34,8 @@ import json
 import logging
 from datetime import date
 from pathlib import Path
+from platform.rl.core.policies.bandit_base import EpsilonGreedyBandit
 from platform.rl.learning_engine import LearningEngine as _CoreLearningEngine
-from platform.rl.policies.bandit_base import EpsilonGreedyBandit
 from typing import TYPE_CHECKING, Any
 from warnings import warn
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import tempfile
 
-from ultimate_discord_intelligence_bot.tools.discord_post_tool import DiscordPostTool
+from ultimate_discord_intelligence_bot.tools.discord.discord_post_tool import DiscordPostTool
 
 
 class FakeResp:

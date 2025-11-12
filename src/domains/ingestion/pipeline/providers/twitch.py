@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+from domains.ingestion.providers.yt_dlp_download_tool import (
     twitch_fetch_metadata,
 )
 

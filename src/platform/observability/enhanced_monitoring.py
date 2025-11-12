@@ -25,8 +25,13 @@ try:
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
-from platform.observability import metrics
 from platform.time import default_utc_now
+
+from ultimate_discord_intelligence_bot.obs import metrics
+
+
+# Get the metrics facade instance
+_metrics = metrics.get_metrics()
 
 
 logger = logging.getLogger(__name__)
@@ -504,7 +509,7 @@ class EnhancedMonitoringSystem:
         """Process the RL feedback queue once and emit observability metrics."""
         enabled = self._feedback_loop_enabled()
         resolved_batch_size = batch_size or self._get_feedback_batch_size()
-        label_context = metrics.label_ctx()
+        label_context = _metrics.label_ctx()
         if labels:
             label_context = {**label_context, **labels}
         summary: dict[str, Any] = {
@@ -521,8 +526,8 @@ class EnhancedMonitoringSystem:
             router = rl_router_registry.get_rl_model_router(create_if_missing=False)
         except Exception as exc:
             logger.error("Unable to import RL router registry: %s", exc, exc_info=True)
-            metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="registry_import").inc()
-            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(0)
+            _metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="registry_import").inc()
+            _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(0)
             summary.update({"status": "error", "error": str(exc)})
             return summary
         queue_depth = 0
@@ -532,13 +537,13 @@ class EnhancedMonitoringSystem:
             except Exception:
                 queue_depth = 0
         summary["queue_depth"] = queue_depth
-        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(queue_depth)
+        _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(queue_depth)
         if not enabled:
             logger.debug("RL feedback loop disabled; queue depth=%s", queue_depth)
             return summary
         if router is None:
             summary["status"] = "no_router"
-            metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="no_router").inc()
+            _metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="no_router").inc()
             logger.warning("RL feedback loop enabled but no router registered")
             return summary
         start_time = time.perf_counter()
@@ -546,22 +551,22 @@ class EnhancedMonitoringSystem:
             result = router.process_trajectory_feedback(batch_size=resolved_batch_size)
         except Exception as exc:
             logger.error("RL feedback processing failed: %s", exc, exc_info=True)
-            metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="exception").inc()
+            _metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="exception").inc()
             try:
                 remaining = len(getattr(router, "trajectory_feedback_queue", []))
             except Exception:
                 remaining = queue_depth
-            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining)
+            _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining)
             summary.update({"status": "error", "error": str(exc), "queue_depth": remaining})
             return summary
         latency_ms = (time.perf_counter() - start_time) * 1000.0
         summary["latency_ms"] = round(latency_ms, 3)
-        metrics.RL_FEEDBACK_PROCESSING_LATENCY.labels(**label_context).observe(latency_ms)
+        _metrics.RL_FEEDBACK_PROCESSING_LATENCY.labels(**label_context).observe(latency_ms)
         processed = int(result.data.get("processed", 0))
         failed = int(result.data.get("failed", 0))
         remaining_queue = int(result.data.get("remaining_queue_size", queue_depth))
         summary.update({"processed": processed, "failed": failed, "queue_depth": remaining_queue})
-        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining_queue)
+        _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**label_context).set(remaining_queue)
         if result.metadata:
             summary["metadata"] = dict(result.metadata)
         if result.skipped:
@@ -572,7 +577,7 @@ class EnhancedMonitoringSystem:
         else:
             summary["status"] = "error"
             summary["error"] = result.error or "unknown_error"
-            metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="step_failure").inc()
+            _metrics.RL_FEEDBACK_FAILED.labels(**label_context, reason="step_failure").inc()
         logger.debug(
             "RL feedback batch processed",
             extra={
@@ -665,7 +670,7 @@ class EnhancedMonitoringSystem:
                 try:
                     labels = {"tenant": "system", "workspace": "monitoring"}
                     try:
-                        system_health_metric = getattr(metrics, "SYSTEM_HEALTH_SCORE", None)
+                        system_health_metric = getattr(_metrics, "SYSTEM_HEALTH_SCORE", None)
                         if system_health_metric is not None:
                             health_score = (
                                 1.0
@@ -678,7 +683,7 @@ class EnhancedMonitoringSystem:
                                 system_health_metric.labels(**labels).set(health_score)
                             except Exception:
                                 logger.debug("Failed to set system health metric")
-                        cost_metric = getattr(metrics, "COST_PER_INTERACTION", None)
+                        cost_metric = getattr(_metrics, "COST_PER_INTERACTION", None)
                         if cost_metric is not None:
                             try:
                                 cost_metric.labels(**labels).set(current_metrics.cost_per_interaction)

@@ -4,12 +4,12 @@ import json
 import logging
 import time
 from dataclasses import dataclass
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel, ValidationError
 from pydantic_core import PydanticUndefined
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.services.request_budget import current_request_tracker
 
 from .cache import CacheKeyGenerator, ResponseCache

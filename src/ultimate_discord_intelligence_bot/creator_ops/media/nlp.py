@@ -19,9 +19,8 @@ try:
 except ImportError:
     torch = None
     pipeline = None
-from platform.core.step_result import StepResult
-
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

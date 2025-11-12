@@ -11,10 +11,11 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 if TYPE_CHECKING:

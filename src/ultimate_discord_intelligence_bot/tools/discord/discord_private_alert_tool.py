@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import ipaddress
 import os
-from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_post
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from urllib.parse import urlparse
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class DiscordPrivateAlertTool:

@@ -12,10 +12,10 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
-from domains.memory.vector.qdrant import get_qdrant_client
+from domains.memory.qdrant_provider import get_qdrant_client
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 if TYPE_CHECKING:

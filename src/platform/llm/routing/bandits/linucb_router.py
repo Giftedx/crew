@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 
     from ._metrics_types import MetricLike, MetricsFacade
 try:
-    from platform.observability.metrics import get_metrics as _gm
+    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
 
     _real_get_metrics: Callable[[], MetricsFacade] | None = cast("Callable[[], MetricsFacade]", _gm)
 except Exception:

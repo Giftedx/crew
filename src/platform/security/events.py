@@ -6,7 +6,6 @@ security relevant actions are recorded in a consistent JSON format.
 
 from __future__ import annotations
 
-from platform.observability.logging import logger
 from typing import Any
 
 
@@ -49,7 +48,14 @@ def log_security_event(
         payload["workspace"] = workspace
     if extra:
         payload.update(extra)
-    logger.info("security_event", **payload)
+    # Import logger lazily to avoid circular import when platform.security is
+    # imported by modules that themselves are imported during logging setup.
+    # This ensures that importing platform.security.* does not require
+    # platform.observability.logging to be fully initialized at module import
+    # time.
+    from ultimate_discord_intelligence_bot.obs.logging import logger as _logger
+
+    _logger.info("security_event", **payload)
 
 
 __all__ = ["log_security_event"]

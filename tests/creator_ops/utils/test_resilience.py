@@ -4,11 +4,7 @@ Tests for resilience utilities including circuit breakers, idempotency, rate lim
 
 import asyncio
 import time
-from platform.core.step_result import StepResult
-from unittest.mock import patch
-
-import pytest
-from core.circuit_breaker_canonical import (
+from platform.http.circuit_breaker_canonical import (
     CircuitBreaker,
     CircuitBreakerOpenError,
     CircuitBreakerRegistry,
@@ -16,6 +12,9 @@ from core.circuit_breaker_canonical import (
     get_circuit_breaker_registry,
     with_circuit_breaker,
 )
+from unittest.mock import patch
+
+import pytest
 
 from ultimate_discord_intelligence_bot.creator_ops.utils.backpressure import (
     BackpressureHandler,
@@ -36,6 +35,7 @@ from ultimate_discord_intelligence_bot.creator_ops.utils.rate_limiter import (
     rate_limiter_manager,
     with_rate_limit,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestCircuitBreaker:

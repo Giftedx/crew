@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import os
-from platform.core.step_result import StepResult
 
 from eval.trajectory_evaluator import AgentTrajectory, TrajectoryEvaluator, TrajectoryStep
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 def test_agentevals_flag_skip(monkeypatch):

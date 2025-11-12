@@ -12,8 +12,7 @@ try:
 except ImportError:
     TWEEPY_AVAILABLE = False
     tweepy = None
-from platform.core.step_result import ErrorCategory, StepResult
-
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

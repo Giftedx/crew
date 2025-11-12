@@ -55,7 +55,7 @@ def test_crewai_tool_wrappers():
             description = "Tool for testing wrapper fixes"
 
             def run(self, text="test"):
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 return StepResult.ok(data={"processed_text": text, "status": "success"})
 

@@ -6,8 +6,9 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import Enum
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class AlertSeverity(Enum):

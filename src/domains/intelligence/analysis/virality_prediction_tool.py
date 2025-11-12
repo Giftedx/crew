@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -122,6 +124,7 @@ class ViralityPredictionTool(BaseTool[StepResult]):
         self._prediction_horizon_hours = prediction_horizon_hours
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:virality_prediction", ttl=3600)
     def _run(
         self,
         content_data: list[dict[str, Any]],

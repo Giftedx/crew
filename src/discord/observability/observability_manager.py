@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import asyncio
 import time
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .conversation_tracer import create_conversation_tracer
 from .metrics_collector import create_discord_metrics_collector

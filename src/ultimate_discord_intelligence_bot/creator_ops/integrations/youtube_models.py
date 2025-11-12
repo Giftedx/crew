@@ -10,8 +10,9 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

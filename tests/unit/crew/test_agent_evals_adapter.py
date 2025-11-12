@@ -1,8 +1,7 @@
-from platform.observability import metrics
-
 import pytest
 
 from eval.trajectory_evaluator import AgentTrajectory, TrajectoryEvaluator, TrajectoryStep
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _FakeAgentEvals:

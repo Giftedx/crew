@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
 from typing import Any
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

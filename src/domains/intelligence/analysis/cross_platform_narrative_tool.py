@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import time
-from platform.core.step_result import StepResult
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -73,6 +74,7 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
         self._narrative_events: dict[str, list[NarrativeEvent]] = {}
         self._cross_platform_mappings: dict[str, list[str]] = {}
 
+    @cache_tool_result(namespace="tool:cross_platform_narrative", ttl=1800)
     def _run(self, narrative_query: str, analysis_depth: str, tenant: str, workspace: str) -> StepResult:
         """
         Track cross-platform narrative based on query.
@@ -140,6 +142,12 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
             return StepResult.ok(data=result)
         except Exception as e:
             return StepResult.fail(f"Cross-platform narrative tracking failed: {e!s}")
+
+    def run(
+        self, narrative_query: str, analysis_depth: str, tenant: str = "default", workspace: str = "default"
+    ) -> StepResult:
+        """Run method to match BaseTool interface."""
+        return self._run(narrative_query, analysis_depth, tenant, workspace)
 
     def _identify_narrative(self, narrative_query: str, tenant: str, workspace: str) -> str:
         """Identify or create narrative ID from query."""

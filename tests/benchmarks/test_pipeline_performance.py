@@ -8,13 +8,13 @@ and concurrent request handling capacity.
 import asyncio
 import statistics
 import time
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import psutil
 import pytest
 
 from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestPipelinePerformance:

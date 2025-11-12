@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import time
 from datetime import datetime
-from platform.core.step_result import StepResult
 from typing import Any, TypedDict
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 

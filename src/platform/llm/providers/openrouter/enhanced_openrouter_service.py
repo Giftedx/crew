@@ -15,12 +15,12 @@ from dataclasses import dataclass
 from platform.cache.semantic_cache import get_semantic_cache
 from platform.config.configuration import get_config
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS
-from platform.observability import metrics
-from platform.observability.langsmith_integration import get_enhanced_observability
 from platform.rl.learning_engine import LearningEngine
 from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.obs.langsmith_integration import get_enhanced_observability
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 from .cache import RedisLLMCache, make_key
@@ -30,8 +30,8 @@ from .token_meter import TokenMeter
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
-    from platform.core.step_result import StepResult
 
+    from ultimate_discord_intelligence_bot.step_result import StepResult
     from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
     from .logging_utils import AnalyticsStore

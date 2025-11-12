@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from platform import http_utils
+from platform.http import http_utils
 from typing import Any
 
 

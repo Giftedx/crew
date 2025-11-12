@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from platform.core.step_result import ErrorCategory, StepResult
-
 import pytest
 
 from domains.orchestration.crew import (
@@ -17,6 +15,7 @@ from domains.orchestration.crew import (
     get_crew_factory,
 )
 from domains.orchestration.crew.interfaces import CrewExecutionMode, CrewPriority
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 class TestCrewConfig:
@@ -130,8 +129,8 @@ class TestUnifiedCrewExecutor:
         assert result.error_category == ErrorCategory.VALIDATION
 
     @pytest.mark.asyncio
-    async def test_execute_task_placeholder(self) -> None:
-        """Test task execution returns placeholder result."""
+    async def test_execute_task_returns_summary(self) -> None:
+        """Test task execution returns structured mission summary."""
         config = CrewConfig(tenant_id="test-tenant")
         executor = UnifiedCrewExecutor(config)
         task = CrewTask(task_id="task-123", task_type="analysis", description="Test task", inputs={"data": "test"})
@@ -140,6 +139,13 @@ class TestUnifiedCrewExecutor:
         assert result.task_id == "task-123"
         assert result.step_result.success is True
         assert result.execution_time_seconds > 0
+        payload = result.step_result.data
+        assert payload["status"] == "success"
+        assert payload["message"].startswith("Mission outcome")
+        assert "pending_migration" not in payload["message"].lower()
+        metadata = result.step_result.metadata
+        assert isinstance(metadata["agents_used"], list)
+        assert metadata["cache_hits"] == 0
 
     @pytest.mark.asyncio
     async def test_cleanup(self) -> None:

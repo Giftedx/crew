@@ -46,7 +46,65 @@ except Exception:
 with contextlib.suppress(Exception):  # pragma: no cover - defensive import for CLI execution context
     import sitecustomize as _sitecustomize  # noqa: F401
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# More robust REPO_ROOT detection that works when run as module
+def _find_repo_root() -> Path:
+    """Find repository root by walking up from current file/module location."""
+    # When run as module, __file__ might not be reliable, so try multiple approaches
+    candidates = []
+
+    # Try __file__ approach first
+    if __file__:
+        current = Path(__file__).resolve()
+        for _ in range(5):  # Walk up max 5 levels
+            if (current / ".git").exists() or (current / "pyproject.toml").exists():
+                candidates.append(current)
+            current = current.parent
+
+    # Try current working directory
+    cwd = Path.cwd()
+    if (cwd / ".git").exists() or (cwd / "pyproject.toml").exists():
+        candidates.append(cwd)
+
+    # Try walking up from cwd
+    current = cwd
+    for _ in range(3):
+        if (current / ".git").exists() or (current / "pyproject.toml").exists():
+            candidates.append(current)
+        current = current.parent
+
+    # Try environment variable if set
+    env_repo_root = os.getenv("REPO_ROOT")
+    if env_repo_root:
+        env_path = Path(env_repo_root).resolve()
+        if (env_path / ".git").exists() or (env_path / "pyproject.toml").exists():
+            candidates.append(env_path)
+
+    # Try common repo locations relative to src/
+    if __file__ and "src" in str(Path(__file__)):
+        # If we're in src/, go up one level
+        src_root = Path(__file__).resolve().parent.parent.parent
+        if (src_root / ".git").exists() or (src_root / "pyproject.toml").exists():
+            candidates.append(src_root)
+
+    # Try hardcoded fallback for this specific repo
+    hardcoded_root = Path("/home/crew")
+    if (hardcoded_root / ".git").exists() or (hardcoded_root / "pyproject.toml").exists():
+        candidates.append(hardcoded_root)
+
+    # Return the first valid candidate, preferring ones with .git
+    for candidate in candidates:
+        if (candidate / ".git").exists():
+            return candidate
+    for candidate in candidates:
+        if (candidate / "pyproject.toml").exists():
+            return candidate
+
+    # Fallback to cwd if nothing found
+    return cwd
+
+
+REPO_ROOT = _find_repo_root()
 
 
 def _print_header(title: str) -> None:
@@ -420,14 +478,16 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
 
 def _run_discord() -> int:
     _print_header("Run Discord Bot")
-    candidates = [REPO_ROOT / "start_full_bot.py", REPO_ROOT / "scripts" / "start_full_bot.py"]
-    target = next((p for p in candidates if p.exists()), None)
-    if target is None:
-        print("❌ start_full_bot.py not found in repo root or scripts/. Ensure repository is intact.")
-        print(f"   Looked in: {', '.join(str(p) for p in candidates)}")
+    # Hardcoded path for reliability
+    target = Path("/home/crew/scripts/start_full_bot.py")
+    if not target.exists():
+        print(f"❌ start_full_bot.py not found at {target}")
         return 2
     print(f"🚀 Launching: {sys.executable} {target}")
-    return subprocess.call([sys.executable, str(target)])
+    # Set PYTHONPATH to include src directory for proper imports
+    env = os.environ.copy()
+    env["PYTHONPATH"] = f"/home/crew/src:{env.get('PYTHONPATH', '')}"
+    return subprocess.call([sys.executable, str(target)], env=env)
 
 
 def _run_crew() -> int:

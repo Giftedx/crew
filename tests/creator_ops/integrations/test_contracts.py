@@ -3,7 +3,6 @@ Contract tests for platform API integrations.
 Tests that API responses match expected schemas and behaviors.
 """
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,6 +13,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.tiktok_client im
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
 from ultimate_discord_intelligence_bot.creator_ops.integrations.x_client import XClient
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestYouTubeContract:

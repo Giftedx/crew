@@ -16,7 +16,7 @@ from scheduler.priority_queue import PriorityQueue
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 _QUEUE: PriorityQueue | None = None
 
 

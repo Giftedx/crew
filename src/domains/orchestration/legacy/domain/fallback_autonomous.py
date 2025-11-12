@@ -10,15 +10,16 @@ from __future__ import annotations
 
 import asyncio
 import time
-from platform.orchestration.protocols import BaseOrchestrator, OrchestrationLayer, OrchestrationType
 from typing import TYPE_CHECKING, Any
 
 import structlog
 
+from domains.orchestration.legacy.protocols import BaseOrchestrator, OrchestrationLayer, OrchestrationType
+
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
-    from platform.orchestration.protocols import OrchestrationContext
+    from domains.orchestration.legacy.protocols import OrchestrationContext
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 logger = structlog.get_logger(__name__)
 
 
@@ -48,7 +49,7 @@ class FallbackAutonomousOrchestrator(BaseOrchestrator):
         Returns:
             StepResult with analysis results or error information
         """
-        from platform.core.step_result import ErrorCategory, StepResult
+        from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
         self._log_orchestration_start(context, **kwargs)
         interaction = kwargs.get("interaction")
@@ -156,7 +157,7 @@ class FallbackAutonomousOrchestrator(BaseOrchestrator):
         Returns:
             StepResult with pipeline data or error
         """
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         try:
             from ultimate_discord_intelligence_bot.tools import PipelineTool
@@ -185,7 +186,7 @@ class FallbackAutonomousOrchestrator(BaseOrchestrator):
         Returns:
             StepResult with analysis data
         """
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         try:
             from ultimate_discord_intelligence_bot.tools import SentimentTool, TextAnalysisTool
@@ -217,7 +218,7 @@ class FallbackAutonomousOrchestrator(BaseOrchestrator):
         Returns:
             StepResult with fact check data
         """
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         try:
             from ultimate_discord_intelligence_bot.tools import FactCheckTool, LogicalFallacyTool

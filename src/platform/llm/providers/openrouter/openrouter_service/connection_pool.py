@@ -11,13 +11,13 @@ from __future__ import annotations
 
 import logging
 import threading
-from platform import http_utils
-from platform.observability.metrics import get_metrics
+from platform.http import http_utils
 from typing import Any
 
 import requests
 
 from app.config.feature_flags import FeatureFlags
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 log = logging.getLogger(__name__)

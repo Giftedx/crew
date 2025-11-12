@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 
 from app.config.settings import (
     ENABLE_DISTRIBUTED_RATE_LIMITING,
@@ -12,6 +11,7 @@ from app.config.settings import (
     RATE_LIMIT_GLOBAL_REFILL_PER_SEC,
     RATE_LIMIT_REDIS_URL,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

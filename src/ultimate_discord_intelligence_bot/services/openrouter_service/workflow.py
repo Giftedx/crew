@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 try:

@@ -11,7 +11,6 @@ import uuid
 from collections import defaultdict, deque
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar_models import (
@@ -30,6 +29,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client im
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, SpeakerDiarization, WhisperASR
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import TranscriptAlignment
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

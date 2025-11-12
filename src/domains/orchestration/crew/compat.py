@@ -132,8 +132,12 @@ class CrewAdapter:
                 # We're in an event loop; execute in a worker thread to keep sync API
                 import concurrent.futures
 
+                from ultimate_discord_intelligence_bot.tenancy.context import run_with_tenant_context
+
+                # Preserve TenantContext across thread boundary (F002 fix)
+                async_exec = self.executor.execute(task, self.config)
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                    future = pool.submit(asyncio.run, self.executor.execute(task, self.config))
+                    future = pool.submit(run_with_tenant_context(lambda: asyncio.run(async_exec)))
                     result = future.result()
             except RuntimeError:
                 # No running loop; safe to use asyncio.run

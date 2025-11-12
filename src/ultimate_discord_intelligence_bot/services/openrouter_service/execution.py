@@ -8,8 +8,9 @@ import sys
 import time
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled
 from platform.http.http_utils import resilient_post as _default_resilient_post
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from .quality import basic_quality_assessment, quality_assessment
 from .service import get_settings
@@ -18,7 +19,7 @@ from .service import get_settings
 if TYPE_CHECKING:
     from .state import RouteState
 try:
-    from platform.observability.enhanced_langsmith_integration import trace_llm_call as _trace_llm_call
+    from ultimate_discord_intelligence_bot.obs.enhanced_langsmith_integration import trace_llm_call as _trace_llm_call
 
     def trace_llm_call(*args: Any, **kwargs: Any) -> None:
         _trace_llm_call(*args, **kwargs)

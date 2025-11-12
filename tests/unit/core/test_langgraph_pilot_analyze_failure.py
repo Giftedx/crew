@@ -1,8 +1,7 @@
-from platform.observability import metrics
-
 import pytest
 
 from graphs.langgraph_pilot import run_ingest_analysis_pilot
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 def test_analyze_failure_increments_failed_and_error_status(monkeypatch: pytest.MonkeyPatch):

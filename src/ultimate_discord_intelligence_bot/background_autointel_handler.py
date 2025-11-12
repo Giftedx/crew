@@ -49,7 +49,7 @@ async def handle_autointel_background(
         url: Content URL to analyze
         depth: Analysis depth (quick/standard/deep/comprehensive/experimental)
     """
-    from platform.observability import metrics
+    from ultimate_discord_intelligence_bot.obs import metrics
 
     try:
         if not interaction.response.is_done():

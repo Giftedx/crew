@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import types
-from platform.observability import metrics
 
 from ingest import pipeline as ip
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _CounterStub:

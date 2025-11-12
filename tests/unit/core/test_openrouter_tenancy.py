@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 import re
 from platform.llm.providers.openrouter import OpenRouterService
-from platform.observability import metrics as metrics_mod
 
 import pytest
+
+from ultimate_discord_intelligence_bot.obs import metrics as metrics_mod
 
 
 def _reset_metrics():

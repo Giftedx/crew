@@ -23,8 +23,9 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any, Literal
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

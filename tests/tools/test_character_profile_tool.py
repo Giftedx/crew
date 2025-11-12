@@ -1,11 +1,11 @@
 """Tests for CharacterProfileTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.intelligence.analysis.character_profile_tool import CharacterProfileTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestCharacterProfileTool:

@@ -1,9 +1,9 @@
 import asyncio
 import logging
 import types
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 def test_content_acquisition_flattens_pipeline_payload():

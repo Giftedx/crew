@@ -7,10 +7,11 @@ and completeness, log retention policies, and log analysis and alerting.
 
 import time
 from datetime import datetime, timedelta
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestAuditLogging:

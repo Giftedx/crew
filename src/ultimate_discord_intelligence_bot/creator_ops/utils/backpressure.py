@@ -8,8 +8,9 @@ import logging
 import time
 from collections import deque
 from collections.abc import Callable
-from platform.core.step_result import StepResult
 from typing import Any, TypeVar
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

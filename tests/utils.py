@@ -10,9 +10,10 @@ import json
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import AsyncMock, Mock
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class AsyncTestHelper:

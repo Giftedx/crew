@@ -94,7 +94,7 @@ def test_step_result_handling():
     """Test that StepResult is properly handled in wrappers."""
     print("🧪 Testing StepResult handling...")
     try:
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         success_result = StepResult.ok(data={"test": "data"})
         assert success_result.success is True

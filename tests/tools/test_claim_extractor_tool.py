@@ -1,11 +1,11 @@
 """Tests for ClaimExtractorTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.intelligence.analysis.claim_extractor_tool import ClaimExtractorTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestClaimExtractorTool:

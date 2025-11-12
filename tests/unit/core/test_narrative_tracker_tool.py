@@ -12,14 +12,13 @@ Tests the cross-platform narrative tracking functionality including:
 from datetime import datetime
 from unittest.mock import Mock, patch
 
-from src.ultimate_discord_intelligence_bot.tools.narrative_tracker_tool import (
+from kg.creator_kg_store import CreatorKGStore
+from ultimate_discord_intelligence_bot.tools.narrative_tracker_tool import (
     NarrativeEvent,
     NarrativeTimeline,
     NarrativeTrackerInput,
     NarrativeTrackerTool,
 )
-
-from src.kg.creator_kg_store import CreatorKGStore
 
 
 class TestNarrativeTrackerInput:

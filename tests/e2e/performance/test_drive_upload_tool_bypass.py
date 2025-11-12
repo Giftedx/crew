@@ -1,6 +1,6 @@
 import unittest
 
-from ultimate_discord_intelligence_bot.tools.drive_upload_tool_bypass import (
+from ultimate_discord_intelligence_bot.tools.integration.drive_upload_tool_bypass import (
     DriveUploadTool,
 )
 

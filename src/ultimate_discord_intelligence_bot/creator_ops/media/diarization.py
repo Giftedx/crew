@@ -22,9 +22,8 @@ except ImportError:
     Pipeline = None
     Annotation = None
     Segment = None
-from platform.core.step_result import StepResult
-
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

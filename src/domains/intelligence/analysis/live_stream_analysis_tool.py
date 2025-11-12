@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -128,6 +130,7 @@ class LiveStreamAnalysisTool(BaseTool[StepResult]):
         self._trend_history: list[TrendAlert] = []
         self._moderation_history: list[ModerationAlert] = []
 
+    @cache_tool_result(namespace="tool:live_stream_analysis", ttl=300)
     def _run(
         self,
         stream_data: dict[str, Any],

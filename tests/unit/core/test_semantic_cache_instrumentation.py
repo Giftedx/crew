@@ -1,9 +1,9 @@
 import os
 from platform.cache.semantic_cache import CacheStats
 from platform.core.settings import get_settings
-from platform.observability import metrics
 
 from src.ultimate_discord_intelligence_bot.services.openrouter_service import OpenRouterService
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _FakeSemanticCache:

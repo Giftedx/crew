@@ -8,10 +8,13 @@ from __future__ import annotations
 
 import copy
 import logging
+import os as _os
+from contextlib import suppress
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
 from platform.rl.learning_engine import LearningEngine
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -73,14 +76,27 @@ class RefactoredOpenRouterService:
         )
 
     def _get_default_models(self) -> dict[str, list[str]]:
-        """Get default model configuration."""
+        """Get default model configuration.
+
+        Aligns with GlobalConfig schema: prefer routing defaults when present,
+        otherwise fall back to sensible OpenRouter defaults.
+        """
         config = get_config()
-        env_general = config.get_setting("openrouter_general_model")
-        env_analysis = config.get_setting("openrouter_analysis_model")
-        return {
-            "general": [env_general or "openai/gpt-4o-mini"],
-            "analysis": [env_analysis or env_general or "openai/gpt-4o-mini"],
-        }
+        # Prefer explicit env var overrides if provided
+        env_general = _os.getenv("OPENROUTER_GENERAL_MODEL")
+        env_analysis = _os.getenv("OPENROUTER_ANALYSIS_MODEL")
+        # Use routing defaults from GlobalConfig
+        routing = getattr(config, "routing", None)
+        general_model = None
+        analysis_model = None
+        if routing is not None:
+            # default_model maps best to "general"
+            general_model = getattr(routing, "default_model", None)
+            # choose summarization_model for "analysis" tasks as closest fit
+            analysis_model = getattr(routing, "summarization_model", None)
+        general = env_general or general_model or "openai/gpt-4o-mini"
+        analysis = env_analysis or analysis_model or general
+        return {"general": [str(general)], "analysis": [str(analysis)]}
 
     def _create_default_token_meter(self) -> Any:
         """Create a default token meter for testing."""
@@ -160,6 +176,9 @@ class RefactoredOpenRouterService:
                 context.tokens_in, context.projected_cost, _ = self.cost_calculator.calculate_costs(
                     prompt, fallback_model, effective_models, task_type, tenant_context
                 )
+            import time as _t
+
+            _start = _t.perf_counter()
             if self._is_offline_mode():
                 result = self.offline_executor.execute(
                     context, context.projected_cost, context.effective_max, tenant_context
@@ -168,6 +187,22 @@ class RefactoredOpenRouterService:
                 result = self.network_executor.execute(
                     context, context.projected_cost, context.effective_max, tenant_context
                 )
+            _latency_ms = (_t.perf_counter() - _start) * 1000.0
+            # Best-effort structured analytics log for tests and dashboards
+            if getattr(self, "logger", None):
+                with suppress(Exception):
+                    self.logger.log_llm_call(  # type: ignore[attr-defined]
+                        task_type,
+                        context.model or "unknown",
+                        str(context.provider_family),
+                        context.tokens_in,
+                        0,
+                        float(context.projected_cost or 0.0),
+                        float(_latency_ms),
+                        None,
+                        bool(result.status == "success"),
+                        None,
+                    )
             if result.status == "success":
                 self.cache_manager.set_cache_results(
                     prompt, context.model, self._convert_to_dict(result), context.namespace, context.cache_key
@@ -182,7 +217,9 @@ class RefactoredOpenRouterService:
         available_models = effective_models.get(task_type, effective_models.get("general", []))
         if not available_models:
             return "openai/gpt-4o-mini"
-        return self.learning.select_model(task_type, available_models)
+        # Use the LearningEngine's recommendation API to select a model.
+        # The simple engine exposes `recommend(domain, context, candidates)`.
+        return self.learning.recommend(task_type, None, available_models)
 
     def _merge_provider_options(self, base: dict[str, Any], overrides: dict[str, Any] | None) -> dict[str, Any]:
         """Merge provider options with deep merge."""

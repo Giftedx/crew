@@ -10,7 +10,6 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING
 
 import networkx as nx
@@ -18,6 +17,7 @@ from sqlalchemy import and_
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.models import Account, Media, Person
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

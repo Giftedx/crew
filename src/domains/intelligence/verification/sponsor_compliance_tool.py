@@ -4,13 +4,13 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from platform.core.step_result import StepResult
 from typing import Any
 
 from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
 
 from kg.creator_kg_store import CreatorKGStore
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

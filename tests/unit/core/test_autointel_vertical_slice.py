@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 from memory import embeddings as emb
 from memory import vector_store as vs
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 def test_autointel_vertical_slice_round_trip() -> None:

@@ -3,12 +3,13 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 logger = logging.getLogger(__name__)

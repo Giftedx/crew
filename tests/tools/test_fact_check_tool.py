@@ -1,11 +1,11 @@
 """Tests for FactCheckTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.intelligence.verification.fact_check_tool import FactCheckTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestFactCheckTool:

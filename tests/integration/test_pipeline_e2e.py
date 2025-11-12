@@ -1,9 +1,10 @@
 """End-to-end integration tests for the content processing pipeline."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestPipelineE2E:

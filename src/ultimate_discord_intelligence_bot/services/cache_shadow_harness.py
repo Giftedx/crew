@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import logging
 from platform.cache.bounded_cache import BoundedLRUCache
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.cache import (
@@ -19,6 +18,7 @@ from ultimate_discord_intelligence_bot.cache import (
     get_cache_namespace,
     get_unified_cache,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

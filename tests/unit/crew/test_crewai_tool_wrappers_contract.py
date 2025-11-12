@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 from ultimate_discord_intelligence_bot.crewai_tool_wrappers import (
     CrewAIToolWrapper,
     DiscordPostToolWrapper,
     MCPCallToolWrapper,
     PipelineToolWrapper,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class _DummyTool:

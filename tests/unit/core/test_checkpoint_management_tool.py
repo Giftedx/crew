@@ -1,7 +1,6 @@
 """Tests for CheckpointManagementTool."""
 
-from platform.core.step_result import StepResult
-
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.checkpoint_management_tool import CheckpointManagementTool
 
 

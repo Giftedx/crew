@@ -9,10 +9,10 @@ from contextlib import ExitStack, contextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any, cast
 
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from ultimate_discord_intelligence_bot.services.request_budget import RequestCostTracker
 
     from .types import PipelineRunResult
-from platform.observability.logfire_spans import span as logfire_span
+from ultimate_discord_intelligence_bot.obs.logfire_spans import span as logfire_span
 
 from .base import PipelineBase
 from .mixins import PipelineExecutionMixin

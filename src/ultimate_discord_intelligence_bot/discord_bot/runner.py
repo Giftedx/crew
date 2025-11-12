@@ -5,13 +5,14 @@ import contextlib
 import os
 import sys
 import traceback
-from platform.config.configuration import get_config as _get_secure_config
-from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
-from platform.time import default_utc_now
+
+from app.config.settings import get_settings as _get_secure_config
+from src.platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
+from src.platform.time import default_utc_now
 
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
-from .domains.ingestion.pipeline import start_ingest_workers
 from .env import check_environment, enable_autonomous_defaults
+from .ingest import start_ingest_workers
 from .registrations import _register_events, _register_prefix_commands, _register_slash_commands
 from .tools_bootstrap import attach_tools, load_tools
 

@@ -14,6 +14,22 @@ optional dependencies like discord.py (tests can set LIGHTWEIGHT_IMPORT=1).
 
 from __future__ import annotations
 
+import os
+import sys
+from pathlib import Path
+
+# Ensure src directory is in PYTHONPATH for proper imports
+_repo_root = Path(__file__).resolve().parent.parent
+_src_dir = _repo_root / "src"
+_repo_dir = _repo_root
+if str(_repo_dir) not in sys.path:
+    sys.path.insert(0, str(_repo_dir))
+
+# Debug: print sys.path to verify
+print(f"DEBUG: sys.path = {sys.path}")
+print(f"DEBUG: _src_dir = {_src_dir}")
+print(f"DEBUG: _repo_dir = {_repo_dir}")
+
 
 # LIGHTWEIGHT_IMPORT flag passthrough for tests (import-safe)
 try:

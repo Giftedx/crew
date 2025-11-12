@@ -20,9 +20,11 @@ import logging
 import os
 import time
 from functools import cached_property
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -110,6 +112,7 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             raise RuntimeError("OPENAI_API_KEY environment variable not set")
         return openai.OpenAI(api_key=api_key)
 
+    @cache_tool_result(namespace="tool:video_frame_analysis", ttl=7200)
     def _run(
         self, video_path: str, tenant: str = "default", workspace: str = "default", analysis_depth: str = "standard"
     ) -> StepResult:

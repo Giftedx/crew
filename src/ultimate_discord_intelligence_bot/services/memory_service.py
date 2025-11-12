@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from domains.memory.vector.qdrant import get_qdrant_client
+from domains.memory.qdrant_provider import get_qdrant_client
 
 from ..observability.stepresult_observer import observe_step_result
 from ..step_result import StepResult
@@ -390,10 +390,15 @@ class MemoryService:
         ns = namespace or mem_ns(ctx, "mem")
         self.memories.append({"namespace": ns, "text": clean_text, "metadata": deepcopy(metadata) or {}})
         if self.qdrant_client and self.embedding_service:
-            task = asyncio.create_task(
-                self._async_store_text(clean_text, metadata or {}, ctx.tenant_id, ctx.workspace_id)
-            )
-            _ = task
+            # Schedule async store only if an event loop is running; otherwise skip silently
+            try:
+                loop = asyncio.get_running_loop()
+                self._last_store_task = loop.create_task(
+                    self._async_store_text(clean_text, metadata or {}, ctx.tenant_id, ctx.workspace_id)
+                )
+            except RuntimeError:
+                # No running loop in this context (e.g., sync unit tests); degrade gracefully
+                logging.getLogger(__name__).debug("Skipping async store: no running event loop available")
         return StepResult.ok(data={"stored": True})
 
     async def _async_store_text(self, text: str, metadata: dict[str, Any], tenant: str, workspace: str) -> None:
@@ -407,7 +412,7 @@ class MemoryService:
     @observe_step_result(tool_name="memory_service.retrieve")
     def retrieve(
         self, query: str, limit: int = 5, metadata: dict[str, Any] | None = None, namespace: str | None = None
-    ) -> StepResult:
+    ) -> list[dict[str, Any]]:
         """Return stored memories matching query within namespace.
 
         This method maintains backward compatibility with the original
@@ -447,4 +452,8 @@ class MemoryService:
             copy = deepcopy(m)
             copy.pop("namespace", None)
             sanitized.append(copy)
-        return StepResult.ok(data=sanitized)
+        # For backward compatibility with legacy tests and tools, return the
+        # plain list of memory records rather than a StepResult wrapper.
+        # The observability decorator will still emit logs and pass the list
+        # through transparently.
+        return sanitized

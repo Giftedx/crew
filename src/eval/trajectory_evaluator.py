@@ -12,12 +12,12 @@ import os
 import time
 from dataclasses import dataclass
 from platform import settings as core_settings
-from platform.core.step_result import StepResult
-from platform.observability import metrics, tracing
 from typing import TYPE_CHECKING, Any
 
 from eval.langsmith_adapter import LangSmithEvaluationAdapter
+from ultimate_discord_intelligence_bot.obs import metrics, tracing
 from ultimate_discord_intelligence_bot.services.rl_model_router import TrajectoryFeedback
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 

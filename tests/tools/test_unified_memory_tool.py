@@ -1,10 +1,10 @@
 """Tests for Unified Memory Tool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import UnifiedMemoryTool
 
 

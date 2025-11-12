@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from ultimate_discord_intelligence_bot.tools.discord_qa_tool import DiscordQATool
+from ultimate_discord_intelligence_bot.tools import DiscordQATool
 
 
 def test_discord_qa_tool_returns_snippets():

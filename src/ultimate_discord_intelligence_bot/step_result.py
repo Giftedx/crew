@@ -4,7 +4,7 @@ import logging
 import time
 from collections import defaultdict, deque
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass, field
+from dataclasses import MISSING, InitVar, dataclass, field
 from enum import Enum
 from typing import Any, cast
 
@@ -63,6 +63,7 @@ class ErrorCategory(Enum):
 
     # Processing errors (8+ types)
     PROCESSING = "processing"
+    EXECUTION = "execution"
     DEPENDENCY = "dependency"
     PARSING_ERROR = "parsing_error"
     TRANSFORMATION_ERROR = "transformation_error"
@@ -184,13 +185,14 @@ class StepResult(Mapping[str, Any]):
     - Integration with observability systems
     """
 
-    success: bool
-    data: dict[str, Any] = field(default_factory=dict)
+    success: bool = True
+    data: InitVar[Mapping[str, Any] | None] = None
+    status: InitVar[str | None] = None
     error: str | None = None
     custom_status: str | None = None
     error_category: ErrorCategory | None = None
     retryable: bool = False
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] | None = None
 
     # Enhanced error handling fields
     error_context: ErrorContext | None = None
@@ -199,6 +201,123 @@ class StepResult(Mapping[str, Any]):
     performance_impact: float = 0.0  # Estimated performance impact (0.0-1.0)
     suggested_actions: list[str] = field(default_factory=list)
     related_errors: list[str] = field(default_factory=list)  # Error IDs of related failures
+
+    _data: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
+    _explicit_data: bool = field(default=False, init=False, repr=False)
+
+    def _initialize_data(self, value: Any) -> None:
+        if isinstance(value, property):
+            value = None
+
+        if value is None or value is MISSING:
+            self._data = {}
+            self._explicit_data = False
+            return
+        if isinstance(value, Mapping):
+            self._data = dict(value)
+            self._explicit_data = True
+            return
+        self._data = {"value": value}
+        self._explicit_data = True
+
+    @property
+    def data(self) -> dict[str, Any] | None:  # noqa: F811 - property overrides InitVar parameter
+        if self._explicit_data:
+            return self._data
+        if self._data:
+            return self._data
+        if self.success:
+            return self._data
+        return None
+
+    @data.setter
+    def data(self, value: Mapping[str, Any] | None) -> None:
+        self._initialize_data(value)
+        # Ensure metadata stays synchronized when data changes
+        self._sync_metadata()
+
+    @property
+    def status(self) -> str:  # noqa: F811 - property overrides InitVar parameter
+        return self.custom_status or ("success" if self.success else "error")
+
+    @status.setter
+    def status(self, value: str | None) -> None:
+        self.custom_status = value
+
+    def __post_init__(self, data: Mapping[str, Any] | None, status: str | None) -> None:
+        # Normalize provided payload into the internal mapping.
+        self._initialize_data(data)
+
+        # Accept either ``status`` or ``custom_status`` for backwards compatibility.
+        incoming_status = None if isinstance(status, property) else status
+        if self.custom_status is None and incoming_status is not None:
+            self.custom_status = incoming_status
+        elif self.custom_status is not None and incoming_status is not None and self.custom_status != incoming_status:
+            logger.debug(
+                "StepResult received conflicting status values; preferring custom_status",
+                extra={"incoming_status": incoming_status, "custom_status": self.custom_status},
+            )
+
+        # Metadata is optional but should always materialize as a dict internally.
+        if self.metadata is None:
+            self.metadata = {}
+        elif not isinstance(self.metadata, dict):
+            self.metadata = {"value": self.metadata}
+
+        self._sync_metadata()
+
+    def _sync_metadata(self, explicit_metadata: Any | None = None) -> None:
+        """Normalize metadata between the dedicated field and ``data`` mapping."""
+
+        def to_mapping(source: Any) -> dict[str, Any]:
+            if source is None:
+                return {}
+            if isinstance(source, dict):
+                return dict(source)
+            return {"value": source}
+
+        sources: list[dict[str, Any]] = []
+
+        if isinstance(explicit_metadata, property):
+            explicit_metadata = None
+
+        if explicit_metadata is not None:
+            sources.append(to_mapping(explicit_metadata))
+        else:
+            if isinstance(self.metadata, dict) and self.metadata:
+                sources.append(dict(self.metadata))
+            elif self.metadata is not None and not isinstance(self.metadata, dict):
+                sources.append(to_mapping(self.metadata))
+
+        data_has_key = "metadata" in self._data
+        if data_has_key:
+            sources.append(to_mapping(self._data["metadata"]))
+
+        if sources:
+            combined: dict[str, Any] = {}
+            for source in sources:
+                combined.update(source)
+            self.metadata = combined
+            if data_has_key:
+                self._data["metadata"] = combined
+            return
+
+        if data_has_key:
+            empty: dict[str, Any] = {}
+            self._data["metadata"] = empty
+            self.metadata = empty
+        elif self.metadata is None or (isinstance(self.metadata, dict) and not self.metadata):
+            self.metadata = {}
+        elif isinstance(self.metadata, dict):
+            combined = dict(self.metadata)
+            self.metadata = combined
+            if data_has_key:
+                self._data["metadata"] = combined
+        else:
+            converted = to_mapping(self.metadata)
+            self.metadata = converted
+            if data_has_key:
+                self._data["metadata"] = converted
 
     @classmethod
     def from_dict(cls, result: Any, context: ErrorContext | None = None) -> StepResult:
@@ -221,10 +340,33 @@ class StepResult(Mapping[str, Any]):
             return enhanced_result
 
         status = result.get("status")
+        explicit_success = result.get("success")
         non_error_statuses = {"success", "skipped", "uncertain"}
-        success = status in non_error_statuses
+        if explicit_success is not None:
+            success = bool(explicit_success)
+        else:
+            success = status in non_error_statuses if status is not None else result.get("error") in (None, "")
         error = result.get("error")
-        data = {k: v for k, v in result.items() if k not in {"status", "error"}}
+        metadata_payload = result.get("metadata")
+
+        payload: Mapping[str, Any] | None
+        if "data" in result and isinstance(result["data"], Mapping):
+            payload = cast("Mapping[str, Any]", result["data"])
+        else:
+            exclude_keys = {
+                "status",
+                "error",
+                "success",
+                "metadata",
+                "error_category",
+                "retryable",
+                "error_context",
+                "error_severity",
+                "performance_impact",
+                "suggested_actions",
+                "related_errors",
+            }
+            payload = {k: v for k, v in result.items() if k not in exclude_keys}
         custom_status = status if (status in {"skipped", "uncertain"}) else None
 
         # Enhanced error categorization from legacy dict
@@ -233,11 +375,13 @@ class StepResult(Mapping[str, Any]):
 
         enhanced_result = cls(
             success=success,
-            data=data,
+            data=payload,
+            status=status,
             error=error,
             custom_status=custom_status,
             error_category=error_category,
             retryable=retryable,
+            metadata=metadata_payload,
         )
 
         # Add error context if provided
@@ -337,6 +481,7 @@ class StepResult(Mapping[str, Any]):
         # Medium severity (most processing errors)
         if error_category in {
             ErrorCategory.PROCESSING,
+            ErrorCategory.EXECUTION,
             ErrorCategory.MODEL_ERROR,
             ErrorCategory.EMBEDDING_ERROR,
             ErrorCategory.VECTOR_SEARCH_ERROR,
@@ -461,16 +606,26 @@ class StepResult(Mapping[str, Any]):
         error_category: ErrorCategory | None = None,
         retryable: bool = False,
         context: ErrorContext | None = None,
+        metadata: Any | None = None,
         **data: Any,
     ) -> StepResult:
         """Enhanced shortcut for a failed result with comprehensive error handling."""
+        payload = dict(data)
+        if not payload:
+            normalized_payload: Mapping[str, Any] | None = None
+        elif set(payload.keys()) == {"data"} and isinstance(payload.get("data"), Mapping):
+            normalized_payload = cast("Mapping[str, Any]", payload["data"])
+        else:
+            normalized_payload = payload
+
         result = cls(
             success=False,
             error=str(error),
-            data=data,
+            data=normalized_payload,
             error_category=error_category,
             retryable=retryable,
         )
+        result._sync_metadata(metadata)
 
         if context:
             result.error_context = context
@@ -606,17 +761,18 @@ class StepResult(Mapping[str, Any]):
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the result back to a ``dict`` for backward compatibility."""
-        result = dict(self.data)
+        data_view = self.data
+        payload = None if data_view is None else {k: v for k, v in self._data.items() if k != "metadata"}
+
+        result: dict[str, Any] = {"data": payload}
+        result["success"] = self.success
         status = self.custom_status or ("success" if self.success else "error")
         result["status"] = status
-        if self.error:
-            result["error"] = self.error
+        result["error"] = self.error
         if self.error_category:
             result["error_category"] = self.error_category.value
-        if self.retryable:
-            result["retryable"] = self.retryable
-        if self.metadata:
-            result["metadata"] = self.metadata
+        result["retryable"] = self.retryable
+        result["metadata"] = self.metadata
 
         # Enhanced error information
         if self.error_context:
@@ -680,6 +836,13 @@ class StepResult(Mapping[str, Any]):
 
         return debug_info
 
+    @property
+    def error_message(self) -> str | None:
+        """Expose a normalized error message for compatibility layers."""
+        if self.metadata and "error_message" in self.metadata:
+            return cast("str | None", self.metadata.get("error_message"))
+        return self.error
+
     # --- Minimal Mapping interface to behave like a read-only dict in tests ---
     def __getitem__(self, key: str) -> Any:  # pragma: no cover - exercised via tests
         if key == "status":
@@ -695,63 +858,133 @@ class StepResult(Mapping[str, Any]):
         if key == "metadata":
             return self.metadata
         # Direct lookup first
-        if key in self.data:
-            return self.data[key]
+        if key in self._data:
+            return self._data[key]
         # Legacy pattern: many tools previously returned {"status":..., <k>: <v>} and during
         # migration some call sites wrapped payload under a top-level "data" key. Support
         # transparent access for nested keys to preserve backwards compatibility with tests
         # expecting e.g. result["score"] instead of result["data"]["score"].
-        nested = self.data.get("data")
+        nested = self._data.get("data")
         if isinstance(nested, dict) and key in nested:
             return nested[key]
         raise KeyError(key)
 
-    def __iter__(self) -> Iterator[str]:  # pragma: no cover
-        base_status = self.custom_status or ("success" if self.success else "error")
-        base: dict[str, Any] = {"status": base_status}
-        if self.error is not None:
-            base["error"] = self.error
-        if self.error_category is not None:
-            base["error_category"] = self.error_category.value
-        if self.retryable:
-            base["retryable"] = True
-        if self.metadata:
-            base["metadata"] = self.metadata
-        yielded: list[str] = list(base.keys())
-        # Top-level keys (excluding duplicated status/error already handled)
-        for k in self.data:
-            if k not in yielded:
-                yielded.append(k)
-        # Also expose nested keys under a single 'data' mapping for membership tests
-        nested = self.data.get("data")
-        if isinstance(nested, dict):
-            for k in nested:
-                if k not in yielded:
-                    yielded.append(k)
-        yield from yielded
+    def _yield_payload_items(self) -> Iterator[tuple[str, Any]]:  # pragma: no cover
+        if not self._data:
+            return
+
+        seen: set[str] = set()
+
+        def _record(item_key: str, item_value: Any) -> Iterator[tuple[str, Any]]:
+            if item_key not in seen and item_key != "metadata":
+                seen.add(item_key)
+                yield item_key, item_value
+
+        for key, value in self._data.items():
+            if key == "data" and isinstance(value, dict):
+                for nested_key, nested_value in value.items():
+                    yield from _record(nested_key, nested_value)
+                continue
+            yield from _record(key, value)
+
+    def __iter__(self) -> Iterator[tuple[str, Any]]:  # pragma: no cover
+        yield from self._yield_payload_items()
 
     def __len__(self) -> int:  # pragma: no cover
-        nested_extra = 0
-        nested = self.data.get("data")
-        if isinstance(nested, dict):
-            # count only keys not already represented at top-level
-            nested_extra = sum(1 for k in nested if k not in self.data)
-        base_fields = 1  # status
-        if self.error is not None:
-            base_fields += 1
-        if self.error_category is not None:
-            base_fields += 1
-        if self.retryable:
-            base_fields += 1
-        if self.metadata:
-            base_fields += 1
-        return len(self.data) + nested_extra + base_fields
+        return sum(1 for _ in self._yield_payload_items())
 
     def get(self, key: str, default: Any = None) -> Any:  # pragma: no cover
         try:
             return self[key]
         except KeyError:
             return default
+
+    def __contains__(self, key: object) -> bool:  # pragma: no cover
+        if not isinstance(key, str):
+            return False
+        return any(item_key == key for item_key, _ in self._yield_payload_items())
+
+    def items(self) -> Iterator[tuple[str, Any]]:  # pragma: no cover
+        return self._yield_payload_items()
+
+    def keys(self) -> Iterator[str]:  # pragma: no cover
+        for item_key, _ in self._yield_payload_items():
+            yield item_key
+
+    def values(self) -> Iterator[Any]:  # pragma: no cover
+        for _, item_value in self._yield_payload_items():
+            yield item_value
+
+    def is_valid(self) -> bool:
+        """Basic validation to ensure the result is in a consistent state."""
+        if self.error is None:
+            return True
+
+        if self.data is None:
+            return True
+
+        if isinstance(self._data, dict):
+            return not any(k != "metadata" for k in self._data)
+
+        return False
+
+    def with_data(self, data: Mapping[str, Any]) -> StepResult:
+        """Return a new ``StepResult`` with the provided payload merged in."""
+        return StepResult(
+            success=self.success,
+            data=dict(data),
+            status=self.custom_status,
+            error=self.error,
+            custom_status=self.custom_status,
+            error_category=self.error_category,
+            retryable=self.retryable,
+            metadata=dict(self.metadata or {}),
+            error_context=self.error_context,
+            error_severity=self.error_severity,
+            recovery_strategy=self.recovery_strategy,
+            performance_impact=self.performance_impact,
+            suggested_actions=list(self.suggested_actions),
+            related_errors=list(self.related_errors),
+        )
+
+    def with_metadata(self, metadata: Mapping[str, Any]) -> StepResult:
+        """Return a new ``StepResult`` with metadata merged in."""
+        merged_metadata = dict(self.metadata or {})
+        merged_metadata.update(metadata)
+
+        if self.data is None:
+            payload: Mapping[str, Any] | None = None
+        else:
+            payload = dict(self._data)
+
+        return StepResult(
+            success=self.success,
+            data=payload,
+            status=self.custom_status,
+            error=self.error,
+            custom_status=self.custom_status,
+            error_category=self.error_category,
+            retryable=self.retryable,
+            metadata=merged_metadata,
+            error_context=self.error_context,
+            error_severity=self.error_severity,
+            recovery_strategy=self.recovery_strategy,
+            performance_impact=self.performance_impact,
+            suggested_actions=list(self.suggested_actions),
+            related_errors=list(self.related_errors),
+        )
+
+    def __enter__(self) -> StepResult:
+        return self
+
+    def __exit__(self, exc_type: type[BaseException] | None, exc: BaseException | None, _tb: Any) -> bool:
+        if exc is not None:
+            self.success = False
+            self.error = str(exc)
+        return False
+
+    def __bool__(self) -> bool:
+        return self.success
 
     def __str__(self) -> str:
         """String representation with PII filtering for safe logging."""
@@ -818,7 +1051,7 @@ class StepResult(Mapping[str, Any]):
     # flattened view (status/error + merged data).
     def __eq__(self, other: object) -> bool:  # pragma: no cover - exercised indirectly
         if isinstance(other, list):
-            inner = self.data
+            inner = self._data
             if isinstance(inner.get("data"), dict):
                 inner = inner["data"]
             # Accept 'results' only mapping
@@ -835,9 +1068,9 @@ class StepResult(Mapping[str, Any]):
         if isinstance(other, dict):
             flat: dict[str, Any] = {}
             # merge nested mapping first (so top-level overrides win)
-            if isinstance(self.data.get("data"), dict):
-                flat.update(cast("dict[str, Any]", self.data["data"]))
-            flat.update({k: v for k, v in self.data.items() if k != "data"})
+            if isinstance(self._data.get("data"), dict):
+                flat.update(cast("dict[str, Any]", self._data["data"]))
+            flat.update({k: v for k, v in self._data.items() if k != "data"})
             flat["status"] = self.custom_status or ("success" if self.success else "error")
             if self.error is not None:
                 flat["error"] = self.error
@@ -848,9 +1081,9 @@ class StepResult(Mapping[str, Any]):
         # Provide a stable hash combining status + frozenset of flattened items.
         try:
             flat_items: list[tuple[str, Any]] = []
-            if isinstance(self.data.get("data"), dict):
-                flat_items.extend(cast("dict[str, Any]", self.data["data"]).items())
-            flat_items.extend([(k, v) for k, v in self.data.items() if k != "data"])
+            if isinstance(self._data.get("data"), dict):
+                flat_items.extend(cast("dict[str, Any]", self._data["data"]).items())
+            flat_items.extend([(k, v) for k, v in self._data.items() if k != "data"])
             flat_items.append(
                 (
                     "status",

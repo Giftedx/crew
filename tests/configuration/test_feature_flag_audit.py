@@ -1,7 +1,7 @@
 """Tests for feature flag audit and simplification framework."""
 
 from pathlib import Path
-from platform.core.configuration.feature_flag_audit import (
+from platform.config.configuration.feature_flag_audit import (
     FeatureFlag,
     FeatureFlagAuditor,
     FeatureFlagAuditResult,

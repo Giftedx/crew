@@ -67,3 +67,12 @@ class VectorStore:
                     break
 
         return results
+
+
+# Backward compatibility: Re-export MemoryService from its new location
+# Note: Import moved to TYPE_CHECKING to break circular dependency
+# Consumers should import from ultimate_discord_intelligence_bot.services.memory_service directly
+# from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+
+
+__all__ = ["VectorRecord", "VectorStore"]

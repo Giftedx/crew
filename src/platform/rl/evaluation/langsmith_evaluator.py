@@ -11,9 +11,9 @@ import logging
 import time
 from dataclasses import dataclass, field
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 

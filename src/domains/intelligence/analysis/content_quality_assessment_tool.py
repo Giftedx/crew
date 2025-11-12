@@ -10,10 +10,11 @@ import logging
 import os
 import re
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -60,6 +61,7 @@ class ContentQualityAssessmentTool(BaseTool[dict[str, Any]]):
         super().__init__()
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:content_quality_assessment", ttl=1800)
     def run(self, input_data: dict) -> StepResult:
         """
         Assess transcript quality and return quality metrics.

@@ -12,8 +12,9 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from platform.cache.unified_config import get_unified_cache_config
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

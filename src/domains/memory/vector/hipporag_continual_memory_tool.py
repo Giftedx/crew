@@ -13,10 +13,11 @@ import os
 import time
 from pathlib import Path
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 from uuid import uuid4
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

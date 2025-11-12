@@ -14,11 +14,11 @@ import logging
 import os
 import re
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .optimization_pipeline import OptimizationConfig, OptimizationPipeline
 from .prompt_compressor import CompressionConfig, PromptCompressor

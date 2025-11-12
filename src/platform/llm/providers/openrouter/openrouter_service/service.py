@@ -16,9 +16,10 @@ except Exception:
 from platform.cache.bounded_cache import BoundedLRUCache
 from platform.cache.unified_config import get_unified_cache_config
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from platform.rl.learning_engine import LearningEngine
 from platform.rl.litellm_router import LLMRouterSingleton
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from .adaptive_routing import AdaptiveRoutingManager
 from .tenant_semantic_cache import TenantSemanticCache
@@ -48,6 +49,8 @@ except Exception:
             return _S()
 
         get_settings = _get_settings_fallback
+from platform.llm.routing.services.rl_model_router import RLModelRouter
+
 from app.config.settings import ENABLE_RL_MODEL_ROUTING
 from ultimate_discord_intelligence_bot.cache import ENABLE_CACHE_V2, UnifiedCache, get_unified_cache
 
@@ -56,7 +59,6 @@ from ..openrouter_helpers import ctx_or_fallback as _ctx_or_fallback_helper
 from ..openrouter_helpers import deep_merge as _deep_merge_helper
 from ..openrouter_helpers import update_shadow_hit_ratio as _update_shadow_hit_ratio_helper
 from ..prompt_engine import PromptEngine
-from ..rl_model_router import RLModelRouter
 from ..token_meter import TokenMeter
 
 

@@ -87,6 +87,11 @@ def test() -> None:
     asyncio.run(test_async())
 
 
+def main() -> None:
+    """Main entry point."""
+    run()
+
+
 if __name__ == "__main__":
     if len(sys.argv) < _MIN_ARGS:
         print("Usage: main.py <command> [<args>]")

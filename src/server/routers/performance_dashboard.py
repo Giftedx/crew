@@ -13,13 +13,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from fastapi import APIRouter, Query
+from pydantic import BaseModel, Field
 
 
 try:
-    from platform.observability import metrics
+    from ultimate_discord_intelligence_bot.obs import metrics
 except ImportError:
     metrics = None
 

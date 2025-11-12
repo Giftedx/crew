@@ -7,10 +7,10 @@ user preference tracking, and adaptive behavior.
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.services.mem0_service import Mem0MemoryService
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

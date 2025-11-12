@@ -5,12 +5,12 @@ This module tests complete workflows from content ingestion through analysis to 
 ensuring all components work together correctly.
 """
 
-from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from tests.factories import AnalysisFactory, StepResultFactory, TranscriptFactory
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestEndToEndWorkflows:

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 from mem0 import Memory
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..settings import _get_setting
 

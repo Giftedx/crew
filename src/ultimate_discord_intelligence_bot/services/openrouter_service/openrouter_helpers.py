@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import contextlib
 import copy
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

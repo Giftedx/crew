@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import contextlib
-from platform.observability.metrics import get_metrics
 from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 if TYPE_CHECKING:

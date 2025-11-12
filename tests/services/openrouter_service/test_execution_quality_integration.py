@@ -2,9 +2,10 @@ import platform.llm.providers.openrouter as or_pkg
 from platform.llm.providers.openrouter.context import prepare_route_state
 from platform.llm.providers.openrouter.execution import execute_online
 from platform.llm.providers.openrouter.service import OpenRouterService
-from platform.observability import metrics as _metrics
 
 import pytest
+
+from ultimate_discord_intelligence_bot.obs import metrics as _metrics
 
 
 class _FakeResponse:

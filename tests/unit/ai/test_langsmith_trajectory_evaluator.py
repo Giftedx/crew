@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
 from types import SimpleNamespace
 
 import pytest
-from ai.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
 
+from ai.rl.langsmith_trajectory_evaluator import LangSmithTrajectoryEvaluator
 from eval.trajectory_evaluator import AgentTrajectory, TrajectoryStep
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class _StubLangSmithAdapter:

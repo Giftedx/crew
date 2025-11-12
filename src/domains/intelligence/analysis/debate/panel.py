@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from platform.observability import tracing
 from typing import TYPE_CHECKING
+
+from ultimate_discord_intelligence_bot.obs import tracing
 
 
 if TYPE_CHECKING:

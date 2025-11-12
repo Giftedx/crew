@@ -6,13 +6,13 @@ import asyncio
 import logging
 import time
 from platform.circuit_breaker_canonical import CircuitBreaker
-from platform.core.step_result import StepResult
 from typing import Any, TypedDict
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..pipeline import ContentPipeline
-from ..platform.observability.metrics import get_metrics
 from ._base import BaseTool
 
 

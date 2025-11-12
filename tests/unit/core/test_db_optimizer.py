@@ -1,7 +1,7 @@
 """Tests for database optimization utilities."""
 
 import asyncio
-from platform.core.db_optimizer import (
+from platform.database.db_optimizer import (
     ConnectionPoolMetrics,
     ConnectionPoolOptimizer,
     DatabaseOptimizer,

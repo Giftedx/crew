@@ -1,8 +1,7 @@
-from platform.observability import metrics
-
 import pytest
 
 from graphs.langgraph_pilot import run_ingest_analysis_pilot
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 def test_pilot_inflight_metric_present(monkeypatch: pytest.MonkeyPatch):

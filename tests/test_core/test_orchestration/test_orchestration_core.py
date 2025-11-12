@@ -9,8 +9,6 @@ import pytest
 
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / "src"))
-from platform.core.step_result import StepResult
-
 from core.orchestration import (
     BaseOrchestrator,
     OrchestrationContext,
@@ -18,6 +16,7 @@ from core.orchestration import (
     OrchestrationType,
     get_orchestration_facade,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestOrchestrator(BaseOrchestrator):

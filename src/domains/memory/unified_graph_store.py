@@ -10,9 +10,10 @@ from __future__ import annotations
 import contextlib
 import logging
 from enum import Enum
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -85,7 +86,7 @@ class UnifiedGraphStore:
                     self.default_backend = GraphBackend.NETWORKX
         if (default_backend == GraphBackend.QDRANT or enable_multi_backend) and self._qdrant_client is None:
             try:
-                from domains.memory.vector.qdrant import get_qdrant_client
+                from domains.memory.qdrant_provider import get_qdrant_client
 
                 self._qdrant_client = get_qdrant_client()
             except Exception as e:

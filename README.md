@@ -130,6 +130,43 @@ The system employs a clean 3-layer architecture following domain-driven design p
 1. **Conversational Response Agent**: Natural, context-aware Discord responses
 1. **Personality Evolution Agent**: RL-based personality optimization from interaction feedback
 
+### Import Patterns
+
+**After domains/ migration, use these import paths:**
+
+```python
+# Platform layer - infrastructure
+from platform.core.step_result import StepResult, ErrorCategory
+from platform.http.http_utils import resilient_get, resilient_post
+from platform.cache.tool_cache_decorator import cache_tool_result
+from platform.llm.llm_router import LLMRouter
+
+# Tenancy - multi-tenant isolation
+from ultimate_discord_intelligence_bot.tenancy.context import (
+    TenantContext,
+    with_tenant,
+    current_tenant,
+    require_tenant,
+)
+
+# Domain layer - business logic
+from domains.intelligence.analysis.logical_fallacy_tool import LogicalFallacyTool
+from domains.intelligence.verification.fact_check_tool import FactCheckTool
+from domains.intelligence.acquisition.youtube_downloader_tool import YouTubeDownloaderTool
+from domains.memory.vector_memory_tool import VectorMemoryTool
+from domains.orchestration.crew.compat import CrewAICompatExecutor
+
+# Observability
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+```
+
+**Deprecated paths (pre-migration):**
+
+- ❌ `from ultimate_discord_intelligence_bot.crew import ...`
+- ❌ `from ultimate_discord_intelligence_bot.tools import ...`
+- ✅ Use `from domains.orchestration.crew import ...` instead
+- ✅ Use `from domains.intelligence.* import ...` for tools
+
 ## 🤖 OpenAI Integration
 
 The bot includes comprehensive OpenAI integration with advanced AI capabilities:
@@ -255,6 +292,57 @@ For detailed documentation, see [OpenAI Integration Features](docs/openai_integr
 
    With these in place, imports like `from platform.core.step_result import StepResult` work consistently across shells, venvs, and containers.
 
+## 🛡️ Compliance Guards
+
+This project enforces automated compliance checks to maintain code quality and architectural standards:
+
+### Automated Enforcement
+
+- **Local Development**: Pre-commit hooks validate all changes before commit
+- **CI Pipeline**: GitHub Actions workflow runs on every PR and push to main branches
+- **Merge Blocking**: PRs cannot merge if compliance checks fail (when branch protection enabled)
+
+### Five Guards Enforced
+
+1. **HTTP Wrapper Guard** - Prevents direct `requests.*` calls; enforces resilient HTTP wrappers with circuit breakers and retries
+2. **Tools Export Guard** - Ensures all tools are registered in `__all__` for dynamic discovery (112 tools validated)
+3. **Metrics Instrumentation Guard** - Enforces consistent metric naming conventions and observability patterns
+4. **Deprecated Directories Guard** - Blocks new files in deprecated paths during architecture migration
+5. **Dispatcher Usage Guard** - Validates tenant context propagation in async/thread boundaries
+
+### Quick Start
+
+```bash
+# One-time setup: Install pre-commit hooks
+make setup-hooks
+
+# Manual execution: Run all guards
+make guards
+
+# Check specific guard
+python scripts/validate_http_wrappers_usage.py
+
+# Generate compliance report
+python scripts/generate_guard_report.py --input <(make guards 2>&1) --output report.json --pretty
+```
+
+### Emergency Bypass
+
+For critical hotfixes only:
+
+```bash
+# Bypass local hook (CI still enforces)
+git commit --no-verify -m "hotfix: critical issue"
+```
+
+**Note**: Bypassed commits still run in CI. Document bypass reason in commit message.
+
+### Documentation
+
+- **Full Guide**: [docs/compliance-guards.md](docs/compliance-guards.md) - 557 lines covering setup, troubleshooting, examples
+- **CI Workflow**: [.github/workflows/guards-ci.yml](.github/workflows/guards-ci.yml) - Automated enforcement with PR comments
+- **Implementation**: [F011_F014_GUARD_CI_INTEGRATION_COMPLETE_2025-11-12.md](F011_F014_GUARD_CI_INTEGRATION_COMPLETE_2025-11-12.md)
+
 ## ⚙️ Configuration
 
 ### Environment Variables
@@ -353,6 +441,7 @@ RATE_LIMIT_BURST_SIZE=10
 The codebase includes comprehensive performance analysis and optimization tools. See [Performance Initiative Summary](docs/PERFORMANCE_INITIATIVE_SUMMARY.md) for details.
 
 **Quick Performance Check**:
+
 ```bash
 # Analyze performance issues
 python3 scripts/performance_improvements.py --report
@@ -362,11 +451,13 @@ python3 -m ruff check src --select PERF
 ```
 
 **Documentation**:
+
 - [Performance Improvement Recommendations](docs/PERFORMANCE_IMPROVEMENT_RECOMMENDATIONS.md) - Comprehensive analysis of 258 performance issues
 - [Performance Best Practices](docs/PERFORMANCE_BEST_PRACTICES.md) - Best practices for high-performance Python code
 - [Performance Fixes Applied](docs/PERFORMANCE_FIXES_APPLIED.md) - Summary of automated fixes
 
 **Benchmarking**:
+
 ```bash
 # Run performance benchmarks
 python3 benchmarks/performance_benchmarks.py

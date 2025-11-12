@@ -4,8 +4,9 @@ import json
 import logging
 import time
 from functools import wraps
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..settings import ENABLE_OBSERVABILITY_WRAPPER, ENABLE_OTEL_EXPORT
 from ..tenancy.context import current_tenant

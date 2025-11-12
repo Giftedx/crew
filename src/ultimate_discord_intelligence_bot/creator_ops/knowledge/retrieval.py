@@ -19,9 +19,8 @@ try:
     from ultimate_discord_intelligence_bot.creator_ops.media.embeddings import EmbeddingsGenerator
 except ImportError:
     EmbeddingsGenerator = None
-from platform.core.step_result import StepResult
-
 from ultimate_discord_intelligence_bot.creator_ops.models import Account, Claim, Interaction, Media, Person, Topic, Unit
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

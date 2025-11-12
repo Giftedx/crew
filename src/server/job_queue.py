@@ -115,7 +115,7 @@ class JobQueue:
                 extra={"job_id": job_id, "tenant_id": tenant_id, "workspace_id": workspace_id, "url": url},
             )
             try:
-                from platform.observability.metrics import get_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
                 get_metrics().counter(
                     "pipeline_jobs_created_total", labels={"tenant": tenant_id, "workspace": workspace_id}
@@ -190,7 +190,7 @@ class JobQueue:
             )
             if status in (JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED):
                 try:
-                    from platform.observability.metrics import get_metrics
+                    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
                     get_metrics().counter(
                         "pipeline_jobs_completed_total",

@@ -10,8 +10,9 @@ from platform.core.routing.base_router import (
     RoutingRequest,
     UnifiedRouter,
 )
-from platform.core.step_result import StepResult
 from unittest.mock import patch
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestRoutingRequest:

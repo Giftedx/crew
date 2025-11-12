@@ -7,10 +7,11 @@ Provides basic fixtures without heavy dependencies.
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @pytest.fixture

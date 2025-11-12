@@ -1,8 +1,8 @@
 import os
 import re
-from platform.observability import metrics
 
 from fastapi.testclient import TestClient
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.server.app import create_app
 
 

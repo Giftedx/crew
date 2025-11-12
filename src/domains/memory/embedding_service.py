@@ -21,9 +21,10 @@ import hashlib
 import logging
 import os
 from dataclasses import dataclass
-from platform.cache.multi_level_cache import MultiLevelCache
-from platform.core.step_result import StepResult
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, Literal
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -66,14 +67,11 @@ class EmbeddingService:
             cache_size: Maximum number of cached embeddings (legacy parameter, now uses multi-level cache)
         """
         self.cache_size = cache_size
-        # Legacy in-memory cache for backwards compatibility
-        self._embedding_cache: dict[str, EmbeddingResult] = {}
         self._models: dict[str, Any] = {}
-        # Multi-level cache with 24-hour TTL for persistent embeddings
-        self._multi_level_cache = MultiLevelCache(
-            redis_url=os.getenv("REDIS_URL"), max_memory_size=cache_size, default_ttl=86400
-        )
+        # Legacy in-memory cache retained for backwards compatibility with clear_cache/get_cache_stats
+        self._embedding_cache: dict[str, EmbeddingResult] = {}
 
+    @cache_tool_result(namespace="embeddings:generation", ttl=86400)
     def embed_text(
         self, text: str, model: Literal["fast", "balanced", "quality"] = "fast", use_cache: bool = True
     ) -> StepResult:
@@ -93,31 +91,17 @@ class EmbeddingService:
             start_time = time.time()
             if not text or not text.strip():
                 return StepResult.fail("Input text cannot be empty", status="bad_request")
-            if use_cache:
-                cache_result = self._check_cache(text, model)
-                if cache_result:
-                    logger.info(f"Embedding cache hit for text (len={len(text)})")
-                    return StepResult.ok(
-                        data={
-                            "embedding": cache_result.embedding,
-                            "model": cache_result.model,
-                            "dimension": cache_result.dimension,
-                            "cache_hit": True,
-                            "generation_time_ms": (time.time() - start_time) * 1000,
-                        }
-                    )
+            if not use_cache:
+                logger.debug("Embedding cache bypassed via use_cache flag")
             model_name = self._select_model(model)
             embedding_result = self._generate_embedding(text, model_name)
             if embedding_result:
-                if use_cache:
-                    self._cache_embedding(text, model, embedding_result)
                 generation_time = (time.time() - start_time) * 1000
                 return StepResult.ok(
                     data={
                         "embedding": embedding_result.embedding,
                         "model": embedding_result.model,
                         "dimension": embedding_result.dimension,
-                        "cache_hit": False,
                         "generation_time_ms": generation_time,
                     }
                 )
@@ -149,7 +133,7 @@ class EmbeddingService:
                 result = self.embed_text(text, model=model, use_cache=use_cache)
                 if result.success:
                     embeddings.append(result.data["embedding"])
-                    if result.data.get("cache_hit"):
+                    if (result.metadata or {}).get("cache_hit"):
                         cache_hits += 1
                 else:
                     return StepResult.fail(
@@ -277,71 +261,6 @@ class EmbeddingService:
         return EmbeddingResult(
             embedding=embedding, model=f"fallback-{model_name}", dimension=dimension, cache_hit=False
         )
-
-    def _check_cache(self, text: str, model: str) -> EmbeddingResult | None:
-        """Check if embedding exists in cache (multi-level + legacy).
-
-        Args:
-            text: Input text
-            model: Model alias
-
-        Returns:
-            Cached EmbeddingResult or None
-        """
-        cache_key = self._compute_cache_key(text, model)
-
-        # Check multi-level cache first (memory → Redis → disk)
-        operation = f"embedding:{model}"
-        inputs = {"text": text}
-        cached_data = self._multi_level_cache.get(operation, inputs)
-        if cached_data:
-            logger.debug(f"Multi-level cache hit for embedding (model={model})")
-            # Reconstruct EmbeddingResult from cached data
-            return EmbeddingResult(
-                embedding=cached_data["embedding"],
-                model=cached_data["model"],
-                dimension=cached_data["dimension"],
-                tokens_used=cached_data.get("tokens_used", 0),
-                cache_hit=True,
-                generation_time_ms=0.0,
-            )
-
-        # Fallback to legacy in-memory cache
-        if cache_key in self._embedding_cache:
-            logger.debug(f"Legacy cache hit for embedding (model={model})")
-            return self._embedding_cache[cache_key]
-
-        return None
-
-    def _cache_embedding(self, text: str, model: str, result: EmbeddingResult) -> None:
-        """Cache embedding result in multi-level cache + legacy cache.
-
-        Args:
-            text: Input text
-            model: Model alias
-            result: Embedding result to cache
-        """
-        cache_key = self._compute_cache_key(text, model)
-
-        # Store in multi-level cache (memory → Redis → disk)
-        operation = f"embedding:{model}"
-        inputs = {"text": text}
-        cache_value = {
-            "embedding": result.embedding,
-            "model": result.model,
-            "dimension": result.dimension,
-            "tokens_used": result.tokens_used,
-        }
-        try:
-            self._multi_level_cache.set(operation, inputs, cache_value, ttl=86400)
-        except Exception as e:
-            logger.warning(f"Failed to cache embedding in multi-level cache: {e}")
-
-        # Also store in legacy in-memory cache for backwards compatibility
-        if len(self._embedding_cache) >= self.cache_size:
-            first_key = next(iter(self._embedding_cache))
-            del self._embedding_cache[first_key]
-        self._embedding_cache[cache_key] = result
 
     @staticmethod
     def _compute_cache_key(text: str, model: str) -> str:

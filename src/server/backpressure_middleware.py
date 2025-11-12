@@ -16,10 +16,9 @@ from starlette.responses import JSONResponse
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from fastapi import FastAPI
     from starlette.requests import Request
     from starlette.responses import Response
-
-    from fastapi import FastAPI
 logger = logging.getLogger(__name__)
 
 

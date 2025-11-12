@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from src.ultimate_discord_intelligence_bot.tools.knowledge_ops_tool import (
+from ultimate_discord_intelligence_bot.tools.knowledge_ops_tool import (
     AuditLog,
     KnowledgeItem,
     KnowledgeOpsInput,

@@ -10,6 +10,18 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
+
+# Ensure virtual environment packages come before src to avoid stub conflicts
+# This must happen BEFORE any other imports
+venv_path = os.path.join(os.path.dirname(__file__), '..', '.venv', 'lib', 'python3.12', 'site-packages')
+if os.path.exists(venv_path):
+    sys.path.insert(0, venv_path)
+
+# Temporarily remove src from path to avoid stub conflicts with FastAPI
+src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+if src_path in sys.path:
+    sys.path.remove(src_path)
 
 try:
     # Ensure platform proxy bootstrap runs early
@@ -27,6 +39,9 @@ if callable(ensure_platform_proxy):  # type: ignore
 import uvicorn  # noqa: E402
 from server.app import create_app  # noqa: E402
 
+# Restore src path now that critical imports are done
+sys.path.insert(0, src_path)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run FastAPI server with safe bootstrap")
@@ -39,7 +54,8 @@ def main() -> None:
     # still import its auto websocket resolver, but our early bootstrap ensures
     # stdlib platform resolution is correct before that happens.
 
-    uvicorn.run(create_app(), host=args.host, port=args.port, reload=args.reload)
+    app = create_app()
+    uvicorn.run(app, host=args.host, port=args.port, reload=args.reload)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,4 @@
-from ultimate_discord_intelligence_bot.tools.discord_monitor_tool import (
-    DiscordMonitorTool,
-)
+from ultimate_discord_intelligence_bot.tools import DiscordMonitorTool
 
 
 def test_discord_monitor_tool_filters_seen_messages():

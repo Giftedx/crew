@@ -14,9 +14,10 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

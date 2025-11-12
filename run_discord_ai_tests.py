@@ -88,7 +88,7 @@ def run_all_tests():
 def run_coverage_tests():
     """Run tests with coverage."""
     return run_command(
-        "python -m pytest tests/ --cov=performance_optimization.src.discord --cov-report=html --cov-report=term-missing -v",
+        "python -m pytest tests/ --cov=src.discord --cov-report=html --cov-report=term-missing -v",
         "Coverage Tests",
     )
 
@@ -105,17 +105,17 @@ def run_specific_test(test_path):
 
 def lint_code():
     """Run code linting."""
-    return run_command("python -m ruff check performance_optimization/src/discord/ tests/ --fix", "Code Linting")
+    return run_command("python -m ruff check src/discord/ tests/ --fix", "Code Linting")
 
 
 def format_code():
     """Format code."""
-    return run_command("python -m ruff format performance_optimization/src/discord/ tests/", "Code Formatting")
+    return run_command("python -m ruff format src/discord/ tests/", "Code Formatting")
 
 
 def type_check():
     """Run type checking."""
-    return run_command("python -m mypy performance_optimization/src/discord/ --ignore-missing-imports", "Type Checking")
+    return run_command("python -m mypy src/discord/ --ignore-missing-imports", "Type Checking")
 
 
 def main():

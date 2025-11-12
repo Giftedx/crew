@@ -1,6 +1,5 @@
 """Comprehensive tests for OpenAI integration services."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -13,6 +12,7 @@ from ultimate_discord_intelligence_bot.services.openai_streaming import OpenAISt
 from ultimate_discord_intelligence_bot.services.openai_structured_outputs import OpenAIStructuredOutputsService
 from ultimate_discord_intelligence_bot.services.openai_vision import OpenAIVisionService
 from ultimate_discord_intelligence_bot.services.openai_voice import OpenAIVoiceService
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestOpenAIIntegrationService:

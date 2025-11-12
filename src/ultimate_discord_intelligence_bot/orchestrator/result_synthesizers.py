@@ -10,8 +10,9 @@ summary statistics and insight generation, maintaining the Phase 1 delegation ar
 """
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 module_logger = logging.getLogger(__name__)

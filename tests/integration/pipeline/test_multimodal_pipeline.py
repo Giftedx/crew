@@ -1,13 +1,13 @@
 """Tests for the multimodal content processing pipeline."""
 
 import asyncio
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from src.kg.creator_kg_store import CreatorKGStore
 from src.pipeline.multimodal_pipeline import MultimodalContentPipeline, PipelineConfig, PipelineResult, PipelineStage
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestPipelineConfig:

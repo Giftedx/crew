@@ -6,7 +6,7 @@ from typing import Any
 
 
 try:
-    from platform.observability import tracing as _obs_tracing
+    from ultimate_discord_intelligence_bot.obs import tracing as _obs_tracing
 
     TRACING_AVAILABLE = True
     tracing_module: Any = _obs_tracing

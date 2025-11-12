@@ -14,9 +14,9 @@ import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from platform.config.configuration import get_config
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

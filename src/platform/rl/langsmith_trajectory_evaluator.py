@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import logging
 from platform.config.configuration import SecureConfig, get_config
-from platform.core.step_result import StepResult
-from platform.observability import metrics
 from platform.orchestration.application import UnifiedFeedbackOrchestrator, get_orchestrator
 from typing import TYPE_CHECKING, Any
 
 from eval.langsmith_adapter import LangSmithEvaluationAdapter
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

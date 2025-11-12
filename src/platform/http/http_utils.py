@@ -20,6 +20,7 @@ import requests as requests
 
 from . import requests_wrappers as _rq
 from . import retry_config as _retry_cfg
+from . import step_result_wrappers as _sr
 from .config import (
     DEFAULT_HTTP_RETRY_ATTEMPTS,
     DEFAULT_RATE_LIMIT_RETRY,
@@ -93,6 +94,29 @@ def resilient_post(
     )
 
 
+def resilient_post_result(
+    url: str,
+    *,
+    json_payload: object | None = None,
+    headers: dict[str, str] | None = None,
+    files: dict[str, object] | None = None,
+    timeout_seconds: int | None = None,
+    allow_legacy_timeout_fallback: bool = True,
+    request_fn: object | None = None,
+):
+    """POST request returning StepResult for structured error handling."""
+    eff_timeout = int(timeout_seconds if timeout_seconds is not None else get_request_timeout())
+    return _sr.resilient_post_result(
+        url,
+        json_payload=json_payload,
+        headers=headers,
+        files=files,
+        timeout_seconds=eff_timeout,
+        allow_legacy_timeout_fallback=allow_legacy_timeout_fallback,
+        request_fn=request_fn,
+    )
+
+
 def resilient_get(
     url: str,
     *,
@@ -105,6 +129,29 @@ def resilient_get(
 ):
     eff_timeout = int(timeout_seconds if timeout_seconds is not None else get_request_timeout())
     return _rq.resilient_get(
+        url,
+        params=params or None,
+        headers=headers,
+        timeout_seconds=eff_timeout,
+        allow_legacy_timeout_fallback=allow_legacy_timeout_fallback,
+        request_fn=request_fn,
+        stream=stream,
+    )
+
+
+def resilient_get_result(
+    url: str,
+    *,
+    params: dict[str, object] | None = None,
+    headers: dict[str, str] | None = None,
+    timeout_seconds: int | None = None,
+    allow_legacy_timeout_fallback: bool = True,
+    request_fn: object | None = None,
+    stream: bool | None = None,
+):
+    """GET request returning StepResult for structured error handling."""
+    eff_timeout = int(timeout_seconds if timeout_seconds is not None else get_request_timeout())
+    return _sr.resilient_get_result(
         url,
         params=params or None,
         headers=headers,
@@ -509,7 +556,9 @@ __all__ = [
     "is_retry_enabled",
     "resilient_delete",
     "resilient_get",
+    "resilient_get_result",
     "resilient_post",
+    "resilient_post_result",
     "resolve_retry_attempts",
     "retrying_delete",
     "retrying_get",

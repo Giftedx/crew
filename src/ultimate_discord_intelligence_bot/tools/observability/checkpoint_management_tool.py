@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from platform.core.step_result import StepResult
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

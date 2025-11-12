@@ -1,8 +1,8 @@
 import os
 from platform.core.settings import get_settings
-from platform.observability import metrics
 
 from src.ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 def _enable_flag():

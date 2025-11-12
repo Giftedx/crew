@@ -6,8 +6,9 @@ security relevant actions are recorded in a consistent JSON format.
 
 from __future__ import annotations
 
-from platform.observability.logging import logger
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.logging import logger
 
 
 def log_security_event(

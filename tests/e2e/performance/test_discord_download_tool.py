@@ -2,13 +2,13 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
+from domains.ingestion.providers.discord_download_tool import (
     DiscordDownloadTool,
 )
 
 
 class TestDiscordDownloadTool(unittest.TestCase):
-    @patch("ultimate_discord_intelligence_bot.tools.discord_download_tool.resilient_get")
+    @patch("domains.ingestion.providers.discord_download_tool.resilient_get")
     def test_run_success(self, mock_resilient_get):
         # Arrange
         mock_response = MagicMock()
@@ -30,7 +30,7 @@ class TestDiscordDownloadTool(unittest.TestCase):
         # Clean up
         os.remove(result["local_path"])
 
-    @patch("ultimate_discord_intelligence_bot.tools.discord_download_tool.resilient_get")
+    @patch("domains.ingestion.providers.discord_download_tool.resilient_get")
     def test_run_error(self, mock_resilient_get):
         # Arrange
         mock_resilient_get.side_effect = Exception("Test error")

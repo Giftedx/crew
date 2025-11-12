@@ -10,7 +10,6 @@ import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from platform.error_handling import handle_error_safely
-from platform.observability import metrics
 from platform.security.privacy import privacy_filter
 from platform.time import default_utc_now
 from typing import Any
@@ -18,6 +17,7 @@ from typing import Any
 from domains.ingestion.pipeline import models
 from domains.intelligence.analysis import segmenter, topics, transcribe
 from domains.memory import embeddings, vector_store
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from .providers import twitch, youtube
 

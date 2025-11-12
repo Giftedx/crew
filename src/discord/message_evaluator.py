@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

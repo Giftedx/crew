@@ -7,10 +7,10 @@ footprint and improve startup performance.
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.lazy_loading import get_lazy_loader
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

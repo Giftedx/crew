@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import time
-from platform.core.step_result import StepResult
 from typing import Any, TypedDict
 
 from ultimate_discord_intelligence_bot.profiles.creator_network_schema import ALL_CREATOR_NETWORKS
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class MonitoringSchedule(TypedDict, total=False):

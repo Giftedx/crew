@@ -42,7 +42,7 @@ class MetricsAPI:
         def get_system_metrics():
             """Get system-wide metrics."""
             try:
-                from platform.observability.metrics_collector import get_system_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_system_metrics
 
                 metrics = get_system_metrics()
                 return jsonify(
@@ -66,7 +66,7 @@ class MetricsAPI:
         def get_all_tool_metrics():
             """Get metrics for all tools."""
             try:
-                from platform.observability.metrics_collector import get_all_tool_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_all_tool_metrics
 
                 metrics = get_all_tool_metrics()
                 return jsonify(
@@ -99,7 +99,7 @@ class MetricsAPI:
         def get_tool_metrics(tool_name: str):
             """Get metrics for a specific tool."""
             try:
-                from platform.observability.metrics_collector import get_tool_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_tool_metrics
 
                 metrics = get_tool_metrics(tool_name)
                 if not metrics:
@@ -130,7 +130,7 @@ class MetricsAPI:
         def get_top_tools():
             """Get top tools by usage."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
@@ -159,7 +159,7 @@ class MetricsAPI:
         def get_slowest_tools():
             """Get slowest tools by execution time."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
@@ -188,7 +188,7 @@ class MetricsAPI:
         def get_error_prone_tools():
             """Get tools with highest error rates."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 limit = request.args.get("limit", 10, type=int)
@@ -218,7 +218,7 @@ class MetricsAPI:
         def get_metrics_report():
             """Get comprehensive metrics report."""
             try:
-                from platform.observability.metrics_collector import generate_metrics_report
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import generate_metrics_report
 
                 report = generate_metrics_report()
                 return jsonify({"status": "success", "data": report})
@@ -229,7 +229,7 @@ class MetricsAPI:
         def export_metrics():
             """Export metrics to file."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 export_file = f"metrics_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -250,7 +250,7 @@ class MetricsAPI:
         def reset_metrics():
             """Reset all metrics."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 collector.reset_metrics()

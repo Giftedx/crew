@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import time
-from platform.core.step_result import StepResult
 
 import pytest
 
-from domains.memory.vector_store import MemoryService
+from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestPerformanceBenchmarks:

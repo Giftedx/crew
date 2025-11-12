@@ -67,6 +67,13 @@ Notes:
 - **Observability**: Enhanced monitoring and health check capabilities
 - **Discord Integration**: Improved artifact publishing with tenant isolation
 - **Documentation**: Comprehensive operational and architectural documentation
+- **Ingestion Shim**: Test-focused ingestion pipeline now normalizes `published_at` values and hardens creator namespace handling
+
+### Fixed
+
+- **Ingestion Tests Compatibility**: Addressed unit tests expecting:
+  - Creator fallback: when provider metadata lacks a channel/creator, namespace defaults to `unknown` and non-string creators are coerced to strings
+  - `published_at` normalization: naive datetimes are converted to ISO 8601 with explicit UTC offset (`+00:00`); strings are preserved; `None` becomes empty string; value is attached to each upserted record payload
 
 ### Configuration Changes
 
@@ -103,9 +110,9 @@ Notes:
 ### Migration Guide
 
 1. **Crew Consolidation**: No migration required - uses canonical crew by default
-2. **Feature Flags**: New flags are disabled by default
-3. **Discord Publishing**: Requires `ENABLE_DISCORD_PUBLISHING=true` and webhook URL
-4. **StepResult Compliance**: Existing tools continue to work, compliance improvements recommended
+1. **Feature Flags**: New flags are disabled by default
+1. **Discord Publishing**: Requires `ENABLE_DISCORD_PUBLISHING=true` and webhook URL
+1. **StepResult Compliance**: Existing tools continue to work, compliance improvements recommended
 
 ### Performance Impact
 

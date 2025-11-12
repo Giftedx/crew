@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from platform.time import default_utc_now
 
-import ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool as ytdlp
+import domains.ingestion.providers.yt_dlp_download_tool as ytdlp
 
 from .base import DiscoveryItem, SourceConnector, Watch
 

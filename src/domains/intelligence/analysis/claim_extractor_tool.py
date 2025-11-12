@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 
 from kg.extract import extract
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -30,6 +31,7 @@ class ClaimExtractorTool(BaseTool[StepResult]):
         super().__init__()
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:claim_extractor", ttl=3600)
     def _run(self, text: str, max_claims: int = 10) -> StepResult:
         """Extract claims using the KG extraction module returning StepResult.
 

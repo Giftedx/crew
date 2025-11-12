@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from platform.core.step_result import ErrorCategory, ErrorContext, StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, ClassVar
 from urllib.parse import urlparse
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, ErrorContext, StepResult
 
 from ._base import BaseTool
 from .discord_download_tool import DiscordDownloadTool

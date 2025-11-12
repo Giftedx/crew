@@ -11,12 +11,17 @@ import json
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from platform.core.step_result import StepResult
-from platform.observability import metrics
 from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+from ultimate_discord_intelligence_bot.obs import metrics
+
+
+# Get the metrics facade instance
+_metrics = metrics.get_metrics()
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -353,44 +358,44 @@ class RLModelRouter:
     def process_trajectory_feedback(self, batch_size: int = 10) -> StepResult:
         """Process queued trajectory feedback and update routing policy."""
         if not self.trajectory_feedback_queue:
-            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**metrics.label_ctx()).set(0)
+            _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**_metrics.label_ctx()).set(0)
             return StepResult.skip(reason="No trajectory feedback available")
         if not self.bandit:
-            metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**metrics.label_ctx()).set(len(self.trajectory_feedback_queue))
-            metrics.RL_FEEDBACK_FAILED.labels(**metrics.label_ctx(), reason="bandit_not_initialized").inc()
+            _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**_metrics.label_ctx()).set(len(self.trajectory_feedback_queue))
+            _metrics.RL_FEEDBACK_FAILED.labels(**_metrics.label_ctx(), reason="bandit_not_initialized").inc()
             return StepResult.fail("Bandit not initialized")
         processed = 0
         failed = 0
         batch_count = min(batch_size, len(self.trajectory_feedback_queue))
-        base_labels = metrics.label_ctx()
+        base_labels = _metrics.label_ctx()
         for _ in range(batch_count):
             feedback = self.trajectory_feedback_queue.pop(0)
             routing_entry = self._find_routing_entry(feedback)
             if routing_entry is None:
                 failed += 1
-                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
-                    **metrics.label_ctx(), model_id=feedback.model_id, result="missing_history"
+                _metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **_metrics.label_ctx(), model_id=feedback.model_id, result="missing_history"
                 ).inc()
-                metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="missing_history").inc()
-                metrics.RL_FEEDBACK_FAILED.labels(**base_labels, reason="missing_history").inc()
+                _metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="missing_history").inc()
+                _metrics.RL_FEEDBACK_FAILED.labels(**base_labels, reason="missing_history").inc()
                 continue
             try:
                 context_vec = self._extract_context_vector(routing_entry.context)
                 self.bandit.update(feedback.model_id, context_vec, routing_entry.reward, trajectory_feedback=feedback)
                 processed += 1
-                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
-                    **metrics.label_ctx(), model_id=feedback.model_id, result="success"
+                _metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **_metrics.label_ctx(), model_id=feedback.model_id, result="success"
                 ).inc()
-                metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="success").inc()
+                _metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="success").inc()
             except Exception as exc:
                 failed += 1
                 logger.error("Failed to process trajectory feedback: %s", exc, exc_info=True)
-                metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
-                    **metrics.label_ctx(), model_id=feedback.model_id, result="failure"
+                _metrics.TRAJECTORY_FEEDBACK_PROCESSED.labels(
+                    **_metrics.label_ctx(), model_id=feedback.model_id, result="failure"
                 ).inc()
-                metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="failure").inc()
-                metrics.RL_FEEDBACK_FAILED.labels(**base_labels, reason="exception").inc()
-        metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**base_labels).set(len(self.trajectory_feedback_queue))
+                _metrics.RL_FEEDBACK_PROCESSED.labels(**base_labels, result="failure").inc()
+                _metrics.RL_FEEDBACK_FAILED.labels(**base_labels, reason="exception").inc()
+        _metrics.RL_FEEDBACK_QUEUE_DEPTH.labels(**base_labels).set(len(self.trajectory_feedback_queue))
         return StepResult.ok(
             processed=processed, failed=failed, remaining_queue_size=len(self.trajectory_feedback_queue)
         )

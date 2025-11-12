@@ -12,9 +12,9 @@ import os as _os
 import time
 from dataclasses import dataclass
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled, resilient_post
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

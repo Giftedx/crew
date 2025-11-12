@@ -6,9 +6,10 @@ and other test objects with realistic data.
 """
 
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import Mock
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

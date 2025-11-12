@@ -10,11 +10,12 @@ import copy
 import logging
 import os as _os
 import time
+from contextlib import suppress
 from dataclasses import dataclass
 from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, http_request_with_retry, is_retry_enabled, resilient_post
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 
@@ -419,12 +420,10 @@ class MetricsRecorder:
 
     def record_budget_rejection(self, task_type: str, provider_family: str) -> None:
         """Record budget rejection metrics."""
-        try:
+        with suppress(Exception):
             metric = getattr(metrics, "LLM_BUDGET_REJECTIONS", None)
             if metric:
                 metric.labels(**self.get_labels(), task=task_type, provider=provider_family).inc()
-        except Exception:
-            pass
 
 
 class OfflineExecutor:
@@ -453,7 +452,17 @@ class OfflineExecutor:
             projected_cost, latency_ms, effective_max, context.task_type, tenant_context
         )
         if context.model:
-            self.learning_engine.update(context.task_type, context.model, reward=reward)
+            # Record learning feedback using the minimal LearningEngine API
+            # (domain=task_type, arm=model, context is not used here)
+            recorded = False
+            with suppress(Exception):
+                self.learning_engine.record(context.task_type, None, context.model, reward)
+                recorded = True
+            if not recorded:
+                # Be resilient to alternate engine interfaces
+                with suppress(Exception):
+                    # Some engines may expose 'update(domain, arm, reward=...)'
+                    self.learning_engine.update(context.task_type, context.model, reward=reward)  # type: ignore[attr-defined]
         if context.model:
             self.metrics_recorder.record_model_selection(context.task_type, context.model, context.provider_family)
             self.metrics_recorder.record_cost_metrics(context.model, context.provider_family, projected_cost)
@@ -555,7 +564,13 @@ class NetworkExecutor:
                 projected_cost, latency_ms, effective_max, context.task_type, tenant_context
             )
             if context.model:
-                self.learning_engine.update(context.task_type, context.model, reward=reward)
+                recorded = False
+                with suppress(Exception):
+                    self.learning_engine.record(context.task_type, None, context.model, reward)
+                    recorded = True
+                if not recorded:
+                    with suppress(Exception):
+                        self.learning_engine.update(context.task_type, context.model, reward=reward)  # type: ignore[attr-defined]
             if context.model:
                 self.metrics_recorder.record_model_selection(context.task_type, context.model, context.provider_family)
                 self.metrics_recorder.record_cost_metrics(context.model, context.provider_family, projected_cost)

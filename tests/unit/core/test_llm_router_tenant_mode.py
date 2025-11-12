@@ -1,5 +1,5 @@
-from platform.core.llm_client import LLMCallResult, LLMClient
-from platform.core.llm_router import LLMRouter
+from platform.llm.llm_client import LLMCallResult, LLMClient
+from platform.llm.llm_router import LLMRouter
 
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 

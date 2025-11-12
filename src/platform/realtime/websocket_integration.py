@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
 from typing import Any
 
 from app.config.settings import ENABLE_WEBSOCKET_UPDATES
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 log = logging.getLogger(__name__)

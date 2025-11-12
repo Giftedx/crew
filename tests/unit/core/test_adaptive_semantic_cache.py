@@ -1,356 +1,295 @@
-"""
-Tests for adaptive semantic cache optimization.
+"""Tests for the adaptive semantic cache implementation.
 
-This module tests the adaptive semantic cache implementation that provides
-30-40% improvement in cache hit rates through dynamic threshold adjustment.
+These tests exercise the modern async-aware cache logic, verifying metric
+tracking, optimization decisions, singleton helpers, and error handling using a
+lightweight in-memory stub instead of the deprecated synchronous helper APIs.
 """
+from __future__ import annotations
 
+import time
 from platform.cache.adaptive_semantic_cache import (
+    ADJUSTMENT_STEP,
+    COST_SAVINGS_TARGET,
+    HIT_RATE_DECLINE_TOLERANCE,
+    HIT_RATE_TARGET,
+    MAX_THRESHOLD,
+    MIN_THRESHOLD,
     AdaptiveSemanticCache,
     CachePerformanceMetrics,
+    OptimizationRecommendation,
     create_adaptive_semantic_cache,
     get_adaptive_semantic_cache,
+    optimize_all_caches,
     reset_adaptive_cache,
 )
-from unittest.mock import Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
 
-class TestCachePerformanceMetrics:
-    """Test cache performance metrics tracking."""
+class FakeAsyncCache:
+    """Simple asyncio-compatible cache stub used to replace the real backend."""
 
-    def test_initial_metrics(self):
-        """Test initial metrics state."""
+    def __init__(self) -> None:
+        self.store: dict[str, Any] = {}
+        self.raise_on_get = False
+        self.raise_on_set = False
+
+    async def get(self, key: str) -> Any | None:
+        if self.raise_on_get:
+            raise RuntimeError("cache get failure")
+        return self.store.get(key)
+
+    async def set(self, key: str, value: Any, dependencies: set[str] | None = None) -> bool:
+        if self.raise_on_set:
+            raise RuntimeError("cache set failure")
+        self.store[key] = value
+        return True
+
+    async def delete(self, key: str, cascade: bool = True) -> bool:  # pragma: no cover - helper only
+        self.store.pop(key, None)
+        return True
+
+
+@pytest.fixture(autouse=True)
+def cleanup_singleton() -> None:
+    """Ensure the module-level cache singleton is cleared between tests."""
+
+    reset_adaptive_cache()
+    yield
+    reset_adaptive_cache()
+
+
+@pytest.fixture
+def fake_async_cache(monkeypatch: pytest.MonkeyPatch) -> FakeAsyncCache:
+    """Patch the cache factory so every cache instance shares a controllable stub."""
+
+    fake = FakeAsyncCache()
+
+    class MetricStub:
+        def labels(self, **kwargs: Any) -> MetricStub:  # pragma: no cover - trivial helper
+            return self
+
+        def inc(self) -> None:  # pragma: no cover - trivial helper
+            return None
+
+        def set(self, _value: float) -> None:  # pragma: no cover - trivial helper
+            return None
+
+        def observe(self, _value: float) -> None:  # pragma: no cover - trivial helper
+            return None
+
+    def _factory(name: str, **kwargs: Any) -> FakeAsyncCache:  # pragma: no cover - simple passthrough
+        return fake
+
+    def _label_ctx_stub() -> dict[str, str]:  # pragma: no cover - trivial helper
+        return {}
+
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.get_multi_level_cache", _factory)
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.label_ctx", _label_ctx_stub)
+    metric_stub = MetricStub()
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.CACHE_HITS", metric_stub)
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.CACHE_MISSES", metric_stub)
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.CACHE_HIT_RATE_RATIO", metric_stub)
+    monkeypatch.setattr("platform.cache.adaptive_semantic_cache.CACHE_OPERATION_LATENCY", metric_stub)
+    return fake
+
+
+class TestCachePerformanceMetrics:
+    """Unit tests for the metrics helper dataclass."""
+
+    def test_metric_accessors_and_ratios(self) -> None:
         metrics = CachePerformanceMetrics()
         assert metrics.total_requests == 0
         assert metrics.cache_hits == 0
         assert metrics.cache_misses == 0
-        assert metrics.total_cost_saved == 0.0
-        assert metrics.average_response_time == 0.0
-        assert metrics.similarity_scores == []
-
-    def test_hit_rate_calculation(self):
-        """Test hit rate calculation."""
-        metrics = CachePerformanceMetrics()
-        metrics.total_requests = 10
-        metrics.cache_hits = 6
-        assert metrics.hit_rate == 0.6
-
-    def test_hit_rate_zero_requests(self):
-        """Test hit rate with zero requests."""
-        metrics = CachePerformanceMetrics()
         assert metrics.hit_rate == 0.0
+        assert metrics.cost_efficiency == 0.0
 
-    def test_average_similarity_calculation(self):
-        """Test average similarity calculation."""
-        metrics = CachePerformanceMetrics()
-        metrics.similarity_scores = [0.8, 0.9, 0.7]
-        assert metrics.average_similarity == 0.8
-
-    def test_average_similarity_empty(self):
-        """Test average similarity with no scores."""
-        metrics = CachePerformanceMetrics()
-        assert metrics.average_similarity == 0.0
-
-    def test_cost_efficiency_calculation(self):
-        """Test cost efficiency calculation."""
-        metrics = CachePerformanceMetrics()
-        metrics.total_requests = 10
-        metrics.total_cost_saved = 5.0
-        assert metrics.cost_efficiency == 0.5
+        metrics.hit_count = 6
+        metrics.miss_count = 4
+        metrics.total_cost_saved = 0.75
+        assert metrics.total_requests == 10
+        assert metrics.cache_hits == 6
+        assert metrics.cache_misses == 4
+        assert metrics.hit_rate == pytest.approx(0.6)
+        expected_cost_efficiency = min(1.0, 0.75 / max(1.0, metrics.total_requests * 0.01))
+        assert metrics.cost_efficiency == pytest.approx(expected_cost_efficiency)
 
 
 class TestAdaptiveSemanticCache:
-    """Test adaptive semantic cache functionality."""
+    """Behavioral tests for the adaptive cache using the async stub."""
 
-    def setup_method(self):
-        """Set up test fixtures."""
-        self.mock_cache = Mock()
-        self.mock_cache.get.return_value = None
-        self.mock_cache.set.return_value = None
-        self.mock_cache.similarity_threshold = 0.8
+    @pytest.mark.asyncio
+    async def test_cache_hit_updates_metrics(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="hit-cache")
+        payload = {"response": "ok"}
+        assert await cache.set("prompt", "model", payload) is True
 
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_initialization(self, mock_create_cache):
-        """Test cache initialization."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache()
-        assert cache.current_threshold == 0.75
-        assert cache.min_threshold == 0.6
-        assert cache.max_threshold == 0.95
-        assert cache.adjustment_step == 0.05
-        assert cache.evaluation_window == 100
-        mock_create_cache.assert_called_once()
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_custom_initialization(self, mock_create_cache):
-        """Test cache initialization with custom parameters."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache(
-            initial_threshold=0.85, min_threshold=0.7, max_threshold=0.98, adjustment_step=0.02, evaluation_window=50
-        )
-        assert cache.current_threshold == 0.85
-        assert cache.min_threshold == 0.7
-        assert cache.max_threshold == 0.98
-        assert cache.adjustment_step == 0.02
-        assert cache.evaluation_window == 50
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_cache_miss(self, mock_create_cache):
-        """Test cache miss behavior."""
-        mock_create_cache.return_value = self.mock_cache
-        self.mock_cache.get.return_value = None
-        cache = AdaptiveSemanticCache()
-        result = cache.get("test prompt", "test-model")
-        assert result is None
-        assert cache.metrics.total_requests == 1
-        assert cache.metrics.cache_hits == 0
-        assert cache.metrics.cache_misses == 1
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_cache_hit(self, mock_create_cache):
-        """Test cache hit behavior."""
-        mock_create_cache.return_value = self.mock_cache
-        cached_response = {"response": "test response", "similarity_score": 0.85, "cost_saved": 0.05}
-        self.mock_cache.get.return_value = cached_response
-        cache = AdaptiveSemanticCache()
-        result = cache.get("test prompt", "test-model")
-        assert result == cached_response
-        assert cache.metrics.total_requests == 1
+        result = await cache.get("prompt", "model")
+        assert result is not None
+        assert result["response"] == payload
         assert cache.metrics.cache_hits == 1
         assert cache.metrics.cache_misses == 0
-        assert cache.metrics.similarity_scores == [0.85]
-        assert cache.metrics.total_cost_saved == 0.05
+        assert cache.metrics.total_cost_saved == pytest.approx(cache.cost_per_llm_request)
+        assert cache.metrics.total_latency_saved_ms == pytest.approx(cache.avg_llm_latency_ms)
 
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_cache_set(self, mock_create_cache):
-        """Test cache set behavior."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache()
-        response = {"response": "test response"}
-        cache.set("test prompt", "test-model", response)
-        expected_call = self.mock_cache.set.call_args
-        assert expected_call is not None
-        args, _kwargs = expected_call
-        stored_response = args[2]
-        assert stored_response["response"] == "test response"
-        assert "timestamp" in stored_response
-        assert stored_response["threshold_used"] == 0.75
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    @patch("time.time")
-    def test_should_adjust_threshold_low_hit_rate(self, mock_time, mock_create_cache):
-        """Test threshold adjustment decision for low hit rate."""
-        mock_create_cache.return_value = self.mock_cache
-        mock_time.return_value = 1000
-        cache = AdaptiveSemanticCache()
-        cache.last_adjustment = 500
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 15
-        cache.metrics.similarity_scores = [0.85] * 15
-        assert cache._should_adjust_threshold() is True
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    @patch("time.time")
-    def test_should_adjust_threshold_high_hit_rate_low_similarity(self, mock_time, mock_create_cache):
-        """Test threshold adjustment decision for high hit rate with low similarity."""
-        mock_create_cache.return_value = self.mock_cache
-        mock_time.return_value = 1000
-        cache = AdaptiveSemanticCache()
-        cache.last_adjustment = 500
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 75
-        cache.metrics.similarity_scores = [0.65] * 75
-        assert cache._should_adjust_threshold() is True
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    @patch("time.time")
-    def test_should_not_adjust_threshold_cooldown(self, mock_time, mock_create_cache):
-        """Test that threshold is not adjusted during cooldown period."""
-        mock_create_cache.return_value = self.mock_cache
-        mock_time.return_value = 1000
-        cache = AdaptiveSemanticCache()
-        cache.last_adjustment = 800
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 15
-        assert cache._should_adjust_threshold() is False
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_should_not_adjust_threshold_insufficient_data(self, mock_create_cache):
-        """Test that threshold is not adjusted with insufficient data."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache()
-        cache.metrics.total_requests = 50
-        assert cache._should_adjust_threshold() is False
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    @patch("time.time")
-    def test_adjust_threshold_lower(self, mock_time, mock_create_cache):
-        """Test lowering threshold due to low hit rate."""
-        mock_create_cache.return_value = self.mock_cache
-        mock_time.return_value = 1000
-        cache = AdaptiveSemanticCache()
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 15
-        cache.metrics.similarity_scores = [0.85] * 15
-        cache._adjust_threshold()
-        assert cache.current_threshold == 0.7
-        assert cache.metrics.total_requests == 0
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    @patch("time.time")
-    def test_adjust_threshold_raise(self, mock_time, mock_create_cache):
-        """Test raising threshold due to high hit rate with low similarity."""
-        mock_create_cache.return_value = self.mock_cache
-        mock_time.return_value = 1000
-        cache = AdaptiveSemanticCache()
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 75
-        cache.metrics.similarity_scores = [0.65] * 75
-        cache._adjust_threshold()
-        assert cache.current_threshold == 0.8
-        assert cache.metrics.total_requests == 0
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_adjust_threshold_bounds(self, mock_create_cache):
-        """Test that threshold adjustments respect bounds."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache(initial_threshold=0.62)
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 15
-        cache.metrics.similarity_scores = [0.85] * 15
-        cache._adjust_threshold()
-        assert cache.current_threshold == 0.6
-        cache = AdaptiveSemanticCache(initial_threshold=0.93)
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 75
-        cache.metrics.similarity_scores = [0.65] * 75
-        cache._adjust_threshold()
-        assert cache.current_threshold == 0.95
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_get_performance_stats(self, mock_create_cache):
-        """Test performance statistics retrieval."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache()
-        cache.metrics.total_requests = 100
-        cache.metrics.cache_hits = 60
-        cache.metrics.cache_misses = 40
-        cache.metrics.total_cost_saved = 25.0
-        cache.metrics.similarity_scores = [0.8, 0.9, 0.7]
-        stats = cache.get_performance_stats()
-        assert stats["current_threshold"] == 0.75
-        assert stats["hit_rate"] == 0.6
-        assert stats["total_requests"] == 100
-        assert stats["cache_hits"] == 60
-        assert stats["cache_misses"] == 40
-        assert stats["average_similarity"] == 0.8
-        assert stats["cost_efficiency"] == 0.25
-        assert stats["total_cost_saved"] == 25.0
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_force_threshold_adjustment(self, mock_create_cache):
-        """Test manual threshold adjustment."""
-        mock_create_cache.return_value = self.mock_cache
-        cache = AdaptiveSemanticCache()
-        cache.force_threshold_adjustment(0.85)
-        assert cache.current_threshold == 0.85
-        cache.force_threshold_adjustment(0.5)
-        assert cache.current_threshold == 0.6
-        cache.force_threshold_adjustment(0.99)
-        assert cache.current_threshold == 0.95
-
-
-class TestAdaptiveSemanticCacheIntegration:
-    """Integration tests for adaptive semantic cache."""
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_adaptive_behavior_simulation(self, mock_create_cache):
-        """Test adaptive behavior over multiple requests."""
-        mock_cache = Mock()
-        mock_cache.get.return_value = None
-        mock_cache.set.return_value = None
-        mock_cache.similarity_threshold = 0.8
-        mock_create_cache.return_value = mock_cache
-        cache = AdaptiveSemanticCache(evaluation_window=10)
-        for i in range(10):
-            cache.get(f"prompt_{i}", "model")
-        assert cache.metrics.hit_rate == 0.0
-        cached_response = {"similarity_score": 0.65, "cost_saved": 0.05}
-        mock_cache.get.return_value = cached_response
-        for i in range(10):
-            cache.get(f"prompt_{i}", "model")
-        assert cache.metrics.hit_rate == 1.0
-        assert cache.metrics.average_similarity == 0.65
-
-
-class TestFactoryFunctions:
-    """Test factory functions for adaptive semantic cache."""
-
-    def test_create_adaptive_semantic_cache(self):
-        """Test factory function for creating adaptive cache."""
-        with patch("core.cache.adaptive_semantic_cache.create_semantic_cache") as mock_create:
-            mock_cache = Mock()
-            mock_create.return_value = mock_cache
-            cache = create_adaptive_semantic_cache(initial_threshold=0.85, min_threshold=0.7, max_threshold=0.98)
-            assert isinstance(cache, AdaptiveSemanticCache)
-            assert cache.current_threshold == 0.85
-            assert cache.min_threshold == 0.7
-            assert cache.max_threshold == 0.98
-
-    def test_get_adaptive_semantic_cache_singleton(self):
-        """Test singleton behavior of get_adaptive_semantic_cache."""
-        with patch("core.cache.adaptive_semantic_cache.create_semantic_cache") as mock_create:
-            mock_cache = Mock()
-            mock_create.return_value = mock_cache
-            reset_adaptive_cache()
-            cache1 = get_adaptive_semantic_cache()
-            assert isinstance(cache1, AdaptiveSemanticCache)
-            cache2 = get_adaptive_semantic_cache()
-            assert cache1 is cache2
-
-    def test_reset_adaptive_cache(self):
-        """Test resetting global adaptive cache."""
-        with patch("core.cache.adaptive_semantic_cache.create_semantic_cache") as mock_create:
-            mock_cache = Mock()
-            mock_create.return_value = mock_cache
-            cache1 = get_adaptive_semantic_cache()
-            reset_adaptive_cache()
-            cache2 = get_adaptive_semantic_cache()
-            assert cache1 is not cache2
-
-
-class TestErrorHandling:
-    """Test error handling in adaptive semantic cache."""
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_cache_error_handling(self, mock_create_cache):
-        """Test error handling when underlying cache fails."""
-        mock_cache = Mock()
-        mock_cache.get.side_effect = Exception("Cache error")
-        mock_cache.set.side_effect = Exception("Cache error")
-        mock_create_cache.return_value = mock_cache
-        cache = AdaptiveSemanticCache()
-        with pytest.raises(Exception, match="Cache error"):
-            cache.get("test prompt", "test-model")
-        with pytest.raises(Exception, match="Cache error"):
-            cache.set("test prompt", "test-model", {"response": "test"})
-
-    @patch("core.cache.adaptive_semantic_cache.create_semantic_cache")
-    def test_metrics_resilience(self, mock_create_cache):
-        """Test that metrics remain consistent despite errors."""
-        mock_cache = Mock()
-        mock_cache.get.return_value = None
-        mock_cache.set.return_value = None
-        mock_create_cache.return_value = mock_cache
-        cache = AdaptiveSemanticCache()
-        cache.get("prompt1", "model")
-        cache.get("prompt2", "model")
-        assert cache.metrics.total_requests == 2
-        assert cache.metrics.cache_misses == 2
+    @pytest.mark.asyncio
+    async def test_cache_miss_records_metrics(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="miss-cache")
+        result = await cache.get("prompt", "model")
+        assert result is None
+        assert cache.metrics.cache_misses == 1
         assert cache.metrics.cache_hits == 0
 
+    @pytest.mark.asyncio
+    async def test_generate_recommendation_trending_down(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="trend-cache", evaluation_window=4)
+        cache.metrics.hit_count = 80
+        cache.metrics.miss_count = 20
+        cache.metrics.total_cost_saved = COST_SAVINGS_TARGET * 2
+        now = time.time()
+        cache.recent_requests.clear()
+        for idx, hit in enumerate([True, False, False, False]):
+            cache.recent_requests.append((f"key{idx}", hit, now - idx))
 
-if __name__ == "__main__":
+        recommendation = await cache._generate_optimization_recommendation()
+        assert recommendation is not None
+        assert recommendation.action == "increase_threshold"
+        assert recommendation.recommended_threshold == pytest.approx(
+            min(MAX_THRESHOLD, cache.current_threshold + ADJUSTMENT_STEP)
+        )
+        assert recommendation.confidence > HIT_RATE_DECLINE_TOLERANCE
+
+    @pytest.mark.asyncio
+    async def test_consider_optimization_applies_when_confident(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="consider-cache", evaluation_window=2, min_requests_for_adjustment=2)
+        cache.metrics.hit_count = 0
+        cache.metrics.miss_count = 2
+        now = time.time()
+        cache.recent_requests.clear()
+        cache.recent_requests.append(("a", False, now))
+        cache.recent_requests.append(("b", False, now))
+
+        recommendation = OptimizationRecommendation(
+            action="decrease_threshold",
+            current_threshold=cache.current_threshold,
+            recommended_threshold=max(cache.current_threshold - ADJUSTMENT_STEP, MIN_THRESHOLD),
+            reason="Low hit rate",
+            expected_hit_rate_improvement=0.1,
+            expected_cost_savings_improvement=0.05,
+            confidence=0.9,
+        )
+
+        generator = AsyncMock(return_value=recommendation)
+        applier_called = False
+        original_apply = cache._apply_optimization
+
+        async def wrapped_apply(rec: OptimizationRecommendation) -> None:
+            nonlocal applier_called
+            applier_called = True
+            await original_apply(rec)
+
+        cache._generate_optimization_recommendation = generator
+        cache._apply_optimization = wrapped_apply  # type: ignore[assignment]
+
+        await cache._consider_optimization()
+        assert applier_called is True
+        assert cache.current_threshold == recommendation.recommended_threshold
+        generator.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_force_optimization_respects_confidence(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="force-cache")
+        low_conf_rec = OptimizationRecommendation(
+            action="increase_threshold",
+            current_threshold=cache.current_threshold,
+            recommended_threshold=min(MAX_THRESHOLD, cache.current_threshold + ADJUSTMENT_STEP),
+            reason="Trending down",
+            expected_hit_rate_improvement=0.05,
+            expected_cost_savings_improvement=0.02,
+            confidence=0.4,
+        )
+        cache._generate_optimization_recommendation = AsyncMock(return_value=low_conf_rec)  # type: ignore[assignment]
+        await cache.force_optimization()
+        assert cache.current_threshold == low_conf_rec.current_threshold
+
+        high_conf_rec = OptimizationRecommendation(
+            action="increase_threshold",
+            current_threshold=cache.current_threshold,
+            recommended_threshold=min(MAX_THRESHOLD, cache.current_threshold + ADJUSTMENT_STEP),
+            reason="Trending down",
+            expected_hit_rate_improvement=0.05,
+            expected_cost_savings_improvement=0.02,
+            confidence=0.8,
+        )
+        cache._generate_optimization_recommendation = AsyncMock(return_value=high_conf_rec)  # type: ignore[assignment]
+        await cache.force_optimization()
+        assert cache.current_threshold == high_conf_rec.recommended_threshold
+
+    @pytest.mark.asyncio
+    async def test_cache_error_handling(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="error-cache")
+        fake_async_cache.raise_on_get = True
+        result = await cache.get("prompt", "model")
+        assert result is None
+        assert cache.metrics.cache_hits == 0
+        assert cache.metrics.cache_misses == 0
+
+        fake_async_cache.raise_on_set = True
+        success = await cache.set("prompt", "model", {"response": "x"})
+        assert success is False
+
+    @pytest.mark.asyncio
+    async def test_get_performance_summary(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = AdaptiveSemanticCache(name="summary-cache")
+        await cache.set("prompt", "model", {"response": "data"})
+        await cache.get("prompt", "model")
+        summary = cache.get_performance_summary()
+        assert summary["cache_name"] == "summary-cache"
+        assert summary["total_requests"] == cache.metrics.total_requests
+        assert summary["targets"]["hit_rate_target"] == HIT_RATE_TARGET
+        assert summary["threshold_limits"]["max_threshold"] == MAX_THRESHOLD
+
+
+class TestFactoryHelpers:
+    """Tests for module-level helper functions that wrap the cache."""
+
+    def test_create_factory_uses_current_defaults(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = create_adaptive_semantic_cache(initial_threshold=0.85)
+        assert isinstance(cache, AdaptiveSemanticCache)
+        assert cache.current_threshold == pytest.approx(0.85)
+
+    @pytest.mark.asyncio
+    async def test_get_adaptive_semantic_cache_singleton(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache1 = await get_adaptive_semantic_cache(name="singleton-cache")
+        cache2 = await get_adaptive_semantic_cache()
+        assert cache1 is cache2
+
+    @pytest.mark.asyncio
+    async def test_optimize_all_caches_without_instance(self) -> None:
+        result = await optimize_all_caches()
+        assert result == {"status": "no_caches"}
+
+    @pytest.mark.asyncio
+    async def test_optimize_all_caches_with_instance(self, fake_async_cache: FakeAsyncCache) -> None:
+        cache = await get_adaptive_semantic_cache(name="opt-cache")
+        recommendation = OptimizationRecommendation(
+            action="maintain_threshold",
+            current_threshold=cache.current_threshold,
+            recommended_threshold=cache.current_threshold,
+            reason="No change",
+            expected_hit_rate_improvement=0.0,
+            expected_cost_savings_improvement=0.0,
+            confidence=0.75,
+        )
+        cache.force_optimization = AsyncMock(return_value=recommendation)  # type: ignore[assignment]
+        result = await optimize_all_caches()
+        assert result["cache_name"] == "opt-cache"
+        assert result["recommendation"] == recommendation.__dict__
+        assert "performance_summary" in result
+
+
+if __name__ == "__main__":  # pragma: no cover - manual invocation helper
     pytest.main([__file__])

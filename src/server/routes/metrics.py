@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from platform.observability import metrics
 from typing import Any
 
 from fastapi import FastAPI, Response
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 def register_metrics_endpoint(app: FastAPI, settings: Any) -> None:

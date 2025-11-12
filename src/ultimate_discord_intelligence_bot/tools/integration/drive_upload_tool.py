@@ -1,9 +1,10 @@
 import logging
 import os
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from typing import Any, ClassVar
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .._base import BaseTool
 

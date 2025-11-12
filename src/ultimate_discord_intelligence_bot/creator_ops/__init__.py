@@ -17,7 +17,8 @@ from __future__ import annotations
 __version__ = "1.0.0"
 __all__ = ["CreatorOpsConfig", "CreatorOpsError", "enable_creator_ops"]
 import os
-from platform.core.step_result import StepResult
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class CreatorOpsError(Exception):

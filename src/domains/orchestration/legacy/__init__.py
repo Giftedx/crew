@@ -26,8 +26,9 @@ Usage:
     result = await facade.orchestrate("my_orchestrator", context)
 """
 
-from platform.orchestration.facade import OrchestrationFacade, get_orchestration_facade
-from platform.orchestration.protocols import (
+# Import from local modules to avoid circular imports
+from domains.orchestration.legacy.facade import OrchestrationFacade, get_orchestration_facade
+from domains.orchestration.legacy.protocols import (
     BaseOrchestrator,
     OrchestrationContext,
     OrchestrationLayer,

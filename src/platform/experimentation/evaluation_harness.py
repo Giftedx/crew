@@ -19,7 +19,7 @@ from .openrouter_service import OpenRouterService
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

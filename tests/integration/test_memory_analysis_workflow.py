@@ -7,8 +7,8 @@ import pytest
 from domains.intelligence.analysis.character_profile_tool import CharacterProfileTool
 from domains.intelligence.analysis.enhanced_analysis_tool import EnhancedAnalysisTool
 from domains.intelligence.verification.claim_verifier_tool import ClaimVerifierTool
+from domains.memory.vector.unified_memory_tool import UnifiedMemoryTool
 from ultimate_discord_intelligence_bot.tools.memory.graph_memory_tool import GraphMemoryTool
-from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import UnifiedMemoryTool
 
 
 class TestMemoryAnalysisWorkflow:

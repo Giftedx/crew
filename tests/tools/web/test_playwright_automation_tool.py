@@ -12,8 +12,7 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     Page = None
-from platform.core.step_result import ErrorCategory
-
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory
 from ultimate_discord_intelligence_bot.tools.web.playwright_automation_tool import PlaywrightAutomationTool
 
 

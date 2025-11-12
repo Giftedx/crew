@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from domains.memory.vector_store import MemoryService
+from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, with_tenant
 
 
@@ -50,7 +50,7 @@ class TestTenantIsolation:
 
     def _simulate_tool_operation(self, ctx: TenantContext):
         """Simulate a tool operation that uses tenant context."""
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         return StepResult.ok(data={"tenant": ctx.tenant, "workspace": ctx.workspace, "operation": "test"})
 
@@ -89,8 +89,7 @@ class TestTenantIsolation:
 
     def test_tenant_isolation_in_tools(self, tenant1_context, tenant2_context):
         """Test that tools maintain tenant isolation."""
-        from platform.core.step_result import StepResult
-
+        from ultimate_discord_intelligence_bot.step_result import StepResult
         from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
         class MockTool(BaseTool[dict]):

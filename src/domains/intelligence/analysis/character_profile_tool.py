@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict
 
-from .. import settings
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools.settings import BASE_DIR
+
+from ..verification.trustworthiness_tracker_tool import TrustworthinessTrackerTool
 from ._base import BaseTool
 from .leaderboard_tool import LeaderboardTool
-from .trustworthiness_tracker_tool import TrustworthinessTrackerTool
 
 
 if TYPE_CHECKING:
@@ -51,7 +53,7 @@ class CharacterProfileTool(BaseTool[StepResult]):
     ) -> None:
         super().__init__()
         self._metrics = get_metrics()
-        self.storage_path = storage_path or settings.BASE_DIR / "character_profiles.json"
+        self.storage_path = storage_path or BASE_DIR / "character_profiles.json"
         self.leaderboard = leaderboard or LeaderboardTool()
         self.trust_tracker = trust_tracker or TrustworthinessTrackerTool()
         if not self.storage_path.exists():
@@ -110,6 +112,7 @@ class CharacterProfileTool(BaseTool[StepResult]):
             "trust": trust,
         }
 
+    @cache_tool_result(namespace="tool:character_profile", ttl=3600)
     def _run(self, person: str) -> StepResult:
         if not person or not person.strip():
             self._metrics.counter("tool_runs_total", labels={"tool": "character_profile", "outcome": "skipped"}).inc()

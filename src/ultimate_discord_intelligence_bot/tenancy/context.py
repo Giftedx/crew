@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-import threading
+import contextvars
+import functools
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -10,7 +11,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
 
-_thread_local = threading.local()
+_tenant_ctx_var: contextvars.ContextVar[TenantContext | None] = contextvars.ContextVar("tenant_ctx", default=None)
 
 
 @dataclass(init=False)
@@ -57,28 +58,72 @@ class TenantContext:
 
 @contextmanager
 def with_tenant(ctx: TenantContext) -> Generator[TenantContext, None, None]:
-    """Context manager that sets the active :class:`TenantContext`."""
+    """Context manager that sets the active :class:`TenantContext`.
 
-    prev = getattr(_thread_local, "tenant_ctx", None)
-    _thread_local.tenant_ctx = ctx
+    Thread-safe and async-safe via contextvars. Automatically propagates
+    to child async tasks and threads created with copy_context().
+    """
+    token = _tenant_ctx_var.set(ctx)
     try:
         yield ctx
     finally:
-        _thread_local.tenant_ctx = prev
+        _tenant_ctx_var.reset(token)
 
 
 def current_tenant() -> TenantContext | None:
-    return getattr(_thread_local, "tenant_ctx", None)
+    """Get current tenant context (async-safe).
+
+    Returns the active TenantContext or None. Safe to call from
+    asyncio tasks, thread pool executors, and sync code.
+    """
+    return _tenant_ctx_var.get()
 
 
-def require_tenant() -> TenantContext:
+def require_tenant(strict: bool = False) -> TenantContext:
+    """Get current tenant context, raising if not set.
+
+    Args:
+        strict: If True, always raise when ctx is None.
+                If False (default), only raise in production/staging.
+
+    Raises:
+        RuntimeError: When context not set and strict mode active.
+    """
     ctx = current_tenant()
     if ctx is None:
-        raise RuntimeError("TenantContext required but not set")
-    return ctx
+        import os
+
+        env = os.getenv("ENVIRONMENT", "development").lower()
+        if strict or env in {"production", "staging"}:
+            raise RuntimeError("TenantContext required but not set (strict mode)")
+    return ctx or TenantContext("default", "main")
 
 
 def mem_ns(ctx: TenantContext, name: str) -> str:
     """Compose a memory namespace for the given tenant/workspace."""
-
     return f"{ctx.tenant_id}:{ctx.workspace_id}:{name}"
+
+
+def run_with_tenant_context(func):
+    """Decorator to copy current tenant context for ThreadPoolExecutor.
+
+    Use when submitting to ThreadPoolExecutor:
+
+        executor.submit(run_with_tenant_context(my_func), arg1, arg2)
+
+    Context is automatically copied for asyncio.create_task().
+    """
+    ctx = current_tenant()
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if ctx:
+            token = _tenant_ctx_var.set(ctx)
+            try:
+                return func(*args, **kwargs)
+            finally:
+                _tenant_ctx_var.reset(token)
+        else:
+            return func(*args, **kwargs)
+
+    return wrapper

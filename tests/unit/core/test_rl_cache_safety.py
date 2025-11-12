@@ -1,7 +1,7 @@
 from platform.cache.llm_cache import memo_llm
 from platform.core.learning_engine import LearningEngine
-from platform.core.privacy import privacy_filter
 from platform.core.rl.policies.bandit_base import EpsilonGreedyBandit
+from platform.security.privacy import privacy_filter
 
 
 def test_rl_cache_domain():

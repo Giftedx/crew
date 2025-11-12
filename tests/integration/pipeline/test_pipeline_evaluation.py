@@ -9,12 +9,12 @@ import asyncio
 import json
 import tempfile
 from pathlib import Path
-from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, Mock
 
 from src.kg.creator_kg_store import CreatorKGStore
-from src.pipeline.evaluation_harness import EvaluationMetrics, PipelineEvaluationHarness, TestEpisode
+from src.pipeline.evaluation_harness import EvaluationEpisode, EvaluationMetrics, PipelineEvaluationHarness
 from src.pipeline.multimodal_pipeline import MultimodalContentPipeline
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestEvaluationMetrics:
@@ -47,12 +47,12 @@ class TestEvaluationMetrics:
         assert result["stages_completed"] == ["download", "transcription"]
 
 
-class TestTestEpisode:
-    """Test the TestEpisode dataclass."""
+class TestEvaluationEpisode:
+    """Test the EvaluationEpisode dataclass."""
 
     def test_episode_initialization(self):
         """Test episode initialization."""
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="https://example.com/video",
             title="Test Episode",
             creator="Test Creator",
@@ -75,7 +75,7 @@ class TestTestEpisode:
 
     def test_episode_to_dict(self):
         """Test episode serialization to dictionary."""
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="https://example.com/video",
             title="Test Episode",
             creator="Test Creator",
@@ -117,7 +117,7 @@ class TestPipelineEvaluationHarness:
         """Test creation of test episodes."""
         episodes = self.harness.create_test_episodes()
         assert len(episodes) == 5
-        assert all(isinstance(ep, TestEpisode) for ep in episodes)
+        assert all(isinstance(ep, EvaluationEpisode) for ep in episodes)
         h3_episodes = [ep for ep in episodes if ep.creator == "H3 Podcast"]
         assert len(h3_episodes) == 2
         hasan_episodes = [ep for ep in episodes if ep.creator == "Hasan Piker"]
@@ -161,7 +161,7 @@ class TestPipelineEvaluationHarness:
 
     def test_calculate_aggregate_metrics(self):
         """Test aggregate metrics calculation."""
-        episode1 = TestEpisode(
+        episode1 = EvaluationEpisode(
             url="url1",
             title="title1",
             creator="creator1",
@@ -171,7 +171,7 @@ class TestPipelineEvaluationHarness:
             expected_topics=[],
             expected_claims=[],
         )
-        episode2 = TestEpisode(
+        episode2 = EvaluationEpisode(
             url="url2",
             title="title2",
             creator="creator2",
@@ -207,7 +207,7 @@ class TestPipelineEvaluationHarness:
 
     def test_generate_summary(self):
         """Test summary generation with pass/fail criteria."""
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="url1",
             title="title1",
             creator="creator1",
@@ -234,7 +234,7 @@ class TestPipelineEvaluationHarness:
 
     def test_generate_summary_fail_criteria(self):
         """Test summary generation with failed criteria."""
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="url1",
             title="title1",
             creator="creator1",
@@ -292,7 +292,7 @@ class TestPipelineEvaluationHarness:
             stage_results=mock_stage_results,
         )
         self.mock_pipeline.process_content = AsyncMock(return_value=StepResult.ok(data=mock_pipeline_result))
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="https://example.com/video",
             title="Test Episode",
             creator="Test Creator",
@@ -317,7 +317,7 @@ class TestPipelineEvaluationHarness:
     def test_evaluate_episode_pipeline_failure(self):
         """Test episode evaluation with pipeline failure."""
         self.mock_pipeline.process_content = AsyncMock(return_value=StepResult.fail("Pipeline failed"))
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="https://example.com/video",
             title="Test Episode",
             creator="Test Creator",
@@ -362,7 +362,7 @@ class TestPipelineEvaluationHarness:
         )
         self.mock_pipeline.process_content = AsyncMock(return_value=StepResult.ok(data=mock_pipeline_result))
         episodes = [
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://example.com/video1",
                 title="Test Episode 1",
                 creator="Test Creator",
@@ -372,7 +372,7 @@ class TestPipelineEvaluationHarness:
                 expected_topics=["topic1"],
                 expected_claims=["claim1"],
             ),
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://example.com/video2",
                 title="Test Episode 2",
                 creator="Test Creator",
@@ -395,7 +395,7 @@ class TestPipelineEvaluationHarness:
 
     def test_save_results(self):
         """Test saving results to file."""
-        episode = TestEpisode(
+        episode = EvaluationEpisode(
             url="https://example.com/video",
             title="Test Episode",
             creator="Test Creator",

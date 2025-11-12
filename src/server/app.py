@@ -14,8 +14,10 @@ in settings. The factory wires:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from contextlib import asynccontextmanager
+
 
 # Early bootstrap to avoid stdlib/platform name clash
 try:
@@ -23,18 +25,19 @@ try:
 except Exception:
     ensure_platform_proxy = None  # type: ignore
 if callable(ensure_platform_proxy):  # type: ignore
-    try:
+    with contextlib.suppress(Exception):
         ensure_platform_proxy()  # type: ignore
-    except Exception:
-        pass
-
-from platform.observability.logfire_config import setup_logfire
 
 from fastapi import FastAPI
-from server.middleware_shim import install_middleware_support
+# Skip middleware_shim for API server to avoid ASGI compatibility issues
+# from server.middleware_shim import install_middleware_support
+from ultimate_discord_intelligence_bot.obs.logfire_config import setup_logfire
 
 
-install_middleware_support()
+# Only install middleware support for testing, not for production API server
+# The middleware_shim breaks ASGI compatibility needed for uvicorn
+# if __name__ == "__main__":  # Only when run directly (testing)
+#     install_middleware_support()
 from server.routes import (
     register_a2a_router,
     register_activities_echo,
@@ -47,6 +50,8 @@ from server.routes import (
     register_pilot_route,
     register_pipeline_routes,
 )
+from server.middleware import add_api_cache_middleware, add_cors_middleware, add_metrics_middleware
+from server.rate_limit import add_rate_limit_middleware
 
 
 try:
@@ -67,44 +72,12 @@ except Exception:
         cors_allow_origins: list[str] | None = None
 
 
-from platform.observability.enhanced_monitoring import start_monitoring_system, stop_monitoring_system
-from platform.observability.tracing import init_tracing
-
-from domains.memory.vector.qdrant import get_qdrant_client
-from server.rate_limit import add_rate_limit_middleware
-
-from .middleware import add_api_cache_middleware, add_cors_middleware, add_metrics_middleware
-
-
-@asynccontextmanager
-async def _lifespan(app: FastAPI):
-    settings = Settings()
-    if settings.enable_tracing:
-        init_tracing(settings.service_name)
-    try:
-        await start_monitoring_system()
-        logging.info("Enhanced monitoring system started")
-    except Exception as exc:
-        logging.warning(f"Failed to start enhanced monitoring system: {exc}")
-    try:
-        setup_logfire(app)
-    except Exception as exc:
-        logging.debug(f"Logfire setup skipped: {exc}")
-    try:
-        get_qdrant_client()
-    except Exception as exc:
-        logging.debug(f"qdrant pre-init failed (will retry lazily): {exc}")
-    yield
-    try:
-        await stop_monitoring_system()
-        logging.info("Enhanced monitoring system stopped")
-    except Exception as exc:
-        logging.warning(f"Failed to stop enhanced monitoring system: {exc}")
-
-
 def create_app(settings: Settings | None = None) -> FastAPI:
-    settings = settings or Settings()
-    app = FastAPI(title=settings.service_name, lifespan=_lifespan)
+    if settings is None:
+        settings = Settings()
+    
+    app = FastAPI(title=settings.service_name)
+    
     register_archive_routes(app)
     register_alert_routes(app)
     register_a2a_router(app, settings)

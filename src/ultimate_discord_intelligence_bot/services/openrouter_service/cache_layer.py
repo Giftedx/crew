@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import contextlib
 import logging
-from platform.observability import metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from ...cache import combine_keys, generate_key_from_params
 

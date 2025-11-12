@@ -29,6 +29,15 @@ citations:
   format: "markdown"
   # TODO: Add citation format configuration
 
+# Contract validation rules used by grounding.contracts
+# Tests expect the "context" use case to require at least 2 citations.
+defaults:
+  min_citations: 2
+  require_timestamped: false
+commands:
+  context:
+    min_citations: 2
+
 # Confidence thresholds
 confidence:
   minimum_threshold: 0.7

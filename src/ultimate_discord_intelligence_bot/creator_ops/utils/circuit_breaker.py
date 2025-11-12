@@ -5,7 +5,7 @@ This module provides backward compatibility for the creator ops circuit breaker 
 All functionality has been migrated to the canonical implementation.
 """
 
-from platform.circuit_breaker_canonical import (
+from platform.http.circuit_breaker_canonical import (
     CircuitBreaker,
     CircuitBreakerOpenError,
     CircuitBreakerRegistry,

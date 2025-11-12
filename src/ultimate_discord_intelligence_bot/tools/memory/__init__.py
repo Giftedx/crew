@@ -1,8 +1,9 @@
 """Tools for memory domain."""
 
-from .offline_rag_tool import OfflineRAGTool
+from domains.memory.vector import GraphMemoryTool, OfflineRAGTool
 
 
 __all__ = [
-    "OfflineRagTool",
+    "GraphMemoryTool",
+    "OfflineRAGTool",
 ]

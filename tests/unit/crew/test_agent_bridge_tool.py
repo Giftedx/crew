@@ -1,8 +1,8 @@
 """Tests for AgentBridgeTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.agent_bridge_tool import AgentBridgeTool
 
 

@@ -7,11 +7,15 @@ the routing layer.
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, ClassVar, TypedDict
 
-from ..services import MemoryService, OpenRouterService, PromptEngine
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+
+# Import services from the canonical package to avoid missing relative modules
+from ultimate_discord_intelligence_bot.services import MemoryService, OpenRouterService, PromptEngine
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 
 
@@ -39,6 +43,7 @@ class PerspectiveSynthesizerTool(BaseTool[StepResult]):
         self.memory = memory or MemoryService()
         self._metrics = get_metrics()
 
+    @cache_tool_result(namespace="tool:perspective_synthesizer", ttl=1800)
     def _run(self, *search_results: object) -> StepResult:
         if len(search_results) == 1 and isinstance(search_results[0], list | tuple | set):
             seq = list(search_results[0])
@@ -46,9 +51,9 @@ class PerspectiveSynthesizerTool(BaseTool[StepResult]):
             seq = list(search_results)
         combined = "\n".join(str(r) for r in seq if r).strip()
         if not combined:
-            self._metrics.counter(
+            self._metrics.increment_counter(
                 "tool_runs_total", labels={"tool": "perspective_synthesizer", "outcome": "success"}
-            ).inc()
+            )
             return StepResult.ok(summary="", model="unknown", tokens=0)
         try:
             memories = [m.get("text", "") for m in self.memory.retrieve(combined) if isinstance(m, dict)]
@@ -72,9 +77,9 @@ class PerspectiveSynthesizerTool(BaseTool[StepResult]):
                 import logging
 
                 logging.getLogger(__name__).warning(f"OpenRouter service skipped due to tenant context issue: {e}")
-                self._metrics.counter(
+                self._metrics.increment_counter(
                     "tool_runs_total", labels={"tool": "perspective_synthesizer", "outcome": "success"}
-                ).inc()
+                )
                 return StepResult.ok(summary=combined.upper(), model="fallback", tokens=0)
             else:
                 raise
@@ -89,7 +94,9 @@ class PerspectiveSynthesizerTool(BaseTool[StepResult]):
                 tokens_val = 0
         raw_summary = str(routed.get("response", combined))
         summary_out = raw_summary.upper()
-        self._metrics.counter("tool_runs_total", labels={"tool": "perspective_synthesizer", "outcome": "success"}).inc()
+        self._metrics.increment_counter(
+            "tool_runs_total", labels={"tool": "perspective_synthesizer", "outcome": "success"}
+        )
         return StepResult.ok(summary=summary_out, model=model_val, tokens=tokens_val)
 
     def run(self, *search_results: object) -> StepResult:

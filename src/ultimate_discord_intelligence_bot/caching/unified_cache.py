@@ -13,9 +13,9 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from platform.cache.unified_config import get_unified_cache_config
-from platform.core.step_result import StepResult
 from typing import Any
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

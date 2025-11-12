@@ -10,12 +10,11 @@ These tests use mocks to avoid external dependencies.
 
 from __future__ import annotations
 
-from platform.observability.logfire_config import setup_logfire
-from platform.observability.logfire_spans import is_logfire_enabled, span
+from platform.rl.litellm_router import LITELLM_AVAILABLE, LLMRouterSingleton
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from ai.litellm_router import LITELLM_AVAILABLE, LLMRouterSingleton
+
 from ai.response_models import (
     ConfidenceLevel,
     ContentQuality,
@@ -25,6 +24,8 @@ from ai.response_models import (
     SeverityLevel,
 )
 from ai.structured_outputs import INSTRUCTOR_AVAILABLE, InstructorClientFactory
+from ultimate_discord_intelligence_bot.obs.logfire_config import setup_logfire
+from ultimate_discord_intelligence_bot.obs.logfire_spans import is_logfire_enabled, span
 
 
 @pytest.fixture
@@ -56,7 +57,7 @@ def mock_all_configs(mock_config):
     """Patch all get_config calls across modules."""
     patches = [
         patch("ai.structured_outputs.get_config", return_value=mock_config),
-        patch("ai.litellm_router.get_config", return_value=mock_config),
+        patch("platform.rl.litellm_router.get_config", return_value=mock_config),
         patch("obs.logfire_config.get_config", return_value=mock_config),
         patch("obs.logfire_spans.get_config", return_value=mock_config),
     ]
@@ -152,7 +153,7 @@ class TestLiteLLMIntegration:
     def test_singleton_returns_router_when_enabled(self, mock_all_configs):
         """Singleton should return configured Router when enabled."""
         LLMRouterSingleton._instance = None
-        with patch("ai.litellm_router._Router") as MockRouter:
+        with patch("platform.rl.litellm_router._Router") as MockRouter:
             mock_router_instance = MagicMock()
             MockRouter.return_value = mock_router_instance
             router = LLMRouterSingleton.get()
@@ -162,7 +163,7 @@ class TestLiteLLMIntegration:
     def test_singleton_returns_none_when_disabled(self):
         """Singleton should return None when feature flag is disabled."""
         LLMRouterSingleton._instance = None
-        with patch("ai.litellm_router.get_config") as mock_get:
+        with patch("platform.rl.litellm_router.get_config") as mock_get:
             config = Mock()
             config.enable_litellm_router = False
             mock_get.return_value = config
@@ -172,7 +173,7 @@ class TestLiteLLMIntegration:
     def test_singleton_caches_instance(self, mock_all_configs):
         """Singleton should cache and reuse Router instance."""
         LLMRouterSingleton._instance = None
-        with patch("ai.litellm_router._Router") as MockRouter:
+        with patch("platform.rl.litellm_router._Router") as MockRouter:
             mock_router_instance = MagicMock()
             MockRouter.return_value = mock_router_instance
             router1 = LLMRouterSingleton.get()
@@ -207,7 +208,7 @@ class TestCombinedIntegration:
             client = InstructorClientFactory.create_client()
             assert client is not None
         if LITELLM_AVAILABLE:
-            with patch("ai.litellm_router._Router") as MockRouter:
+            with patch("platform.rl.litellm_router._Router") as MockRouter:
                 MockRouter.return_value = MagicMock()
                 router = LLMRouterSingleton.get()
                 assert router is not None or not mock_all_configs.enable_litellm_router
@@ -222,7 +223,7 @@ class TestCombinedIntegration:
             config_inst.enable_instructor = False
             mock_inst.return_value = config_inst
             assert not InstructorClientFactory.is_enabled()
-        with patch("ai.litellm_router.get_config") as mock_lite:
+        with patch("platform.rl.litellm_router.get_config") as mock_lite:
             config_lite = Mock()
             config_lite.enable_litellm_router = False
             mock_lite.return_value = config_lite
@@ -250,7 +251,7 @@ class TestErrorHandling:
 
     def test_litellm_graceful_degradation_when_unavailable(self):
         """System should work when litellm is not installed."""
-        with patch("ai.litellm_router.LITELLM_AVAILABLE", False):
+        with patch("platform.rl.litellm_router.LITELLM_AVAILABLE", False):
             LLMRouterSingleton._instance = None
             router = LLMRouterSingleton.get()
             assert router is None

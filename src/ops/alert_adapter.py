@@ -5,6 +5,7 @@ from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, resilient_post
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
+
 from security.net_guard import SecurityError
 from security.webhook_guard import verify_incoming
 from ultimate_discord_intelligence_bot.tenancy import current_tenant

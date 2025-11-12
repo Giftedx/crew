@@ -1,20 +1,33 @@
 """Caching decorators for ML/AI operations."""
+
 from __future__ import annotations
 
 import functools
 import json
 import logging
-from collections.abc import Callable
-from platform.core.step_result import StepResult
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from .multi_level_cache import get_cache
 
 
-logger = logging.getLogger(__name__)
-T = TypeVar('T')
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-def cached_operation(operation_name: str, ttl: int | None=None, tenant_param: str='tenant', workspace_param: str='workspace', key_params: list[str] | None=None, exclude_params: list[str] | None=None):
+    from ultimate_discord_intelligence_bot.step_result import StepResult
+
+
+logger = logging.getLogger(__name__)
+T = TypeVar("T")
+
+
+def cached_operation(
+    operation_name: str,
+    ttl: int | None = None,
+    tenant_param: str = "tenant",
+    workspace_param: str = "workspace",
+    key_params: list[str] | None = None,
+    exclude_params: list[str] | None = None,
+):
     """Decorator for caching expensive operations.
 
     Args:
@@ -27,14 +40,14 @@ def cached_operation(operation_name: str, ttl: int | None=None, tenant_param: st
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
-
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
             cache = get_cache()
-            tenant = kwargs.get(tenant_param, '')
-            workspace = kwargs.get(workspace_param, '')
+            tenant = kwargs.get(tenant_param, "")
+            workspace = kwargs.get(workspace_param, "")
             cache_inputs = {}
             import inspect
+
             sig = inspect.signature(func)
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
@@ -53,16 +66,26 @@ def cached_operation(operation_name: str, ttl: int | None=None, tenant_param: st
                             continue
             cached_result = cache.get(operation_name, cache_inputs, tenant, workspace)
             if cached_result is not None:
-                logger.debug(f'Cache hit for {operation_name}')
+                logger.debug(f"Cache hit for {operation_name}")
                 return cached_result
-            logger.debug(f'Cache miss for {operation_name}, executing function')
+            logger.debug(f"Cache miss for {operation_name}, executing function")
             result = func(*args, **kwargs)
             cache.set(operation_name, cache_inputs, result, ttl, tenant, workspace)
             return result
+
         return wrapper
+
     return decorator
 
-def cached_step_result(operation_name: str, ttl: int | None=None, tenant_param: str='tenant', workspace_param: str='workspace', key_params: list[str] | None=None, exclude_params: list[str] | None=None):
+
+def cached_step_result(
+    operation_name: str,
+    ttl: int | None = None,
+    tenant_param: str = "tenant",
+    workspace_param: str = "workspace",
+    key_params: list[str] | None = None,
+    exclude_params: list[str] | None = None,
+):
     """Decorator for caching StepResult operations.
 
     Args:
@@ -75,14 +98,14 @@ def cached_step_result(operation_name: str, ttl: int | None=None, tenant_param: 
     """
 
     def decorator(func: Callable[..., StepResult]) -> Callable[..., StepResult]:
-
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> StepResult:
             cache = get_cache()
-            tenant = kwargs.get(tenant_param, '')
-            workspace = kwargs.get(workspace_param, '')
+            tenant = kwargs.get(tenant_param, "")
+            workspace = kwargs.get(workspace_param, "")
             cache_inputs = {}
             import inspect
+
             sig = inspect.signature(func)
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
@@ -101,17 +124,26 @@ def cached_step_result(operation_name: str, ttl: int | None=None, tenant_param: 
                             continue
             cached_result = cache.get(operation_name, cache_inputs, tenant, workspace)
             if cached_result is not None:
-                logger.debug(f'Cache hit for {operation_name}')
+                logger.debug(f"Cache hit for {operation_name}")
                 return cached_result
-            logger.debug(f'Cache miss for {operation_name}, executing function')
+            logger.debug(f"Cache miss for {operation_name}, executing function")
             result = func(*args, **kwargs)
             if result.success:
                 cache.set(operation_name, cache_inputs, result, ttl, tenant, workspace)
             return result
+
         return wrapper
+
     return decorator
 
-def cache_invalidate(operation_name: str, tenant_param: str='tenant', workspace_param: str='workspace', key_params: list[str] | None=None, exclude_params: list[str] | None=None):
+
+def cache_invalidate(
+    operation_name: str,
+    tenant_param: str = "tenant",
+    workspace_param: str = "workspace",
+    key_params: list[str] | None = None,
+    exclude_params: list[str] | None = None,
+):
     """Decorator for invalidating cache entries.
 
     Args:
@@ -123,14 +155,14 @@ def cache_invalidate(operation_name: str, tenant_param: str='tenant', workspace_
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
-
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> T:
             cache = get_cache()
-            tenant = kwargs.get(tenant_param, '')
-            workspace = kwargs.get(workspace_param, '')
+            tenant = kwargs.get(tenant_param, "")
+            workspace = kwargs.get(workspace_param, "")
             cache_inputs = {}
             import inspect
+
             sig = inspect.signature(func)
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
@@ -150,10 +182,13 @@ def cache_invalidate(operation_name: str, tenant_param: str='tenant', workspace_
             result = func(*args, **kwargs)
             cache.delete(operation_name, cache_inputs, tenant, workspace)
             return result
+
         return wrapper
+
     return decorator
 
-def cache_clear(tenant: str='', workspace: str=''):
+
+def cache_clear(tenant: str = "", workspace: str = ""):
     """Clear cache for tenant/workspace or all.
 
     Args:
@@ -163,10 +198,12 @@ def cache_clear(tenant: str='', workspace: str=''):
     cache = get_cache()
     return cache.clear(tenant, workspace)
 
+
 def cache_stats() -> dict[str, Any]:
     """Get cache statistics."""
     cache = get_cache()
     return cache.get_stats()
+
 
 def cache_health() -> StepResult:
     """Check cache health."""

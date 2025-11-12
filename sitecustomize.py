@@ -70,14 +70,56 @@ if SRC.exists():
     plat_init = plat_dir / "__init__.py"
     if plat_init.exists() and std_platform is not None:
         try:
-            # Safer and more robust than replacing the module: augment the stdlib
-            # module in-place to behave as a package. This avoids rare edge cases
-            # where other libraries keep references to the original module object.
-            std_platform.__package__ = "platform"
-            std_platform.__path__ = [str(plat_dir)]  # mark as package for submodule imports
-            std_platform.__spec__ = importlib.machinery.ModuleSpec(name="platform", loader=None, is_package=True)
-            sys.modules["platform"] = std_platform
-        except Exception as e:  # Fallback to proxy creation if in-place augment fails
+            # Create a proxy module that inherits from stdlib platform
+            class PlatformProxy(types.ModuleType):
+                def __init__(self, std_platform, plat_dir):
+                    super().__init__("platform")
+                    self._std_platform = std_platform
+                    self.__path__ = [str(plat_dir)]
+                    self.__package__ = "platform"
+                    self.__spec__ = importlib.machinery.ModuleSpec(name="platform", loader=None, is_package=True)
+
+                    # Copy all stdlib attributes
+                    for name in dir(std_platform):
+                        if not name.startswith("_"):
+                            setattr(self, name, getattr(std_platform, name))
+
+                    # Copy critical private attrs
+                    for attr in ["__file__", "__name__", "__doc__", "__loader__"]:
+                        if hasattr(std_platform, attr):
+                            setattr(self, attr, getattr(std_platform, attr))
+
+                def __getattr__(self, name):
+                    # First check if it's a local submodule
+                    local_submodules = ["core", "config", "http", "time", "cache", "optimization", "settings"]
+                    if name in local_submodules:
+                        try:
+                            return importlib.import_module(f"platform.{name}")
+                        except ImportError:
+                            pass
+                    # Then check stdlib
+                    if hasattr(self._std_platform, name):
+                        return getattr(self._std_platform, name)
+                    raise AttributeError(f"module 'platform' has no attribute '{name}'")
+
+            proxy = PlatformProxy(std_platform, plat_dir)
+            sys.modules["platform"] = proxy
+
+            # Directly import and register local submodules
+            try:
+                import platform.core
+
+                sys.modules["platform.core"] = platform.core
+            except ImportError:
+                pass
+            try:
+                import platform.config
+
+                sys.modules["platform.config"] = platform.config
+            except ImportError:
+                pass
+
+        except Exception as e:  # Fallback to simple proxy creation if class fails
             try:
                 proxy = types.ModuleType("platform")
                 # Copy ALL stdlib attributes so dependencies like urllib3/zstandard/pydantic work

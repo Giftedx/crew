@@ -10,9 +10,9 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass
-from platform.observability import metrics
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
 from .experiment import Experiment, ExperimentManager, VariantStats

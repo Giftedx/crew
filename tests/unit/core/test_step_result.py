@@ -1,6 +1,6 @@
 """Tests for StepResult."""
 
-from platform.core.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestStepResult:

@@ -10,9 +10,10 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from .consensus_protocol import AgentVote, ConsensusProtocol, ConsensusResult, VoteAggregationStrategy
 

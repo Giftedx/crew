@@ -12,8 +12,7 @@ import json
 import logging
 import time
 from datetime import datetime, timedelta
-from platform import http_utils
-from platform.core.step_result import StepResult
+from platform.http import http_utils
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -26,6 +25,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_models i
     YouTubeSearchResult,
     YouTubeVideo,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

@@ -21,8 +21,9 @@ import logging
 import time
 from dataclasses import dataclass
 from platform.cache.multi_level_cache import MultiLevelCache, get_multi_level_cache
-from platform.observability.metrics import CACHE_HITS, CACHE_OPERATION_LATENCY, label_ctx
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import CACHE_HITS, CACHE_OPERATION_LATENCY, label_ctx
 
 
 logger = logging.getLogger(__name__)

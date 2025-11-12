@@ -22,7 +22,6 @@ except ImportError:
     import logging
 
     logger = logging.getLogger(__name__)
-from platform.core.step_result import StepResult
 from platform.realtime.live_monitor import (
     AlertLevel,
     LiveContentMetrics,
@@ -41,6 +40,7 @@ from platform.realtime.stream_processor import (
 )
 
 from domains.intelligence.analysis.live_stream_analysis_tool import LiveStreamAnalysisTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class MonitoringMode(Enum):

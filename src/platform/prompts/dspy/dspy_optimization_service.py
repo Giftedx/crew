@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 import dspy
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .dspy_components.signature import DebateAnalysisSignature
 

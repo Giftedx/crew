@@ -27,7 +27,7 @@ class EnhancedAutonomousOrchestrator:
         self.system_health = {"healthy": False, "errors": [], "available_capabilities": []}
         self._validate_system_health()
         try:
-            from .platform.observability.metrics import get_metrics
+            from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
             self.metrics = get_metrics()
         except ImportError:

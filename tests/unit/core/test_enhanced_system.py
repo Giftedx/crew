@@ -6,10 +6,13 @@ from unittest.mock import Mock
 
 
 sys.path.insert(0, "src")
-from platform.core.db_optimizer import DatabaseOptimizer
 from platform.core.llm_cache import QuantizedEmbedding, VectorIndex, get_llm_cache
 from platform.core.llm_router import LLMRouter, TaskComplexityMetrics
-from platform.core.step_result import (
+from platform.database.db_optimizer import DatabaseOptimizer
+
+from memory.vector_store import VectorStore
+from ultimate_discord_intelligence_bot.performance_dashboard import PerformanceDashboard
+from ultimate_discord_intelligence_bot.step_result import (
     ErrorAnalyzer,
     ErrorCategory,
     ErrorContext,
@@ -17,10 +20,6 @@ from platform.core.step_result import (
     ErrorSeverity,
     StepResult,
 )
-
-from memory.vector_store import VectorStore
-
-from ultimate_discord_intelligence_bot.performance_dashboard import PerformanceDashboard
 
 
 class TestEnhancedSystemIntegration:
@@ -134,9 +133,9 @@ class TestEnhancedSystemIntegration:
         """Test end-to-end integration of all enhanced components."""
         from platform.core.llm_cache import get_llm_cache
         from platform.core.llm_router import LLMRouter
-        from platform.core.step_result import ErrorCategory, StepResult
 
         from ultimate_discord_intelligence_bot.performance_dashboard import get_performance_dashboard
+        from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
         get_llm_cache()
         dashboard = get_performance_dashboard()

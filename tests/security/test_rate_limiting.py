@@ -7,10 +7,11 @@ backoff and retry behavior, and rate limit bypass attempts.
 
 import asyncio
 import time
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestRateLimiting:

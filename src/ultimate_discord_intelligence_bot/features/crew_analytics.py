@@ -10,9 +10,10 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

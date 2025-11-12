@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import json
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 import pytest
 
 from ultimate_discord_intelligence_bot.observability.stepresult_observer import observe_step_result
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @pytest.fixture(autouse=True)

@@ -9,7 +9,10 @@ import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from platform.core.store_adapter import (
+
+import pytest
+
+from ultimate_discord_intelligence_bot.core.store_adapter import (
     CreatorProfile,
     Debate,
     KGNode,
@@ -17,8 +20,6 @@ from platform.core.store_adapter import (
     UnifiedStoreManager,
     create_store_manager,
 )
-
-import pytest
 
 
 @pytest.fixture

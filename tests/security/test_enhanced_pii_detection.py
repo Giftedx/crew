@@ -1,7 +1,11 @@
 """Comprehensive tests for enhanced PII detection and redaction."""
 
-from platform.core.privacy.enhanced_pii_detector import EnhancedPIIDetector, PIIDetectionResult, validate_pii_patterns
-from platform.core.privacy.enhanced_redactor import EnhancedRedactor, redact_enhanced_pii, redact_with_metadata
+from platform.security.privacy.enhanced_pii_detector import (
+    EnhancedPIIDetector,
+    PIIDetectionResult,
+    validate_pii_patterns,
+)
+from platform.security.privacy.enhanced_redactor import EnhancedRedactor, redact_enhanced_pii, redact_with_metadata
 
 
 class TestEnhancedPIIDetector:
@@ -122,7 +126,7 @@ class TestEnhancedPIIDetector:
 
     def test_overlapping_spans_removal(self):
         """Test removal of overlapping spans."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [
             EnhancedSpan("email", 0, 10, "test@test.com", 0.9, "low"),
@@ -175,7 +179,7 @@ class TestEnhancedRedactor:
 
     def test_replace_strategy(self):
         """Test simple replacement strategy."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         redacted_text, stats = self.redactor.redact("test@example.com", spans, "replace")
@@ -184,7 +188,7 @@ class TestEnhancedRedactor:
 
     def test_hash_strategy(self):
         """Test hash-based redaction strategy."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         redacted_text, stats = self.redactor.redact("test@example.com", spans, "hash")
@@ -193,7 +197,7 @@ class TestEnhancedRedactor:
 
     def test_partial_strategy(self):
         """Test partial redaction strategy."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         redacted_text, stats = self.redactor.redact("test@example.com", spans, "partial")
@@ -202,7 +206,7 @@ class TestEnhancedRedactor:
 
     def test_contextual_strategy(self):
         """Test contextual redaction strategy."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("ssn", 0, 11, "123-45-6789", 0.99, "critical")]
         redacted_text, stats = self.redactor.redact("123-45-6789", spans, "contextual")
@@ -211,7 +215,7 @@ class TestEnhancedRedactor:
 
     def test_custom_masks(self):
         """Test custom masking."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         custom_masks = {"email": "[CUSTOM_EMAIL_MASK]"}
@@ -221,7 +225,7 @@ class TestEnhancedRedactor:
 
     def test_preserve_format(self):
         """Test format preservation."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("phone", 0, 12, "555-123-4567", 0.9, "high")]
         redacted_text, stats = self.redactor.redact("555-123-4567", spans, "partial", preserve_format=True)
@@ -230,7 +234,7 @@ class TestEnhancedRedactor:
 
     def test_redact_with_metadata(self):
         """Test redaction with comprehensive metadata."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         detection_result = PIIDetectionResult(
@@ -269,7 +273,7 @@ class TestEnhancedRedactor:
 
     def test_multiple_spans_redaction(self):
         """Test redaction of multiple PII spans."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [
             EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high"),
@@ -284,7 +288,7 @@ class TestEnhancedRedactor:
 
     def test_convenience_functions(self):
         """Test convenience functions."""
-        from platform.core.privacy.enhanced_pii_detector import EnhancedSpan
+        from platform.security.privacy.enhanced_pii_detector import EnhancedSpan
 
         spans = [EnhancedSpan("email", 0, 16, "test@example.com", 0.9, "high")]
         redacted_text, _stats = redact_enhanced_pii("test@example.com", spans, "replace")

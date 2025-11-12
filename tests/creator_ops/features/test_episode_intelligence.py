@@ -4,7 +4,6 @@ Tests for Episode Intelligence Pack feature.
 
 from datetime import datetime
 from pathlib import Path
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 import pytest
@@ -25,6 +24,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models 
     RiskLevel,
 )
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestEpisodeIntelligencePack:

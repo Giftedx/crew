@@ -59,9 +59,8 @@ class TestThreatAndDeceptionMerging:
 
     def test_merge_threat_and_deception_analysis(self, orchestrator):
         """Should combine threat indicators and deception markers."""
-        from platform.core.step_result import StepResult
-
         from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         threat_result = StepResult.ok(result={"threat_level": "medium"})
         deception_result = StepResult.ok(result={"deception_probability": 0.65})
@@ -71,9 +70,8 @@ class TestThreatAndDeceptionMerging:
 
     def test_merge_handles_empty_threat_data(self, orchestrator):
         """Should handle missing threat analysis gracefully."""
-        from platform.core.step_result import StepResult
-
         from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         threat_result = StepResult.skip(reason="No threat data")
         deception_result = StepResult.ok(result={"deception_probability": 0.3})
@@ -82,9 +80,8 @@ class TestThreatAndDeceptionMerging:
 
     def test_merge_resolves_conflicts(self, orchestrator):
         """Should handle data merging appropriately."""
-        from platform.core.step_result import StepResult
-
         from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         threat_result = StepResult.ok(result={"confidence": 0.8})
         deception_result = StepResult.ok(result={"confidence": 0.6})

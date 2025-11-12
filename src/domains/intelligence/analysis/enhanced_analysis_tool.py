@@ -5,10 +5,10 @@ from __future__ import annotations
 import re
 import time
 from platform.cache.tool_cache_decorator import cache_tool_result
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import AnalysisTool
 
@@ -71,7 +71,7 @@ class EnhancedAnalysisTool(AnalysisTool):
         Returns:
             StepResult with analysis results or error information
         """
-        from platform.core.step_result import ErrorContext
+        from ultimate_discord_intelligence_bot.step_result import ErrorContext
 
         start_time = time.time()
         context = ErrorContext(

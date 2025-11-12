@@ -137,7 +137,7 @@ class BackpressureCoordinator:
         self._metrics = BackpressureMetrics()
         self._prometheus_metrics: Any | None = None
         try:
-            from platform.observability.metrics import get_metrics
+            from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
             metrics = get_metrics()
             self._backpressure_active_gauge = metrics.gauge("backpressure_active")

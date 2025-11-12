@@ -1,9 +1,7 @@
 import pytest
 import requests
 
-from ultimate_discord_intelligence_bot.tools.discord_private_alert_tool import (
-    DiscordPrivateAlertTool,
-)
+from ultimate_discord_intelligence_bot.tools import DiscordPrivateAlertTool
 
 
 def test_discord_alert_posts(monkeypatch):

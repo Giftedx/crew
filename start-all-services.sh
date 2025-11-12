@@ -169,11 +169,13 @@ log_info "Step 7/8: Starting selected services..."
 
 start_discord_bot() {
     log_info "Starting Discord Bot..."
+    export PYTHONPATH="/home/crew/src:$PYTHONPATH"
     python -m ultimate_discord_intelligence_bot.setup_cli run discord
 }
 
 start_discord_bot_enhanced() {
     log_info "Starting Discord Bot (Enhanced Mode)..."
+    export PYTHONPATH="/home/crew/src:$PYTHONPATH"
     ENABLE_GPTCACHE=true \
     ENABLE_SEMANTIC_CACHE_SHADOW=true \
     ENABLE_GPTCACHE_ANALYSIS_SHADOW=true \
@@ -226,6 +228,7 @@ case $OPTION in
         mkdir -p logs/services
 
         # Start services in background
+        export PYTHONPATH="/home/crew/src:$PYTHONPATH"
         nohup python -m ultimate_discord_intelligence_bot.setup_cli run discord > logs/services/discord-bot.log 2>&1 &
         echo $! > logs/services/discord-bot.pid
         log_success "Discord Bot started (PID: $(cat logs/services/discord-bot.pid))"
@@ -286,11 +289,13 @@ case $OPTION in
         for comp in $COMPONENTS; do
             case $comp in
                 1)
+                    export PYTHONPATH="/home/crew/src:$PYTHONPATH" \
                     nohup python -m ultimate_discord_intelligence_bot.setup_cli run discord > logs/services/discord-bot.log 2>&1 &
                     echo $! > logs/services/discord-bot.pid
                     log_success "Discord Bot started"
                     ;;
                 2)
+                    export PYTHONPATH="/home/crew/src:$PYTHONPATH" \
                     ENABLE_GPTCACHE=true \
                     ENABLE_SEMANTIC_CACHE_SHADOW=true \
                     ENABLE_GPTCACHE_ANALYSIS_SHADOW=true \

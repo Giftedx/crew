@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from ultimate_discord_intelligence_bot.tools.drive_upload_tool import DriveUploadTool
+from ultimate_discord_intelligence_bot.tools.integration.drive_upload_tool import DriveUploadTool
 
 
 def test_drive_folder_reuse(monkeypatch):

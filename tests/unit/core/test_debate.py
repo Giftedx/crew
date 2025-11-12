@@ -1,5 +1,5 @@
 from platform.core.learning_engine import LearningEngine
-from platform.core.router import Router
+from platform.router import Router
 
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore

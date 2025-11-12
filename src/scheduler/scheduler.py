@@ -8,13 +8,13 @@ from datetime import datetime, timedelta
 from platform.batching import BulkInserter, RequestBatcher
 from platform.db_locks import get_lock_for_connection
 from platform.error_handling import handle_error_safely
-from platform.observability import metrics
 from platform.rl.learning_engine import LearningEngine
 from platform.time import default_utc_now
 from typing import TYPE_CHECKING, Any
 
 from domains.ingestion.pipeline import models, pipeline
 from domains.ingestion.pipeline.sources.base import SourceConnector, Watch
+from ultimate_discord_intelligence_bot.obs import metrics
 
 from .priority_queue import PriorityQueue
 
@@ -44,7 +44,7 @@ class Scheduler:
         self._lock = get_lock_for_connection(self.conn)
         self._background_tasks: set[asyncio.Task[Any]] = set()
         if "scheduler" not in self.learner.status():
-            self.learner.register_domain("scheduler", priors={30: 0.0, 300: 0.0})
+            self.learner.register_domain("scheduler")
         self._bulk_inserter = BulkInserter(self.conn, batch_size=50)
         self._state_batcher = RequestBatcher(self.conn, batch_size=50, batch_timeout=30.0)
 

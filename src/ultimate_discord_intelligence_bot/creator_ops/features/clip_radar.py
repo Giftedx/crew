@@ -11,7 +11,6 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -19,6 +18,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client im
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, SpeakerDiarization, WhisperASR
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import TranscriptAlignment
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

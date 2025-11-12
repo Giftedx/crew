@@ -38,13 +38,35 @@ class LazyToolLoader:
             return self._create_stub_tool(tool_name, e)
 
     def _import_tool_class(self, tool_name: str) -> type[BaseTool]:
-        """Import a tool class with caching."""
+        """Import a tool class with caching and optional contract validation."""
         if tool_name in self._class_cache:
             return self._class_cache[tool_name]
         try:
             from ultimate_discord_intelligence_bot.tools import __getattr__
 
             cls = __getattr__(tool_name)
+
+            # Optional contract validation (shadow mode)
+            try:
+                import os
+
+                if os.getenv("ENABLE_TOOL_CONTRACT_VALIDATION", "false").lower() in {"true", "1"}:
+                    from ultimate_discord_intelligence_bot.tools.validation import validate_tool_contract
+
+                    validation_result = validate_tool_contract(cls)
+                    if not validation_result.success:
+                        import logging
+
+                        logger = logging.getLogger(__name__)
+                        logger.warning(
+                            "Tool %s failed contract validation: %s",
+                            tool_name,
+                            validation_result.error,
+                        )
+            except Exception:
+                # Don't fail import on validation errors
+                pass
+
             self._class_cache[tool_name] = cls
             return cls
         except Exception as e:
@@ -52,7 +74,7 @@ class LazyToolLoader:
 
     def _create_stub_tool(self, tool_name: str, error: Exception) -> BaseTool:
         """Create a stub tool that fails gracefully when unavailable."""
-        from platform.core.step_result import StepResult
+        from ultimate_discord_intelligence_bot.step_result import StepResult
 
         class StubTool(BaseTool):
             def __init__(self, name: str, error: Exception):

@@ -6,7 +6,6 @@ components working together to process creator content.
 """
 
 from datetime import datetime
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -35,6 +34,7 @@ from ultimate_discord_intelligence_bot.creator_ops.media.nlp import (
     SentimentAnalysis,
     TopicSegment,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestMediaPipeline:

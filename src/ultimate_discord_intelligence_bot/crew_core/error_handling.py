@@ -6,10 +6,11 @@ and provides standardized error handling utilities.
 
 from __future__ import annotations
 
-from platform.core.step_result import ErrorCategory, StepResult
 from typing import TYPE_CHECKING
 
 import structlog
+
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 if TYPE_CHECKING:
@@ -83,4 +84,4 @@ class CrewErrorHandler:
             return ErrorCategory.VALIDATION
         if any(keyword in error_type.lower() for keyword in ["auth", "permission", "unauthorized", "forbidden"]):
             return ErrorCategory.AUTHENTICATION
-        return ErrorCategory.PROCESSING
+        return ErrorCategory.EXECUTION

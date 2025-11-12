@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 import time
 from platform.cache.api_cache_middleware import APICacheMiddleware
-from platform.observability import metrics
 from typing import TYPE_CHECKING
 
 from fastapi import FastAPI, Request, Response
+
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 if TYPE_CHECKING:
@@ -16,6 +17,8 @@ if TYPE_CHECKING:
 def add_metrics_middleware(app: FastAPI, settings) -> None:
     if not getattr(settings, "enable_http_metrics", False):
         return
+
+    _metrics = metrics.get_metrics()
 
     @app.middleware("http")
     async def _metrics_mw(request: Request, call_next: Callable):
@@ -27,10 +30,10 @@ def add_metrics_middleware(app: FastAPI, settings) -> None:
         method = request.method
         dur_ms = (time.perf_counter() - start) * 1000
         try:
-            metrics.HTTP_REQUEST_LATENCY.labels(route, method).observe(dur_ms)
-            metrics.HTTP_REQUEST_COUNT.labels(route, method, str(response.status_code)).inc()
+            _metrics.HTTP_REQUEST_LATENCY.labels(route, method).observe(dur_ms)
+            _metrics.HTTP_REQUEST_COUNT.labels(route, method, str(response.status_code)).inc()
             if int(getattr(response, "status_code", 0)) == 429:
-                metrics.RATE_LIMIT_REJECTIONS.labels(route, method).inc()
+                _metrics.RATE_LIMIT_REJECTIONS.labels(route, method).inc()
         except Exception as exc:
             logging.debug("metrics middleware swallow error: %s", exc)
         return response

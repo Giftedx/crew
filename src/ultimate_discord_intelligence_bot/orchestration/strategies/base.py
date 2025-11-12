@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 logger = logging.getLogger(__name__)
 
 

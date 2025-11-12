@@ -11,11 +11,12 @@ These tests validate the current behavior before extraction to ensure
 zero regressions during the refactoring.
 """
 
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @pytest.fixture

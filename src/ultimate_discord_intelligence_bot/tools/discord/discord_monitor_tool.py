@@ -6,9 +6,10 @@ Metrics: tool_runs_total{tool="discord_monitor", outcome=success}
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from typing import TYPE_CHECKING, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .._base import BaseTool
 from ..social.multi_platform_monitor_tool import MultiPlatformMonitorTool

@@ -8,10 +8,11 @@ search query latency, and batch operation performance.
 import asyncio
 import statistics
 import time
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestMemoryPerformance:

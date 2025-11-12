@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from collections.abc import Iterable
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.pipeline_components.middleware import (
     BasePipelineStepMiddleware,
@@ -9,6 +8,7 @@ from ultimate_discord_intelligence_bot.pipeline_components.middleware import (
     TracingStepMiddleware,
 )
 from ultimate_discord_intelligence_bot.pipeline_components.mixins import PipelineExecutionMixin
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class _StubPipeline(PipelineExecutionMixin):

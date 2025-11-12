@@ -13,18 +13,18 @@ import json
 import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 import pytest
 
-from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import ClipRadar
+from ultimate_discord_intelligence_bot.creator_ops.features.clip_radar import LiveClipRadar
 from ultimate_discord_intelligence_bot.creator_ops.features.episode_intelligence import EpisodeIntelligence
 from ultimate_discord_intelligence_bot.creator_ops.features.repurposing_studio import RepurposingStudio
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
 from ultimate_discord_intelligence_bot.creator_ops.integrations.youtube_client import YouTubeClient
-from ultimate_discord_intelligence_bot.creator_ops.media.asr import ASRProcessor
-from ultimate_discord_intelligence_bot.creator_ops.media.diarization import DiarizationProcessor
+from ultimate_discord_intelligence_bot.creator_ops.media.asr import WhisperASR
+from ultimate_discord_intelligence_bot.creator_ops.media.diarization import SpeakerDiarization
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestCreatorOpsE2E:
@@ -72,7 +72,7 @@ class TestCreatorOpsE2E:
                 )
             }
         )
-        diarization_processor = Mock(spec=DiarizationProcessor)
+        diarization_processor = Mock(spec=SpeakerDiarization)
         diarization_processor.diarize_audio.return_value = StepResult.ok(
             data={
                 "result": Mock(
@@ -189,7 +189,7 @@ class TestCreatorOpsE2E:
                 )
             }
         )
-        clip_radar = Mock(spec=ClipRadar)
+        clip_radar = Mock(spec=LiveClipRadar)
         clip_radar.start_monitoring.return_value = StepResult.ok(data={"monitoring_started": True})
         clip_radar.detect_moment.return_value = StepResult.ok(
             data={

@@ -5,7 +5,7 @@ This test file focuses on testing the ASR logic without importing
 torch/whisper to avoid numpy compatibility issues.
 """
 
-from platform.core.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestASRMinimal:

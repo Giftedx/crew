@@ -17,10 +17,10 @@ import logging
 import time
 from dataclasses import dataclass, field
 from platform.cache.adaptive_semantic_cache import get_adaptive_semantic_cache
-from platform.observability.metrics import generate_latest
 from typing import Any
 
 from domains.memory.vector.search.optimized_vector_store import get_optimized_vector_store
+from ultimate_discord_intelligence_bot.obs.metrics import generate_latest
 
 
 logger = logging.getLogger(__name__)

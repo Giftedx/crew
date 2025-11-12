@@ -3,11 +3,11 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 
 from crewai.tools import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -110,11 +110,11 @@ class ResourceAllocationTool(BaseTool):
                 "version": "1.0",
             }
             logger.info("Resource allocation completed successfully")
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"}).inc()
             return StepResult.success(allocation_report)
         except Exception as e:
             logger.error(f"Resource allocation failed: {e!s}")
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"}).inc()
             return StepResult.fail(f"Resource allocation failed: {e!s}")
         finally:
             metrics.histogram("tool_run_seconds", time.time() - start_time, labels={"tool": self.__class__.__name__})

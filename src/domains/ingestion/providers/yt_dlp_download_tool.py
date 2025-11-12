@@ -16,11 +16,12 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, ClassVar, cast
 
-from ...settings import DOWNLOADS_DIR, TEMP_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.settings import DOWNLOADS_DIR, TEMP_DIR, YTDLP_ARCHIVE, YTDLP_CONFIG
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from ._base import BaseTool
 
 

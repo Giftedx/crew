@@ -12,8 +12,9 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class EvaluationMetrics:
 
 
 @dataclass
-class TestEpisode:
+class EvaluationEpisode:
     """Container for test episode data."""
 
     url: str
@@ -97,12 +98,12 @@ class PipelineEvaluationHarness:
         self.kg_store = kg_store
         self.tenant = tenant
         self.workspace = workspace
-        self.results: list[tuple[TestEpisode, EvaluationMetrics]] = []
+        self.results: list[tuple[EvaluationEpisode, EvaluationMetrics]] = []
 
-    def create_test_episodes(self) -> list[TestEpisode]:
+    def create_test_episodes(self) -> list[EvaluationEpisode]:
         """Create test episodes for evaluation."""
         return [
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 title="H3 Podcast #123 - Tech Talk with Guest",
                 creator="H3 Podcast",
@@ -118,7 +119,7 @@ class PipelineEvaluationHarness:
                     "Guest": [(1200.0, 1800.0)],
                 },
             ),
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://www.youtube.com/watch?v=example2",
                 title="H3 Podcast #124 - Gaming Discussion",
                 creator="H3 Podcast",
@@ -130,7 +131,7 @@ class PipelineEvaluationHarness:
                 ground_truth_transcript="Today we're talking about the gaming industry and how streaming has changed everything...",
                 ground_truth_diarization={"Ethan": [(0.0, 1350.0)], "Hila": [(1350.0, 2700.0)]},
             ),
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://www.twitch.tv/videos/example1",
                 title="Hasan Reacts to Political News",
                 creator="Hasan Piker",
@@ -142,7 +143,7 @@ class PipelineEvaluationHarness:
                 ground_truth_transcript="Welcome back to the stream. Today we're reacting to the latest political news...",
                 ground_truth_diarization={"Hasan": [(0.0, 7200.0)]},
             ),
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://www.twitch.tv/videos/example2",
                 title="Hasan Gaming Stream - Valorant",
                 creator="Hasan Piker",
@@ -154,7 +155,7 @@ class PipelineEvaluationHarness:
                 ground_truth_transcript="Alright, let's jump into some Valorant. I've been practicing my aim...",
                 ground_truth_diarization={"Hasan": [(0.0, 5400.0)]},
             ),
-            TestEpisode(
+            EvaluationEpisode(
                 url="https://www.youtube.com/watch?v=example3",
                 title="Hasan Reacts to Drama",
                 creator="Hasan Piker",
@@ -237,7 +238,7 @@ class PipelineEvaluationHarness:
                 total_cost += cost_estimates[stage] * duration_hours
         return total_cost
 
-    async def evaluate_episode(self, episode: TestEpisode) -> EvaluationMetrics:
+    async def evaluate_episode(self, episode: EvaluationEpisode) -> EvaluationMetrics:
         """Evaluate a single episode through the pipeline."""
         logger.info(f"Evaluating episode: {episode.title}")
         metrics = EvaluationMetrics()
@@ -287,7 +288,7 @@ class PipelineEvaluationHarness:
             metrics.stages_failed.append("evaluation")
         return metrics
 
-    async def run_evaluation(self, episodes: list[TestEpisode] | None = None) -> dict[str, Any]:
+    async def run_evaluation(self, episodes: list[EvaluationEpisode] | None = None) -> dict[str, Any]:
         """Run evaluation on all test episodes."""
         if episodes is None:
             episodes = self.create_test_episodes()
@@ -305,7 +306,7 @@ class PipelineEvaluationHarness:
             "summary": self.generate_summary(results, aggregate_metrics),
         }
 
-    def calculate_aggregate_metrics(self, results: list[tuple[TestEpisode, EvaluationMetrics]]) -> dict[str, Any]:
+    def calculate_aggregate_metrics(self, results: list[tuple[EvaluationEpisode, EvaluationMetrics]]) -> dict[str, Any]:
         """Calculate aggregate metrics across all episodes."""
         if not results:
             return {}
@@ -334,7 +335,7 @@ class PipelineEvaluationHarness:
         }
 
     def generate_summary(
-        self, results: list[tuple[TestEpisode, EvaluationMetrics]], aggregate_metrics: dict[str, Any]
+        self, results: list[tuple[EvaluationEpisode, EvaluationMetrics]], aggregate_metrics: dict[str, Any]
     ) -> dict[str, Any]:
         """Generate evaluation summary with pass/fail criteria."""
         summary = {"overall_status": "PASS", "criteria_met": {}, "criteria_failed": {}, "recommendations": []}

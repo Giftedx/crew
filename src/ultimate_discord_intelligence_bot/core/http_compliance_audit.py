@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from platform.core.step_result import StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 FIXES_PREVIEW_LIMIT = 3

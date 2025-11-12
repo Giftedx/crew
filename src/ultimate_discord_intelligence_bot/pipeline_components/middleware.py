@@ -10,7 +10,7 @@ from .tracing import tracing_module
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass(slots=True)

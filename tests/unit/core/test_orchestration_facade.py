@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 import pytest
 
 from ultimate_discord_intelligence_bot.orchestration import OrchestrationFacade, OrchestrationStrategy, get_orchestrator
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestOrchestrationStrategy:

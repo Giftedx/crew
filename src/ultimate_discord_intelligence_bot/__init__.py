@@ -5,7 +5,14 @@ ensures type checkers (mypy, pyright) treat the code as typed application
 code rather than an untyped third-party dependency.
 """
 
+# Ensure src directory is in path for absolute imports from domains/
+import sys
 from typing import Any
+
+
+_src_path = "/home/crew/src"
+if _src_path not in sys.path:
+    sys.path.insert(0, _src_path)
 
 
 __all__: list[str] = []

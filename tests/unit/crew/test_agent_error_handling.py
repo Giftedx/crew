@@ -6,11 +6,12 @@ agent initialization failures, task execution errors, tool failures, retry logic
 and graceful degradation scenarios.
 """
 
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestAgentErrorHandling:

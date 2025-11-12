@@ -16,13 +16,14 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from platform.core.step_result import StepResult
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any
 
-from crewai_tools import BaseTool
 from pydantic import BaseModel, Field
 
+from crewai.tools import BaseTool
 from kg.creator_kg_store import CreatorKGStore
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ class NarrativeTrackerTool(BaseTool):
         super().__init__()
         self.kg_store = kg_store or CreatorKGStore(":memory:")
 
+    @cache_tool_result(namespace="tool:narrative_tracker", ttl=3600)
     def _run(
         self,
         narrative_query: str,
@@ -149,6 +151,10 @@ class NarrativeTrackerTool(BaseTool):
         except Exception as e:
             logger.error(f"Narrative tracking failed: {e!s}")
             return StepResult.fail(f"Narrative tracking failed: {e!s}")
+
+    def run(self, input_data: dict[str, Any]) -> StepResult:
+        """Run method to match BaseTool interface."""
+        return self._run(**input_data)
 
     def _query_narrative_events(
         self, narrative_query: str, creators: list[str], time_range: dict, tenant: str, workspace: str

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import asyncio
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 from autogen import AssistantAgent, UserProxyAgent
 from autogen.agentchat.groupchat import GroupChat
 from autogen.agentchat.manager import GroupChatManager
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

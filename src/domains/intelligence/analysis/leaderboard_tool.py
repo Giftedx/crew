@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import json
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .. import settings
 from ._base import BaseTool
@@ -37,7 +38,7 @@ class LeaderboardTool(BaseTool[StepResult]):
     def __init__(self, storage_path: Path | None = None):
         super().__init__()
         self._metrics = get_metrics()
-        self.storage_path = storage_path or settings.BASE_DIR / "leaderboard.json"
+        self.storage_path = storage_path or settings.base_dir / "leaderboard.json"
         if not self.storage_path.exists():
             self._save({})
 

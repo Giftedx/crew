@@ -1,7 +1,7 @@
 import json
 from unittest.mock import Mock
 
-from src.ultimate_discord_intelligence_bot.tools.smart_clip_composer_tool import (
+from ultimate_discord_intelligence_bot.tools.smart_clip_composer_tool import (
     ClipSuggestion,
     ExportData,
     SmartClipComposerInput,

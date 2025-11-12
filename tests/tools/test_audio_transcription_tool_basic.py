@@ -1,11 +1,11 @@
 """Basic tests for AudioTranscriptionTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.ingestion.providers.audio_transcription_tool import AudioTranscriptionTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestAudioTranscriptionTool:

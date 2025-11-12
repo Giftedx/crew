@@ -1,11 +1,11 @@
 """Tests for ContentQualityAssessmentTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.intelligence.analysis.content_quality_assessment_tool import ContentQualityAssessmentTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestContentQualityAssessmentTool:

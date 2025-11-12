@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 __all__ = ["RequestCostTracker", "current_request_tracker", "track_request_budget"]
 _thread_local = threading.local()
 

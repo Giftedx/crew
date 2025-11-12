@@ -14,7 +14,8 @@ import yaml
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from platform.core.step_result import StepResult
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

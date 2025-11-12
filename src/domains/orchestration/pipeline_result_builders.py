@@ -8,8 +8,9 @@ and graceful degradation when inputs are incomplete.
 from __future__ import annotations
 
 import time
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 def merge_threat_payload(

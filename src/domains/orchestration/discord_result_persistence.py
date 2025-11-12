@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 def _get_metrics():
     """Lazy import of metrics to avoid circular dependencies."""
     try:
-        from platform.observability.metrics import get_metrics
+        from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
         return get_metrics()
     except ImportError:

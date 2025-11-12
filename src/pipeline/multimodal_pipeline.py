@@ -10,10 +10,10 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any
 
 from kg.creator_kg_store import CreatorKGStore
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

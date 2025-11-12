@@ -7,9 +7,10 @@ service availability, and performance indicators.
 from __future__ import annotations
 
 import time
-from platform.observability.performance_monitor import get_performance_summary
-from platform.observability.resource_monitor import get_current_resource_usage, get_resource_monitor
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.performance_monitor import get_performance_summary
+from ultimate_discord_intelligence_bot.obs.resource_monitor import get_current_resource_usage, get_resource_monitor
 
 
 class HealthCheckService:
@@ -61,7 +62,7 @@ class HealthCheckService:
             qdrant_url = self._get_qdrant_url()
             if qdrant_url == ":memory:":
                 return {"status": "healthy", "type": "memory", "message": "Using in-memory Qdrant for testing"}
-            from domains.memory.vector.qdrant import get_qdrant_client
+            from domains.memory.qdrant_provider import get_qdrant_client
 
             client = get_qdrant_client()
             collections = client.get_collections()
@@ -101,7 +102,7 @@ class HealthCheckService:
     def _check_memory_service(self) -> dict[str, Any]:
         """Check memory service health."""
         try:
-            from domains.memory.vector_store import MemoryService
+            from ultimate_discord_intelligence_bot.services.memory_service import MemoryService
 
             memory_service = MemoryService()
             test_result = memory_service.add(

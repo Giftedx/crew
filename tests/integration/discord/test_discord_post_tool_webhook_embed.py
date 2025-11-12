@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ultimate_discord_intelligence_bot.tools.discord_post_tool import DiscordPostTool
+from ultimate_discord_intelligence_bot.tools import DiscordPostTool
 
 
 class FakeResp:
@@ -23,7 +23,7 @@ def test_discord_post_embed_monkeypatched(monkeypatch):
         return FakeResp(204)
 
     # Patch resilient_post
-    import ultimate_discord_intelligence_bot.tools.discord_post_tool as mod
+    from ultimate_discord_intelligence_bot.tools import discord_post_tool as mod
 
     monkeypatch.setattr(mod, "resilient_post", fake_post)
 

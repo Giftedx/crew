@@ -13,10 +13,10 @@ Tests all data transformation functions in isolation:
 """
 
 import logging
-from platform.core.step_result import StepResult
 from unittest.mock import Mock
 
 from ultimate_discord_intelligence_bot.orchestrator import data_transformers
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestNormalizeAcquisitionData:

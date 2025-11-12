@@ -8,13 +8,14 @@ import tempfile
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from performance_optimization.src.discord.conversational_pipeline import (
+
+from src.discord.conversational_pipeline import (
     ConversationalPipeline,
     PipelineConfig,
     PipelineContext,
     PipelineResult,
 )
-from performance_optimization.src.discord.personality.personality_manager import (
+from src.discord.personality.personality_manager import (
     PersonalityContext,
 )
 

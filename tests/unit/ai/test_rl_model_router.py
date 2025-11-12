@@ -1,8 +1,7 @@
-from platform.observability import metrics
-
 import numpy as np
 import pytest
 
+from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.services.rl_model_router import (
     RLModelRouter,
     RoutingReward,

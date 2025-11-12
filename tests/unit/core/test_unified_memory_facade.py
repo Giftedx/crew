@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-
 import pytest
-from memory.vector_store import VectorRecord
 
+from memory.vector_store import VectorRecord
 from ultimate_discord_intelligence_bot.memory import UnifiedMemoryService, get_unified_memory
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @pytest.fixture

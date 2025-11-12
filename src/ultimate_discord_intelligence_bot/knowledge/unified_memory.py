@@ -10,17 +10,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from platform.core.step_result import StepResult
 from typing import Any
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 
 try:
     from domains.memory.api import retrieve as memory_retrieve
     from domains.memory.api import store as memory_store
+    from domains.memory.qdrant_provider import get_qdrant_client
     from domains.memory.store import MemoryStore
-    from domains.memory.vector.qdrant import get_qdrant_client
     from domains.memory.vector_store import VectorStore
 except ImportError:
     memory_store = None

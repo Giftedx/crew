@@ -18,7 +18,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from datetime import datetime
-    from platform.core.step_result import StepResult
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 def _as_list(value: Iterable[str] | None) -> StepResult:

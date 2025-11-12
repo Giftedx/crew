@@ -11,13 +11,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 

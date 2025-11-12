@@ -21,17 +21,18 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from platform.core.step_result import ErrorCategory, StepResult
-from platform.orchestration.protocols import (
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
+import structlog
+
+from domains.orchestration.legacy.protocols import (
     BaseOrchestrator,
     OrchestrationContext,
     OrchestrationLayer,
     OrchestrationType,
 )
-from typing import TYPE_CHECKING, Any
-
-import numpy as np
-import structlog
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 if TYPE_CHECKING:
@@ -201,6 +202,7 @@ class UnifiedFeedbackOrchestrator(BaseOrchestrator):
         if self._tasks_started:
             return
         try:
+            # TenantContext automatically propagates to asyncio tasks via contextvars (F002 verified)
             feedback_task = asyncio.create_task(self._feedback_processing_loop())
             consolidation_task = asyncio.create_task(self._consolidation_loop())
             health_task = asyncio.create_task(self._health_monitoring_loop())

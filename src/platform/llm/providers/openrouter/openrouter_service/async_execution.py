@@ -220,7 +220,7 @@ class AsyncExecutor:
     def _record_metrics(self, state: RouteState, latency_ms: float, tokens_out: int, success: bool) -> None:
         """Record metrics for the request."""
         try:
-            from platform.observability import metrics
+            from ultimate_discord_intelligence_bot.obs import metrics
 
             labels = state.labels()
             metrics.LLM_MODEL_SELECTED.labels(

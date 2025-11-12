@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar, runtime_check
 
 
 if TYPE_CHECKING:
-    from platform.core.step_result import ErrorContext, StepResult
-from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import ErrorContext, StepResult
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @runtime_checkable

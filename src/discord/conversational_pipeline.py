@@ -12,10 +12,11 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .message_evaluator import EvaluationResult, MessageEvaluator
 from .opt_in_manager import OptInManager

@@ -46,7 +46,7 @@ def test_pilot_endpoint_includes_duration(monkeypatch: pytest.MonkeyPatch):
 def test_pilot_endpoint_emits_duration_metric(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("ENABLE_LANGGRAPH_PILOT_API", "1")
     monkeypatch.setenv("ENABLE_LANGGRAPH_PILOT", "1")
-    from platform.observability import metrics
+    from ultimate_discord_intelligence_bot.obs import metrics
 
     metrics.reset()
     app = create_app()

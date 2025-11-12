@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -17,6 +16,7 @@ from ultimate_discord_intelligence_bot.orchestrator.pipeline_result_builders imp
     extract_system_status_from_crew,
     merge_threat_payload,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestBuildPipelineContentAnalysisResult:

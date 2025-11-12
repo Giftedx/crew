@@ -7,10 +7,10 @@ scheduling, content velocity tracking, and automated content processing.
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.services.monitoring_orchestrator import RealTimeMonitoringOrchestrator
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class MonitoringStrategy:
         Returns:
             StepResult with monitoring status
         """
-        from platform.observability.metrics import get_metrics
+        from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
         metrics = get_metrics()
         metrics.counter("orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "started"})

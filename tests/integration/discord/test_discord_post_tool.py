@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 import requests
 
-from ultimate_discord_intelligence_bot.tools.discord_post_tool import (
-    DiscordPostTool,
-)
+from ultimate_discord_intelligence_bot.tools import DiscordPostTool
 
 
 def test_embed_post(monkeypatch):

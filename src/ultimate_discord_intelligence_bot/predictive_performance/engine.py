@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 import time
 from collections import deque
-from platform.observability import metrics as obs_metrics
 from typing import Any
 
 import numpy as np
+
+from ultimate_discord_intelligence_bot.obs import metrics as obs_metrics
 
 
 try:
@@ -41,8 +42,9 @@ except Exception:
             return 1.0 - ss_res / ss_tot if ss_tot > 0 else 0.0
 
 
-from platform.observability.metrics import get_metrics
 from platform.time import default_utc_now
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 from ..advanced_performance_analytics import AdvancedPerformanceAnalytics
 from ..enhanced_performance_monitor import EnhancedPerformanceMonitor
@@ -57,7 +59,7 @@ from .models import CapacityForecast, EarlyWarningAlert, ModelDriftAlert, Perfor
 
 
 try:
-    from platform.observability import tracing as _obs_tracing
+    from ultimate_discord_intelligence_bot.obs import tracing as _obs_tracing
 except Exception:
 
     class _NoOpSpan:

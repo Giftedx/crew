@@ -13,9 +13,10 @@ import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 if TYPE_CHECKING:

@@ -18,8 +18,9 @@ import contextlib
 import logging
 from collections import deque
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

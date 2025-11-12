@@ -25,11 +25,74 @@ import logging
 import os
 import time
 from collections.abc import Awaitable, Callable
-from platform.observability import metrics
 from typing import Any
 
 from fastapi import FastAPI, Request, Response
-from server import middleware_shim
+
+
+try:
+    from server import middleware_shim
+except ImportError:
+    middleware_shim = None
+from ultimate_discord_intelligence_bot.obs import metrics
+
+
+try:
+    from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+    from starlette.requests import Request as StarletteRequest
+except Exception:
+
+    class BaseHTTPMiddleware:
+        """Minimal stand-in implementing Starlette's interface enough for tests.
+
+        Provides an ASGI callable that wraps a `dispatch` coroutine method.
+        """
+
+        def __init__(self, app: Any) -> None:
+            self.app = app
+
+        async def __call__(self, scope: dict, receive: Callable, send: Callable):
+            if scope.get("type") != "http":
+                await self.app(scope, receive, send)
+                return
+            request = Request(scope, receive=receive)
+
+            async def call_next(req: Request) -> Response:
+                new_scope = dict(scope)
+                req_scope = getattr(req, "scope", {})
+                if isinstance(req_scope, dict):
+                    new_scope.update({k: v for k, v in req_scope.items() if k in {"path", "raw_path", "query_string"}})
+                    if "method" in req_scope:
+                        new_scope["method"] = req_scope["method"]
+                responder = await self.app(new_scope, receive, send)
+                return responder
+
+            response = await self.dispatch(request, call_next)
+            if isinstance(response, Response):
+                await response(scope, receive, send)
+
+        async def dispatch(self, request: Request, call_next: Callable):
+            return await call_next(request)
+
+    StarletteRequest = Request
+    RequestResponseEndpoint = Callable[[Request], Awaitable[Response]]
+
+
+class FixedWindowRateLimiter(BaseHTTPMiddleware):
+    """Simple fixed-window rate limiter middleware.
+
+    Works with real Starlette (subclassing its BaseHTTPMiddleware) or with the
+    lightweight dummy base when Starlette is absent (tests / shim mode).
+    """
+
+    def __init__(self, app: Any, burst: int) -> None:
+        try:
+            super().__init__(app)
+        except Exception:
+            self.app = app
+        self._burst = max(1, burst)
+        self._remaining = self._burst
+        self._reset = time.monotonic() + 1.0
 
 
 try:
@@ -115,8 +178,9 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):
             self._reset = now + 1.0
         if self._remaining <= 0:
             try:
+                _metrics = metrics.get_metrics()
                 meth = getattr(request, "method", "GET")
-                metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()
+                _metrics.RATE_LIMIT_REJECTIONS.labels(rp_norm, str(meth).upper()).inc()
             except Exception as exc:
                 logging.debug("rate limit metrics error: %s", exc)
             return Response(status_code=429, content="Rate limit exceeded")
@@ -132,7 +196,8 @@ def add_rate_limit_middleware(app: FastAPI) -> None:
         burst = int(os.getenv("RATE_LIMIT_BURST", os.getenv("RATE_LIMIT_RPS", "10")))
     except Exception:
         burst = 10
-    middleware_shim.install_middleware_support()
+    if middleware_shim is not None:
+        middleware_shim.install_middleware_support()
     from typing import cast as _cast
 
     app_any = _cast("Any", app)

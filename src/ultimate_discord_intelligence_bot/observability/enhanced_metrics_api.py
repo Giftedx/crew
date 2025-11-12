@@ -25,7 +25,7 @@ except ImportError:
     jsonify = render_template_string = request = None
     FLASK_AVAILABLE = False
     print("⚠️  Flask not available - enhanced metrics API will not be available")
-from platform.observability.dashboard_templates import get_base_template, get_simple_dashboard
+from ultimate_discord_intelligence_bot.obs.dashboard_templates import get_base_template, get_simple_dashboard
 
 
 EVALUATION_METRICS_CACHE_TTL_SECONDS = 10
@@ -70,7 +70,7 @@ class EnhancedMetricsAPI:
         def get_system_metrics():
             """Get system-wide metrics."""
             try:
-                from platform.observability.metrics_collector import get_system_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_system_metrics
 
                 metrics = get_system_metrics()
                 return jsonify(
@@ -95,7 +95,7 @@ class EnhancedMetricsAPI:
         def get_all_tool_metrics():
             """Get metrics for all tools."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 metrics = collector.get_all_tool_metrics()
@@ -115,7 +115,7 @@ class EnhancedMetricsAPI:
         def get_tool_metrics(tool_name: str):
             """Get metrics for a specific tool."""
             try:
-                from platform.observability.metrics_collector import get_tool_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_tool_metrics
 
                 metrics = get_tool_metrics(tool_name)
                 if not metrics:
@@ -138,7 +138,7 @@ class EnhancedMetricsAPI:
         def get_analytics():
             """Get advanced analytics and insights."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 all_metrics = collector.get_all_tool_metrics()
@@ -167,7 +167,7 @@ class EnhancedMetricsAPI:
         def export_metrics():
             """Export metrics with enhanced formatting."""
             try:
-                from platform.observability.metrics_collector import get_metrics_collector
+                from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
                 collector = get_metrics_collector()
                 export_file = f"enhanced_metrics_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -187,7 +187,7 @@ class EnhancedMetricsAPI:
     def _calculate_health_score(self) -> float:
         """Calculate overall system health score."""
         try:
-            from platform.observability.metrics_collector import get_metrics_collector
+            from ultimate_discord_intelligence_bot.obs.metrics_collector import get_metrics_collector
 
             collector = get_metrics_collector()
             all_metrics = collector.get_all_tool_metrics()

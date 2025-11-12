@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+from domains.ingestion.providers.yt_dlp_download_tool import (
     YtDlpDownloadTool,
 )
 

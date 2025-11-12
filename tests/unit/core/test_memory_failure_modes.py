@@ -6,11 +6,12 @@ vector store failures, embedding generation errors, search timeouts, and
 tenant isolation during failures.
 """
 
-from platform.core.step_result import StepResult
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestMemoryFailureModes:

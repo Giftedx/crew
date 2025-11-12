@@ -11,8 +11,9 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

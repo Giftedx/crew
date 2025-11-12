@@ -1,9 +1,10 @@
 from platform.core.http import reset_circuit_breakers
 from platform.http.http_utils import http_request_with_retry
-from platform.observability import metrics as m
 
 import pytest
 import requests
+
+from ultimate_discord_intelligence_bot.obs import metrics as m
 
 
 @pytest.fixture(autouse=True)

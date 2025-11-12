@@ -18,9 +18,10 @@ from __future__ import annotations
 import contextlib
 from collections.abc import Callable, Sequence
 from platform.llm_cache import get_llm_cache
-from platform.observability.metrics import get_metrics
 from platform.token_meter import cost_guard, estimate_tokens
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 ProviderFn = Callable[[Sequence[dict[str, Any]]], Any]

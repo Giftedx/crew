@@ -6,7 +6,7 @@ Validates combinations of detection/redaction feature flags and the RL
 
 from __future__ import annotations
 
-from platform.core.privacy import privacy_filter
+from platform.security.privacy import privacy_filter
 
 
 SAMPLE = "Contact me at alice@example.com or 555-123-4567 for details."

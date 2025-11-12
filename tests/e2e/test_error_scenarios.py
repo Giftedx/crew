@@ -1,13 +1,13 @@
 """End-to-end tests for error scenarios and edge cases."""
 
 import asyncio
-from platform.core.step_result import StepResult
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousOrchestrator
+from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
 from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

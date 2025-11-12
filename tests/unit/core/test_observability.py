@@ -1,9 +1,9 @@
 import importlib
 import importlib.util
-from platform.observability import metrics, slo, tracing
 
 from discord import commands as dc
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+from ultimate_discord_intelligence_bot.obs import metrics, slo, tracing
 from ultimate_discord_intelligence_bot.tenancy import TenantContext, with_tenant
 
 
@@ -50,7 +50,8 @@ def test_logging_includes_tenant():
     import io
     import json
     import logging
-    from platform.observability import logging as obs_logging
+
+    from ultimate_discord_intelligence_bot.obs import logging as obs_logging
 
     stream = io.StringIO()
     handler = logging.StreamHandler(stream)

@@ -1,6 +1,5 @@
-from platform.observability import metrics
-
 from analysis import segmenter, transcribe
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class DummySettings:

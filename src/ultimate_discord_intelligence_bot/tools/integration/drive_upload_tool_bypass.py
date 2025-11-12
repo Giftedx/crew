@@ -9,9 +9,10 @@ components to proceed with local file references.
 from __future__ import annotations
 
 import os
-from platform.core.step_result import StepResult
-from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from typing import Any, ClassVar
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .._base import BaseTool
 
@@ -75,4 +76,7 @@ class DriveUploadToolBypass(BaseTool[StepResult]):
             return StepResult.fail(error=str(exc), platform="Bypass", command="upload-bypass")
 
 
-__all__ = ["DriveUploadToolBypass"]
+__all__ = ["DriveUploadTool", "DriveUploadToolBypass"]
+
+# Alias for compatibility
+DriveUploadTool = DriveUploadToolBypass

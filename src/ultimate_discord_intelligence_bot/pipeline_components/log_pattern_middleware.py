@@ -14,7 +14,8 @@ from .middleware import BasePipelineStepMiddleware, StepContext
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from platform.core.step_result import StepResult
+
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

@@ -4,10 +4,10 @@ import subprocess
 import pytest
 import requests
 
-from ultimate_discord_intelligence_bot.tools.discord_download_tool import (
+from domains.ingestion.providers.discord_download_tool import (
     DiscordDownloadTool,
 )
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+from domains.ingestion.providers.yt_dlp_download_tool import (
     InstagramDownloadTool,
     KickDownloadTool,
     RedditDownloadTool,

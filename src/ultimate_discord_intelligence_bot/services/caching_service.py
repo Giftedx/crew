@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 from app.config.settings import get_settings
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ...platform.cache.multi_level_cache import MultiLevelCache
 

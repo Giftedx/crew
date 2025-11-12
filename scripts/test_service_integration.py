@@ -39,7 +39,7 @@ from ultimate_discord_intelligence_bot.services.openrouter_service import (
     OpenRouterService,
 )
 from ultimate_discord_intelligence_bot.services.prompt_engine import PromptEngine
-from ultimate_discord_intelligence_bot.tools.mcp_call_tool import MCPCallTool
+from ultimate_discord_intelligence_bot.tools.observability.mcp_call_tool import MCPCallTool
 
 
 class ServiceIntegrationTester:

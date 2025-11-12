@@ -2,7 +2,6 @@
 Tests for Instagram Graph API client and models.
 """
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
@@ -23,6 +22,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models
     InstagramWebhookEvent,
     InstagramWebhookSubscription,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestInstagramModels:

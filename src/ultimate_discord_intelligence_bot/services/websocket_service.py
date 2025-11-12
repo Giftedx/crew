@@ -9,13 +9,13 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from platform.core.step_result import StepResult
 from typing import Any
 
 import websockets
 from websockets.exceptions import ConnectionClosed, WebSocketException
 
 from app.config.settings import get_settings
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 log = logging.getLogger(__name__)

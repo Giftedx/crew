@@ -3,7 +3,8 @@ from __future__ import annotations
 import contextlib
 import re
 from platform.llm.providers.openrouter import OpenRouterService
-from platform.observability import metrics as metrics_mod
+
+from ultimate_discord_intelligence_bot.obs import metrics as metrics_mod
 
 
 def test_openrouter_metrics_use_effective_labels_non_strict(monkeypatch):

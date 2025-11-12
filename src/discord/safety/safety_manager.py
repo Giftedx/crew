@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .content_filter import ContentFilterConfig, ContentFilterResult, create_content_filter
 from .moderation_alerts import AlertConfig, AlertSeverity, AlertType, create_moderation_alert_manager

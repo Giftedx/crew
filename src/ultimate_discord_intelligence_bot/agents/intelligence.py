@@ -11,10 +11,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from crewai import Agent
-from domains.memory.tools import OfflineRagTool
-
 from app.config.feature_flags import FeatureFlags
 from domains.intelligence.analysis import EnhancedAnalysisTool, TextAnalysisTool
+from domains.memory.tools import OfflineRagTool
 from ultimate_discord_intelligence_bot.tools import (
     CrossPlatformNarrativeTrackingTool,
     GraphMemoryTool,

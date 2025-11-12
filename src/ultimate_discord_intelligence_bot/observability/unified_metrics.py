@@ -10,9 +10,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from platform.core.step_result import StepResult
 from typing import TYPE_CHECKING, Any
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
 
 

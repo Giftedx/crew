@@ -31,7 +31,7 @@ from .a2a_tools import get_tools as _get_tools
 
 
 try:
-    from platform.observability import tracing
+    from ultimate_discord_intelligence_bot.obs import tracing
 except Exception:
 
     class _NoTracing:
@@ -50,7 +50,7 @@ except Exception:
 
     tracing = _NoTracing()
 try:
-    from platform.core.step_result import StepResult
+    from ultimate_discord_intelligence_bot.step_result import StepResult
 except Exception:
 
     class StepResult:

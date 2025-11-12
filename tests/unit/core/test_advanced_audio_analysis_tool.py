@@ -1,8 +1,8 @@
 """Tests for AdvancedAudioAnalysisTool."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools.advanced_audio_analysis_tool import AdvancedAudioAnalysisTool
 
 

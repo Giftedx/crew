@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from platform.observability import metrics
 from typing import TYPE_CHECKING
 
 from app.config.settings import Settings
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 if TYPE_CHECKING:

@@ -8,12 +8,12 @@ import secrets
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from platform.core.step_result import StepResult
 
 import bcrypt
 import jwt
 
 from app.config.settings import ENABLE_ENTERPRISE_TENANT_MANAGEMENT
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 log = logging.getLogger(__name__)

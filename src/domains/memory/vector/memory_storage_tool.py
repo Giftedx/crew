@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 import uuid
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ..tenancy import current_tenant, mem_ns
 from ._base import BaseTool
@@ -44,7 +45,7 @@ else:
 
 
 try:
-    from domains.memory.vector.qdrant import get_qdrant_client
+    from domains.memory.qdrant_provider import get_qdrant_client
 except Exception:
 
     def get_qdrant_client():
@@ -122,7 +123,10 @@ class MemoryStorageTool(BaseTool[StepResult]):
             qclient = cast("_QdrantLike", client)
         else:
             try:
-                qclient = cast("_QdrantLike", get_qdrant_client())
+                # Lazy import to avoid circular dependency
+                from domains.memory.qdrant_provider import get_qdrant_client as _get_qdrant_client
+
+                qclient = cast("_QdrantLike", _get_qdrant_client())
             except Exception:
                 qclient = cast("_QdrantLike", None)
         object.__setattr__(self, "base_collection", base_collection)
@@ -226,7 +230,7 @@ class MemoryStorageTool(BaseTool[StepResult]):
         Returns:
             StepResult with storage results or error information
         """
-        from platform.core.step_result import ErrorContext
+        from ultimate_discord_intelligence_bot.step_result import ErrorContext
 
         context = ErrorContext(
             operation="memory_storage", component="MemoryStorageTool", tenant=tenant, workspace=workspace

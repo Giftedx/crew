@@ -89,10 +89,14 @@ def retrieve(
         namespace = vector_store.VectorStore.namespace(tenant, workspace, "memory")
         res = vstore.query(namespace, vec, top_k=k)
         for r in res:
-            payload = r.payload or {}
-            hits.append(
-                MemoryHit(id=payload.get("id", 0), score=float(r.score), text=payload.get("text", ""), meta=payload)
-            )
+            payload = getattr(r, "payload", {}) or {}
+            # Some lightweight stores don't attach scores; default to 1.0
+            score_val = getattr(r, "score", None)
+            try:
+                score = float(score_val) if score_val is not None else 1.0
+            except Exception:
+                score = 1.0
+            hits.append(MemoryHit(id=payload.get("id", 0), score=score, text=payload.get("text", ""), meta=payload))
     if "symbolic" in strategies:
         for item in store.search_keyword(tenant, workspace, query, limit=k):
             payload = json.loads(item.content_json)

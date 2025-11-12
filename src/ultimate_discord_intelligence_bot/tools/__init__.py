@@ -12,6 +12,14 @@ dependencies from being required during unrelated imports/tests.
 Import specific tools or submodules explicitly as needed.
 """
 
+# Ensure src directory is in path for absolute imports
+import sys
+
+
+_src_path = "/home/crew/src"
+if _src_path not in sys.path:
+    sys.path.insert(0, _src_path)
+
 MAPPING = {
     # Acquisition tools (migrated to domains/ingestion/providers/)
     "AudioTranscriptionTool": "domains.ingestion.providers.audio_transcription_tool",
@@ -28,6 +36,7 @@ MAPPING = {
     "CharacterProfileTool": "domains.intelligence.analysis.character_profile_tool",
     "ContentQualityAssessmentTool": "domains.intelligence.analysis.content_quality_assessment_tool",
     "CrossPlatformNarrativeTrackingTool": "domains.intelligence.analysis.cross_platform_narrative_tool",
+    "EngagementPredictionTool": "domains.intelligence.analysis.engagement_prediction_tool",
     "EnhancedAnalysisTool": "domains.intelligence.analysis.enhanced_analysis_tool",
     "ImageAnalysisTool": "domains.intelligence.analysis.image_analysis_tool",
     "LiveStreamAnalysisTool": "domains.intelligence.analysis.live_stream_analysis_tool",
@@ -261,6 +270,7 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
     mod = MAPPING.get(name)
     if mod is None:
         raise AttributeError(name)
+    import sys
     from importlib import import_module
 
     try:
@@ -269,6 +279,10 @@ def __getattr__(name: str):  # PEP 562: lazy attribute loading
             module_path = f"{__name__}{mod}"
         else:
             # Absolute import (e.g., 'domains.intelligence.analysis.social_graph_analysis_tool')
+            # Ensure src directory is in path for absolute imports
+            src_path = "/home/crew/src"
+            if src_path not in sys.path:
+                sys.path.insert(0, src_path)
             module_path = mod
         module = import_module(module_path)
     except Exception as exc:  # Optional dependency or heavy module failed to import

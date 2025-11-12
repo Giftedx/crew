@@ -8,7 +8,7 @@ from domains.ingestion.providers.audio_transcription_tool import AudioTranscript
 from domains.ingestion.providers.multi_platform_download_tool import MultiPlatformDownloadTool
 from domains.intelligence.analysis.enhanced_analysis_tool import EnhancedAnalysisTool
 from domains.intelligence.verification.claim_verifier_tool import ClaimVerifierTool
-from ultimate_discord_intelligence_bot.tools.memory.unified_memory_tool import UnifiedMemoryTool
+from domains.memory.vector.unified_memory_tool import UnifiedMemoryTool
 
 
 class TestContentProcessingWorkflow:

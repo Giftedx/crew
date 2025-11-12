@@ -24,12 +24,13 @@ import statistics
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from platform.core.step_result import ErrorCategory, StepResult
 from typing import Any
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
+
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -540,3 +541,35 @@ def reset_database_optimizer() -> None:
     """Reset the global database optimizer instance."""
     global _db_optimizer
     _db_optimizer = None
+
+
+# Placeholder classes for backward compatibility
+@dataclass
+class ConnectionPoolMetrics:
+    """Metrics for database connection pool."""
+
+    active: int = 0
+    idle: int = 0
+    total: int = 0
+    wait_time_ms: float = 0.0
+
+
+class ConnectionPoolOptimizer:
+    """Placeholder for connection pool optimizer."""
+
+
+class DatabaseOptimizerManager:
+    """Placeholder for database optimizer manager."""
+
+
+class QueryMetrics:
+    """Placeholder for query metrics."""
+
+
+class QueryOptimizer:
+    """Placeholder for query optimizer."""
+
+
+def get_database_optimization_report():
+    """Placeholder for database optimization report."""
+    return {}

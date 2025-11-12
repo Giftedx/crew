@@ -10,10 +10,11 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass
 from enum import Enum
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from platform.rl.thompson_sampling import ThompsonSamplingBandit
 from typing import Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .llm_provider_registry import ModelInfo, get_provider_allowlist_from_config, list_models
 

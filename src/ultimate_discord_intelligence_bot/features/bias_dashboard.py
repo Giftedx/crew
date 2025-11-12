@@ -10,10 +10,10 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.analysis.bias_metrics import BiasAnalyzer, BiasMetrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 @dataclass

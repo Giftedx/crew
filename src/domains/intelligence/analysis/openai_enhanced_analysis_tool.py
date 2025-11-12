@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import TYPE_CHECKING
 
 from ultimate_discord_intelligence_bot.services.openai_integration_service import OpenAIIntegrationService
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
@@ -20,6 +21,13 @@ class OpenAIEnhancedAnalysisTool(BaseTool):
         super().__init__()
         self.openai_service = OpenAIIntegrationService()
 
+    def run(
+        self, content: str, analysis_type: str = "general", tenant: str = "default", workspace: str = "default"
+    ) -> StepResult:
+        """Run enhanced analysis with OpenAI capabilities."""
+        return self._run(content, analysis_type, tenant, workspace)
+
+    @cache_tool_result(namespace="tool:openai_enhanced_analysis", ttl=3600)
     def _run(self, content: str, analysis_type: str, tenant: str, workspace: str) -> StepResult:
         """Run enhanced analysis with OpenAI capabilities."""
         try:

@@ -5,9 +5,10 @@ from __future__ import annotations
 import contextlib
 import time
 from copy import deepcopy
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING, Any
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .middleware import PipelineStepMiddleware, StepContext
 from .observability import merge_log_pattern_summaries

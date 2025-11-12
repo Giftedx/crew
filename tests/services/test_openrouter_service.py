@@ -1,10 +1,10 @@
 """Test cases for OpenRouterService refactored implementation."""
 
-from platform.core.step_result import StepResult
 from platform.llm.providers.openrouter import OpenRouterService
 
 import pytest
 
+from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext
 
 

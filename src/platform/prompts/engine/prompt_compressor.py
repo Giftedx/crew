@@ -12,8 +12,8 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from ..step_result import StepResult
-from ..tenancy.helpers import require_tenant
+from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tenancy.helpers import require_tenant
 
 
 logger = logging.getLogger(__name__)

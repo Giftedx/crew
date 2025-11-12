@@ -1,7 +1,6 @@
 import logging
 import random
 from collections import deque
-from platform.observability.metrics import get_metrics
 from typing import Any
 
 import numpy as np
@@ -9,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 

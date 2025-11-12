@@ -1,9 +1,8 @@
-from platform.observability import logging as obs_logging
-
 import pytest
 
 from security.moderation import Moderation
 from security.rbac import RBAC
+from ultimate_discord_intelligence_bot.obs import logging as obs_logging
 
 
 @pytest.fixture

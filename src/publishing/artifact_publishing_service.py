@@ -23,8 +23,9 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -529,7 +530,7 @@ class ArtifactPublishingService:
             score = highlight.get("highlight_score", 0)
             transcript = highlight.get("transcript_text", "No transcript available")
             lines.append(f"**{i + 1}.** [{start_time:.1f}s - {end_time:.1f}s] (Score: {score:.2f})")
-            lines.append(f'   "{transcript[:100]}{('...' if len(transcript) > 100 else '')}"')
+            lines.append(f'   "{transcript[:100]}{("..." if len(transcript) > 100 else "")}"')
             lines.append("")
         if len(highlights) > 5:
             lines.append(f"... and {len(highlights) - 5} more highlights")
@@ -557,7 +558,7 @@ class ArtifactPublishingService:
             for _i, claim in enumerate(claims[:3]):
                 confidence = claim.get("confidence", 0)
                 speaker = claim.get("speaker", "Unknown")
-                lines.append(f'• **{speaker}:** "{claim.get('text', '')}" ({confidence:.1%})')
+                lines.append(f'• **{speaker}:** "{claim.get("text", "")}" ({confidence:.1%})')
             if len(claims) > 3:
                 lines.append(f"... and {len(claims) - 3} more claims")
             lines.append("")
@@ -566,7 +567,7 @@ class ArtifactPublishingService:
             for _i, quote in enumerate(quotes[:3]):
                 confidence = quote.get("confidence", 0)
                 speaker = quote.get("speaker", "Unknown")
-                lines.append(f'• **{speaker}:** "{quote.get('text', '')}" ({confidence:.1%})')
+                lines.append(f'• **{speaker}:** "{quote.get("text", "")}" ({confidence:.1%})')
             if len(quotes) > 3:
                 lines.append(f"... and {len(quotes) - 3} more quotes")
         return "\n".join(lines)

@@ -51,7 +51,7 @@ if TYPE_CHECKING:
     from platform.llm_client import LLMCallResult, LLMClient
 logger = logging.getLogger(__name__)
 try:
-    from platform.observability.metrics import get_metrics as _gm
+    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics as _gm
 
     def _obtain_metrics() -> Any | None:
         try:
@@ -214,6 +214,18 @@ class LLMRouter:
             "yes",
             "on",
         }
+
+        # F005 fix: Load router policy and provider allowlist from config
+        self._router_policy = os.getenv("ROUTER_POLICY", "quality_first")
+        allowlist_raw = os.getenv("LLM_PROVIDER_ALLOWLIST", "")
+        self._provider_allowlist = (
+            [p.strip().lower() for p in allowlist_raw.split(",") if p.strip()] if allowlist_raw else None
+        )
+        quality_tasks_raw = os.getenv("QUALITY_FIRST_TASKS", "")
+        self._quality_first_tasks = (
+            [t.strip() for t in quality_tasks_raw.split(",") if t.strip()] if quality_tasks_raw else None
+        )
+
         self._cost_weight = float(os.getenv("COST_WEIGHT", "0.4"))
         self._quality_weight = float(os.getenv("QUALITY_WEIGHT", "0.5"))
         self._latency_weight = float(os.getenv("LATENCY_WEIGHT", "0.1"))
@@ -466,8 +478,33 @@ class LLMRouter:
         return "".join(reasoning_parts)
 
     def _get_available_models(self) -> list[str]:
-        """Get list of available model names."""
-        return list(self._clients.keys())
+        """Get list of available model names, filtered by provider allowlist if configured.
+
+        F005 fix: Validates selected providers against LLM_PROVIDER_ALLOWLIST.
+        """
+        available = list(self._clients.keys())
+
+        # Apply provider allowlist if configured
+        if self._provider_allowlist:
+            filtered = []
+            for model in available:
+                # Check if model provider is in allowlist (simple prefix match)
+                model_lower = model.lower()
+                if any(provider in model_lower for provider in self._provider_allowlist):
+                    filtered.append(model)
+                else:
+                    logger.debug(f"Model {model} filtered out by LLM_PROVIDER_ALLOWLIST={self._provider_allowlist}")
+
+            if not filtered:
+                logger.warning(
+                    f"LLM_PROVIDER_ALLOWLIST filtered out all models. "
+                    f"Allowlist={self._provider_allowlist}, available={available}. "
+                    "Falling back to all available models."
+                )
+                return available
+            return filtered
+
+        return available
 
     def _feature_quality(self, features: Sequence[float] | None) -> float:
         """Return a heuristic feature quality score in [0,1]. Higher is better.

@@ -11,13 +11,13 @@ Tests cover:
 """
 
 from datetime import datetime
-from platform.core.step_result import StepResult
 from unittest.mock import Mock, patch
 
 import pytest
 from requests.exceptions import ConnectionError
 
 from ultimate_discord_intelligence_bot.creator_ops.integrations.twitch_client import TwitchClient
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestTwitchClient:

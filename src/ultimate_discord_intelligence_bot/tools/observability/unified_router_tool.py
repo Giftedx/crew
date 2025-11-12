@@ -9,19 +9,19 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
+from crewai.tools import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.routing import (
     RoutingRequest,
     UnifiedCostTracker,
     UnifiedRouterConfig,
     UnifiedRouterService,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -143,7 +143,7 @@ class UnifiedRouterTool(BaseTool):
                 )
                 if not cost_record_result.success:
                     logger.warning(f"Failed to record cost: {cost_record_result.error}")
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"}).inc()
             return StepResult.ok(
                 data={
                     "selected_model": routing_result.selected_model,
@@ -158,7 +158,7 @@ class UnifiedRouterTool(BaseTool):
             )
         except Exception as e:
             logger.error(f"Error in unified router tool: {e}", exc_info=True)
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"}).inc()
             return StepResult.fail(f"Unified routing failed: {e!s}", error_context={"exception": str(e)})
         finally:
             metrics.histogram("tool_run_seconds", time.time() - start_time, labels={"tool": self.__class__.__name__})

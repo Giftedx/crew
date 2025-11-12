@@ -1,7 +1,8 @@
 from platform.http.http_utils import http_request_with_retry
-from platform.observability import metrics as metrics_mod
 
 import pytest
+
+from ultimate_discord_intelligence_bot.obs import metrics as metrics_mod
 
 
 def test_retry_metrics_exposed(monkeypatch):

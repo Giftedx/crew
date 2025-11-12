@@ -4,7 +4,6 @@ Instagram Graph API client for Business and Creator accounts.
 
 import logging
 from datetime import datetime
-from platform.core.step_result import StepResult
 from typing import Any
 
 import httpx
@@ -26,6 +25,7 @@ from ultimate_discord_intelligence_bot.creator_ops.integrations.instagram_models
     InstagramWebhookEvent,
     InstagramWebhookSubscription,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

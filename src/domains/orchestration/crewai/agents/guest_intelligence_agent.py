@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import time
 from datetime import datetime
-from platform.core.step_result import StepResult
 from typing import Any, TypedDict
 
 from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
@@ -10,6 +9,7 @@ from ultimate_discord_intelligence_bot.profiles.creator_network_schema import (
     EnhancedCreatorProfile,
     create_enhanced_profile_from_config,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class CollaborationEvent(TypedDict, total=False):

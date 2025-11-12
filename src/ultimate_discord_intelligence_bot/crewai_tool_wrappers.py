@@ -197,7 +197,7 @@ class CrewAIToolWrapper(BaseTool):
             f"✅ Updated global crew context (now has {len(_GLOBAL_CREW_CONTEXT)} keys: {list(_GLOBAL_CREW_CONTEXT.keys())})"
         )
         with contextlib.suppress(Exception):
-            from platform.observability.metrics import get_metrics
+            from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
             metrics = get_metrics()
             metrics.counter(
@@ -225,17 +225,17 @@ class CrewAIToolWrapper(BaseTool):
         call_count = _TOOL_CALL_COUNTS.get(tool_cls, 0) + 1
         _TOOL_CALL_COUNTS[tool_cls] = call_count
         with contextlib.suppress(Exception):
-            from platform.observability.metrics import get_metrics
+            from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
             get_metrics().counter(
                 "autointel_tool_calls_total",
                 labels={"tool": tool_cls, "call_number": str(call_count), "limit_reached": "false"},
             )
         if call_count > MAX_TOOL_CALLS_PER_SESSION:
-            from platform.core.step_result import StepResult
+            from ultimate_discord_intelligence_bot.step_result import StepResult
 
             with contextlib.suppress(Exception):
-                from platform.observability.metrics import get_metrics
+                from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
                 get_metrics().counter(
                     "autointel_tool_calls_total",
@@ -578,7 +578,7 @@ class CrewAIToolWrapper(BaseTool):
                                     print(error_msg)
                                     logger = logging.getLogger(__name__)
                                     logger.error(error_msg)
-                                    from platform.core.step_result import StepResult
+                                    from ultimate_discord_intelligence_bot.step_result import StepResult
 
                                     return StepResult.fail(
                                         error=f"Missing required data: {param}", step=f"{tool_cls}_validation"
@@ -984,7 +984,7 @@ class PipelineToolWrapper(BaseTool):
     def _run(self, url: str, quality: str = "1080p", **kwargs) -> Any:
         """Run the pipeline tool with proper delegation to the underlying tool."""
         try:
-            from platform.core.step_result import StepResult
+            from ultimate_discord_intelligence_bot.step_result import StepResult
 
             tenant_id = kwargs.get("tenant_id")
             workspace_id = kwargs.get("workspace_id")
@@ -1033,7 +1033,7 @@ class PipelineToolWrapper(BaseTool):
             else:
                 return StepResult.fail(error="Pipeline tool has no run method", url=url, quality=quality)
         except Exception as e:
-            from platform.core.step_result import StepResult
+            from ultimate_discord_intelligence_bot.step_result import StepResult
 
             return StepResult.fail(error=f"Pipeline execution failed: {e!s}", url=url, quality=quality)
 
@@ -1072,7 +1072,7 @@ class DiscordPostToolWrapper(BaseTool):
 
             class _NoopPoster:
                 def _run(self, *a, **k):
-                    from platform.core.step_result import StepResult
+                    from ultimate_discord_intelligence_bot.step_result import StepResult
 
                     return StepResult.skip(reason="discord_post_disabled")
 
@@ -1104,7 +1104,7 @@ class DiscordPostToolWrapper(BaseTool):
                     message = str(message)
             msg_clean = (message or "").strip()
             if not msg_clean or len(msg_clean) < max(1, min_len):
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 return StepResult.skip(reason="empty_or_short_message")
             msg_hash = hashlib.sha256(msg_clean.encode("utf-8")).hexdigest()
@@ -1114,18 +1114,18 @@ class DiscordPostToolWrapper(BaseTool):
                 and self._last_post_time is not None
                 and (now - self._last_post_time < max(0.0, cooldown))
             ):
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 return StepResult.skip(reason="duplicate_message_debounced")
             if not self._can_post:
                 if hasattr(self._wrapped_tool, "_run"):
                     return self._wrapped_tool._run({"title": msg_clean[:80]}, {})
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 return StepResult.skip(reason="discord_post_disabled")
             if hasattr(self._wrapped_tool, "run"):
                 res = self._wrapped_tool.run(message=message)
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 if isinstance(res, StepResult):
                     if res.success:
@@ -1138,7 +1138,7 @@ class DiscordPostToolWrapper(BaseTool):
             if hasattr(self._wrapped_tool, "_run"):
                 content_data = {"title": message[:80], "uploader": "CrewAI", "platform": "internal"}
                 res = self._wrapped_tool._run(content_data, {})
-                from platform.core.step_result import StepResult
+                from ultimate_discord_intelligence_bot.step_result import StepResult
 
                 if isinstance(res, StepResult):
                     if res.success:
@@ -1148,7 +1148,7 @@ class DiscordPostToolWrapper(BaseTool):
                 self._last_post_hash = msg_hash
                 self._last_post_time = now
                 return StepResult.ok(message=str(res))
-            from platform.core.step_result import StepResult
+            from ultimate_discord_intelligence_bot.step_result import StepResult
 
             return StepResult.skip(reason="discord_post_unavailable")
         except Exception as e:

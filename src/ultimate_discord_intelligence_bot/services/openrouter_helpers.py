@@ -5,9 +5,9 @@ import copy
 import logging
 from collections.abc import Mapping
 from platform.config.flags import enabled
-from platform.observability.metrics import get_metrics
 from typing import Any
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.tenancy.context import TenantContext, current_tenant
 
 

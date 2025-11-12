@@ -6,7 +6,6 @@ facade pattern, registry, performance optimizations, and advanced features.
 
 import asyncio
 import time
-from platform.core.step_result import StepResult
 from platform.llm.providers.openrouter.async_execution import AsyncExecutor, AsyncRouteManager
 from platform.llm.providers.openrouter.batcher import BatchConfig, RequestBatcher
 from platform.llm.providers.openrouter.cache_warmer import CacheCompressor, CacheWarmer, EnhancedCacheManager
@@ -35,6 +34,8 @@ from platform.llm.providers.openrouter.retry_strategy import RetryConfig, RetryM
 from unittest.mock import Mock, patch
 
 import pytest
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestFacadePattern:

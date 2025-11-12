@@ -1,7 +1,6 @@
 """Tests for agent collaboration framework."""
 
 import asyncio
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
@@ -13,6 +12,7 @@ from ultimate_discord_intelligence_bot.features.agent_collaboration import (
     CollaborationPattern,
     CollaborationResult,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestAgentCollaboration:

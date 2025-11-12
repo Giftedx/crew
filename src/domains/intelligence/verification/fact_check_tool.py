@@ -22,12 +22,13 @@ from __future__ import annotations
 
 import logging
 import os
-from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_get, resilient_post
-from platform.observability.metrics import get_metrics
 from typing import TYPE_CHECKING
 
 from requests import RequestException
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:
@@ -79,7 +80,7 @@ class FactCheckTool:
         Returns:
             StepResult with evidence and backend status information
         """
-        from platform.core.step_result import ErrorContext
+        from ultimate_discord_intelligence_bot.step_result import ErrorContext
 
         context = ErrorContext(operation="fact_checking", component="FactCheckTool", tenant=tenant, workspace=workspace)
         if not claim or not claim.strip():

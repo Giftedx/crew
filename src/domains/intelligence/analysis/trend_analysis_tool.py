@@ -15,9 +15,11 @@ from __future__ import annotations
 import logging
 import time
 from collections import Counter, defaultdict
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -130,6 +132,7 @@ class TrendAnalysisTool(BaseTool[StepResult]):
         self._trend_patterns: list[TrendPattern] = []
         self._viral_predictions: list[ViralPrediction] = []
 
+    @cache_tool_result(namespace="tool:trend_analysis", ttl=1800)
     def _run(
         self,
         content_data: list[TrendDataPoint] | None = None,

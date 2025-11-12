@@ -11,13 +11,12 @@ These tests verify end-to-end behavior under various failure scenarios including
 from __future__ import annotations
 
 import time
+from platform.http import http_utils
 from typing import TYPE_CHECKING
 from unittest.mock import Mock, patch
 
 import pytest
 import requests
-
-from core import http_utils
 
 
 if TYPE_CHECKING:

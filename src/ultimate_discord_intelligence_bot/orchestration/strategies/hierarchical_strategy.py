@@ -7,12 +7,12 @@ task dependency resolution, and hierarchical failure recovery.
 from __future__ import annotations
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
 
 from ultimate_discord_intelligence_bot.services.hierarchical_orchestrator import (
     HierarchicalOrchestrator as HierarchicalOrchestratorImpl,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class HierarchicalStrategy:
         Returns:
             StepResult with workflow execution outcome
         """
-        from platform.observability.metrics import get_metrics
+        from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
         metrics = get_metrics()
         metrics.counter("orchestration_strategy_executions_total", labels={"strategy": self.name, "outcome": "started"})

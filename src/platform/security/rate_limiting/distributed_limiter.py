@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
 from typing import Any
 
 import redis
 from redis.exceptions import ConnectionError as RedisConnectionError
 from redis.exceptions import RedisError
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

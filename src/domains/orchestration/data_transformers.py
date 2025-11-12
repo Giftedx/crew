@@ -5,8 +5,9 @@ data across different pipeline stages and analysis outputs.
 """
 
 import logging
-from platform.core.step_result import StepResult
 from typing import Any
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 # Module-level logger

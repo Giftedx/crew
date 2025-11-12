@@ -10,7 +10,7 @@ import contextlib
 
 
 try:
-    from platform.observability.metrics import get_metrics
+    from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
     _M = get_metrics()
 except Exception:

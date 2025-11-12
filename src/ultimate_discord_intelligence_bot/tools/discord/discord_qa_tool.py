@@ -8,12 +8,13 @@ reasoning happens in higher-level agents.
 
 from __future__ import annotations
 
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import TypedDict
 
+from domains.memory.vector.vector_search_tool import VectorSearchTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
 from .._base import BaseTool
-from ..domains.memory.vector_search_tool import VectorSearchTool
 
 
 class _DiscordQAResult(TypedDict, total=False):

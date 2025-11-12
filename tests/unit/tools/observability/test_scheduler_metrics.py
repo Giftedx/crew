@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from platform.observability import metrics
-
-from ingest.sources.youtube import YouTubeConnector
-
 from ingest import models, pipeline
+from ingest.sources.youtube import YouTubeConnector
 from scheduler import PriorityQueue, Scheduler
+from ultimate_discord_intelligence_bot.obs import metrics
 
 
 class _CounterStub:

@@ -11,7 +11,8 @@ import time
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-from ..platform.observability.metrics import get_metrics
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+
 from ..tenancy import current_tenant
 
 

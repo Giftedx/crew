@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
 from platform.http.http_utils import (
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -13,10 +12,12 @@ from platform.http.http_utils import (
     resilient_post,
     validate_public_https_url,
 )
-from platform.observability.metrics import get_metrics
 from platform.time import default_utc_now
 
 from pydantic import Field
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .._base import BaseTool
 

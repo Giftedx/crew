@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import logging
 import os
-from platform.core.step_result import StepResult
 from typing import Any
 
 from cryptography.fernet import Fernet
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

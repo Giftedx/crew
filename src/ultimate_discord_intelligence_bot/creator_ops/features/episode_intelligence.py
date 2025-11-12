@@ -8,7 +8,6 @@ import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from platform.core.step_result import StepResult
 
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models import (
@@ -29,6 +28,7 @@ from ultimate_discord_intelligence_bot.creator_ops.features.intelligence_models 
 from ultimate_discord_intelligence_bot.creator_ops.knowledge.api import KnowledgeAPI
 from ultimate_discord_intelligence_bot.creator_ops.media import NLPPipeline, NLPResult
 from ultimate_discord_intelligence_bot.creator_ops.media.alignment import AlignedSegment, AlignedTranscript
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

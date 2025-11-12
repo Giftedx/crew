@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from platform.core.step_result import StepResult
 from unittest.mock import MagicMock, patch
 
 from analysis.transcription.speaker_diarization_service import (
@@ -12,6 +11,8 @@ from analysis.transcription.speaker_diarization_service import (
     SpeakerSegment,
     get_diarization_service,
 )
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestSpeakerDiarizationService:

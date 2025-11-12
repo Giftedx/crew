@@ -10,10 +10,11 @@ from __future__ import annotations
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from platform.core.step_result import StepResult
 from platform.http.http_utils import requests, resilient_get, resilient_post
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
+
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

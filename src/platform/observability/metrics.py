@@ -437,6 +437,13 @@ if PROMETHEUS_AVAILABLE:
         ["model", "provider"],
     )
 
+    # Router decisions (core counter expected by tests and services)
+    ROUTER_DECISIONS = _get_or_create_counter(
+        "router_decisions_total",
+        "Number of routing decisions made",
+        ["tenant", "workspace"],
+    )
+
     # OAuth metrics
     OAUTH_TOKEN_REFRESH_COUNT = _get_or_create_counter(
         "app_oauth_token_refresh_count_total", "OAuth token refresh count", ["platform"]
@@ -615,6 +622,7 @@ else:
     MODEL_ROUTING_COUNT = Counter()
     MODEL_ROUTING_LATENCY = PrometheusHistogram()
     MODEL_ROUTING_ERROR_COUNT = Counter()
+    ROUTER_DECISIONS = Counter()
     OAUTH_TOKEN_REFRESH_COUNT = Counter()
     OAUTH_TOKEN_REFRESH_ERROR_COUNT = Counter()
     OAUTH_TOKEN_REFRESH_LATENCY = PrometheusHistogram()
@@ -686,13 +694,13 @@ __all__ = [
     "OAUTH_TOKEN_REFRESH_COUNT",
     "OAUTH_TOKEN_REFRESH_ERROR_COUNT",
     "OAUTH_TOKEN_REFRESH_LATENCY",
-    # Prometheus metrics
     "REQUEST_COUNT",
     "REQUEST_LATENCY",
     "RL_FEEDBACK_FAILED",
     "RL_FEEDBACK_PROCESSED",
     "RL_FEEDBACK_PROCESSING_LATENCY",
     "RL_FEEDBACK_QUEUE_DEPTH",
+    "ROUTER_DECISIONS",
     "TRAJECTORY_EVALUATIONS",
     "TRAJECTORY_FEEDBACK_EMISSIONS",
     "TRAJECTORY_FEEDBACK_PROCESSED",
@@ -729,4 +737,11 @@ if PROMETHEUS_AVAILABLE:
 else:
     MODERATION_CHECKS_COUNT = Counter()
     MODERATION_BLOCKS_COUNT = Counter()
-    MODERATION_LATENCY = None
+    MODERATION_LATENCY = PrometheusHistogram()
+
+# Export moderation metrics for explicit importers
+__all__ += [
+    "MODERATION_BLOCKS_COUNT",
+    "MODERATION_CHECKS_COUNT",
+    "MODERATION_LATENCY",
+]

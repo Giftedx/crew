@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from platform.core.llm_cache import get_llm_cache, reset_llm_cache_for_tests
+from platform.cache.llm_cache import get_llm_cache, reset_llm_cache_for_tests
 
 
 def test_llm_cache_disabled_returns_none(monkeypatch):

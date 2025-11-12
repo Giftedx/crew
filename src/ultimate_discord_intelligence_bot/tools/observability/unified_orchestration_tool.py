@@ -9,13 +9,12 @@ from __future__ import annotations
 
 import logging
 import time
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 from typing import Any
 
-from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
+from crewai.tools import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.orchestration import (
     TaskManager,
     TaskManagerConfig,
@@ -24,6 +23,7 @@ from ultimate_discord_intelligence_bot.orchestration import (
     UnifiedOrchestrationConfig,
     UnifiedOrchestrationService,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)
@@ -118,13 +118,13 @@ class UnifiedOrchestrationTool(BaseTool):
                 result = self._get_orchestration_metrics(tenant_id, workspace_id)
             else:
                 result = StepResult.fail(f"Unknown operation: {operation}")
-                metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"})
+                metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"}).inc()
                 return result
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "success"}).inc()
             return result
         except Exception as e:
             logger.error(f"Error in unified orchestration tool: {e}", exc_info=True)
-            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"})
+            metrics.counter("tool_runs_total", labels={"tool": self.__class__.__name__, "outcome": "error"}).inc()
             return StepResult.fail(f"Orchestration operation failed: {e!s}", error_context={"exception": str(e)})
         finally:
             metrics.histogram("tool_run_seconds", time.time() - start_time, labels={"tool": self.__class__.__name__})

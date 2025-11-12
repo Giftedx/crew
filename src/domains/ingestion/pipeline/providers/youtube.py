@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from ultimate_discord_intelligence_bot.tools.yt_dlp_download_tool import (
+from domains.ingestion.providers.yt_dlp_download_tool import (
     youtube_fetch_metadata,
 )
 

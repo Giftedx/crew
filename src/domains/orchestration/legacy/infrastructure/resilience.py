@@ -21,18 +21,19 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
 from platform.circuit_breaker import CircuitBreaker, CircuitConfig
-from platform.core.step_result import ErrorCategory, StepResult
 from platform.error_handling import log_error
-from platform.observability import metrics
-from platform.orchestration.protocols import (
+from typing import TYPE_CHECKING, Any, TypeVar
+
+import structlog
+
+from domains.orchestration.legacy.protocols import (
     BaseOrchestrator,
     OrchestrationContext,
     OrchestrationLayer,
     OrchestrationType,
 )
-from typing import TYPE_CHECKING, Any, TypeVar
-
-import structlog
+from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 
 
 if TYPE_CHECKING:
@@ -227,6 +228,8 @@ class ResilienceOrchestrator(BaseOrchestrator):
         if self._monitoring_started:
             return
         try:
+            # TenantContext is automatically propagated to asyncio.create_task via contextvars
+            # No explicit wrapping needed - contextvars handle async propagation (F002 verified)
             task = asyncio.create_task(self._health_monitor_loop())
             self._background_tasks.add(task)
             task.add_done_callback(self._background_tasks.discard)

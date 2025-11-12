@@ -11,16 +11,22 @@ import asyncio
 import hashlib
 import logging
 from datetime import UTC, datetime
-from platform.observability import incident, slo
 from platform.rl.learning_engine import LearningEngine
 from platform.router import Router
 from typing import TYPE_CHECKING, Any
 
-import discord
+# Import the Discord dependency via the lightweight shim that safely degrades
+# when the real discord.py library is not installed. This ensures tests that
+# import ops_* helpers do not fail at import time due to missing optional deps.
+from app.discord.discord_env import (  # type: ignore
+    _DISCORD_AVAILABLE,
+    LIGHTWEIGHT_IMPORT,
+    commands,
+    discord,
+)
 from debate.panel import PanelConfig, run_panel
 from debate.store import Debate, DebateStore
-from discord.ext import commands
-from discord.ui import Button, Select, View
+from ultimate_discord_intelligence_bot.obs import incident, slo
 
 
 if TYPE_CHECKING:
@@ -251,274 +257,302 @@ def ops_debate_stats() -> dict[str, Any]:
     return {"count": len(rows), "avg_rounds": 1.0 if rows else 0.0}
 
 
-class AnalysisDepthSelect(View):
-    """Interactive dropdown for selecting analysis depth."""
+if _DISCORD_AVAILABLE and not LIGHTWEIGHT_IMPORT and hasattr(commands, "slash_command"):
+    # Only define interactive Discord UI components when the real library is available.
+    from discord.ui import Button, View  # type: ignore
 
-    def __init__(self, url: str, user_id: int):
-        super().__init__(timeout=300)
-        self.url = url
-        self.user_id = user_id
-        self.selected_depth = None
-        self._background_tasks: set[asyncio.Task[Any]] = set()
+    class AnalysisDepthSelect(View):
+        """Interactive dropdown for selecting analysis depth."""
 
-    @discord.ui.select(
-        placeholder="Choose analysis depth...",
-        options=[
-            discord.SelectOption(label="Quick", description="Fast analysis (2-3 min)", value="quick"),
-            discord.SelectOption(label="Standard", description="Balanced analysis (5-7 min)", value="standard"),
-            discord.SelectOption(label="Comprehensive", description="Deep analysis (10-15 min)", value="comprehensive"),
-            discord.SelectOption(label="Expert", description="Maximum depth analysis (15-30 min)", value="expert"),
-        ],
-    )
-    async def select_depth(self, interaction: discord.Interaction, select: Select):
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
-            return
-        self.selected_depth = select.values[0]
-        await interaction.response.edit_message(
-            content=f"✅ Selected: **{select.values[0].title()}** analysis\n🚀 Starting analysis...", view=None
+        def __init__(self, url: str, user_id: int):
+            super().__init__(timeout=300)
+            self.url = url
+            self.user_id = user_id
+            self.selected_depth = None
+            self._background_tasks: set[asyncio.Task[Any]] = set()
+
+        @discord.ui.select(  # type: ignore[attr-defined]
+            placeholder="Choose analysis depth...",
+            options=[
+                discord.SelectOption(label="Quick", description="Fast analysis (2-3 min)", value="quick"),  # type: ignore[attr-defined]
+                discord.SelectOption(label="Standard", description="Balanced analysis (5-7 min)", value="standard"),  # type: ignore[attr-defined]
+                discord.SelectOption(
+                    label="Comprehensive", description="Deep analysis (10-15 min)", value="comprehensive"
+                ),  # type: ignore[attr-defined]
+                discord.SelectOption(label="Expert", description="Maximum depth analysis (15-30 min)", value="expert"),  # type: ignore[attr-defined]
+            ],
         )
-        task = asyncio.create_task(self._run_analysis(interaction.channel, interaction.user))
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
+        async def select_depth(self, interaction: Any, select: Any):  # pragma: no cover - UI path
+            if interaction.user.id != self.user_id:
+                await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
+                return
+            self.selected_depth = select.values[0]
+            await interaction.response.edit_message(
+                content=f"✅ Selected: **{select.values[0].title()}** analysis\n🚀 Starting analysis...", view=None
+            )
+            task = asyncio.create_task(self._run_analysis(interaction.channel, interaction.user))
+            self._background_tasks.add(task)
+            task.add_done_callback(self._background_tasks.discard)
 
-    async def _run_analysis(self, channel, user):
-        """Run the analysis in background and send results."""
-        try:
-            from ultimate_discord_intelligence_bot.enhanced_crew_integration import execute_crew_with_quality_monitoring
+        async def _run_analysis(self, channel, user):  # pragma: no cover - UI path
+            try:
+                from ultimate_discord_intelligence_bot.enhanced_crew_integration import (
+                    execute_crew_with_quality_monitoring,
+                )
 
-            quality_threshold = {"quick": 0.6, "standard": 0.7, "comprehensive": 0.8, "expert": 0.9}[
-                self.selected_depth
+                quality_threshold = {"quick": 0.6, "standard": 0.7, "comprehensive": 0.8, "expert": 0.9}[
+                    self.selected_depth
+                ]
+                progress_msg = await channel.send("🔄 **Analysis in progress...**")
+                result = await execute_crew_with_quality_monitoring(
+                    inputs={"url": self.url}, quality_threshold=quality_threshold, enable_alerts=True
+                )
+                await progress_msg.edit(content=self._format_analysis_result(result))
+            except Exception as e:
+                logger.error(f"Analysis failed: {e}")
+                await channel.send(f"❌ Analysis failed: {e!s}")
+
+        def _format_analysis_result(self, result) -> str:
+            quality_score = result.get("quality_score", 0.0)
+            execution_time = result.get("execution_time", 0.0)
+            status_emoji = "🟢" if quality_score > 0.8 else "🟡" if quality_score > 0.6 else "🔴"
+            return (
+                "🎯 **Analysis Complete!**\n\n"
+                f"{status_emoji} **Quality Score:** `{quality_score:.2f}/1.0`\n"
+                f"⏱️ **Execution Time:** `{execution_time:.1f}s`\n"
+                f"📊 **Alerts:** `{len(result.get('performance_alerts', []))}`\n\n"
+                "**Key Findings:**\n• Multi-platform content analysis completed\n"
+                "• Advanced deception detection applied\n• Fact-checking and credibility assessment done\n"
+                "• Results stored in vector memory for future queries\n\n"
+                "*Use `/ask <question>` to query the analyzed content!*"
+            )
+
+    class PlatformSelectView(View):  # pragma: no cover - UI path
+        """Interactive platform selection for content ingestion."""
+
+        def __init__(self, user_id: int):
+            super().__init__(timeout=300)
+            self.user_id = user_id
+            self.selected_platform = None
+
+        @discord.ui.select(  # type: ignore[attr-defined]
+            placeholder="Select platform to monitor...",
+            options=[
+                discord.SelectOption(
+                    label="YouTube", description="Video content analysis", emoji="📺", value="youtube"
+                ),  # type: ignore[attr-defined]
+                discord.SelectOption(label="Twitter/X", description="Social media posts", emoji="🐦", value="twitter"),  # type: ignore[attr-defined]
+                discord.SelectOption(label="TikTok", description="Short-form videos", emoji="🎵", value="tiktok"),  # type: ignore[attr-defined]
+                discord.SelectOption(
+                    label="Instagram", description="Photo and video content", emoji="📸", value="instagram"
+                ),  # type: ignore[attr-defined]
+                discord.SelectOption(label="Reddit", description="Discussion threads", emoji="💬", value="reddit"),  # type: ignore[attr-defined]
+                discord.SelectOption(label="Twitch", description="Live streams", emoji="🎮", value="twitch"),  # type: ignore[attr-defined]
+            ],
+        )
+        async def select_platform(self, interaction: Any, select: Any):
+            if interaction.user.id != self.user_id:
+                await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
+                return
+            self.selected_platform = select.values[0]
+            await interaction.response.edit_message(
+                content=(
+                    f"✅ Selected platform: **{select.values[0].title()}**\n\nPlease provide a creator handle or URL:"
+                ),
+                view=None,
+            )
+
+    class EnhancedAnalysisCommands(commands.Cog):  # type: ignore
+        """Enhanced Discord commands with interactive features."""
+
+        def __init__(self, bot):
+            self.bot = bot
+
+        @commands.slash_command(name="analyze", description="Analyze content with interactive depth selection")
+        async def analyze_interactive(self, ctx, url: str):
+            await ctx.defer()
+            if not self._is_valid_url(url):
+                await ctx.followup.send("❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)")
+                return
+            view = AnalysisDepthSelect(url, ctx.user.id)
+            await ctx.followup.send(
+                (f"🎯 **Content Analysis Request**\n📎 URL: {url}\n\nChoose your analysis depth:"),
+                view=view,
+                ephemeral=True,
+            )
+
+        @commands.slash_command(name="monitor", description="Set up content monitoring with platform selection")
+        async def monitor_setup(self, ctx):
+            await ctx.defer()
+            view = PlatformSelectView(ctx.user.id)
+            await ctx.followup.send(
+                "📡 **Content Monitoring Setup**\n\nSelect a platform to monitor:", view=view, ephemeral=True
+            )
+
+        @commands.slash_command(name="ask", description="Query analyzed content with enhanced formatting")
+        async def ask_enhanced(self, ctx, question: str):
+            await ctx.defer()
+            try:
+                from domains.memory import MemoryService
+
+                memory_service = MemoryService()
+                result = await memory_service.query_content(
+                    query=question, tenant="discord", workspace=ctx.guild.id if ctx.guild else "dm"
+                )
+                if result.status == "success":
+                    embed = self._create_qa_embed(question, result.data)
+                    await ctx.followup.send(embed=embed)
+                else:
+                    await ctx.followup.send(f"❌ Query failed: {result.error}")
+            except Exception as e:  # pragma: no cover - UI path
+                logger.error(f"Q&A failed: {e}")
+                await ctx.followup.send(f"❌ Error processing question: {e!s}")
+
+        def _is_valid_url(self, url: str) -> bool:
+            import re
+
+            url_pattern = re.compile(
+                "^https?://(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,6}\\.?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})(?::\\d+)?(?:/?|[/?]\\S+)$",
+                re.IGNORECASE,
+            )
+            if not url_pattern.match(url):
+                return False
+            supported_domains = [
+                "youtube.com",
+                "youtu.be",
+                "twitter.com",
+                "x.com",
+                "tiktok.com",
+                "instagram.com",
+                "reddit.com",
+                "twitch.tv",
             ]
-            progress_msg = await channel.send("🔄 **Analysis in progress...**")
-            result = await execute_crew_with_quality_monitoring(
-                inputs={"url": self.url}, quality_threshold=quality_threshold, enable_alerts=True
+            from urllib.parse import urlparse
+
+            domain = urlparse(url).netloc.lower()
+            return any(supported_domain in domain for supported_domain in supported_domains)
+
+        def _create_qa_embed(self, question: str, answer_data: dict[str, Any]) -> Any:
+            embed = discord.Embed(
+                title="🔍 Content Query Results",
+                description=f"**Question:** {question}",
+                color=discord.Color.blue(),
+                timestamp=datetime.now(UTC),
             )
-            await progress_msg.edit(content=self._format_analysis_result(result))
-        except Exception as e:
-            logger.error(f"Analysis failed: {e}")
-            await channel.send(f"❌ Analysis failed: {e!s}")
+            answer = answer_data.get("answer", "No answer found")
+            embed.add_field(name="📝 Answer", value=answer[:1024], inline=False)
+            confidence = answer_data.get("confidence", 0)
+            embed.add_field(name="🎯 Confidence", value=f"{confidence:.1%}", inline=True)
+            sources = answer_data.get("sources", [])
+            if sources:
+                sources_text = "\n".join([f"• {src.get('title', 'Unknown')}" for src in sources])
+                embed.add_field(name="📚 Sources", value=sources_text[:1024], inline=True)
+            citations = answer_data.get("citations", [])
+            if citations:
+                citation_text = "\n".join([f"[{i + 1}] {cit}" for i, cit in enumerate(citations[:3])])
+                embed.add_field(name="🔗 Citations", value=citation_text[:1024], inline=False)
+            embed.set_footer(text="Powered by Ultimate Discord Intelligence Bot")
+            return embed
 
-    def _format_analysis_result(self, result) -> str:
-        """Format analysis results for Discord."""
-        quality_score = result.get("quality_score", 0.0)
-        execution_time = result.get("execution_time", 0.0)
-        status_emoji = "🟢" if quality_score > 0.8 else "🟡" if quality_score > 0.6 else "🔴"
-        return f"🎯 **Analysis Complete!**\n\n{status_emoji} **Quality Score:** `{quality_score:.2f}/1.0`\n⏱️ **Execution Time:** `{execution_time:.1f}s`\n📊 **Alerts:** `{len(result.get('performance_alerts', []))}`\n\n**Key Findings:**\n• Multi-platform content analysis completed\n• Advanced deception detection applied\n• Fact-checking and credibility assessment done\n• Results stored in vector memory for future queries\n\n*Use `/ask <question>` to query the analyzed content!*"
+    class SystemStatusView(View):  # pragma: no cover - UI path
+        """Interactive system status dashboard."""
 
+        def __init__(self, bot):
+            super().__init__(timeout=None)
+            self.bot = bot
 
-class PlatformSelectView(View):
-    """Interactive platform selection for content ingestion."""
+        @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary)  # type: ignore[attr-defined]
+        async def refresh_status(self, interaction: Any, button: Button):
+            await interaction.response.edit_message(content=self._get_system_status(), view=self)
 
-    def __init__(self, user_id: int):
-        super().__init__(timeout=300)
-        self.user_id = user_id
-        self.selected_platform = None
+        @discord.ui.button(label="📊 Performance", style=discord.ButtonStyle.secondary)  # type: ignore[attr-defined]
+        async def show_performance(self, interaction: Any, button: Button):
+            await interaction.response.send_message(self._get_performance_metrics(), ephemeral=True)
 
-    @discord.ui.select(
-        placeholder="Select platform to monitor...",
-        options=[
-            discord.SelectOption(label="YouTube", description="Video content analysis", emoji="📺", value="youtube"),
-            discord.SelectOption(label="Twitter/X", description="Social media posts", emoji="🐦", value="twitter"),
-            discord.SelectOption(label="TikTok", description="Short-form videos", emoji="🎵", value="tiktok"),
-            discord.SelectOption(
-                label="Instagram", description="Photo and video content", emoji="📸", value="instagram"
-            ),
-            discord.SelectOption(label="Reddit", description="Discussion threads", emoji="💬", value="reddit"),
-            discord.SelectOption(label="Twitch", description="Live streams", emoji="🎮", value="twitch"),
-        ],
-    )
-    async def select_platform(self, interaction: discord.Interaction, select: Select):
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("❌ This menu is not for you!", ephemeral=True)
-            return
-        self.selected_platform = select.values[0]
-        await interaction.response.edit_message(
-            content=f"✅ Selected platform: **{select.values[0].title()}**\n\nPlease provide a creator handle or URL:",
-            view=None,
-        )
-
-
-class EnhancedAnalysisCommands(commands.Cog):
-    """Enhanced Discord commands with interactive features."""
-
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.slash_command(name="analyze", description="Analyze content with interactive depth selection")
-    async def analyze_interactive(self, ctx, url: str):
-        """Interactive content analysis with depth selection."""
-        await ctx.defer()
-        if not self._is_valid_url(url):
-            await ctx.followup.send("❌ Please provide a valid URL (YouTube, Twitter, TikTok, etc.)")
-            return
-        view = AnalysisDepthSelect(url, ctx.user.id)
-        await ctx.followup.send(
-            f"🎯 **Content Analysis Request**\n📎 URL: {url}\n\nChoose your analysis depth:", view=view, ephemeral=True
-        )
-
-    @commands.slash_command(name="monitor", description="Set up content monitoring with platform selection")
-    async def monitor_setup(self, ctx):
-        """Interactive platform monitoring setup."""
-        await ctx.defer()
-        view = PlatformSelectView(ctx.user.id)
-        await ctx.followup.send(
-            "📡 **Content Monitoring Setup**\n\nSelect a platform to monitor:", view=view, ephemeral=True
-        )
-
-    @commands.slash_command(name="ask", description="Query analyzed content with enhanced formatting")
-    async def ask_enhanced(self, ctx, question: str):
-        """Enhanced Q&A with better formatting and context."""
-        await ctx.defer()
-        try:
-            from domains.memory import MemoryService
-
-            memory_service = MemoryService()
-            result = await memory_service.query_content(
-                query=question, tenant="discord", workspace=ctx.guild.id if ctx.guild else "dm"
+        def _get_system_status(self) -> str:
+            return (
+                "🟢 **System Status: Healthy**\n\n📊 **Active Components:**\n"
+                "• Content Ingestion Pipeline: ✅ Running\n• AI Analysis Engine: ✅ Operational\n"
+                "• Vector Memory: ✅ Connected\n• Discord Integration: ✅ Active\n\n🔍 **Recent Activity:**\n"
+                "• 24 analyses completed today\n• 156 content items processed\n• 89% average quality score\n\n"
+                "*Use `/ask` to query analyzed content or `/analyze` for new content!*"
             )
-            if result.status == "success":
-                embed = self._create_qa_embed(question, result.data)
-                await ctx.followup.send(embed=embed)
+
+        def _get_performance_metrics(self) -> str:
+            return (
+                "📈 **Performance Metrics**\n\n⏱️ **Average Response Times:**\n"
+                "• Content Analysis: 4.2s\n• Fact Checking: 2.8s\n• Memory Queries: 0.3s\n\n"
+                "💰 **Cost Tracking:**\n• Today's Usage: $2.34\n• Monthly Total: $67.89\n• Efficiency Score: 94%\n\n"
+                "🎯 **Quality Metrics:**\n• Analysis Accuracy: 96%\n• Fact Check Precision: 92%\n• User Satisfaction: 4.8/5\n\n*Performance data updated in real-time*"
+            )
+
+    async def setup_enhanced_discord_bot():  # pragma: no cover - UI path
+        intents = discord.Intents.default()
+        intents.message_content = True
+        intents.guilds = True
+        bot = commands.Bot(
+            command_prefix="/", intents=intents, description="Ultimate Discord Intelligence Bot - Enhanced Edition"
+        )
+        await bot.add_cog(EnhancedAnalysisCommands(bot))
+        bot.add_view(SystemStatusView(bot))
+
+        @bot.event
+        async def on_ready():
+            logger.info(f"{bot.user} has connected to Discord!")
+            await bot.change_presence(
+                activity=discord.Activity(type=discord.ActivityType.watching, name="for /analyze commands")
+            )
+
+        @bot.event
+        async def on_command_error(ctx, error):
+            if isinstance(error, commands.CommandNotFound):
+                await ctx.send(
+                    "❓ **Command not found!**\n\nAvailable commands:\n• `/analyze <url>` - Analyze content\n"
+                    "• `/ask <question>` - Query analyzed content\n• `/monitor` - Set up content monitoring\n\n*Use tab completion or check `/help` for more options!*"
+                )
+            elif isinstance(error, commands.MissingRequiredArgument):
+                await ctx.send(f"❌ **Missing argument:** `{error.param.name}` is required for this command.")
             else:
-                await ctx.followup.send(f"❌ Query failed: {result.error}")
+                logger.error(f"Command error: {error}")
+                await ctx.send("❌ **An error occurred.** Please try again or contact support.")
+
+        return bot
+
+    async def run_enhanced_discord_bot():  # pragma: no cover - UI path
+        import os
+
+        token = os.getenv("DISCORD_BOT_TOKEN")
+        if not token:
+            logger.error("DISCORD_BOT_TOKEN environment variable not set!")
+            logger.error("Please set your Discord bot token in the .env file or environment variables.")
+            return
+        logger.info("Starting Enhanced Discord Intelligence Bot...")
+        bot = await setup_enhanced_discord_bot()
+        try:
+            await bot.start(token)
+        except KeyboardInterrupt:
+            logger.info("Shutting down bot...")
         except Exception as e:
-            logger.error(f"Q&A failed: {e}")
-            await ctx.followup.send(f"❌ Error processing question: {e!s}")
+            logger.error(f"Bot error: {e}")
+        finally:
+            await bot.close()
 
-    def _is_valid_url(self, url: str) -> bool:
-        """Basic URL validation for supported platforms."""
-        import re
+    def run_discord_bot():  # pragma: no cover - UI path
+        asyncio.run(run_enhanced_discord_bot())
+else:
+    # Placeholders to keep import-time happy in test environments without discord.py
+    AnalysisDepthSelect = None  # type: ignore
+    PlatformSelectView = None  # type: ignore
+    SystemStatusView = None  # type: ignore
 
-        url_pattern = re.compile(
-            "^https?://(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\\.)+[A-Z]{2,6}\\.?|localhost|\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})(?::\\d+)?(?:/?|[/?]\\S+)$",
-            re.IGNORECASE,
-        )
-        if not url_pattern.match(url):
-            return False
-        supported_domains = [
-            "youtube.com",
-            "youtu.be",
-            "twitter.com",
-            "x.com",
-            "tiktok.com",
-            "instagram.com",
-            "reddit.com",
-            "twitch.tv",
-        ]
-        from urllib.parse import urlparse
+    async def setup_enhanced_discord_bot():  # pragma: no cover - shim path
+        raise AttributeError("Discord UI is unavailable in lightweight mode")
 
-        domain = urlparse(url).netloc.lower()
-        return any(supported_domain in domain for supported_domain in supported_domains)
+    async def run_enhanced_discord_bot():  # pragma: no cover - shim path
+        raise AttributeError("Discord UI is unavailable in lightweight mode")
 
-    def _create_qa_embed(self, question: str, answer_data: dict[str, Any]) -> discord.Embed:
-        """Create a rich embed for Q&A responses."""
-        embed = discord.Embed(
-            title="🔍 Content Query Results",
-            description=f"**Question:** {question}",
-            color=discord.Color.blue(),
-            timestamp=datetime.now(UTC),
-        )
-        answer = answer_data.get("answer", "No answer found")
-        embed.add_field(name="📝 Answer", value=answer[:1024], inline=False)
-        confidence = answer_data.get("confidence", 0)
-        embed.add_field(name="🎯 Confidence", value=f"{confidence:.1%}", inline=True)
-        sources = answer_data.get("sources", [])
-        if sources:
-            sources_text = "\n".join([f"• {src.get('title', 'Unknown')}" for src in sources])
-            embed.add_field(name="📚 Sources", value=sources_text[:1024], inline=True)
-        citations = answer_data.get("citations", [])
-        if citations:
-            citation_text = "\n".join([f"[{i + 1}] {cit}" for i, cit in enumerate(citations[:3])])
-            embed.add_field(name="🔗 Citations", value=citation_text[:1024], inline=False)
-        embed.set_footer(text="Powered by Ultimate Discord Intelligence Bot")
-        return embed
-
-
-class SystemStatusView(View):
-    """Interactive system status dashboard."""
-
-    def __init__(self, bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-
-    @discord.ui.button(label="🔄 Refresh", style=discord.ButtonStyle.primary)
-    async def refresh_status(self, interaction: discord.Interaction, button: Button):
-        """Refresh system status."""
-        await interaction.response.edit_message(content=self._get_system_status(), view=self)
-
-    @discord.ui.button(label="📊 Performance", style=discord.ButtonStyle.secondary)
-    async def show_performance(self, interaction: discord.Interaction, button: Button):
-        """Show performance metrics."""
-        await interaction.response.send_message(self._get_performance_metrics(), ephemeral=True)
-
-    def _get_system_status(self) -> str:
-        """Get current system status."""
-        return "🟢 **System Status: Healthy**\n\n📊 **Active Components:**\n• Content Ingestion Pipeline: ✅ Running\n• AI Analysis Engine: ✅ Operational\n• Vector Memory: ✅ Connected\n• Discord Integration: ✅ Active\n\n🔍 **Recent Activity:**\n• 24 analyses completed today\n• 156 content items processed\n• 89% average quality score\n\n*Use `/ask` to query analyzed content or `/analyze` for new content!*"
-
-    def _get_performance_metrics(self) -> str:
-        """Get performance metrics."""
-        return "📈 **Performance Metrics**\n\n⏱️ **Average Response Times:**\n• Content Analysis: 4.2s\n• Fact Checking: 2.8s\n• Memory Queries: 0.3s\n\n💰 **Cost Tracking:**\n• Today's Usage: $2.34\n• Monthly Total: $67.89\n• Efficiency Score: 94%\n\n🎯 **Quality Metrics:**\n• Analysis Accuracy: 96%\n• Fact Check Precision: 92%\n• User Satisfaction: 4.8/5\n\n*Performance data updated in real-time*"
-
-
-async def setup_enhanced_discord_bot():
-    """Set up the enhanced Discord bot with interactive features."""
-    intents = discord.Intents.default()
-    intents.message_content = True
-    intents.guilds = True
-    bot = commands.Bot(
-        command_prefix="/", intents=intents, description="Ultimate Discord Intelligence Bot - Enhanced Edition"
-    )
-    await bot.add_cog(EnhancedAnalysisCommands(bot))
-    bot.add_view(SystemStatusView(bot))
-
-    @bot.event
-    async def on_ready():
-        logger.info(f"{bot.user} has connected to Discord!")
-        await bot.change_presence(
-            activity=discord.Activity(type=discord.ActivityType.watching, name="for /analyze commands")
-        )
-
-    @bot.event
-    async def on_command_error(ctx, error):
-        """Enhanced error handling for commands."""
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.send(
-                "❓ **Command not found!**\n\nAvailable commands:\n• `/analyze <url>` - Analyze content\n• `/ask <question>` - Query analyzed content\n• `/monitor` - Set up content monitoring\n\n*Use tab completion or check `/help` for more options!*"
-            )
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"❌ **Missing argument:** `{error.param.name}` is required for this command.")
-        else:
-            logger.error(f"Command error: {error}")
-            await ctx.send("❌ **An error occurred.** Please try again or contact support.")
-
-    return bot
-
-
-async def run_enhanced_discord_bot():
-    """Run the enhanced Discord bot standalone."""
-    import os
-
-    token = os.getenv("DISCORD_BOT_TOKEN")
-    if not token:
-        logger.error("DISCORD_BOT_TOKEN environment variable not set!")
-        logger.error("Please set your Discord bot token in the .env file or environment variables.")
-        return
-    logger.info("Starting Enhanced Discord Intelligence Bot...")
-    bot = await setup_enhanced_discord_bot()
-    try:
-        await bot.start(token)
-    except KeyboardInterrupt:
-        logger.info("Shutting down bot...")
-    except Exception as e:
-        logger.error(f"Bot error: {e}")
-    finally:
-        await bot.close()
-
-
-def run_discord_bot():
-    """Synchronous entry point for running the Discord bot."""
-    asyncio.run(run_enhanced_discord_bot())
+    def run_discord_bot():  # pragma: no cover - shim path
+        raise AttributeError("Discord UI is unavailable in lightweight mode")
 
 
 if __name__ == "__main__":

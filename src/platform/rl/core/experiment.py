@@ -110,8 +110,7 @@ class Experiment:
         )
         if METRICS_AVAILABLE:
             try:
-                from platform.observability import metrics
-
+                from ultimate_discord_intelligence_bot.obs import metrics
                 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
                 ctx = current_tenant()
@@ -156,8 +155,7 @@ class Experiment:
         )
         if METRICS_AVAILABLE:
             try:
-                from platform.observability import metrics
-
+                from ultimate_discord_intelligence_bot.obs import metrics
                 from ultimate_discord_intelligence_bot.tenancy import current_tenant
 
                 ctx = current_tenant()

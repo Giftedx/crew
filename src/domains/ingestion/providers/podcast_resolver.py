@@ -6,11 +6,12 @@ Contract: public run/_run returns StepResult; helper returns domain object.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
 
-from ...profiles.schema import CanonicalFeed
-from .._base import BaseTool
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.profiles.schema import CanonicalFeed
+from ultimate_discord_intelligence_bot.step_result import StepResult
+
+from ._base import BaseTool
 
 
 @dataclass

@@ -20,7 +20,6 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from platform.core.step_result import StepResult
 from typing import Any, Literal
 
 from domains.intelligence.analysis.transcription.asr_service import (
@@ -28,6 +27,7 @@ from domains.intelligence.analysis.transcription.asr_service import (
     TranscriptionResult,
     TranscriptionSegment,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 logger = logging.getLogger(__name__)

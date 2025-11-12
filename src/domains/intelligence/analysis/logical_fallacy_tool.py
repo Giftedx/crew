@@ -8,12 +8,11 @@ With ENABLE_INSTRUCTOR=True, uses LLM-based analysis for more accurate detection
 
 import logging
 import re
-from platform.config.configuration import get_config
-from platform.core.step_result import StepResult
-from platform.observability.metrics import get_metrics
-from platform.rl.response_models import FallacyAnalysisResult
-from platform.rl.structured_outputs import InstructorClientFactory
+from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import ClassVar
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
@@ -105,61 +104,11 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         super().__init__()
         self._metrics = get_metrics()
 
-    def _run_llm_analysis(self, text: str) -> StepResult:
-        """Use LLM with Instructor for structured fallacy detection.
-
-        Args:
-            text: Content to analyze for logical fallacies
-
-        Returns:
-            StepResult with FallacyAnalysisResult data
-
-        Raises:
-            Exception: Any error during LLM call (caught by caller for fallback)
-        """
-        config = get_config()
-        client = InstructorClientFactory.create_openrouter_client()
-        prompt = f"Analyze the following text for logical fallacies. Identify specific instances with quotes, explain why each is a fallacy, assess severity, and provide an overall credibility score.\n\nText to analyze:\n{text}\n\nBe thorough but fair. Not every argument flaw is a fallacy. Focus on clear logical errors that undermine the argument's validity."
-        result: FallacyAnalysisResult = client.chat.completions.create(
-            model=config.openrouter_analysis_model or "anthropic/claude-3.5-sonnet",
-            response_model=FallacyAnalysisResult,
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are an expert in critical thinking and logical reasoning. Analyze arguments for fallacies with precision and fairness.",
-                },
-                {"role": "user", "content": prompt},
-            ],
-            max_retries=config.instructor_max_retries,
-        )
-        confidence_scores = {}
-        for fallacy in result.fallacies:
-            confidence_map = {"low": 0.3, "medium": 0.6, "high": 0.8, "very_high": 0.95}
-            confidence_scores[fallacy.fallacy_type.value] = confidence_map.get(fallacy.confidence.value, 0.5)
-        details = {fallacy.fallacy_type.value: fallacy.explanation for fallacy in result.fallacies}
-        self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "success_llm"}).inc()
-        return StepResult.ok(
-            fallacies=[f.fallacy_type.value for f in result.fallacies],
-            count=len(result.fallacies),
-            confidence_scores=confidence_scores,
-            details=details,
-            overall_quality=result.overall_quality.value,
-            credibility_score=result.credibility_score,
-            summary=result.summary,
-            recommendations=result.recommendations,
-            key_issues=result.key_issues,
-            analysis_method="llm_instructor",
-        )
-
+    @cache_tool_result(namespace="tool:logical_fallacy", ttl=3600)
     def _run(self, text: str) -> StepResult:
         if not text or not text.strip():
             self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "skipped"}).inc()
             return StepResult.skip(reason="empty text", fallacies=[], count=0, confidence_scores={}, details={})
-        if InstructorClientFactory.is_enabled():
-            try:
-                return self._run_llm_analysis(text)
-            except Exception as exc:
-                logger.warning(f"LLM analysis failed, falling back to pattern matching: {exc}")
         findings = []
         confidence_scores = {}
         text_lower = text.lower()

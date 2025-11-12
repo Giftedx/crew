@@ -1,11 +1,11 @@
 """Tests for MultiPlatformDownloadTool with corrected interface."""
 
-from platform.core.step_result import StepResult
 from unittest.mock import patch
 
 import pytest
 
 from domains.ingestion.providers.multi_platform_download_tool import MultiPlatformDownloadTool
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 class TestMultiPlatformDownloadTool:

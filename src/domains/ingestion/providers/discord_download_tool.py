@@ -13,11 +13,12 @@ Test Compatibility:
 import os
 import tempfile
 from pathlib import Path
-from platform.core.step_result import StepResult
 from platform.http.http_utils import resilient_get
-from platform.observability.metrics import get_metrics
 
 from pydantic import AnyHttpUrl, BaseModel
+
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
 
