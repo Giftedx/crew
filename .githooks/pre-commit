@@ -42,17 +42,45 @@ if ! make test-fast; then
     exit 1
 fi
 
-echo "🔧 Running compliance checks..."
+echo "🔧 Running compliance guards..."
 if command -v "$PYTHON" >/dev/null 2>&1; then
-    # Use the robust Python compliance validator for requests usage
+    guards_passed=true
+
+    # HTTP wrapper usage validation
     if ! "$PYTHON" scripts/validate_http_wrappers_usage.py; then
-        echo "❌ Direct 'requests' usage detected by validator (use core.http_utils)"
-        exit 1
+        echo "❌ HTTP wrapper guard failed (use http_utils, not direct requests.*)"
+        guards_passed=false
     fi
 
-    # Check for missing StepResult usage in tools
-    if find src/ultimate_discord_intelligence_bot/tools/ -name "*.py" -not -name "_base.py" -not -name "__init__.py" -exec grep -l "def _run" {} \; | xargs grep -L "StepResult" 2>/dev/null; then
-        echo "⚠️  Warning: Some tools may not be using StepResult pattern"
+    # Tools exports validation
+    if ! "$PYTHON" scripts/validate_tools_exports.py; then
+        echo "❌ Tools export guard failed"
+        guards_passed=false
+    fi
+
+    # Metrics instrumentation validation
+    if ! "$PYTHON" scripts/metrics_instrumentation_guard.py; then
+        echo "❌ Metrics instrumentation guard failed"
+        guards_passed=false
+    fi
+
+    # Deprecated directories validation
+    if ! "$PYTHON" scripts/guards/deprecated_directories_guard.py; then
+        echo "❌ Deprecated directories guard failed"
+        guards_passed=false
+    fi
+
+    # Dispatcher usage validation (optional)
+    if ! "$PYTHON" scripts/validate_dispatcher_usage.py 2>/dev/null; then
+        echo "⚠️  Warning: Dispatcher usage guard skipped (optional)"
+    fi
+
+    if [ "$guards_passed" = false ]; then
+        echo ""
+        echo "❌ Compliance guards failed!"
+        echo "Fix violations or bypass with: git commit --no-verify (emergencies only)"
+        echo "Run 'make guards' for detailed output"
+        exit 1
     fi
 fi
 

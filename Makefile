@@ -23,6 +23,21 @@ install:
 
 dev: install pre-commit
 
+# Install git hooks (pre-commit, etc.)
+.PHONY: setup-hooks hooks
+setup-hooks hooks:
+	@echo "Installing git hooks..."
+	@mkdir -p .git/hooks
+	@if [ -f .githooks/pre-commit ]; then \
+		cp .githooks/pre-commit .git/hooks/pre-commit && \
+		chmod +x .git/hooks/pre-commit && \
+		echo "✅ Pre-commit hook installed"; \
+	else \
+		echo "⚠️  Warning: .githooks/pre-commit not found"; \
+	fi
+	@echo "Git hooks setup complete. Hooks will run automatically on commit."
+	@echo "To bypass: git commit --no-verify (emergencies only)"
+
 pre-commit:
 	$(PYTHON) -m pre_commit install --install-hooks
 
@@ -97,11 +112,11 @@ run-crew:
 
 # Launch FastAPI server locally (uses uvicorn). Requires runtime deps only.
 run-api:
-	$(PYTHON) scripts/run_api.py --host 0.0.0.0 --port 8000
+	PYTHONPATH=src $(PYTHON) scripts/run_api.py --host 0.0.0.0 --port $(or $(PORT),8000)
 
 # Launch FastAPI server with auto-reload (development convenience)
 run-api-dev:
-	$(PYTHON) scripts/run_api.py --host 0.0.0.0 --port 8000 --reload
+	PYTHONPATH=src $(PYTHON) scripts/run_api.py --host 0.0.0.0 --port 8000 --reload
 
 docker-build:
 	docker build -t $(IMAGE) .
@@ -160,7 +175,7 @@ test:
 
 # Fast local CI sweep (quick feedback loop)
 test-fast:
-	$(PYTHON) -m pytest -q -c pytest.ini \
+	$(PYTHON) -m pytest -q -c pytest.ini --no-cov \
 		tests/unit/core/test_http_utils.py \
 		tests/unit/core/test_guards_http_requests.py \
 		tests/unit/core/test_vector_store_dimension.py \
@@ -169,7 +184,7 @@ test-fast:
 # Run the fast test sweep with a clean environment for retry precedence tests
 .PHONY: test-fast-clean-env
 test-fast-clean-env:
-	env -u RETRY_MAX_ATTEMPTS PYTHONPATH=src $(PYTHON) -m pytest -q -c pytest.ini \
+	env -u RETRY_MAX_ATTEMPTS PYTHONPATH=src $(PYTHON) -m pytest -q -c pytest.ini --no-cov \
 		tests/unit/core/test_http_utils.py \
 		tests/unit/core/test_guards_http_requests.py \
 		tests/unit/core/test_vector_store_dimension.py \
