@@ -1,0 +1,152 @@
+# Error Recovery Policies for Pipeline Orchestrator
+# Maps ErrorCategory values to recovery strategies
+
+# Network and infrastructure errors - aggressive retry
+NETWORK:
+  max_retries: 5
+  backoff_base_seconds: 1.0
+  backoff_factor: 2.0
+  fallback_step: null
+  action: RETRY
+
+TIMEOUT:
+  max_retries: 3
+  backoff_base_seconds: 2.0
+  backoff_factor: 2.0
+  fallback_step: null
+  action: RETRY
+
+SERVICE_UNAVAILABLE:
+  max_retries: 4
+  backoff_base_seconds: 5.0
+  backoff_factor: 1.5
+  fallback_step: null
+  action: RETRY
+
+SERVICE_OVERLOADED:
+  max_retries: 3
+  backoff_base_seconds: 10.0
+  backoff_factor: 1.5
+  fallback_step: null
+  action: RETRY
+
+CIRCUIT_BREAKER_OPEN:
+  max_retries: 0
+  backoff_base_seconds: 0
+  backoff_factor: 1.0
+  fallback_step: null
+  action: SKIP
+  reason: "Circuit breaker open, service degraded"
+
+# Rate limiting - backoff and retry
+RATE_LIMIT:
+  max_retries: 3
+  backoff_base_seconds: 60.0 # Respect rate limits
+  backoff_factor: 1.0 # Linear backoff
+  fallback_step: null
+  action: RETRY
+
+# Validation and parsing errors - skip immediately
+VALIDATION:
+  max_retries: 0
+  action: SKIP
+  reason: "Invalid input, cannot process"
+
+INVALID_FORMAT:
+  max_retries: 0
+  action: SKIP
+  reason: "Unsupported format"
+
+PARSING_ERROR:
+  max_retries: 0
+  action: SKIP
+  reason: "Failed to parse content"
+
+SCHEMA_VALIDATION:
+  max_retries: 0
+  action: SKIP
+  reason: "Schema validation failed"
+
+# Model and processing errors - fallback to cheaper model
+MODEL_ERROR:
+  max_retries: 1
+  backoff_base_seconds: 1.0
+  backoff_factor: 1.0
+  fallback_step: "use_fallback_model"
+  action: FALLBACK
+
+EMBEDDING_ERROR:
+  max_retries: 2
+  backoff_base_seconds: 2.0
+  backoff_factor: 1.5
+  fallback_step: null
+  action: RETRY
+
+# Resource exhaustion - fail fast
+INSUFFICIENT_RESOURCES:
+  max_retries: 0
+  action: FAIL
+  reason: "Insufficient resources"
+
+QUOTA_EXCEEDED:
+  max_retries: 0
+  action: FAIL
+  reason: "Quota exceeded"
+
+MEMORY_ERROR:
+  max_retries: 0
+  action: FAIL
+  reason: "Out of memory"
+
+# Authentication/authorization - fail fast
+AUTHENTICATION:
+  max_retries: 0
+  action: FAIL
+  reason: "Authentication failed"
+
+AUTHORIZATION:
+  max_retries: 0
+  action: FAIL
+  reason: "Authorization denied"
+
+PERMISSION_DENIED:
+  max_retries: 0
+  action: FAIL
+  reason: "Permission denied"
+
+# Not found - skip
+NOT_FOUND:
+  max_retries: 0
+  action: SKIP
+  reason: "Resource not found"
+
+# Generic processing errors - limited retry
+PROCESSING:
+  max_retries: 1
+  backoff_base_seconds: 1.0
+  backoff_factor: 1.0
+  fallback_step: null
+  action: RETRY
+
+# Transient errors - retry
+TRANSIENT:
+  max_retries: 3
+  backoff_base_seconds: 1.0
+  backoff_factor: 2.0
+  fallback_step: null
+  action: RETRY
+
+RETRYABLE:
+  max_retries: 3
+  backoff_base_seconds: 1.0
+  backoff_factor: 2.0
+  fallback_step: null
+  action: RETRY
+
+# Default policy for uncategorized errors
+DEFAULT:
+  max_retries: 1
+  backoff_base_seconds: 1.0
+  backoff_factor: 1.0
+  fallback_step: null
+  action: RETRY
