@@ -75,9 +75,9 @@ except Exception:
 def create_app(settings: Settings | None = None) -> FastAPI:
     if settings is None:
         settings = Settings()
-    
+
     app = FastAPI(title=settings.service_name)
-    
+
     register_archive_routes(app)
     register_alert_routes(app)
     register_a2a_router(app, settings)

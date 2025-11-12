@@ -8,10 +8,12 @@ from pydantic import BaseModel
 
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix='/api/cache', tags=['cache-management'])
+router = APIRouter(prefix="/api/cache", tags=["cache-management"])
+
 
 class CacheStatsResponse(BaseModel):
     """Response model for cache statistics."""
+
     total_requests: int
     cache_hits: int
     cache_misses: int
@@ -20,15 +22,20 @@ class CacheStatsResponse(BaseModel):
     hit_rate: float
     cache_ttl: int
 
+
 class CacheInvalidationRequest(BaseModel):
     """Request model for cache invalidation."""
+
     path: str
-    method: str = 'GET'
+    method: str = "GET"
+
 
 class CacheInvalidationResponse(BaseModel):
     """Response model for cache invalidation."""
+
     invalidated_keys: int
     message: str
+
 
 def _get_default_cache_ttl() -> int:
     """
@@ -42,40 +49,54 @@ def _get_default_cache_ttl() -> int:
     """
     try:
         from platform.cache.unified_config import get_unified_cache_config
-        ttl = get_unified_cache_config().get_ttl_for_domain('tool')
+
+        ttl = get_unified_cache_config().get_ttl_for_domain("tool")
         if ttl is not None and int(ttl) > 0:
             return int(ttl)
     except Exception:
         pass
     try:
         from platform.config.configuration import get_config
+
         cfg = get_config()
-        if hasattr(cfg, 'cache_ttl_tool'):
-            ttl = getattr(cfg, 'cache_ttl_tool', None)
+        if hasattr(cfg, "cache_ttl_tool"):
+            ttl = getattr(cfg, "cache_ttl_tool", None)
             if isinstance(ttl, (int, float)) and int(ttl) > 0:
                 return int(ttl)
     except Exception:
         pass
     try:
-        env_ttl = os.getenv('CACHE_TTL_TOOL', '300')
+        env_ttl = os.getenv("CACHE_TTL_TOOL", "300")
         return int(env_ttl)
     except Exception:
         return 300
-_STATS = {'total_requests': 0, 'cache_hits': 0, 'cache_misses': 0, 'cache_bypassed': 0, 'cache_errors': 0, 'cache_ttl': _get_default_cache_ttl()}
+
+
+_STATS = {
+    "total_requests": 0,
+    "cache_hits": 0,
+    "cache_misses": 0,
+    "cache_bypassed": 0,
+    "cache_errors": 0,
+    "cache_ttl": _get_default_cache_ttl(),
+}
+
 
 def _compute_hit_rate() -> float:
-    hits = _STATS['cache_hits']
-    total = max(_STATS['total_requests'], 1)
+    hits = _STATS["cache_hits"]
+    total = max(_STATS["total_requests"], 1)
     try:
         return round(hits / total, 4)
     except Exception:
         return 0.0
 
+
 def _bump_counter(name: str) -> None:
     if name in _STATS:
         _STATS[name] += 1
 
-@router.get('/stats')
+
+@router.get("/stats")
 async def get_cache_stats(request: Request) -> CacheStatsResponse:
     """
     Get cache statistics.
@@ -89,13 +110,22 @@ async def get_cache_stats(request: Request) -> CacheStatsResponse:
     """
     try:
         get_cache_service()
-        _bump_counter('total_requests')
-        return CacheStatsResponse(total_requests=_STATS['total_requests'], cache_hits=_STATS['cache_hits'], cache_misses=_STATS['cache_misses'], cache_bypassed=_STATS['cache_bypassed'], cache_errors=_STATS['cache_errors'], hit_rate=_compute_hit_rate(), cache_ttl=_STATS['cache_ttl'])
+        _bump_counter("total_requests")
+        return CacheStatsResponse(
+            total_requests=_STATS["total_requests"],
+            cache_hits=_STATS["cache_hits"],
+            cache_misses=_STATS["cache_misses"],
+            cache_bypassed=_STATS["cache_bypassed"],
+            cache_errors=_STATS["cache_errors"],
+            hit_rate=_compute_hit_rate(),
+            cache_ttl=_STATS["cache_ttl"],
+        )
     except Exception as e:
-        logger.error(f'Error getting cache stats: {e}')
-        raise HTTPException(status_code=500, detail='Failed to retrieve cache statistics')
+        logger.error(f"Error getting cache stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve cache statistics")
 
-@router.post('/invalidate')
+
+@router.post("/invalidate")
 async def invalidate_cache(payload: CacheInvalidationRequest) -> CacheInvalidationResponse:
     """
     Invalidate cached responses for a specific path and method.
@@ -107,14 +137,15 @@ async def invalidate_cache(payload: CacheInvalidationRequest) -> CacheInvalidati
         get_cache_service()
         path = payload.path
         method = payload.method.upper()
-        _bump_counter('total_requests')
-        logger.info(f'Invalidating cache for {method} {path}')
-        return CacheInvalidationResponse(invalidated_keys=1, message=f'Cache invalidated for {method} {path}')
+        _bump_counter("total_requests")
+        logger.info(f"Invalidating cache for {method} {path}")
+        return CacheInvalidationResponse(invalidated_keys=1, message=f"Cache invalidated for {method} {path}")
     except Exception as e:
-        logger.error(f'Error invalidating cache: {e}')
-        raise HTTPException(status_code=500, detail='Failed to invalidate cache')
+        logger.error(f"Error invalidating cache: {e}")
+        raise HTTPException(status_code=500, detail="Failed to invalidate cache")
 
-@router.post('/clear')
+
+@router.post("/clear")
 async def clear_all_cache() -> dict[str, Any]:
     """
     Clear all cached API responses.
@@ -124,13 +155,14 @@ async def clear_all_cache() -> dict[str, Any]:
     """
     try:
         get_cache_service()
-        logger.warning('Clearing all API cache')
-        return {'message': 'All API cache cleared successfully', 'cleared': True}
+        logger.warning("Clearing all API cache")
+        return {"message": "All API cache cleared successfully", "cleared": True}
     except Exception as e:
-        logger.error(f'Error clearing cache: {e}')
-        raise HTTPException(status_code=500, detail='Failed to clear cache')
+        logger.error(f"Error clearing cache: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear cache")
 
-@router.get('/health')
+
+@router.get("/health")
 async def cache_health_check() -> dict[str, Any]:
     """
     Health check endpoint for cache service.
@@ -139,8 +171,10 @@ async def cache_health_check() -> dict[str, Any]:
     """
     try:
         get_cache_service()
-        return {'status': 'healthy', 'cache_service': 'available', 'timestamp': 'now'}
+        return {"status": "healthy", "cache_service": "available", "timestamp": "now"}
     except Exception as e:
-        logger.error(f'Cache health check failed: {e}')
-        return {'status': 'unhealthy', 'error': str(e), 'timestamp': 'now'}
-__all__ = ['router']
+        logger.error(f"Cache health check failed: {e}")
+        return {"status": "unhealthy", "error": str(e), "timestamp": "now"}
+
+
+__all__ = ["router"]
