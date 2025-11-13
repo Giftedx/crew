@@ -10,7 +10,7 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum
 from platform.core.step_result import ErrorCategory, StepResult
-from typing import Any
+from typing import Any, ClassVar
 
 
 class FlagStatus(Enum):
@@ -59,7 +59,7 @@ class FeatureFlag:
 class FeatureFlagRegistry:
     """Centralized feature flag registry with validation and introspection."""
 
-    _FLAGS: dict[str, FeatureFlag] = {
+    _FLAGS: ClassVar[dict[str, FeatureFlag]] = {
         # ===== CORE SYSTEM =====
         "ENABLE_API": FeatureFlag(
             name="ENABLE_API",

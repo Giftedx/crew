@@ -516,7 +516,6 @@ __all__ = [
     "BatchConfig",
     "BatchMetrics",
     "BatchOperation",
-    "BatchProcessor",
     "BatchingManager",
     "BulkInserter",
     "RequestBatcher",

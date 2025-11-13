@@ -1,11 +1,10 @@
-from __future__ import annotations
-
-
 """Minimal Redis cache helper.
 
 Provides string/JSON get/set with TTL and namespacing. Optional dependency;
 callers should guard construction with availability checks.
 """
+
+from __future__ import annotations
 
 import json
 from dataclasses import dataclass
