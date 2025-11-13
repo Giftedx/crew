@@ -1,16 +1,48 @@
 from __future__ import annotations
 
+import logging
+
 
 try:
     import discord  # type: ignore
 except Exception:  # pragma: no cover
     discord = None  # type: ignore
 
+logger = logging.getLogger(__name__)
+
 
 def register_system_commands(bot_owner) -> None:
     bot = bot_owner.bot
     if not bot or discord is None:
         return
+
+    @bot.tree.command(name="autointel", description="Autonomous intelligence analysis with unlimited time")
+    async def autointel_command(interaction, url: str, depth: str = "standard"):
+        """Execute intelligence analysis in background mode."""
+        # CRITICAL: Defer IMMEDIATELY to avoid Discord 3-second timeout
+        await interaction.response.defer(ephemeral=False)
+
+        # Import handler inside command to avoid startup issues
+        from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        from ultimate_discord_intelligence_bot.background_autointel_handler import handle_autointel_background
+        from ultimate_discord_intelligence_bot.background_intelligence_worker import BackgroundIntelligenceWorker
+
+        # Initialize components if not already present (lazy singleton pattern)
+        if not hasattr(bot_owner, "orchestrator"):
+            logger.info("⚙️ Initializing orchestrator (first use)...")
+            bot_owner.orchestrator = AutonomousIntelligenceOrchestrator()
+        if not hasattr(bot_owner, "background_worker"):
+            logger.info("⚙️ Initializing background worker (first use)...")
+            bot_owner.background_worker = BackgroundIntelligenceWorker(bot_owner.orchestrator)
+
+        # Execute via background handler (defer already done above)
+        await handle_autointel_background(
+            interaction=interaction,
+            orchestrator=bot_owner.orchestrator,
+            background_worker=bot_owner.background_worker,
+            url=url,
+            depth=depth,
+        )
 
     @bot.tree.command(name="system-status", description="Comprehensive system health")
     async def system_status(interaction):

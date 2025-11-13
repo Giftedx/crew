@@ -386,3 +386,31 @@ class GlobalConfig:
             self.openai_api_key = env_val
         if env_val := os.getenv("OPENROUTER_API_KEY"):
             self.openrouter_api_key = env_val
+
+    def get_setting(self, key: str, default: Any = None) -> Any:
+        """Get a configuration setting with fallback to environment variable.
+
+        Args:
+            key: Setting key (lowercase with underscores)
+            default: Default value if setting not found
+
+        Returns:
+            Configuration value, environment variable, or default
+        """
+        # First try to get from instance attributes
+        value = getattr(self, key, None)
+        if value is not None:
+            return value
+
+        # Fall back to environment variable (uppercase)
+        env_key = key.upper()
+        env_value = os.getenv(env_key, default)
+
+        # Convert string environment values to appropriate types if needed
+        if env_value and isinstance(env_value, str):
+            if env_value.lower() in ("1", "true", "yes", "on"):
+                return True
+            elif env_value.lower() in ("0", "false", "no", "off"):
+                return False
+
+        return env_value

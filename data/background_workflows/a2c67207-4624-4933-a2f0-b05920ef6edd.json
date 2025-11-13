@@ -1,0 +1,33 @@
+{
+  "workflow_id": "a2c67207-4624-4933-a2f0-b05920ef6edd",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "comprehensive",
+  "webhook_url": "https://discord.com/api/webhooks/1438378479375618283/5zcWhdiwvr-jrUGjJsHipx1CUtFBKgBP3mKHKsIiTjGCmfUDVzs8IcxP_kdBS25vddE_",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {
+      "total": 5.0,
+      "per_task": {
+        "acquisition": 0.1,
+        "transcription": 0.75,
+        "analysis": 2.0,
+        "verification": 1.0,
+        "knowledge": 1.15
+      }
+    }
+  },
+  "status": "failed",
+  "start_time": 1763018873.8523407,
+  "start_timestamp": "2025-11-13T07:27:53.852360",
+  "progress": {
+    "stage": "acquisition",
+    "percentage": 10,
+    "message": "Downloading and extracting content...",
+    "timestamp": 1763018873.853442
+  },
+  "error": "cannot import name 'default_utc_now' from 'platform.time' (/home/crew/platform/time.py)",
+  "end_time": 1763018875.710127
+}

@@ -4,8 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime as _dt
 from datetime import timedelta
-from platform.time import default_utc_now
 from typing import Any
+
+
+# Import from our custom platform package, avoiding stdlib conflict
+try:
+    from platform.time import default_utc_now
+except ModuleNotFoundError:
+    # Fallback if platform package not available
+    from datetime import datetime, timezone
+
+    def default_utc_now() -> datetime:
+        return datetime.now(timezone.utc)
 
 
 class TimelineManager:

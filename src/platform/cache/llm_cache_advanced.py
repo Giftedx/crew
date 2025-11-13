@@ -4,6 +4,7 @@ This module provides intelligent caching for Large Language Model responses,
 including semantic similarity-based cache key matching and comprehensive
 token usage tracking for cost optimization.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -15,19 +16,24 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class LLMRequest:
     """Data class for LLM request parameters."""
+
     prompt: str
     model: str
     temperature: float = 0.0
     max_tokens: int | None = None
     ttl: int | None = None
 
+
 class LLMSimilarityCache:
     """LLM cache with semantic similarity-based key matching."""
 
-    def __init__(self, similarity_threshold: float=0.85, max_cache_keys_per_prompt: int=5, enable_token_tracking: bool=True):
+    def __init__(
+        self, similarity_threshold: float = 0.85, max_cache_keys_per_prompt: int = 5, enable_token_tracking: bool = True
+    ):
         """Initialize the LLM similarity cache.
 
         Args:
@@ -39,9 +45,17 @@ class LLMSimilarityCache:
         self.max_cache_keys_per_prompt = max_cache_keys_per_prompt
         self.enable_token_tracking = enable_token_tracking
         self._cache_service = get_cache_service()
-        self._stats = {'cache_hits': 0, 'cache_misses': 0, 'similarity_hits': 0, 'total_tokens_saved': 0, 'total_requests': 0}
+        self._stats = {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "similarity_hits": 0,
+            "total_tokens_saved": 0,
+            "total_requests": 0,
+        }
 
-    async def get(self, prompt: str, model: str, temperature: float=0.0, max_tokens: int | None=None, **kwargs) -> dict[str, Any] | None:
+    async def get(
+        self, prompt: str, model: str, temperature: float = 0.0, max_tokens: int | None = None, **kwargs
+    ) -> dict[str, Any] | None:
         """Get cached LLM response with semantic similarity matching.
 
         Args:
@@ -54,24 +68,24 @@ class LLMSimilarityCache:
         Returns:
             Cached response if found, None otherwise
         """
-        self._stats['total_requests'] += 1
+        self._stats["total_requests"] += 1
         cache_key = self._make_cache_key(prompt, model, temperature, max_tokens, kwargs)
-        cached_result = await self._cache_service.get(cache_key, 'llm')
+        cached_result = await self._cache_service.get(cache_key, "llm")
         if cached_result:
-            self._stats['cache_hits'] += 1
+            self._stats["cache_hits"] += 1
             if self.enable_token_tracking and isinstance(cached_result, dict):
-                self._stats['total_tokens_saved'] += cached_result.get('usage', {}).get('completion_tokens', 0)
+                self._stats["total_tokens_saved"] += cached_result.get("usage", {}).get("completion_tokens", 0)
             return cached_result
         similar_key = await self._find_similar_prompt(prompt, model, temperature)
         if similar_key:
-            cached_result = await self._cache_service.get(similar_key, 'llm')
+            cached_result = await self._cache_service.get(similar_key, "llm")
             if cached_result:
-                self._stats['similarity_hits'] += 1
-                self._stats['cache_hits'] += 1
+                self._stats["similarity_hits"] += 1
+                self._stats["cache_hits"] += 1
                 if self.enable_token_tracking and isinstance(cached_result, dict):
-                    self._stats['total_tokens_saved'] += cached_result.get('usage', {}).get('completion_tokens', 0)
+                    self._stats["total_tokens_saved"] += cached_result.get("usage", {}).get("completion_tokens", 0)
                 return cached_result
-        self._stats['cache_misses'] += 1
+        self._stats["cache_misses"] += 1
         return None
 
     async def set(self, request: LLMRequest, response: dict[str, Any], **kwargs) -> bool:
@@ -90,7 +104,7 @@ class LLMSimilarityCache:
             True if successfully cached, False otherwise
         """
         cache_key = self._make_cache_key(request.prompt, request.model, request.temperature, request.max_tokens, kwargs)
-        success = await self._cache_service.set(cache_key, response, ttl=request.ttl, cache_type='llm')
+        success = await self._cache_service.set(cache_key, response, ttl=request.ttl, cache_type="llm")
         if success:
             await self._update_similarity_index(request.prompt, request.model, cache_key)
         return success
@@ -104,20 +118,22 @@ class LLMSimilarityCache:
         Returns:
             Number of keys invalidated
         """
-        logger.info(f'Invalidating cache for model: {model}')
+        logger.info(f"Invalidating cache for model: {model}")
         return 0
 
-    def _make_cache_key(self, prompt: str, model: str, temperature: float, max_tokens: int | None, kwargs: dict[str, Any]) -> str:
+    def _make_cache_key(
+        self, prompt: str, model: str, temperature: float, max_tokens: int | None, kwargs: dict[str, Any]
+    ) -> str:
         """Create a deterministic cache key for the LLM request."""
-        key_components = [f'model={model}', f'temperature={temperature:.2f}']
+        key_components = [f"model={model}", f"temperature={temperature:.2f}"]
         if max_tokens is not None:
-            key_components.append(f'max_tokens={max_tokens}')
+            key_components.append(f"max_tokens={max_tokens}")
         for key, value in sorted(kwargs.items()):
-            if key not in ['api_key', 'secret']:
-                key_components.append(f'{key}={value!r}')
+            if key not in ["api_key", "secret"]:
+                key_components.append(f"{key}={value!r}")
         content = f"{prompt}|{'|'.join(key_components)}"
         content_hash = hashlib.sha256(content.encode()).hexdigest()[:16]
-        return f'llm:{model}:{content_hash}'
+        return f"llm:{model}:{content_hash}"
 
     async def _find_similar_prompt(self, prompt: str, model: str, temperature: float) -> str | None:
         """Find a similar prompt in the cache using basic heuristics.
@@ -148,9 +164,19 @@ class LLMSimilarityCache:
 
     def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
-        total_requests = self._stats['total_requests']
-        hit_rate = self._stats['cache_hits'] / total_requests if total_requests > 0 else 0.0
-        return {'total_requests': total_requests, 'cache_hits': self._stats['cache_hits'], 'cache_misses': self._stats['cache_misses'], 'similarity_hits': self._stats['similarity_hits'], 'hit_rate': hit_rate, 'total_tokens_saved': self._stats['total_tokens_saved'], 'similarity_threshold': self.similarity_threshold, 'max_cache_keys_per_prompt': self.max_cache_keys_per_prompt}
+        total_requests = self._stats["total_requests"]
+        hit_rate = self._stats["cache_hits"] / total_requests if total_requests > 0 else 0.0
+        return {
+            "total_requests": total_requests,
+            "cache_hits": self._stats["cache_hits"],
+            "cache_misses": self._stats["cache_misses"],
+            "similarity_hits": self._stats["similarity_hits"],
+            "hit_rate": hit_rate,
+            "total_tokens_saved": self._stats["total_tokens_saved"],
+            "similarity_threshold": self.similarity_threshold,
+            "max_cache_keys_per_prompt": self.max_cache_keys_per_prompt,
+        }
+
 
 class LLMCacheManager:
     """Manager for LLM caching with multiple strategies and models."""
@@ -170,10 +196,14 @@ class LLMCacheManager:
             LLM cache instance for the model
         """
         if model not in self._caches:
-            if 'gpt-4' in model.lower():
-                self._caches[model] = LLMSimilarityCache(similarity_threshold=0.9, max_cache_keys_per_prompt=3, enable_token_tracking=True)
-            elif 'gpt-3.5' in model.lower():
-                self._caches[model] = LLMSimilarityCache(similarity_threshold=0.85, max_cache_keys_per_prompt=5, enable_token_tracking=True)
+            if "gpt-4" in model.lower():
+                self._caches[model] = LLMSimilarityCache(
+                    similarity_threshold=0.9, max_cache_keys_per_prompt=3, enable_token_tracking=True
+                )
+            elif "gpt-3.5" in model.lower():
+                self._caches[model] = LLMSimilarityCache(
+                    similarity_threshold=0.85, max_cache_keys_per_prompt=5, enable_token_tracking=True
+                )
             else:
                 self._caches[model] = LLMSimilarityCache()
         return self._caches[model]
@@ -216,9 +246,14 @@ class LLMCacheManager:
         for model, cache in self._caches.items():
             stats[model] = cache.get_stats()
         return stats
+
+
 _llm_cache_manager = LLMCacheManager()
+
 
 def get_llm_cache_manager() -> LLMCacheManager:
     """Get the global LLM cache manager instance."""
     return _llm_cache_manager
-__all__ = ['LLMCacheManager', 'LLMSimilarityCache', 'get_llm_cache_manager']
+
+
+__all__ = ["LLMCacheManager", "LLMSimilarityCache", "get_llm_cache_manager"]

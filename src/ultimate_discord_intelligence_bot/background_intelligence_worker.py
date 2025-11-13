@@ -36,7 +36,6 @@ from typing import TYPE_CHECKING, Any
 
 
 if TYPE_CHECKING:
-    from crewai import CrewOutput
     from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
 logger = logging.getLogger(__name__)
 
@@ -142,11 +141,98 @@ class BackgroundIntelligenceWorker:
             depth = state["depth"]
             webhook_url = state["webhook_url"]
             logger.info(f"🔬 Executing background workflow {workflow_id} - NO TIME LIMITS")
-            await self._update_progress(workflow_id, "acquisition", 10, "Downloading and extracting content...")
-            crew = self.orchestrator._build_intelligence_crew(url, depth)
-            await self._update_progress(workflow_id, "execution", 20, "Running multi-agent intelligence analysis...")
-            result: CrewOutput = await asyncio.to_thread(crew.kickoff, inputs={"url": url, "depth": depth})
-            await self._update_progress(workflow_id, "processing", 70, "Processing and validating findings...")
+            await self._update_progress(workflow_id, "acquisition", 10, "Initializing full intelligence pipeline...")
+
+            # Use the real orchestrator for full 7-stage pipeline analysis
+            # This includes: download → transcription → content routing → quality filtering →
+            # analysis (fact-checking, claim extraction, debunking) → memory storage → finalization
+            logger.info(f"🚀 Launching ContentPipeline for {workflow_id} (depth: {depth})")
+
+            # Ensure src/ is in path for imports (needed for background thread context)
+            import os
+            import sys
+
+            # Calculate path to src/ directory
+            src_path = os.path.dirname(os.path.dirname(__file__))
+            if src_path not in sys.path:
+                sys.path.insert(0, src_path)
+                logger.info(f"✅ Added {src_path} to sys.path")
+
+            # CRITICAL: Pre-inject platform modules to prevent built-in module conflict
+            try:
+                import importlib.util
+
+                platform_base = os.path.join(src_path, "platform")
+
+                # Load platform modules directly from filesystem
+                time_spec = importlib.util.spec_from_file_location(
+                    "platform.time", os.path.join(platform_base, "time.py")
+                )
+                http_spec = importlib.util.spec_from_file_location(
+                    "platform.http", os.path.join(platform_base, "http", "__init__.py")
+                )
+                cache_spec = importlib.util.spec_from_file_location(
+                    "platform.cache", os.path.join(platform_base, "cache", "__init__.py")
+                )
+                config_spec = importlib.util.spec_from_file_location(
+                    "platform.config", os.path.join(platform_base, "config", "__init__.py")
+                )
+
+                # Inject into sys.modules
+                if time_spec and time_spec.loader:
+                    _time = importlib.util.module_from_spec(time_spec)
+                    sys.modules["platform.time"] = _time
+                    time_spec.loader.exec_module(_time)
+
+                if http_spec and http_spec.loader:
+                    _http = importlib.util.module_from_spec(http_spec)
+                    sys.modules["platform.http"] = _http
+                    http_spec.loader.exec_module(_http)
+
+                if cache_spec and cache_spec.loader:
+                    _cache = importlib.util.module_from_spec(cache_spec)
+                    sys.modules["platform.cache"] = _cache
+                    cache_spec.loader.exec_module(_cache)
+
+                if config_spec and config_spec.loader:
+                    _config = importlib.util.module_from_spec(config_spec)
+                    sys.modules["platform.config"] = _config
+                    config_spec.loader.exec_module(_config)
+
+                logger.info("✅ Injected platform.* modules using importlib")
+            except Exception as e:
+                logger.warning(f"⚠️ Could not inject platform modules: {e}", exc_info=True)
+
+            # Import and initialize the orchestrator
+            from ultimate_discord_intelligence_bot.pipeline_components.orchestrator import ContentPipeline
+
+            await self._update_progress(workflow_id, "download", 15, "🔍 Stage 1/7: Downloading content...")
+
+            pipeline = ContentPipeline()
+
+            # Map depth to quality parameter (orchestrator expects quality like "1080p", "720p", "comprehensive")
+            quality_map = {"quick": "720p", "standard": "1080p", "comprehensive": "1080p", "deep": "1080p"}
+            quality = quality_map.get(depth, "1080p")
+
+            # Run the full pipeline (this will handle all 7 stages)
+            logger.info(f"⚙️ Executing ContentPipeline.process_video(url={url}, quality={quality})")
+            await self._update_progress(workflow_id, "transcription", 25, "🎙️ Stage 2/7: Transcribing audio...")
+
+            pipeline_result = await pipeline.process_video(url, quality)
+
+            # Check if pipeline succeeded - status field is "success" or "error"
+            if not pipeline_result or pipeline_result.get("status") != "success":
+                error_msg = (
+                    pipeline_result.get("error", "Pipeline failed") if pipeline_result else "Pipeline returned None"
+                )
+                logger.error(f"❌ ContentPipeline failed: {error_msg}")
+                raise Exception(f"Intelligence pipeline failed: {error_msg}")
+
+            logger.info(f"✅ ContentPipeline completed successfully for {workflow_id}")
+
+            # Extract results from pipeline output
+            result = pipeline_result
+            await self._update_progress(workflow_id, "processing", 70, "📊 Processing pipeline results...")
             analysis_results = self._extract_crew_results(result)
             await self._update_progress(workflow_id, "formatting", 85, "Formatting intelligence briefing...")
             briefing = self._format_intelligence_briefing(url, depth, analysis_results, workflow_id, state)
@@ -172,25 +258,92 @@ class BackgroundIntelligenceWorker:
             self.active_workflows.pop(workflow_id, None)
 
     def _extract_crew_results(self, result: Any) -> dict[str, Any]:
-        """Extract structured results from CrewOutput."""
+        """Extract structured results from PipelineRunResult or CrewOutput."""
         analysis_results = {"raw_output": None, "task_outputs": [], "memory_stored": False, "graph_created": False}
-        if hasattr(result, "raw"):
+
+        # Handle PipelineRunResult (dict from ContentPipeline)
+        if isinstance(result, dict):
+            # PipelineRunResult structure:
+            # {
+            #   "status": "success",
+            #   "analysis": {"status": "success", "sentiment": "...", "keywords": [...], ...},
+            #   "fallacy": {"status": "success", "fallacies": [...], ...},
+            #   "perspective": {"status": "success", "summary": "...", ...},
+            #   "memory": {"status": "success", ...},
+            #   ...
+            # }
+            # Note: Each field is StepResult.to_dict() which merges data directly into dict
+
+            # Extract analysis data (data is merged into root, not nested in "data")
+            if "analysis" in result and isinstance(result["analysis"], dict):
+                analysis_dict = result["analysis"]
+                # Check if the step succeeded
+                if analysis_dict.get("status") == "success":
+                    # The analysis data is merged into the dict along with "status"
+                    analysis_results["raw_output"] = json.dumps(analysis_dict, indent=2)
+                    # Extract specific components
+                    for key in ["sentiment", "keywords", "emotions", "topics", "word_count", "key_phrases"]:
+                        if key in analysis_dict:
+                            analysis_results[key] = analysis_dict[key]
+
+            # Extract fallacy detection results
+            if "fallacy" in result and isinstance(result["fallacy"], dict):
+                fallacy_dict = result["fallacy"]
+                if fallacy_dict.get("status") == "success":
+                    # Extract fallacy data (merged into root of dict)
+                    for key in ["fallacies", "fallacy_count", "confidence_scores"]:
+                        if key in fallacy_dict:
+                            analysis_results[key] = fallacy_dict[key]
+
+            # Extract perspective/summary
+            if "perspective" in result and isinstance(result["perspective"], dict):
+                perspective_dict = result["perspective"]
+                if perspective_dict.get("status") == "success":
+                    # Extract summary and other perspective data
+                    for key in ["summary", "briefing", "claims", "fact_checks"]:
+                        if key in perspective_dict:
+                            analysis_results[key] = perspective_dict[key]
+
+            # Extract transcription for reference
+            if "transcription" in result and isinstance(result["transcription"], dict):
+                trans_dict = result["transcription"]
+                if trans_dict.get("status") == "success" and "transcript" in trans_dict:
+                    analysis_results["transcript"] = trans_dict["transcript"]
+
+            # Extract memory storage status
+            if "memory" in result and isinstance(result["memory"], dict):
+                memory_dict = result["memory"]
+                analysis_results["memory_stored"] = memory_dict.get("status") == "success"
+
+            # Extract graph creation status
+            if "graph_memory" in result and isinstance(result["graph_memory"], dict):
+                graph_dict = result["graph_memory"]
+                analysis_results["graph_created"] = graph_dict.get("status") == "success"
+
+            # Build task outputs showing all stages
+            for stage_name in ["download", "transcription", "analysis", "fallacy", "perspective", "memory"]:
+                if stage_name in result and isinstance(result[stage_name], dict):
+                    stage_status = result[stage_name].get("status", "unknown")
+                    analysis_results["task_outputs"].append(f"{stage_name}: {stage_status}")
+
+            # If no analysis data found, use entire result as raw output
+            if not analysis_results["raw_output"]:
+                analysis_results["raw_output"] = json.dumps(result, indent=2)
+
+        # Handle legacy CrewOutput format
+        elif hasattr(result, "raw"):
             analysis_results["raw_output"] = result.raw
         elif hasattr(result, "final_output"):
             analysis_results["raw_output"] = result.final_output
         else:
             analysis_results["raw_output"] = str(result)
+
         if hasattr(result, "tasks_output") and result.tasks_output:
             for task_output in result.tasks_output:
                 analysis_results["task_outputs"].append(
                     task_output.raw if hasattr(task_output, "raw") else str(task_output)
                 )
-        try:
-            if analysis_results["raw_output"]:
-                parsed = json.loads(analysis_results["raw_output"])
-                analysis_results.update(parsed)
-        except (json.JSONDecodeError, TypeError):
-            pass
+
         return analysis_results
 
     def _format_intelligence_briefing(
@@ -204,11 +357,43 @@ class BackgroundIntelligenceWorker:
         briefing += f"**Analysis Depth:** {depth}\n"
         briefing += f"**Processing Time:** {duration:.1f}s ({duration / 60:.1f} minutes)\n"
         briefing += f"**Timestamp:** {datetime.utcnow().isoformat()}Z\n\n"
-        briefing += "---\n\n"
+
+        # Add content type and quality if available
+        if results.get("content_type"):
+            briefing += f"**Content Type:** {results['content_type']}\n"
+        if results.get("quality_score"):
+            briefing += f"**Quality Score:** {results['quality_score']:.2f}\n"
+
+        briefing += "\n---\n\n"
+
+        # Format fact checks if available
+        if results.get("fact_checks"):
+            briefing += "## 🔍 Fact Checks\n\n"
+            fact_checks = results["fact_checks"]
+            if isinstance(fact_checks, list):
+                for i, check in enumerate(fact_checks, 1):
+                    briefing += f"**{i}.** {check}\n"
+            else:
+                briefing += f"{fact_checks}\n"
+            briefing += "\n"
+
+        # Format claims if available
+        if results.get("claims"):
+            briefing += "## 📋 Claims Extracted\n\n"
+            claims = results["claims"]
+            if isinstance(claims, list):
+                for i, claim in enumerate(claims, 1):
+                    briefing += f"**{i}.** {claim}\n"
+            else:
+                briefing += f"{claims}\n"
+            briefing += "\n"
+
+        # Add generic analysis output
         if results.get("briefing"):
             briefing += results["briefing"]
         elif results.get("raw_output"):
             briefing += f"## Analysis Results\n\n{results['raw_output']}\n\n"
+
         briefing += "\n---\n\n"
         briefing += "## Workflow Metadata\n\n"
         briefing += f"- **Memory Stored:** {('✅ Yes' if results.get('memory_stored') else '❌ No')}\n"
@@ -259,7 +444,9 @@ class BackgroundIntelligenceWorker:
                     }
                 ],
             }
-            resilient_post(webhook_url, json_payload=payload, timeout_seconds=30)
+            response = resilient_post(webhook_url, json_payload=payload, timeout_seconds=30)
+            if response.status_code >= 400:
+                logger.error(f"Webhook error delivery failed: {response.status_code} - {response.text}")
         except Exception as e:
             logger.error(f"Failed to deliver error via webhook: {e}", exc_info=True)
 

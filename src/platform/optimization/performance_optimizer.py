@@ -7,6 +7,7 @@ Includes AI-driven optimization, advanced observability, and auto-scaling infras
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import TYPE_CHECKING, Any
@@ -249,7 +250,6 @@ class WorkloadPredictor:
 
             # Calculate moving average and trend
             recent_avg = self.np.mean(workload_scores[-5:])  # Last 5 points
-            overall_avg = self.np.mean(workload_scores)
 
             # Simple linear trend calculation
             x = self.np.arange(len(workload_scores))
@@ -323,7 +323,7 @@ class WorkloadPredictor:
                 return "decreasing"
             else:
                 return "stable"
-        except:
+        except Exception:
             return "stable"
 
     def _analyze_peak_patterns(self) -> list[str]:
@@ -1349,7 +1349,6 @@ class IncidentPatternAnalyzer:
             hour_counts[hour] = hour_counts.get(hour, 0) + 1
 
         # Find hours with high incident frequency
-        max_incidents = max(hour_counts.values()) if hour_counts else 0
         avg_incidents = sum(hour_counts.values()) / max(1, len(hour_counts))
 
         for hour, count in hour_counts.items():
@@ -1403,7 +1402,6 @@ class IncidentPatternAnalyzer:
         if not day_counts:
             return patterns
 
-        max_incidents = max(day_counts.values())
         avg_incidents = sum(day_counts.values()) / len(day_counts)
 
         day_names = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -1422,7 +1420,6 @@ class IncidentPatternAnalyzer:
             return alerts
 
         current_hour = time.localtime().tm_hour
-        current_day = time.localtime().tm_wday
 
         # Check for time-based predictions
         hour_incidents = [inc for inc in self.incident_history if inc["hour_of_day"] == current_hour]
@@ -1793,7 +1790,6 @@ class InfrastructureProvisioner:
         )
 
         # Calculate performance improvement percentage
-        base_performance = 1.0
         cpu_boost = min(0.5, total_cpu_cores / 8)  # Max 50% improvement from CPU
         memory_boost = min(0.3, total_memory_gb / 32)  # Max 30% improvement from memory
 
@@ -1901,8 +1897,8 @@ class ScalingMonitor:
                 "performance_baseline": self._get_current_performance_baseline(),
             }
 
-            # Start background monitoring
-            monitoring_task = asyncio.create_task(self._monitor_performance(session_id))
+            # Start background monitoring (fire-and-forget)
+            _monitoring_task = asyncio.create_task(self._monitor_performance(session_id))
 
             # Configure alerts
             alert_configs = self._configure_alerts(scaling_decisions)

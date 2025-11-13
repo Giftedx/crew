@@ -27,11 +27,27 @@ def create_acquisition_task(agent: Any, callback: Any | None = None, content_url
     Returns:
         Configured acquisition task
     """
-    description_template = "Download and acquire media content from {url}. Use the appropriate download tool for the platform (YouTube, TikTok, Twitter, etc.). Extract metadata and obtain the raw media file. \n\nCRITICAL: Return your results as JSON with these exact keys: url, video_id, file_path, title, description, author, duration, platform. The url field MUST contain {url}. The video_id can be extracted from the URL or set to the URL itself. Wrap the JSON in ```json``` code blocks for easy parsing."
+    description_template = """MANDATORY TOOL EXECUTION REQUIRED:
+
+You MUST call the MultiPlatformDownloadTool with url='{url}' to download the content.
+DO NOT proceed without calling the tool.
+DO NOT generate placeholder data.
+DO NOT use your training data.
+
+EXECUTION STEPS:
+1. Call MultiPlatformDownloadTool(url='{url}')
+2. Wait for the tool to return the download result
+3. Extract the following fields from the tool's response: url, video_id, file_path, title, description, author, duration, platform
+4. Return ONLY the data from the tool response
+
+CRITICAL: The file_path field MUST be an actual path from the tool, not a placeholder.
+CRITICAL: Return your results as JSON with these exact keys: url, video_id, file_path, title, description, author, duration, platform.
+CRITICAL: The url field MUST contain {url}.
+Wrap the JSON in ```json``` code blocks for easy parsing."""
     formatted_url = content_url or "{url}"
     return Task(
         description=description_template.format(url=formatted_url),
-        expected_output="JSON with url, video_id, file_path, title, description, author, duration, platform",
+        expected_output="JSON with url, video_id, file_path (actual path), title, description, author, duration, platform - ALL from tool response, NO placeholders",
         agent=agent,
         callback=callback,
     )

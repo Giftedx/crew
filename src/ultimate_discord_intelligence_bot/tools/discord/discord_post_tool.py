@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from platform.config.configuration import get_config
 from platform.http.http_utils import (
     DEFAULT_RATE_LIMIT_RETRY,
     HTTP_RATE_LIMITED,
@@ -13,8 +12,6 @@ from platform.http.http_utils import (
     validate_public_https_url,
 )
 from platform.time import default_utc_now
-
-from pydantic import Field
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
@@ -36,11 +33,9 @@ class DiscordPostTool(BaseTool[StepResult]):
 
     name: str = "Discord Post Tool"
     description: str = "Post content notifications to Discord with proper formatting"
-    webhook_url: str | None = Field(default=None)
 
     def __init__(self, webhook_url: str | None = None):
-        super().__init__()
-        self.webhook_url = webhook_url or get_config("DISCORD_WEBHOOK")
+        self.webhook_url = webhook_url or os.getenv("DISCORD_WEBHOOK")
         if not self.webhook_url:
             raise ValueError(
                 "Discord webhook URL is not configured. Please set DISCORD_WEBHOOK in your environment or config."

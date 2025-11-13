@@ -10,7 +10,8 @@ from platform.http.http_utils import REQUEST_TIMEOUT_SECONDS, retrying_post
 from platform.time import default_utc_now
 
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
-from .domains.ingestion.pipeline import start_ingest_workers
+
+# from domains.ingestion.pipeline import start_ingest_workers  # TODO: Re-enable when implemented
 from .env import check_environment, enable_autonomous_defaults
 from .registrations import _register_events, _register_prefix_commands, _register_slash_commands
 from .tools_bootstrap import attach_tools, load_tools
@@ -49,24 +50,29 @@ def create_full_bot():
 
 
 async def main():
-    print("🚀 Starting Full Discord Intelligence Bot...")
+    print("🚀 Starting Full Discord Intelligence Bot...", flush=True)
     gateway_enabled = os.getenv("ENABLE_DISCORD_GATEWAY", "1").lower() in {"1", "true", "yes"}
+    print(f"DEBUG: gateway_enabled={gateway_enabled}", flush=True)
     if LIGHTWEIGHT_IMPORT or not _DISCORD_AVAILABLE:
         print("⚠️  Discord gateway library not available; switching to headless mode.")
         gateway_enabled = False
     user_cmds_enabled = os.getenv("ENABLE_DISCORD_USER_COMMANDS", "0").lower() in {"1", "true", "yes"}
     admin_cmds_enabled = os.getenv("ENABLE_DISCORD_ADMIN_COMMANDS", "0").lower() in {"1", "true", "yes"}
+    print("DEBUG: About to check environment...", flush=True)
     if not check_environment():
         sys.exit(1)
-    print("✅ Environment variables validated")
+    print("✅ Environment variables validated", flush=True)
+    print("DEBUG: About to enable autonomous defaults...", flush=True)
     enable_autonomous_defaults()
+    print("DEBUG: Autonomous defaults enabled", flush=True)
 
     async def _run_headless_agent(user_on: bool, admin_on: bool) -> None:
         print(
             f"🧠 Running in headless agent mode (user_cmds={('on' if user_on else 'off')}, admin={('on' if admin_on else 'off')})"
         )
         if os.getenv("ENABLE_INGEST_WORKER", "0") in {"1", "true", "True"}:
-            await start_ingest_workers(asyncio.get_running_loop())
+            # await start_ingest_workers(asyncio.get_running_loop())  # TODO: Re-enable when implemented
+            print("INFO: Ingest workers temporarily disabled (not implemented)")
         else:
             print("INFO: Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
         print("📨 Discord posts will use webhooks if configured; no gateway commands are exposed.")
@@ -105,18 +111,34 @@ async def main():
             pass
 
     if not gateway_enabled:
+        print("DEBUG: Gateway disabled, entering headless mode", flush=True)
         await _run_headless_agent(user_cmds_enabled, admin_cmds_enabled)
     else:
+        print("DEBUG: Gateway enabled, checking token...", flush=True)
         token = (os.getenv("DISCORD_BOT_TOKEN") or "").strip()
         if not token:
             print("⚠️  DISCORD_BOT_TOKEN not set; running in headless mode.")
             await _run_headless_agent(user_cmds_enabled, admin_cmds_enabled)
             return
+        print(f"DEBUG: Token found (length={len(token)}), creating bot...", flush=True)
         bot = None
         try:
             bot = create_full_bot()
-            print("🤖 Starting Discord connection...")
-            await bot.start(token, reconnect=False)
+            print("🤖 Starting Discord connection...", flush=True)
+            # Enable reconnect to survive network hiccups and rate limits
+            print("DEBUG: About to call bot.start() - this should run forever", flush=True)
+            # Use async context manager to properly manage bot lifecycle
+            async with bot:
+                await bot.start(token, reconnect=True)
+            # This line should NEVER execute unless bot disconnects
+            print("⚠️  WARNING: bot.start() returned unexpectedly! Bot disconnected gracefully.", flush=True)
+            print("DEBUG: Exiting main() after bot.start() returned", flush=True)
+            return  # Exit cleanly if bot was stopped gracefully
+        except KeyboardInterrupt:
+            print("\n⚠️  Received interrupt signal, shutting down gracefully...")
+            if bot is not None:
+                await bot.close()
+            return
         except Exception as e:
             print(f"❌ Failed to start bot: {e}")
             traceback.print_exc()
@@ -150,3 +172,7 @@ async def main():
 
 
 __all__ = ["create_full_bot", "main"]
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

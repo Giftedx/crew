@@ -9,7 +9,7 @@ try:
     # Remove the local src directory containing our crewai package
     local_src = None
     for path in sys.path:
-        if path.endswith('/src') and '/home/crew' in path:
+        if path.endswith("/src") and "/home/crew" in path:
             local_src = path
             break
 

@@ -1,0 +1,24 @@
+{
+  "workflow_id": "b839849b-3af8-443c-b6d4-ee57855361f3",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "comprehensive",
+  "webhook_url": "your_discord_webhook_url_here",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {}
+  },
+  "status": "failed",
+  "start_time": 1763006081.7784605,
+  "start_timestamp": "2025-11-13T03:54:41.778533",
+  "progress": {
+    "stage": "acquisition",
+    "percentage": 10,
+    "message": "Downloading and extracting content...",
+    "timestamp": 1763006081.779142
+  },
+  "error": "'OrchestrationFacade' object has no attribute '_build_intelligence_crew'",
+  "end_time": 1763006081.780576
+}

@@ -1,0 +1,5 @@
+id: 1
+name: Default Tenant
+workspaces:
+  main:
+    discord_guild_id: 123

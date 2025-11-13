@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from .schema import CreatorProfile
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .schema import CreatorProfile
 
 
 class ProfileStore:

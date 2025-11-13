@@ -95,7 +95,7 @@ def _chunk_segments(
     buf: list[str] = []
     start = segments[0][0]
     end = segments[0][1]
-    for s, e, text in segments:
+    for _s, e, text in segments:
         candidate_len = sum(len(t) for t in buf) + len(text) + max(0, len(buf))
         if buf and candidate_len > max_chars:
             chunks.append((start, end, " ".join(buf)))

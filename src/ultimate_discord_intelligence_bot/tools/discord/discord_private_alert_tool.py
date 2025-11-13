@@ -25,7 +25,7 @@ class DiscordPrivateAlertTool:
     """
 
     def __init__(self, webhook_url: str | None = None):
-        self.webhook_url = webhook_url or os.getenv("DISCORD_ALERT_WEBHOOK")
+        self.webhook_url = webhook_url or os.getenv("DISCORD_PRIVATE_WEBHOOK")
         self._metrics = get_metrics()
         if self.webhook_url and (not self._is_valid_discord_url(self.webhook_url)):
             raise ValueError("Invalid or insecure Discord webhook URL")

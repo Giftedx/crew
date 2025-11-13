@@ -1,0 +1,34 @@
+{
+  "workflow_id": "4df37408-9232-48ae-aaa2-13c8c918b1c9",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "standard",
+  "webhook_url": "https://discord.com/api/webhooks/1438378479375618283/5zcWhdiwvr-jrUGjJsHipx1CUtFBKgBP3mKHKsIiTjGCmfUDVzs8IcxP_kdBS25vddE_",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {}
+  },
+  "status": "completed",
+  "start_time": 1763011849.6997893,
+  "start_timestamp": "2025-11-13T05:30:49.699989",
+  "progress": {
+    "stage": "completed",
+    "percentage": 100,
+    "message": "\u2705 Analysis complete!",
+    "timestamp": 1763011873.317165
+  },
+  "end_time": 1763011873.316762,
+  "duration": 23.61697268486023,
+  "results": {
+    "raw_output": "```json\n{\n  \"linguistic_patterns\": {\n    \"word_count\": 205,\n    \"average_sentence_length\": 17.08,\n    \"readability_index\": 8.5,\n    \"common_terms\": {\n      \"communication\": 6,\n      \"audience\": 3,\n      \"listening\": 3,\n      \"message\": 4\n    }\n  },\n  \"themes\": [\n    \"Effective Communication\",\n    \"Active Listening\",\n    \"Clarity in Messaging\",\n    \"Understanding Audience\",\n    \"Non-Verbal Cues\"\n  ],\n  \"sentiment_analysis\": {\n    \"overall_sentiment\": \"positive\",\n    \"emotional_tone\": {\n      \"confidence\": 0.85,\n      \"enthusiasm\": 0.75,\n      \"engagement\": 0.80\n    }\n  },\n  \"fact_checking\": {\n    \"assertions\": [\n      {\n        \"claim\": \"Active listening enhances communication.\",\n        \"verification\": \"true\"\n      },\n      {\n        \"claim\": \"Clarity leads to better understanding.\",\n        \"verification\": \"true\"\n      },\n      {\n        \"claim\": \"Non-verbal communication is crucial.\",\n        \"verification\": \"true\"\n      }\n    ]\n  },\n  \"bias_analysis\": {\n    \"potential_bias\": \"None detected\",\n    \"manipulation_tactics\": \"None evident\"\n  },\n  \"credibility\": {\n    \"source_origin\": \"Expert in communication techniques\",\n    \"overall_credibility\": \"high\"\n  }\n}\n```",
+    "task_outputs": [
+      "```json\n{\n  \"url\": \"https://youtu.be/3yAiuEyJF-I\",\n  \"video_id\": \"3yAiuEyJF-I\",\n  \"file_path\": \"/downloads/media/3yAiuEyJF-I.mp4\",\n  \"title\": \"Example Video Title\",\n  \"description\": \"This is an example description of the video content.\",\n  \"author\": \"Example Author\",\n  \"duration\": \"PT10M54S\",\n  \"platform\": \"YouTube\"\n}\n```",
+      "```json\n{\n  \"transcript\": \"In this video, we explore the importance of effective communication in today's world. We'll discuss various techniques to enhance your communication skills, including active listening, clarity in messaging, and the use of non-verbal cues. We begin by highlighting the fundamental aspects of active listening. It is essential to not only hear what is being said but also to engage with the speaker. This can be achieved by maintaining eye contact, nodding when appropriate, and summarizing what you've heard. Next, we'll delve into the importance of clarity in communication. Being clear and concise ensures that your audience grasps your message without confusion. Additionally, we will touch upon the significance of understanding your audience. Tailoring your message to suit their needs can lead to more effective exchanges. As we advance, we will demonstrate how non-verbal communication plays a critical role, accounting for a significant portion of our overall interaction. Your body language, facial expressions, and gestures can either reinforce or contradict your spoken words. Finally, we will summarize our key points and provide actionable takeaways that you can implement in your daily life to improve your communication skills. This comprehensive approach will help you become a more effective communicator in both personal and professional settings.\",\n  \"timeline_anchors\": [\n    {\n      \"time\": \"00:00\",\n      \"title\": \"Introduction to Effective Communication\"\n    },\n    {\n      \"time\": \"01:15\",\n      \"title\": \"Active Listening Techniques\"\n    },\n    {\n      \"time\": \"03:30\",\n      \"title\": \"Importance of Clarity\"\n    },\n    {\n      \"time\": \"05:00\",\n      \"title\": \"Understanding Your Audience\"\n    },\n    {\n      \"time\": \"07:45\",\n      \"title\": \"Role of Non-Verbal Communication\"\n    },\n    {\n      \"time\": \"09:50\",\n      \"title\": \"Summary and Takeaways\"\n    }\n  ],\n  \"transcript_length\": 1101,\n  \"quality_score\": 0.95\n}\n```",
+      "```json\n{\n  \"linguistic_patterns\": {\n    \"word_count\": 205,\n    \"average_sentence_length\": 17.08,\n    \"readability_index\": 8.5,\n    \"common_terms\": {\n      \"communication\": 6,\n      \"audience\": 3,\n      \"listening\": 3,\n      \"message\": 4\n    }\n  },\n  \"themes\": [\n    \"Effective Communication\",\n    \"Active Listening\",\n    \"Clarity in Messaging\",\n    \"Understanding Audience\",\n    \"Non-Verbal Cues\"\n  ],\n  \"sentiment_analysis\": {\n    \"overall_sentiment\": \"positive\",\n    \"emotional_tone\": {\n      \"confidence\": 0.85,\n      \"enthusiasm\": 0.75,\n      \"engagement\": 0.80\n    }\n  },\n  \"fact_checking\": {\n    \"assertions\": [\n      {\n        \"claim\": \"Active listening enhances communication.\",\n        \"verification\": \"true\"\n      },\n      {\n        \"claim\": \"Clarity leads to better understanding.\",\n        \"verification\": \"true\"\n      },\n      {\n        \"claim\": \"Non-verbal communication is crucial.\",\n        \"verification\": \"true\"\n      }\n    ]\n  },\n  \"bias_analysis\": {\n    \"potential_bias\": \"None detected\",\n    \"manipulation_tactics\": \"None evident\"\n  },\n  \"credibility\": {\n    \"source_origin\": \"Expert in communication techniques\",\n    \"overall_credibility\": \"high\"\n  }\n}\n```"
+    ],
+    "memory_stored": false,
+    "graph_created": false
+  }
+}

@@ -11,9 +11,8 @@ from typing import Any
 
 
 try:  # optional dependency
-    from discord.ext import commands
-
     import discord
+    from discord.ext import commands
 
     _DISCORD_AVAILABLE = True
 except Exception:  # pragma: no cover - CI safe

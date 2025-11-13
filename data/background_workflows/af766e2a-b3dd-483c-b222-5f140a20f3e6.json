@@ -1,0 +1,33 @@
+{
+  "workflow_id": "af766e2a-b3dd-483c-b222-5f140a20f3e6",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "comprehensive",
+  "webhook_url": "https://discord.com/api/webhooks/1438378479375618283/5zcWhdiwvr-jrUGjJsHipx1CUtFBKgBP3mKHKsIiTjGCmfUDVzs8IcxP_kdBS25vddE_",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {
+      "total": 5.0,
+      "per_task": {
+        "acquisition": 0.1,
+        "transcription": 0.75,
+        "analysis": 2.0,
+        "verification": 1.0,
+        "knowledge": 1.15
+      }
+    }
+  },
+  "status": "failed",
+  "start_time": 1763019373.6891663,
+  "start_timestamp": "2025-11-13T07:36:13.689184",
+  "progress": {
+    "stage": "download",
+    "percentage": 15,
+    "message": "\ud83d\udd27 Forcing video download (bypassing agent)...",
+    "timestamp": 1763019375.8042312
+  },
+  "error": "Download tool did not return file_path. Got: {'platform': 'YouTube', 'command': 'yt-dlp -o /root/crew_data/Downloads/%(title)s [%(id)s].%(ext)s -f bv*[height<=1080]+ba/b[height<=1080] --restrict-filenames --write-info-json --print-json --retries 3 --no-cache-dir https://youtu.be/3yAiuEyJF-I', 'runner': '/home/crew/.venv/bin/yt-dlp', 'video_id': '3yAiuEyJF-I', 'title': \"I'm Suing These Three Creators\", 'uploader': 'h3h3Productions', 'duration': '1230', 'file_size': '205243507', 'channel_id': 'UCDWIvJwLJsE4LG1Atne2blQ', 'channel_url': 'https://www.youtube.com/channel/UCDWIvJwLJsE4LG1Atne2blQ', 'uploader_url': 'https://www.youtube.com/@h3h3productions', 'uploader_id': '@h3h3productions', 'local_path': '/root/crew_data/Downloads/I_m_Suing_These_Three_Creators [3yAiuEyJF-I].webm', 'tool': 'YouTubeDownloadTool'}",
+  "end_time": 1763019392.2327354
+}

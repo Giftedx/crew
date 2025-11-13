@@ -484,10 +484,9 @@ def _run_discord() -> int:
         print(f"❌ start_full_bot.py not found at {target}")
         return 2
     print(f"🚀 Launching: {sys.executable} {target}")
-    # Set PYTHONPATH to include src directory for proper imports
-    env = os.environ.copy()
-    env["PYTHONPATH"] = f"/home/crew/src:{env.get('PYTHONPATH', '')}"
-    return subprocess.call([sys.executable, str(target)], env=env)
+    # Don't add src to PYTHONPATH - start_full_bot.py handles path setup internally
+    # to avoid src/discord/ shadowing the real discord.py package
+    return subprocess.call([sys.executable, str(target)])
 
 
 def _run_crew() -> int:

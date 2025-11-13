@@ -1,0 +1,24 @@
+{
+  "workflow_id": "88772188-f37d-43a4-8f6b-5278a42305ed",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "comprehensive",
+  "webhook_url": "https://discord.com/api/webhooks/1438378479375618283/5zcWhdiwvr-jrUGjJsHipx1CUtFBKgBP3mKHKsIiTjGCmfUDVzs8IcxP_kdBS25vddE_",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {}
+  },
+  "status": "failed",
+  "start_time": 1763024220.855543,
+  "start_timestamp": "2025-11-13T08:57:00.855690",
+  "progress": {
+    "stage": "download",
+    "percentage": 15,
+    "message": "\ud83d\udd0d Stage 1/7: Downloading content...",
+    "timestamp": 1763024221.053719
+  },
+  "error": "'GlobalConfig' object has no attribute 'get_setting'",
+  "end_time": 1763024221.1839292
+}

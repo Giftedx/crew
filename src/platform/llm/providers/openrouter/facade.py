@@ -19,4 +19,4 @@ from platform.llm.providers.openrouter.openrouter_service.facade import (
 )
 
 
-__all__ = getattr(_mod, "__all__", []) + ["BudgetManager", "CacheManager", "MetricsCollector"]
+__all__ = [*getattr(_mod, "__all__", []), "BudgetManager", "CacheManager", "MetricsCollector"]

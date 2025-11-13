@@ -11,12 +11,17 @@ from typing import Any
 
 
 try:  # optional dependency
+    import discord
     from discord.ext import commands
 
-    import discord
-
     _DISCORD_AVAILABLE = True
-except Exception:  # pragma: no cover - CI safe
+except Exception as e:  # pragma: no cover - CI safe
+    import sys
+
+    print(f"❌ Discord import failed: {e}", file=sys.stderr)
+    import traceback
+
+    traceback.print_exc()
     _DISCORD_AVAILABLE = False
     discord = None
     commands = None
@@ -57,12 +62,36 @@ class ScopedCommandBot:
     def _register_scoped_commands(self) -> None:
         if not self.bot:
             return
-        register_system_commands(self)
-        register_ops_commands(self)
-        register_dev_commands(self)
-        register_analytics_commands(self)
-        register_openai_commands(self)
-        register_events(self)
+        try:
+            register_system_commands(self)
+            log.info("✅ Registered system commands")
+        except Exception as e:
+            log.error(f"❌ Failed to register system commands: {e}", exc_info=True)
+        try:
+            register_ops_commands(self)
+            log.info("✅ Registered ops commands")
+        except Exception as e:
+            log.error(f"❌ Failed to register ops commands: {e}", exc_info=True)
+        try:
+            register_dev_commands(self)
+            log.info("✅ Registered dev commands")
+        except Exception as e:
+            log.error(f"❌ Failed to register dev commands: {e}", exc_info=True)
+        try:
+            register_analytics_commands(self)
+            log.info("✅ Registered analytics commands")
+        except Exception as e:
+            log.error(f"❌ Failed to register analytics commands: {e}", exc_info=True)
+        try:
+            register_openai_commands(self)
+            log.info("✅ Registered openai commands")
+        except Exception as e:
+            log.error(f"❌ Failed to register openai commands: {e}", exc_info=True)
+        try:
+            register_events(self)
+            log.info("✅ Registered events")
+        except Exception as e:
+            log.error(f"❌ Failed to register events: {e}", exc_info=True)
 
     async def start(self, token: str) -> None:
         if not _DISCORD_AVAILABLE or not self.bot:

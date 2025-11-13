@@ -1,0 +1,1520 @@
+{
+  "workflow_id": "5d0f852b-cd41-4538-813d-712a1492dea9",
+  "url": "https://youtu.be/3yAiuEyJF-I",
+  "depth": "comprehensive",
+  "webhook_url": "https://discord.com/api/webhooks/1438378479375618283/5zcWhdiwvr-jrUGjJsHipx1CUtFBKgBP3mKHKsIiTjGCmfUDVzs8IcxP_kdBS25vddE_",
+  "user_id": "258276274726895617",
+  "channel_id": "1389030635271753830",
+  "metadata": {
+    "guild_id": "1389030634592407695",
+    "command": "/autointel",
+    "budget_limits": {
+      "total": 5.0,
+      "per_task": {
+        "acquisition": 0.1,
+        "transcription": 0.75,
+        "analysis": 2.0,
+        "verification": 1.0,
+        "knowledge": 1.15
+      }
+    }
+  },
+  "status": "completed",
+  "start_time": 1763019592.3031213,
+  "start_timestamp": "2025-11-13T07:39:52.303138",
+  "progress": {
+    "stage": "completed",
+    "percentage": 100,
+    "message": "\u2705 Analysis complete!",
+    "timestamp": 1763019735.7388537
+  },
+  "end_time": 1763019735.736118,
+  "duration": 143.43299674987793,
+  "results": {
+    "raw_output": "{\"download\": {\"platform\": \"YouTube\", \"command\": \"yt-dlp -o /root/crew_data/Downloads/%(title)s [%(id)s].%(ext)s -f bv*[height<=1080]+ba/b[height<=1080] --restrict-filenames --write-info-json --print-json --retries 3 --no-cache-dir https://youtu.be/3yAiuEyJF-I\", \"runner\": \"/home/crew/.venv/bin/yt-dlp\", \"video_id\": \"3yAiuEyJF-I\", \"title\": \"I'm Suing These Three Creators\", \"uploader\": \"h3h3Productions\", \"duration\": \"1230\", \"file_size\": \"205243507\", \"channel_id\": \"UCDWIvJwLJsE4LG1Atne2blQ\", \"channel_url\": \"https://www.youtube.com/channel/UCDWIvJwLJsE4LG1Atne2blQ\", \"uploader_url\": \"https://www.youtube.com/@h3h3productions\", \"uploader_id\": \"@h3h3productions\", \"local_path\": \"/root/crew_data/Downloads/I_m_Suing_These_Three_Creators [3yAiuEyJF-I].webm\", \"tool\": \"YouTubeDownloadTool\"}, \"transcript\": {\"transcript\": \"Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers. Today I invite you into my home to share my favorite pastime with you. Join me in creating generational wealth for my attorney. Let me tell you guys a story. About a year and a half ago, it was a big conversation called ReactGate. ReactGate was a debate going on in the streaming community about what constituted fair use. People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream. They would rarely add sufficient commentary or even pause the video to speak. Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title, so that they could cannibalize traffic from the original video. Here's what Lemino had to say about this phenomenon. I don't mind people reacting to my videos, but I do mind when they play the entirety of my video. A face cam in the corner or the occasional interruption does nothing to address that issue. My video is still being played from beginning to end in someone else's stream or video. It's neither ethical nor necessary to feature the entirety of someone else's work, or you know, they could do the bare minimum and ask for permission. Something that none of the major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot of people angry because why should these content thieves essentially get more views than the author of the video which in a lot of cases was happening. I mean, people don't like injustice, and this just, we all see this. And no, it's not right. This debate culminated when XQC, one of the prime suspects, called in to my show to debate me, in which case I'm sad to report that I was terribly owned. So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you? It doesn't matter. Well, if flat out doesn't because that's fair. Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content. Do a week. do a week of no reaction content and see how many fucking views you get oh okay sure i mean that's content man it's a great it's original content at least the ultimate debate bro he hit him with the worm oh why didn't i think of that first i kid exC, but he is not the one I'm suing. Despite my criticism, he's not a malicious infringer. But the ones I am suing, you'll see, are much, much worse. Now, ironically, after this debate and in the wake of this large conversation, the problem seems to have only gotten worse. You have people like Hassan Piker paving the way of fair use with what's known as Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever disappears for extended period of time and leaves the video playing for his chair Mr. Chair they call it. IDF had warned people to leave the area around the main airport and Sana then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of. They include IDFs for an offer. And it was in this setting that I formulated an idea. What if I could make a long form, irresistible piece of content that I knew that these streamers couldn't resist, they couldn't avoid the temptation of watching it. The second it was published. I don't have very sure with them. It's not that I wanted these people to steal my video. It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion. The trap was set and it worked even better than I imagined it would. We captured pretty much every large streamer reacting to it in its entirety immediately after it was published. Now the thing is, there were a few people that went above and beyond to commit copyright infringement. For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular viewership. She's working directly with the Snark Subreddit moderators to siphon views, and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit. Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3. Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here they're offering these streamers as market substitutes for my work. This is the cardinal sin of copyright infringement. The snark subreddit has been a frequent and persistent infringer. That's how I knew. When this video came out, the snarkers were going to encourage, promote, and push streamers to commit copyright infringement. I should thank the Snarkers actually. Because of their predictability, they acted like double agents for us, incriminating their favorite streamers and serving them up on a golden platter. So thank you, Snark. It's one thing for a subreddit to admit it's engaging in copyright infringement. But how do you get the streamers themselves to admit that they're stealing content? Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime if you liked the content, if you enjoyed your time here. It turns out they just do it for you. You couldn't cook up a more incriminating statement if you tried. Denims, the queen of self-owning, you prevail again. There's one thing about copyright you should know is that you got to register it before you publish to be eligible for statutory damages and attorney's fees, which is the main biting force of a copyright infringement lawsuit. Well, I'm happy to tell you guys now, I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress. Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing, but I would never sue them just for doing that. I don't want to chill the reaction community into fear. Actually the opposite. I hope that we can all unite against this type of egregious behavior that not only makes us all look bad, but could destroy the commentary community as we know it. Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. The state of reaction content on Twitch is so broken, these creators feel comfortable looking right into a camera and saying outright, hey, I'm stealing this guy's content, pay me instead of him. This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream, my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent that could endanger our entire field. Now, before I tell you who the three people I'm suing are, I just want to make it clear that they all met this very specific high bar of criteria that I set forth earlier. These people were not targeted based on their gender, their identity, their political beliefs. All three are on this list. In fact, they're the only three as far as I could tell that reacted to the full video. Drum roll please. Who's sweating at home, guys? Casey Tron, the queen of ripping farts and bongloads. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I'm amazing? Frogan who bless her soul, she's still rising. Can I walk away and use a bathroom? Do I have permission? Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that? It's very obvious from the way that guy's talking. He's a Sneiko fan. Oh my God, bro. I love you. I love you, bro. I'm so sweaty, bro. I love you, bro. None of the hostages that have been released so far have said that they have been raped. The hostages have public statements. You can go look at them. The sexual assault I experienced should never happen to any human being. This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie. Are you a soldier? Yes. That seems pretty definitive. He never said Hassan Nasrallah was a good guy. I can't believe I'm calling Nasrallah base. I mean, listen. Now for the fun part, let's take a look at the complaints. And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. So we're going to watch it. Well, that's a really dumb thing to say, don't you think? Why are you so comfortable? We've given each complaint a clever little title, and here's Casey Trons. She smoked more than she spoke. Casey Tron smokes 42 times during her reaction. And just as a silly thought experiment, we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well, we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and 55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her quote unquote reaction. And whatever talking she did was just to express how confused she was, presumably from smoking 42 times. What is happening? I'm trying to follow. I've lost the plot. The complaint continues. Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly at her computer screen and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she states quote what is happening i'm trying to follow but i've lost the plot to give you an idea the majority of her commentary comes down to this I don't understand this you're doing he's read more books than you could ever imagine what the hell is coming out of guitar what the kids love anime right he's read more books than you could ever imagine. What is happening? I'm trying to follow. I've lost the plot. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I made this? This isn't music video, Hassan. And as dumb as all of that is, this is the part that really got her sued. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. Without necessarily supporting Ethan Klein. So we're going to watch it. What the fuck is going on here? Stating outright that her intention of doing this is so that people who don't want to support me can watch it through her is why copyright infringement laws exist. You could not and should not do that, especially if your commentary consists of you taking bong loads. At least try to engage with the content. Whoa, what was that? Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys. Frogan. Reaction by exiting. Here she is getting up to leave the video running as she steps out of the room. Is that transformative? Hmm. I guess the judge will decide. She said, quote, it's time to watch the new nuke ethically. Hell yeah. Huh. Very smart to say on camera, by the way. She said, quote, thank you guys so much. I do appreciate everyone's support and thank you for watching it with me well you are so welcome and i'm so glad that you were able to enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything to say dude because he's cycling the same fucking points over and over again what more what more commentary do you need on him repeating the same fucking points for the whole first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again. This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube. They're gonna make it at least one good point. What do you want me to make a point on? Oh, I forgot. She also said, can I use the bathroom, please? I'll leave it playing. You may use the bathroom, Frogan. Although I don't advise it. Can I use a bathroom, please? I'll leave it playing. This into your stomach. And let me state the obvious. Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life. What happens? But you just pause it. You just pause the video, right? Like you get up and you go to the bathroom, you just pause it. They should be watching for you. But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right? As lazy and pathetic as her reaction is, this is not why she's getting sued. This is... Thank you guys so much. I do appreciate everyone's support. And thank you for watching it with me. First time viewer. Time to watch the new ethically. Hell yeah. I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people. I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm having a great time. Exactly. We're going to watch it live. Yes. He doesn't want people to know when it's dropping because we're all watching through other streamers. And I suggest you all watch it through other people as well. It's the stated malicious intent to steal. They talk about watching ethically, but I learned not to steal when I was five. Up next is denim's. And honestly, just take a look at this, guys. It's a nightmare on denim street. Not only did she chariact, but she was kind enough to write her name right at the top, just so that we knew that she was stealing my content, and it was her room and nobody else's. Judge, did you know that we're on denim street right now? Here's some quotes from Denims. We're relying on you to stay live so we don't have to give the nuke views. Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it, since he's confirmed it's coming out today. I'm going to stream it. That is very explicit. Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video, give me a follow, subscribe, throw a prime if you like my content. Your content? The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns, and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully when I'm back, they're done with this. You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better. Mr. 305. I see it. Dude, you should do this. I have an alternate. We're relying on you to stay live so we don't give more views on the nuke. Yeah, I'm going to stream it. Since he confirmed it's coming out today, we're going to stream it. If you want to watch it, watch it with someone else who's already watching it. You know, come enjoy the watch party somewhere else. If you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. If you liked the content, if you enjoyed your time here. Because I'm going to be honest, I did not want to watch that by myself. Let me also commercialize it by asking you to reward me financially for stealing his content. That is like, Chef Kiss. By the way, Denham's had a very successful stream. She had 43,000 people watching her live. Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods. She went on this dude's podcast to debate fair use. And would you be surprised if I told you she said a lot of incriminating things in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like because at least I'm not like directly ripping from one content creator and not like a whole team and stuff. And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video. It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator. The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing. It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain point. It's the same reason you watch shows with your friends. You want to watch it with other people. A lot of people go to watch streamers on Twitch for their React content almost as a curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos. And they probably never will go through YouTube and click a bunch of videos. They like going to Twitch because they like to have it as like, this streamer is curating fun content that I want to watch. From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like. If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like. People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen and how safe they've you know gotten that she thinks she can go out on public on video and say shit like i'm stealing this content because I want to I'm coping even though I know it's stealing When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again I hope it's been obvious about why I'm suing these three people and not others. These people not only violated all the principles of fair use. They also did it maliciously. And that's the part that really got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort to comment, and if you make a good faith effort to comment, and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video, I think you're probably pretty much doing the right thing and that's fine. And I would never sue someone for that. Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women, that I'm a hypocrite for suing for copyright infringement, I just have this to say. I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves. Because let's face it, I want to make sure there's money left over for me when I win my lawsuits. Thanks for watching, everybody. It's been a great time. I'll see you around.\", \"segments\": [{\"start\": 0.0, \"end\": 9.84, \"text\": \"Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers.\"}, {\"start\": 10.4, \"end\": 14.72, \"text\": \"Today I invite you into my home to share my favorite pastime with you.\"}, {\"start\": 15.24, \"end\": 18.32, \"text\": \"Join me in creating generational wealth for my attorney.\"}, {\"start\": 22.0, \"end\": 24.32, \"text\": \"Let me tell you guys a story.\"}, {\"start\": 25.44, \"end\": 29.68, \"text\": \"About a year and a half ago, it was a big conversation called ReactGate.\"}, {\"start\": 30.22, \"end\": 35.56, \"text\": \"ReactGate was a debate going on in the streaming community about what constituted fair use.\"}, {\"start\": 35.82, \"end\": 42.44, \"text\": \"People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream.\"}, {\"start\": 42.44, \"end\": 46.94, \"text\": \"They would rarely add sufficient commentary or even pause the video to speak.\"}, {\"start\": 46.94, \"end\": 52.8, \"text\": \"Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title,\"}, {\"start\": 52.8, \"end\": 56.0, \"text\": \"so that they could cannibalize traffic from the original video.\"}, {\"start\": 56.0, \"end\": 59.3, \"text\": \"Here's what Lemino had to say about this phenomenon.\"}, {\"start\": 59.3, \"end\": 65.68, \"text\": \"I don't mind people reacting to my videos, but I do mind when they play the entirety of my video.\"}, {\"start\": 65.68, \"end\": 71.12, \"text\": \"A face cam in the corner or the occasional interruption does nothing to address that issue.\"}, {\"start\": 71.12, \"end\": 75.84, \"text\": \"My video is still being played from beginning to end in someone else's stream or video.\"}, {\"start\": 75.84, \"end\": 80.64, \"text\": \"It's neither ethical nor necessary to feature the entirety of someone else's work,\"}, {\"start\": 80.64, \"end\": 84.0, \"text\": \"or you know, they could do the bare minimum and ask for permission.\"}, {\"start\": 84.0, \"end\": 85.08, \"text\": \"Something that none of the\"}, {\"start\": 85.08, \"end\": 90.44, \"text\": \"major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question\"}, {\"start\": 90.44, \"end\": 98.02, \"text\": \"no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot\"}, {\"start\": 98.02, \"end\": 104.4, \"text\": \"of people angry because why should these content thieves essentially get more views than the author\"}, {\"start\": 104.4, \"end\": 106.38, \"text\": \"of the video which in a lot of cases was happening.\"}, {\"start\": 106.58, \"end\": 109.62, \"text\": \"I mean, people don't like injustice, and this just, we all see this.\"}, {\"start\": 109.66, \"end\": 110.5, \"text\": \"And no, it's not right.\"}, {\"start\": 110.76, \"end\": 116.86, \"text\": \"This debate culminated when XQC, one of the prime suspects, called in to my show to debate me,\"}, {\"start\": 117.22, \"end\": 120.96, \"text\": \"in which case I'm sad to report that I was terribly owned.\"}, {\"start\": 121.42, \"end\": 132.14, \"text\": \"So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you?\"}, {\"start\": 132.86, \"end\": 137.68, \"text\": \"It doesn't matter. Well, if flat out doesn't because that's fair.\"}, {\"start\": 138.72, \"end\": 144.14, \"text\": \"Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content.\"}, {\"start\": 144.14, \"end\": 145.6, \"text\": \"Do a week. do a week of\"}, {\"start\": 145.6, \"end\": 155.12, \"text\": \"no reaction content and see how many fucking views you get oh okay sure i mean that's content man\"}, {\"start\": 155.12, \"end\": 160.08, \"text\": \"it's a great it's original content at least the ultimate debate bro he hit him with the worm\"}, {\"start\": 160.08, \"end\": 165.58, \"text\": \"oh why didn't i think of that first i kid exC, but he is not the one I'm suing.\"}, {\"start\": 165.72, \"end\": 168.5, \"text\": \"Despite my criticism, he's not a malicious infringer.\"}, {\"start\": 168.6, \"end\": 172.26, \"text\": \"But the ones I am suing, you'll see, are much, much worse.\"}, {\"start\": 172.5, \"end\": 176.96, \"text\": \"Now, ironically, after this debate and in the wake of this large conversation,\"}, {\"start\": 177.42, \"end\": 179.54, \"text\": \"the problem seems to have only gotten worse.\"}, {\"start\": 179.54, \"end\": 183.92, \"text\": \"You have people like Hassan Piker paving the way of fair use with what's known as\"}, {\"start\": 183.92, \"end\": 190.52, \"text\": \"Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever\"}, {\"start\": 190.52, \"end\": 195.62, \"text\": \"disappears for extended period of time and leaves the video playing for his chair\"}, {\"start\": 195.62, \"end\": 197.62, \"text\": \"Mr. Chair they call it.\"}, {\"start\": 197.62, \"end\": 202.18, \"text\": \"IDF had warned people to leave the area around the main airport and Sana\"}, {\"start\": 202.18, \"end\": 225.16, \"text\": \"then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of.\"}, {\"start\": 225.58, \"end\": 228.24, \"text\": \"They include IDFs for an offer.\"}, {\"start\": 228.82, \"end\": 232.66, \"text\": \"And it was in this setting that I formulated an idea.\"}, {\"start\": 233.1, \"end\": 237.12, \"text\": \"What if I could make a long form, irresistible piece of content\"}, {\"start\": 237.12, \"end\": 240.76, \"text\": \"that I knew that these streamers couldn't resist,\"}, {\"start\": 240.92, \"end\": 243.08, \"text\": \"they couldn't avoid the temptation of watching it.\"}, {\"start\": 243.16, \"end\": 244.56, \"text\": \"The second it was published.\"}, {\"start\": 244.82, \"end\": 249.92, \"text\": \"I don't have very sure with them. It's not that I wanted these people to steal my video.\"}, {\"start\": 249.92, \"end\": 260.64, \"text\": \"It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion.\"}, {\"start\": 260.64, \"end\": 264.64, \"text\": \"The trap was set and it worked even better than I imagined it would.\"}, {\"start\": 264.64, \"end\": 265.28, \"text\": \"We captured\"}, {\"start\": 265.28, \"end\": 270.76, \"text\": \"pretty much every large streamer reacting to it in its entirety immediately after it was published.\"}, {\"start\": 270.76, \"end\": 277.84, \"text\": \"Now the thing is, there were a few people that went above and beyond to commit copyright infringement.\"}, {\"start\": 277.84, \"end\": 284.92, \"text\": \"For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular\"}, {\"start\": 284.92, \"end\": 285.6, \"text\": \"viewership.\"}, {\"start\": 286.16, \"end\": 290.52, \"text\": \"She's working directly with the Snark Subreddit moderators to siphon views,\"}, {\"start\": 290.66, \"end\": 296.08, \"text\": \"and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit.\"}, {\"start\": 296.18, \"end\": 301.58, \"text\": \"Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3.\"}, {\"start\": 301.94, \"end\": 306.12, \"text\": \"Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly\"}, {\"start\": 306.12, \"end\": 308.84, \"text\": \"or citing our post in their critique of H3.\"}, {\"start\": 309.12, \"end\": 310.82, \"text\": \"Here they're offering these streamers\"}, {\"start\": 310.82, \"end\": 313.22, \"text\": \"as market substitutes for my work.\"}, {\"start\": 313.44, \"end\": 315.92, \"text\": \"This is the cardinal sin of copyright infringement.\"}, {\"start\": 316.02, \"end\": 317.94, \"text\": \"The snark subreddit has been a frequent\"}, {\"start\": 317.94, \"end\": 319.62, \"text\": \"and persistent infringer.\"}, {\"start\": 319.88, \"end\": 320.72, \"text\": \"That's how I knew.\"}, {\"start\": 320.98, \"end\": 322.08, \"text\": \"When this video came out,\"}, {\"start\": 322.34, \"end\": 324.34, \"text\": \"the snarkers were going to encourage, promote,\"}, {\"start\": 324.34, \"end\": 327.76, \"text\": \"and push streamers to commit copyright infringement.\"}, {\"start\": 327.76, \"end\": 329.76, \"text\": \"I should thank the Snarkers actually.\"}, {\"start\": 329.76, \"end\": 334.4, \"text\": \"Because of their predictability, they acted like double agents for us, incriminating their\"}, {\"start\": 334.4, \"end\": 337.76, \"text\": \"favorite streamers and serving them up on a golden platter.\"}, {\"start\": 337.76, \"end\": 339.6, \"text\": \"So thank you, Snark.\"}, {\"start\": 339.6, \"end\": 344.1, \"text\": \"It's one thing for a subreddit to admit it's engaging in copyright infringement.\"}, {\"start\": 344.1, \"end\": 348.24, \"text\": \"But how do you get the streamers themselves to admit that they're stealing content?\"}, {\"start\": 348.24, \"end\": 356.24, \"text\": \"Well guys, if you enjoyed not giving any views to that terrible video, follow,\"}, {\"start\": 356.24, \"end\": 361.12, \"text\": \"subscribe, throw a prime if you liked the content, if you enjoyed your time here.\"}, {\"start\": 361.12, \"end\": 363.2, \"text\": \"It turns out they just do it for you.\"}, {\"start\": 363.2, \"end\": 367.4, \"text\": \"You couldn't cook up a more incriminating statement if you tried.\"}, {\"start\": 367.4, \"end\": 370.96, \"text\": \"Denims, the queen of self-owning, you prevail again.\"}, {\"start\": 370.96, \"end\": 375.04, \"text\": \"There's one thing about copyright you should know is that you got to register it before\"}, {\"start\": 375.04, \"end\": 381.24, \"text\": \"you publish to be eligible for statutory damages and attorney's fees, which is the main\"}, {\"start\": 381.24, \"end\": 384.38, \"text\": \"biting force of a copyright infringement lawsuit.\"}, {\"start\": 384.38, \"end\": 385.74, \"text\": \"Well, I'm happy to tell you guys now,\"}, {\"start\": 385.94, \"end\": 393.18, \"text\": \"I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress.\"}, {\"start\": 394.24, \"end\": 399.82, \"text\": \"Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators\"}, {\"start\": 399.82, \"end\": 408.08, \"text\": \"and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing,\"}, {\"start\": 408.08, \"end\": 411.52, \"text\": \"but I would never sue them just for doing that. I don't want to chill the reaction\"}, {\"start\": 411.52, \"end\": 416.0, \"text\": \"community into fear. Actually the opposite. I hope that we can all unite\"}, {\"start\": 416.0, \"end\": 419.84, \"text\": \"against this type of egregious behavior that not only makes us all look bad,\"}, {\"start\": 419.84, \"end\": 423.12, \"text\": \"but could destroy the commentary community as we know it.\"}, {\"start\": 423.12, \"end\": 429.72, \"text\": \"Well guys, if you enjoyed not giving any views to that terrible video,\"}, {\"start\": 429.72, \"end\": 432.56, \"text\": \"follow, subscribe, throw a prime.\"}, {\"start\": 432.56, \"end\": 435.86, \"text\": \"The state of reaction content on Twitch is so broken,\"}, {\"start\": 435.86, \"end\": 439.2, \"text\": \"these creators feel comfortable looking right into a camera\"}, {\"start\": 439.2, \"end\": 442.72, \"text\": \"and saying outright, hey, I'm stealing this guy's content,\"}, {\"start\": 442.72, \"end\": 444.46, \"text\": \"pay me instead of him.\"}, {\"start\": 444.46, \"end\": 449.54, \"text\": \"This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream,\"}, {\"start\": 449.72, \"end\": 455.08, \"text\": \"my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent\"}, {\"start\": 455.08, \"end\": 457.08, \"text\": \"that could endanger our entire field.\"}, {\"start\": 457.34, \"end\": 461.48, \"text\": \"Now, before I tell you who the three people I'm suing are, I just want to make it clear\"}, {\"start\": 461.48, \"end\": 468.0, \"text\": \"that they all met this very specific high bar of criteria that I set forth earlier.\"}, {\"start\": 468.0, \"end\": 473.0, \"text\": \"These people were not targeted based on their gender, their identity, their political beliefs.\"}, {\"start\": 473.0, \"end\": 475.0, \"text\": \"All three are on this list.\"}, {\"start\": 475.0, \"end\": 479.0, \"text\": \"In fact, they're the only three as far as I could tell that reacted to the full video.\"}, {\"start\": 479.0, \"end\": 482.5, \"text\": \"Drum roll please. Who's sweating at home, guys?\"}, {\"start\": 482.5, \"end\": 487.12, \"text\": \"Casey Tron, the queen of ripping farts and bongloads.\"}, {\"start\": 487.12, \"end\": 489.6, \"text\": \"They do musicals. They're very musical people.\"}, {\"start\": 489.6, \"end\": 494.96, \"text\": \"Are you being serious? Dog, what do you? Look! You think I'm amazing?\"}, {\"start\": 494.96, \"end\": 498.72, \"text\": \"Frogan who bless her soul, she's still rising.\"}, {\"start\": 498.72, \"end\": 501.76, \"text\": \"Can I walk away and use a bathroom? Do I have permission?\"}, {\"start\": 525.52, \"end\": 528.08, \"text\": \"Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that?\"}, {\"start\": 528.08, \"end\": 530.4, \"text\": \"It's very obvious from the way that guy's talking.\"}, {\"start\": 530.4, \"end\": 531.68, \"text\": \"He's a Sneiko fan.\"}, {\"start\": 531.68, \"end\": 532.96, \"text\": \"Oh my God, bro.\"}, {\"start\": 532.96, \"end\": 533.6, \"text\": \"I love you.\"}, {\"start\": 533.6, \"end\": 534.8, \"text\": \"I love you, bro.\"}, {\"start\": 534.8, \"end\": 535.68, \"text\": \"I'm so sweaty, bro.\"}, {\"start\": 535.68, \"end\": 536.64, \"text\": \"I love you, bro.\"}, {\"start\": 536.64, \"end\": 539.84, \"text\": \"None of the hostages that have been released so far have said that they have been raped.\"}, {\"start\": 539.84, \"end\": 542.32, \"text\": \"The hostages have public statements.\"}, {\"start\": 542.32, \"end\": 543.92, \"text\": \"You can go look at them.\"}, {\"start\": 543.92, \"end\": 548.0, \"text\": \"The sexual assault I experienced should never happen to any human being.\"}, {\"start\": 548.0, \"end\": 553.5, \"text\": \"This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie.\"}, {\"start\": 553.5, \"end\": 555.0, \"text\": \"Are you a soldier?\"}, {\"start\": 555.0, \"end\": 556.0, \"text\": \"Yes.\"}, {\"start\": 556.0, \"end\": 557.5, \"text\": \"That seems pretty definitive.\"}, {\"start\": 557.5, \"end\": 560.0, \"text\": \"He never said Hassan Nasrallah was a good guy.\"}, {\"start\": 560.0, \"end\": 562.0, \"text\": \"I can't believe I'm calling Nasrallah base.\"}, {\"start\": 562.0, \"end\": 563.0, \"text\": \"I mean, listen.\"}, {\"start\": 563.0, \"end\": 566.58, \"text\": \"Now for the fun part, let's take a look at the complaints.\"}, {\"start\": 566.76, \"end\": 575.86, \"text\": \"And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron.\"}, {\"start\": 577.0, \"end\": 583.1, \"text\": \"A lot of people have been wanting to watch this without necessarily supporting Ethan Klein.\"}, {\"start\": 583.76, \"end\": 585.78, \"text\": \"So we're going to watch it.\"}, {\"start\": 586.06, \"end\": 589.38, \"text\": \"Well, that's a really dumb thing to say, don't you think?\"}, {\"start\": 589.68, \"end\": 590.94, \"text\": \"Why are you so comfortable?\"}, {\"start\": 591.28, \"end\": 595.12, \"text\": \"We've given each complaint a clever little title, and here's Casey Trons.\"}, {\"start\": 595.38, \"end\": 597.38, \"text\": \"She smoked more than she spoke.\"}, {\"start\": 597.64, \"end\": 600.68, \"text\": \"Casey Tron smokes 42 times during her reaction.\"}, {\"start\": 600.68, \"end\": 602.96, \"text\": \"And just as a silly thought experiment,\"}, {\"start\": 603.14, \"end\": 610.64, \"text\": \"we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well,\"}, {\"start\": 610.64, \"end\": 616.72, \"text\": \"we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and\"}, {\"start\": 616.72, \"end\": 624.0, \"text\": \"55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her\"}, {\"start\": 624.0, \"end\": 625.34, \"text\": \"quote unquote reaction.\"}, {\"start\": 625.64, \"end\": 631.36, \"text\": \"And whatever talking she did was just to express how confused she was, presumably from\"}, {\"start\": 631.36, \"end\": 632.98, \"text\": \"smoking 42 times.\"}, {\"start\": 633.14, \"end\": 634.1, \"text\": \"What is happening?\"}, {\"start\": 634.3, \"end\": 635.4, \"text\": \"I'm trying to follow.\"}, {\"start\": 635.8, \"end\": 636.9, \"text\": \"I've lost the plot.\"}, {\"start\": 637.5, \"end\": 638.7, \"text\": \"The complaint continues.\"}, {\"start\": 638.88, \"end\": 644.7, \"text\": \"Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly\"}, {\"start\": 644.7, \"end\": 645.76, \"text\": \"at her computer screen\"}, {\"start\": 645.76, \"end\": 652.24, \"text\": \"and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated\"}, {\"start\": 652.24, \"end\": 658.56, \"text\": \"forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she\"}, {\"start\": 658.56, \"end\": 663.92, \"text\": \"states quote what is happening i'm trying to follow but i've lost the plot to give you an idea\"}, {\"start\": 663.92, \"end\": 674.76, \"text\": \"the majority of her commentary comes down to this I don't understand this you're doing he's read more\"}, {\"start\": 674.76, \"end\": 680.16, \"text\": \"books than you could ever imagine what the hell is coming out of guitar what the\"}, {\"start\": 680.16, \"end\": 688.0, \"text\": \"kids love anime right he's read more books than you could ever imagine.\"}, {\"start\": 688.0, \"end\": 694.0, \"text\": \"What is happening? I'm trying to follow. I've lost the plot.\"}, {\"start\": 694.0, \"end\": 706.72, \"text\": \"They do musicals. They're very musical people.\"}, {\"start\": 706.72, \"end\": 709.12, \"text\": \"Are you being serious?\"}, {\"start\": 709.12, \"end\": 712.16, \"text\": \"Dog, what do you? Look! You think I made this?\"}, {\"start\": 712.16, \"end\": 716.64, \"text\": \"This isn't music video, Hassan.\"}, {\"start\": 716.64, \"end\": 720.56, \"text\": \"And as dumb as all of that is, this is the part that really got her sued.\"}, {\"start\": 720.56, \"end\": 726.18, \"text\": \"A lot of people have been wanting to watch this without necessarily supporting Ethan Klein.\"}, {\"start\": 726.56, \"end\": 731.12, \"text\": \"Without necessarily supporting Ethan Klein.\"}, {\"start\": 732.0, \"end\": 734.04, \"text\": \"So we're going to watch it.\"}, {\"start\": 734.64, \"end\": 737.1, \"text\": \"What the fuck is going on here?\"}, {\"start\": 737.46, \"end\": 742.44, \"text\": \"Stating outright that her intention of doing this is so that people who don't want to support\"}, {\"start\": 742.44, \"end\": 746.54, \"text\": \"me can watch it through her is why copyright\"}, {\"start\": 746.54, \"end\": 752.2, \"text\": \"infringement laws exist. You could not and should not do that, especially if your commentary\"}, {\"start\": 752.2, \"end\": 757.7, \"text\": \"consists of you taking bong loads. At least try to engage with the content. Whoa, what was that?\"}, {\"start\": 758.04, \"end\": 762.54, \"text\": \"Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys.\"}, {\"start\": 763.7, \"end\": 767.0, \"text\": \"Frogan. Reaction by exiting.\"}, {\"start\": 767.0, \"end\": 771.0, \"text\": \"Here she is getting up to leave the video running as she steps out of the room.\"}, {\"start\": 771.0, \"end\": 773.0, \"text\": \"Is that transformative?\"}, {\"start\": 773.0, \"end\": 774.0, \"text\": \"Hmm.\"}, {\"start\": 774.0, \"end\": 775.0, \"text\": \"I guess the judge will decide.\"}, {\"start\": 775.0, \"end\": 778.0, \"text\": \"She said, quote, it's time to watch the new nuke ethically.\"}, {\"start\": 778.0, \"end\": 779.0, \"text\": \"Hell yeah.\"}, {\"start\": 779.0, \"end\": 780.0, \"text\": \"Huh.\"}, {\"start\": 780.0, \"end\": 782.0, \"text\": \"Very smart to say on camera, by the way.\"}, {\"start\": 782.0, \"end\": 784.0, \"text\": \"She said, quote, thank you guys so much.\"}, {\"start\": 784.0, \"end\": 785.5, \"text\": \"I do appreciate everyone's support\"}, {\"start\": 785.5, \"end\": 790.64, \"text\": \"and thank you for watching it with me well you are so welcome and i'm so glad that you were able to\"}, {\"start\": 790.64, \"end\": 796.96, \"text\": \"enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything\"}, {\"start\": 796.96, \"end\": 802.0, \"text\": \"to say dude because he's cycling the same fucking points over and over again what more what more\"}, {\"start\": 802.0, \"end\": 805.44, \"text\": \"commentary do you need on him repeating the same fucking points for the whole\"}, {\"start\": 811.68, \"end\": 812.0, \"text\": \"first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again.\"}, {\"start\": 821.72, \"end\": 822.24, \"text\": \"This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube.\"}, {\"start\": 825.76, \"end\": 826.04, \"text\": \"They're gonna make it at least one good point. What do you want me to make a point on?\"}, {\"start\": 826.6, \"end\": 826.7, \"text\": \"Oh, I forgot.\"}, {\"start\": 828.98, \"end\": 829.14, \"text\": \"She also said, can I use the bathroom, please?\"}, {\"start\": 830.06, \"end\": 830.24, \"text\": \"I'll leave it playing.\"}, {\"start\": 831.68, \"end\": 831.88, \"text\": \"You may use the bathroom, Frogan.\"}, {\"start\": 833.1, \"end\": 833.24, \"text\": \"Although I don't advise it.\"}, {\"start\": 834.84, \"end\": 834.96, \"text\": \"Can I use a bathroom, please?\"}, {\"start\": 835.76, \"end\": 836.12, \"text\": \"I'll leave it playing.\"}, {\"start\": 837.08, \"end\": 837.38, \"text\": \"This into your stomach.\"}, {\"start\": 838.36, \"end\": 840.04, \"text\": \"And let me state the obvious.\"}, {\"start\": 843.34, \"end\": 845.16, \"text\": \"Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life.\"}, {\"start\": 845.16, \"end\": 845.56, \"text\": \"What happens?\"}, {\"start\": 846.12, \"end\": 848.46, \"text\": \"But you just pause it. You just pause the video, right?\"}, {\"start\": 848.8, \"end\": 851.18, \"text\": \"Like you get up and you go to the bathroom, you just pause it.\"}, {\"start\": 851.92, \"end\": 853.62, \"text\": \"They should be watching for you.\"}, {\"start\": 854.36, \"end\": 858.84, \"text\": \"But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right?\"}, {\"start\": 858.98, \"end\": 863.14, \"text\": \"As lazy and pathetic as her reaction is, this is not why she's getting sued.\"}, {\"start\": 863.3, \"end\": 864.04, \"text\": \"This is...\"}, {\"start\": 864.04, \"end\": 864.84, \"text\": \"Thank you guys so much.\"}, {\"start\": 864.84, \"end\": 868.16, \"text\": \"I do appreciate everyone's support. And thank you for watching it with me.\"}, {\"start\": 868.7, \"end\": 872.28, \"text\": \"First time viewer. Time to watch the new ethically. Hell yeah.\"}, {\"start\": 872.6, \"end\": 877.22, \"text\": \"I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people.\"}, {\"start\": 877.92, \"end\": 881.3, \"text\": \"I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm\"}, {\"start\": 881.3, \"end\": 884.94, \"text\": \"having a great time. Exactly. We're going to watch it live. Yes.\"}, {\"start\": 885.32, \"end\": 888.84, \"text\": \"He doesn't want people to know when it's dropping because we're all watching through other streamers.\"}, {\"start\": 889.02, \"end\": 891.94, \"text\": \"And I suggest you all watch it through other people as well.\"}, {\"start\": 892.04, \"end\": 894.38, \"text\": \"It's the stated malicious intent to steal.\"}, {\"start\": 894.86, \"end\": 898.6, \"text\": \"They talk about watching ethically, but I learned not to steal when I was five.\"}, {\"start\": 898.78, \"end\": 900.04, \"text\": \"Up next is denim's.\"}, {\"start\": 901.24, \"end\": 904.18, \"text\": \"And honestly, just take a look at this, guys.\"}, {\"start\": 904.5, \"end\": 906.5, \"text\": \"It's a nightmare on denim street.\"}, {\"start\": 906.84, \"end\": 911.14, \"text\": \"Not only did she chariact, but she was kind enough to write her name right at the top,\"}, {\"start\": 911.22, \"end\": 915.28, \"text\": \"just so that we knew that she was stealing my content, and it was her room and nobody else's.\"}, {\"start\": 915.38, \"end\": 918.24, \"text\": \"Judge, did you know that we're on denim street right now?\"}, {\"start\": 918.38, \"end\": 919.48, \"text\": \"Here's some quotes from Denims.\"}, {\"start\": 919.62, \"end\": 923.22, \"text\": \"We're relying on you to stay live so we don't have to give the nuke views.\"}, {\"start\": 923.52, \"end\": 925.0, \"text\": \"Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it,\"}, {\"start\": 930.8, \"end\": 931.18, \"text\": \"since he's confirmed it's coming out today. I'm going to stream it. That is very explicit.\"}, {\"start\": 936.14, \"end\": 936.6, \"text\": \"Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video,\"}, {\"start\": 942.18, \"end\": 942.56, \"text\": \"give me a follow, subscribe, throw a prime if you like my content. Your content?\"}, {\"start\": 945.76, \"end\": 950.64, \"text\": \"The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns,\"}, {\"start\": 950.64, \"end\": 956.64, \"text\": \"and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully\"}, {\"start\": 956.64, \"end\": 959.2, \"text\": \"when I'm back, they're done with this.\"}, {\"start\": 964.0, \"end\": 965.44, \"text\": \"You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better.\"}, {\"start\": 965.44, \"end\": 966.52, \"text\": \"Mr. 305.\"}, {\"start\": 967.4, \"end\": 968.12, \"text\": \"I see it.\"}, {\"start\": 968.24, \"end\": 969.38, \"text\": \"Dude, you should do this.\"}, {\"start\": 969.44, \"end\": 970.24, \"text\": \"I have an alternate.\"}, {\"start\": 972.96, \"end\": 975.84, \"text\": \"We're relying on you to stay live so we don't give more views on the nuke.\"}, {\"start\": 975.92, \"end\": 977.2, \"text\": \"Yeah, I'm going to stream it.\"}, {\"start\": 977.24, \"end\": 979.42, \"text\": \"Since he confirmed it's coming out today, we're going to stream it.\"}, {\"start\": 979.54, \"end\": 983.1, \"text\": \"If you want to watch it, watch it with someone else who's already watching it.\"}, {\"start\": 983.18, \"end\": 985.08, \"text\": \"You know, come enjoy the watch party somewhere else.\"}, {\"start\": 985.44, \"end\": 990.44, \"text\": \"If you enjoyed not giving any views to that terrible video, follow,\"}, {\"start\": 991.16, \"end\": 992.64, \"text\": \"subscribe, throw a prime.\"}, {\"start\": 993.1, \"end\": 995.34, \"text\": \"If you liked the content, if you enjoyed your time here.\"}, {\"start\": 995.6, \"end\": 998.2, \"text\": \"Because I'm going to be honest, I did not want to watch that by myself.\"}, {\"start\": 998.2, \"end\": 1004.84, \"text\": \"Let me also commercialize it by asking you to reward me financially for stealing his content.\"}, {\"start\": 1006.44, \"end\": 1006.88, \"text\": \"That is like, Chef Kiss.\"}, {\"start\": 1013.0, \"end\": 1013.18, \"text\": \"By the way, Denham's had a very successful stream. She had 43,000 people watching her live.\"}, {\"start\": 1018.12, \"end\": 1023.64, \"text\": \"Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods.\"}, {\"start\": 1024.02, \"end\": 1026.52, \"text\": \"She went on this dude's podcast to\"}, {\"start\": 1026.52, \"end\": 1031.82, \"text\": \"debate fair use. And would you be surprised if I told you she said a lot of incriminating things\"}, {\"start\": 1031.82, \"end\": 1037.3, \"text\": \"in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on\"}, {\"start\": 1037.3, \"end\": 1041.74, \"text\": \"filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as\"}, {\"start\": 1041.74, \"end\": 1046.48, \"text\": \"a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like\"}, {\"start\": 1046.48, \"end\": 1050.78, \"text\": \"because at least I'm not like directly ripping from one content creator and not like a whole team and stuff.\"}, {\"start\": 1051.08, \"end\": 1057.18, \"text\": \"And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video.\"}, {\"start\": 1057.3, \"end\": 1062.18, \"text\": \"It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator.\"}, {\"start\": 1062.38, \"end\": 1066.8, \"text\": \"The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm\"}, {\"start\": 1066.8, \"end\": 1070.48, \"text\": \"reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be\"}, {\"start\": 1070.48, \"end\": 1074.6, \"text\": \"saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing.\"}, {\"start\": 1074.6, \"end\": 1080.36, \"text\": \"It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain\"}, {\"start\": 1080.36, \"end\": 1084.3, \"text\": \"point. It's the same reason you watch shows with your friends. You want to watch it with other people.\"}, {\"start\": 1084.3, \"end\": 1089.2, \"text\": \"A lot of people go to watch streamers on Twitch for their React content almost as a\"}, {\"start\": 1089.2, \"end\": 1094.0, \"text\": \"curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos.\"}, {\"start\": 1094.0, \"end\": 1097.6, \"text\": \"And they probably never will go through YouTube and click a bunch of videos. They like going to\"}, {\"start\": 1097.6, \"end\": 1102.56, \"text\": \"Twitch because they like to have it as like, this streamer is curating fun content that I want to watch.\"}, {\"start\": 1102.56, \"end\": 1110.5, \"text\": \"From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like.\"}, {\"start\": 1110.5, \"end\": 1121.0, \"text\": \"If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like.\"}, {\"start\": 1121.0, \"end\": 1130.08, \"text\": \"People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend\"}, {\"start\": 1130.08, \"end\": 1137.68, \"text\": \"is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen\"}, {\"start\": 1137.68, \"end\": 1144.64, \"text\": \"and how safe they've you know gotten that she thinks she can go out on public on video and say\"}, {\"start\": 1144.64, \"end\": 1147.58, \"text\": \"shit like i'm stealing this content because I want to\"}, {\"start\": 1147.58, \"end\": 1149.62, \"text\": \"I'm coping even though I know it's stealing\"}, {\"start\": 1150.12, \"end\": 1155.92, \"text\": \"When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable\"}, {\"start\": 1155.92, \"end\": 1164.14, \"text\": \"Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again\"}, {\"start\": 1164.76, \"end\": 1165.94, \"text\": \"I hope it's been\"}, {\"start\": 1165.94, \"end\": 1172.34, \"text\": \"obvious about why I'm suing these three people and not others. These people not only violated\"}, {\"start\": 1172.34, \"end\": 1178.6, \"text\": \"all the principles of fair use. They also did it maliciously. And that's the part that really\"}, {\"start\": 1178.6, \"end\": 1183.96, \"text\": \"got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort\"}, {\"start\": 1183.96, \"end\": 1185.2, \"text\": \"to comment, and if you make a good faith effort to comment,\"}, {\"start\": 1192.28, \"end\": 1192.64, \"text\": \"and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video,\"}, {\"start\": 1195.92, \"end\": 1196.0, \"text\": \"I think you're probably pretty much doing the right thing and that's fine.\"}, {\"start\": 1197.44, \"end\": 1198.06, \"text\": \"And I would never sue someone for that.\"}, {\"start\": 1204.5, \"end\": 1208.0, \"text\": \"Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women,\"}, {\"start\": 1208.34, \"end\": 1212.6, \"text\": \"that I'm a hypocrite for suing for copyright infringement, I just have this to say.\"}, {\"start\": 1215.24, \"end\": 1221.0, \"text\": \"I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves.\"}, {\"start\": 1221.3, \"end\": 1225.78, \"text\": \"Because let's face it, I want to make sure there's money left over for me when I win my lawsuits.\"}, {\"start\": 1226.2, \"end\": 1229.56, \"text\": \"Thanks for watching, everybody. It's been a great time. I'll see you around.\"}]}, \"forced_execution\": true, \"bypass_reason\": \"CrewAI agents hallucinate instead of calling tools\"}",
+    "task_outputs": [
+      "{\"platform\": \"YouTube\", \"command\": \"yt-dlp -o /root/crew_data/Downloads/%(title)s [%(id)s].%(ext)s -f bv*[height<=1080]+ba/b[height<=1080] --restrict-filenames --write-info-json --print-json --retries 3 --no-cache-dir https://youtu.be/3yAiuEyJF-I\", \"runner\": \"/home/crew/.venv/bin/yt-dlp\", \"video_id\": \"3yAiuEyJF-I\", \"title\": \"I'm Suing These Three Creators\", \"uploader\": \"h3h3Productions\", \"duration\": \"1230\", \"file_size\": \"205243507\", \"channel_id\": \"UCDWIvJwLJsE4LG1Atne2blQ\", \"channel_url\": \"https://www.youtube.com/channel/UCDWIvJwLJsE4LG1Atne2blQ\", \"uploader_url\": \"https://www.youtube.com/@h3h3productions\", \"uploader_id\": \"@h3h3productions\", \"local_path\": \"/root/crew_data/Downloads/I_m_Suing_These_Three_Creators [3yAiuEyJF-I].webm\", \"tool\": \"YouTubeDownloadTool\"}",
+      "{\"transcript\": \"Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers. Today I invite you into my home to share my favorite pastime with you. Join me in creating generational wealth for my attorney. Let me tell you guys a story. About a year and a half ago, it was a big conversation called ReactGate. ReactGate was a debate going on in the streaming community about what constituted fair use. People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream. They would rarely add sufficient commentary or even pause the video to speak. Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title, so that they could cannibalize traffic from the original video. Here's what Lemino had to say about this phenomenon. I don't mind people reacting to my videos, but I do mind when they play the entirety of my video. A face cam in the corner or the occasional interruption does nothing to address that issue. My video is still being played from beginning to end in someone else's stream or video. It's neither ethical nor necessary to feature the entirety of someone else's work, or you know, they could do the bare minimum and ask for permission. Something that none of the major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot of people angry because why should these content thieves essentially get more views than the author of the video which in a lot of cases was happening. I mean, people don't like injustice, and this just, we all see this. And no, it's not right. This debate culminated when XQC, one of the prime suspects, called in to my show to debate me, in which case I'm sad to report that I was terribly owned. So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you? It doesn't matter. Well, if flat out doesn't because that's fair. Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content. Do a week. do a week of no reaction content and see how many fucking views you get oh okay sure i mean that's content man it's a great it's original content at least the ultimate debate bro he hit him with the worm oh why didn't i think of that first i kid exC, but he is not the one I'm suing. Despite my criticism, he's not a malicious infringer. But the ones I am suing, you'll see, are much, much worse. Now, ironically, after this debate and in the wake of this large conversation, the problem seems to have only gotten worse. You have people like Hassan Piker paving the way of fair use with what's known as Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever disappears for extended period of time and leaves the video playing for his chair Mr. Chair they call it. IDF had warned people to leave the area around the main airport and Sana then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of. They include IDFs for an offer. And it was in this setting that I formulated an idea. What if I could make a long form, irresistible piece of content that I knew that these streamers couldn't resist, they couldn't avoid the temptation of watching it. The second it was published. I don't have very sure with them. It's not that I wanted these people to steal my video. It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion. The trap was set and it worked even better than I imagined it would. We captured pretty much every large streamer reacting to it in its entirety immediately after it was published. Now the thing is, there were a few people that went above and beyond to commit copyright infringement. For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular viewership. She's working directly with the Snark Subreddit moderators to siphon views, and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit. Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3. Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here they're offering these streamers as market substitutes for my work. This is the cardinal sin of copyright infringement. The snark subreddit has been a frequent and persistent infringer. That's how I knew. When this video came out, the snarkers were going to encourage, promote, and push streamers to commit copyright infringement. I should thank the Snarkers actually. Because of their predictability, they acted like double agents for us, incriminating their favorite streamers and serving them up on a golden platter. So thank you, Snark. It's one thing for a subreddit to admit it's engaging in copyright infringement. But how do you get the streamers themselves to admit that they're stealing content? Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime if you liked the content, if you enjoyed your time here. It turns out they just do it for you. You couldn't cook up a more incriminating statement if you tried. Denims, the queen of self-owning, you prevail again. There's one thing about copyright you should know is that you got to register it before you publish to be eligible for statutory damages and attorney's fees, which is the main biting force of a copyright infringement lawsuit. Well, I'm happy to tell you guys now, I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress. Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing, but I would never sue them just for doing that. I don't want to chill the reaction community into fear. Actually the opposite. I hope that we can all unite against this type of egregious behavior that not only makes us all look bad, but could destroy the commentary community as we know it. Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. The state of reaction content on Twitch is so broken, these creators feel comfortable looking right into a camera and saying outright, hey, I'm stealing this guy's content, pay me instead of him. This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream, my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent that could endanger our entire field. Now, before I tell you who the three people I'm suing are, I just want to make it clear that they all met this very specific high bar of criteria that I set forth earlier. These people were not targeted based on their gender, their identity, their political beliefs. All three are on this list. In fact, they're the only three as far as I could tell that reacted to the full video. Drum roll please. Who's sweating at home, guys? Casey Tron, the queen of ripping farts and bongloads. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I'm amazing? Frogan who bless her soul, she's still rising. Can I walk away and use a bathroom? Do I have permission? Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that? It's very obvious from the way that guy's talking. He's a Sneiko fan. Oh my God, bro. I love you. I love you, bro. I'm so sweaty, bro. I love you, bro. None of the hostages that have been released so far have said that they have been raped. The hostages have public statements. You can go look at them. The sexual assault I experienced should never happen to any human being. This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie. Are you a soldier? Yes. That seems pretty definitive. He never said Hassan Nasrallah was a good guy. I can't believe I'm calling Nasrallah base. I mean, listen. Now for the fun part, let's take a look at the complaints. And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. So we're going to watch it. Well, that's a really dumb thing to say, don't you think? Why are you so comfortable? We've given each complaint a clever little title, and here's Casey Trons. She smoked more than she spoke. Casey Tron smokes 42 times during her reaction. And just as a silly thought experiment, we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well, we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and 55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her quote unquote reaction. And whatever talking she did was just to express how confused she was, presumably from smoking 42 times. What is happening? I'm trying to follow. I've lost the plot. The complaint continues. Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly at her computer screen and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she states quote what is happening i'm trying to follow but i've lost the plot to give you an idea the majority of her commentary comes down to this I don't understand this you're doing he's read more books than you could ever imagine what the hell is coming out of guitar what the kids love anime right he's read more books than you could ever imagine. What is happening? I'm trying to follow. I've lost the plot. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I made this? This isn't music video, Hassan. And as dumb as all of that is, this is the part that really got her sued. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. Without necessarily supporting Ethan Klein. So we're going to watch it. What the fuck is going on here? Stating outright that her intention of doing this is so that people who don't want to support me can watch it through her is why copyright infringement laws exist. You could not and should not do that, especially if your commentary consists of you taking bong loads. At least try to engage with the content. Whoa, what was that? Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys. Frogan. Reaction by exiting. Here she is getting up to leave the video running as she steps out of the room. Is that transformative? Hmm. I guess the judge will decide. She said, quote, it's time to watch the new nuke ethically. Hell yeah. Huh. Very smart to say on camera, by the way. She said, quote, thank you guys so much. I do appreciate everyone's support and thank you for watching it with me well you are so welcome and i'm so glad that you were able to enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything to say dude because he's cycling the same fucking points over and over again what more what more commentary do you need on him repeating the same fucking points for the whole first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again. This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube. They're gonna make it at least one good point. What do you want me to make a point on? Oh, I forgot. She also said, can I use the bathroom, please? I'll leave it playing. You may use the bathroom, Frogan. Although I don't advise it. Can I use a bathroom, please? I'll leave it playing. This into your stomach. And let me state the obvious. Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life. What happens? But you just pause it. You just pause the video, right? Like you get up and you go to the bathroom, you just pause it. They should be watching for you. But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right? As lazy and pathetic as her reaction is, this is not why she's getting sued. This is... Thank you guys so much. I do appreciate everyone's support. And thank you for watching it with me. First time viewer. Time to watch the new ethically. Hell yeah. I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people. I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm having a great time. Exactly. We're going to watch it live. Yes. He doesn't want people to know when it's dropping because we're all watching through other streamers. And I suggest you all watch it through other people as well. It's the stated malicious intent to steal. They talk about watching ethically, but I learned not to steal when I was five. Up next is denim's. And honestly, just take a look at this, guys. It's a nightmare on denim street. Not only did she chariact, but she was kind enough to write her name right at the top, just so that we knew that she was stealing my content, and it was her room and nobody else's. Judge, did you know that we're on denim street right now? Here's some quotes from Denims. We're relying on you to stay live so we don't have to give the nuke views. Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it, since he's confirmed it's coming out today. I'm going to stream it. That is very explicit. Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video, give me a follow, subscribe, throw a prime if you like my content. Your content? The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns, and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully when I'm back, they're done with this. You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better. Mr. 305. I see it. Dude, you should do this. I have an alternate. We're relying on you to stay live so we don't give more views on the nuke. Yeah, I'm going to stream it. Since he confirmed it's coming out today, we're going to stream it. If you want to watch it, watch it with someone else who's already watching it. You know, come enjoy the watch party somewhere else. If you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. If you liked the content, if you enjoyed your time here. Because I'm going to be honest, I did not want to watch that by myself. Let me also commercialize it by asking you to reward me financially for stealing his content. That is like, Chef Kiss. By the way, Denham's had a very successful stream. She had 43,000 people watching her live. Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods. She went on this dude's podcast to debate fair use. And would you be surprised if I told you she said a lot of incriminating things in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like because at least I'm not like directly ripping from one content creator and not like a whole team and stuff. And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video. It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator. The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing. It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain point. It's the same reason you watch shows with your friends. You want to watch it with other people. A lot of people go to watch streamers on Twitch for their React content almost as a curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos. And they probably never will go through YouTube and click a bunch of videos. They like going to Twitch because they like to have it as like, this streamer is curating fun content that I want to watch. From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like. If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like. People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen and how safe they've you know gotten that she thinks she can go out on public on video and say shit like i'm stealing this content because I want to I'm coping even though I know it's stealing When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again I hope it's been obvious about why I'm suing these three people and not others. These people not only violated all the principles of fair use. They also did it maliciously. And that's the part that really got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort to comment, and if you make a good faith effort to comment, and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video, I think you're probably pretty much doing the right thing and that's fine. And I would never sue someone for that. Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women, that I'm a hypocrite for suing for copyright infringement, I just have this to say. I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves. Because let's face it, I want to make sure there's money left over for me when I win my lawsuits. Thanks for watching, everybody. It's been a great time. I'll see you around.\", \"segments\": [{\"start\": 0.0, \"end\": 9.84, \"text\": \"Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers.\"}, {\"start\": 10.4, \"end\": 14.72, \"text\": \"Today I invite you into my home to share my favorite pastime with you.\"}, {\"start\": 15.24, \"end\": 18.32, \"text\": \"Join me in creating generational wealth for my attorney.\"}, {\"start\": 22.0, \"end\": 24.32, \"text\": \"Let me tell you guys a story.\"}, {\"start\": 25.44, \"end\": 29.68, \"text\": \"About a year and a half ago, it was a big conversation called ReactGate.\"}, {\"start\": 30.22, \"end\": 35.56, \"text\": \"ReactGate was a debate going on in the streaming community about what constituted fair use.\"}, {\"start\": 35.82, \"end\": 42.44, \"text\": \"People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream.\"}, {\"start\": 42.44, \"end\": 46.94, \"text\": \"They would rarely add sufficient commentary or even pause the video to speak.\"}, {\"start\": 46.94, \"end\": 52.8, \"text\": \"Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title,\"}, {\"start\": 52.8, \"end\": 56.0, \"text\": \"so that they could cannibalize traffic from the original video.\"}, {\"start\": 56.0, \"end\": 59.3, \"text\": \"Here's what Lemino had to say about this phenomenon.\"}, {\"start\": 59.3, \"end\": 65.68, \"text\": \"I don't mind people reacting to my videos, but I do mind when they play the entirety of my video.\"}, {\"start\": 65.68, \"end\": 71.12, \"text\": \"A face cam in the corner or the occasional interruption does nothing to address that issue.\"}, {\"start\": 71.12, \"end\": 75.84, \"text\": \"My video is still being played from beginning to end in someone else's stream or video.\"}, {\"start\": 75.84, \"end\": 80.64, \"text\": \"It's neither ethical nor necessary to feature the entirety of someone else's work,\"}, {\"start\": 80.64, \"end\": 84.0, \"text\": \"or you know, they could do the bare minimum and ask for permission.\"}, {\"start\": 84.0, \"end\": 85.08, \"text\": \"Something that none of the\"}, {\"start\": 85.08, \"end\": 90.44, \"text\": \"major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question\"}, {\"start\": 90.44, \"end\": 98.02, \"text\": \"no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot\"}, {\"start\": 98.02, \"end\": 104.4, \"text\": \"of people angry because why should these content thieves essentially get more views than the author\"}, {\"start\": 104.4, \"end\": 106.38, \"text\": \"of the video which in a lot of cases was happening.\"}, {\"start\": 106.58, \"end\": 109.62, \"text\": \"I mean, people don't like injustice, and this just, we all see this.\"}, {\"start\": 109.66, \"end\": 110.5, \"text\": \"And no, it's not right.\"}, {\"start\": 110.76, \"end\": 116.86, \"text\": \"This debate culminated when XQC, one of the prime suspects, called in to my show to debate me,\"}, {\"start\": 117.22, \"end\": 120.96, \"text\": \"in which case I'm sad to report that I was terribly owned.\"}, {\"start\": 121.42, \"end\": 132.14, \"text\": \"So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you?\"}, {\"start\": 132.86, \"end\": 137.68, \"text\": \"It doesn't matter. Well, if flat out doesn't because that's fair.\"}, {\"start\": 138.72, \"end\": 144.14, \"text\": \"Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content.\"}, {\"start\": 144.14, \"end\": 145.6, \"text\": \"Do a week. do a week of\"}, {\"start\": 145.6, \"end\": 155.12, \"text\": \"no reaction content and see how many fucking views you get oh okay sure i mean that's content man\"}, {\"start\": 155.12, \"end\": 160.08, \"text\": \"it's a great it's original content at least the ultimate debate bro he hit him with the worm\"}, {\"start\": 160.08, \"end\": 165.58, \"text\": \"oh why didn't i think of that first i kid exC, but he is not the one I'm suing.\"}, {\"start\": 165.72, \"end\": 168.5, \"text\": \"Despite my criticism, he's not a malicious infringer.\"}, {\"start\": 168.6, \"end\": 172.26, \"text\": \"But the ones I am suing, you'll see, are much, much worse.\"}, {\"start\": 172.5, \"end\": 176.96, \"text\": \"Now, ironically, after this debate and in the wake of this large conversation,\"}, {\"start\": 177.42, \"end\": 179.54, \"text\": \"the problem seems to have only gotten worse.\"}, {\"start\": 179.54, \"end\": 183.92, \"text\": \"You have people like Hassan Piker paving the way of fair use with what's known as\"}, {\"start\": 183.92, \"end\": 190.52, \"text\": \"Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever\"}, {\"start\": 190.52, \"end\": 195.62, \"text\": \"disappears for extended period of time and leaves the video playing for his chair\"}, {\"start\": 195.62, \"end\": 197.62, \"text\": \"Mr. Chair they call it.\"}, {\"start\": 197.62, \"end\": 202.18, \"text\": \"IDF had warned people to leave the area around the main airport and Sana\"}, {\"start\": 202.18, \"end\": 225.16, \"text\": \"then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of.\"}, {\"start\": 225.58, \"end\": 228.24, \"text\": \"They include IDFs for an offer.\"}, {\"start\": 228.82, \"end\": 232.66, \"text\": \"And it was in this setting that I formulated an idea.\"}, {\"start\": 233.1, \"end\": 237.12, \"text\": \"What if I could make a long form, irresistible piece of content\"}, {\"start\": 237.12, \"end\": 240.76, \"text\": \"that I knew that these streamers couldn't resist,\"}, {\"start\": 240.92, \"end\": 243.08, \"text\": \"they couldn't avoid the temptation of watching it.\"}, {\"start\": 243.16, \"end\": 244.56, \"text\": \"The second it was published.\"}, {\"start\": 244.82, \"end\": 249.92, \"text\": \"I don't have very sure with them. It's not that I wanted these people to steal my video.\"}, {\"start\": 249.92, \"end\": 260.64, \"text\": \"It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion.\"}, {\"start\": 260.64, \"end\": 264.64, \"text\": \"The trap was set and it worked even better than I imagined it would.\"}, {\"start\": 264.64, \"end\": 265.28, \"text\": \"We captured\"}, {\"start\": 265.28, \"end\": 270.76, \"text\": \"pretty much every large streamer reacting to it in its entirety immediately after it was published.\"}, {\"start\": 270.76, \"end\": 277.84, \"text\": \"Now the thing is, there were a few people that went above and beyond to commit copyright infringement.\"}, {\"start\": 277.84, \"end\": 284.92, \"text\": \"For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular\"}, {\"start\": 284.92, \"end\": 285.6, \"text\": \"viewership.\"}, {\"start\": 286.16, \"end\": 290.52, \"text\": \"She's working directly with the Snark Subreddit moderators to siphon views,\"}, {\"start\": 290.66, \"end\": 296.08, \"text\": \"and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit.\"}, {\"start\": 296.18, \"end\": 301.58, \"text\": \"Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3.\"}, {\"start\": 301.94, \"end\": 306.12, \"text\": \"Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly\"}, {\"start\": 306.12, \"end\": 308.84, \"text\": \"or citing our post in their critique of H3.\"}, {\"start\": 309.12, \"end\": 310.82, \"text\": \"Here they're offering these streamers\"}, {\"start\": 310.82, \"end\": 313.22, \"text\": \"as market substitutes for my work.\"}, {\"start\": 313.44, \"end\": 315.92, \"text\": \"This is the cardinal sin of copyright infringement.\"}, {\"start\": 316.02, \"end\": 317.94, \"text\": \"The snark subreddit has been a frequent\"}, {\"start\": 317.94, \"end\": 319.62, \"text\": \"and persistent infringer.\"}, {\"start\": 319.88, \"end\": 320.72, \"text\": \"That's how I knew.\"}, {\"start\": 320.98, \"end\": 322.08, \"text\": \"When this video came out,\"}, {\"start\": 322.34, \"end\": 324.34, \"text\": \"the snarkers were going to encourage, promote,\"}, {\"start\": 324.34, \"end\": 327.76, \"text\": \"and push streamers to commit copyright infringement.\"}, {\"start\": 327.76, \"end\": 329.76, \"text\": \"I should thank the Snarkers actually.\"}, {\"start\": 329.76, \"end\": 334.4, \"text\": \"Because of their predictability, they acted like double agents for us, incriminating their\"}, {\"start\": 334.4, \"end\": 337.76, \"text\": \"favorite streamers and serving them up on a golden platter.\"}, {\"start\": 337.76, \"end\": 339.6, \"text\": \"So thank you, Snark.\"}, {\"start\": 339.6, \"end\": 344.1, \"text\": \"It's one thing for a subreddit to admit it's engaging in copyright infringement.\"}, {\"start\": 344.1, \"end\": 348.24, \"text\": \"But how do you get the streamers themselves to admit that they're stealing content?\"}, {\"start\": 348.24, \"end\": 356.24, \"text\": \"Well guys, if you enjoyed not giving any views to that terrible video, follow,\"}, {\"start\": 356.24, \"end\": 361.12, \"text\": \"subscribe, throw a prime if you liked the content, if you enjoyed your time here.\"}, {\"start\": 361.12, \"end\": 363.2, \"text\": \"It turns out they just do it for you.\"}, {\"start\": 363.2, \"end\": 367.4, \"text\": \"You couldn't cook up a more incriminating statement if you tried.\"}, {\"start\": 367.4, \"end\": 370.96, \"text\": \"Denims, the queen of self-owning, you prevail again.\"}, {\"start\": 370.96, \"end\": 375.04, \"text\": \"There's one thing about copyright you should know is that you got to register it before\"}, {\"start\": 375.04, \"end\": 381.24, \"text\": \"you publish to be eligible for statutory damages and attorney's fees, which is the main\"}, {\"start\": 381.24, \"end\": 384.38, \"text\": \"biting force of a copyright infringement lawsuit.\"}, {\"start\": 384.38, \"end\": 385.74, \"text\": \"Well, I'm happy to tell you guys now,\"}, {\"start\": 385.94, \"end\": 393.18, \"text\": \"I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress.\"}, {\"start\": 394.24, \"end\": 399.82, \"text\": \"Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators\"}, {\"start\": 399.82, \"end\": 408.08, \"text\": \"and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing,\"}, {\"start\": 408.08, \"end\": 411.52, \"text\": \"but I would never sue them just for doing that. I don't want to chill the reaction\"}, {\"start\": 411.52, \"end\": 416.0, \"text\": \"community into fear. Actually the opposite. I hope that we can all unite\"}, {\"start\": 416.0, \"end\": 419.84, \"text\": \"against this type of egregious behavior that not only makes us all look bad,\"}, {\"start\": 419.84, \"end\": 423.12, \"text\": \"but could destroy the commentary community as we know it.\"}, {\"start\": 423.12, \"end\": 429.72, \"text\": \"Well guys, if you enjoyed not giving any views to that terrible video,\"}, {\"start\": 429.72, \"end\": 432.56, \"text\": \"follow, subscribe, throw a prime.\"}, {\"start\": 432.56, \"end\": 435.86, \"text\": \"The state of reaction content on Twitch is so broken,\"}, {\"start\": 435.86, \"end\": 439.2, \"text\": \"these creators feel comfortable looking right into a camera\"}, {\"start\": 439.2, \"end\": 442.72, \"text\": \"and saying outright, hey, I'm stealing this guy's content,\"}, {\"start\": 442.72, \"end\": 444.46, \"text\": \"pay me instead of him.\"}, {\"start\": 444.46, \"end\": 449.54, \"text\": \"This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream,\"}, {\"start\": 449.72, \"end\": 455.08, \"text\": \"my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent\"}, {\"start\": 455.08, \"end\": 457.08, \"text\": \"that could endanger our entire field.\"}, {\"start\": 457.34, \"end\": 461.48, \"text\": \"Now, before I tell you who the three people I'm suing are, I just want to make it clear\"}, {\"start\": 461.48, \"end\": 468.0, \"text\": \"that they all met this very specific high bar of criteria that I set forth earlier.\"}, {\"start\": 468.0, \"end\": 473.0, \"text\": \"These people were not targeted based on their gender, their identity, their political beliefs.\"}, {\"start\": 473.0, \"end\": 475.0, \"text\": \"All three are on this list.\"}, {\"start\": 475.0, \"end\": 479.0, \"text\": \"In fact, they're the only three as far as I could tell that reacted to the full video.\"}, {\"start\": 479.0, \"end\": 482.5, \"text\": \"Drum roll please. Who's sweating at home, guys?\"}, {\"start\": 482.5, \"end\": 487.12, \"text\": \"Casey Tron, the queen of ripping farts and bongloads.\"}, {\"start\": 487.12, \"end\": 489.6, \"text\": \"They do musicals. They're very musical people.\"}, {\"start\": 489.6, \"end\": 494.96, \"text\": \"Are you being serious? Dog, what do you? Look! You think I'm amazing?\"}, {\"start\": 494.96, \"end\": 498.72, \"text\": \"Frogan who bless her soul, she's still rising.\"}, {\"start\": 498.72, \"end\": 501.76, \"text\": \"Can I walk away and use a bathroom? Do I have permission?\"}, {\"start\": 525.52, \"end\": 528.08, \"text\": \"Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that?\"}, {\"start\": 528.08, \"end\": 530.4, \"text\": \"It's very obvious from the way that guy's talking.\"}, {\"start\": 530.4, \"end\": 531.68, \"text\": \"He's a Sneiko fan.\"}, {\"start\": 531.68, \"end\": 532.96, \"text\": \"Oh my God, bro.\"}, {\"start\": 532.96, \"end\": 533.6, \"text\": \"I love you.\"}, {\"start\": 533.6, \"end\": 534.8, \"text\": \"I love you, bro.\"}, {\"start\": 534.8, \"end\": 535.68, \"text\": \"I'm so sweaty, bro.\"}, {\"start\": 535.68, \"end\": 536.64, \"text\": \"I love you, bro.\"}, {\"start\": 536.64, \"end\": 539.84, \"text\": \"None of the hostages that have been released so far have said that they have been raped.\"}, {\"start\": 539.84, \"end\": 542.32, \"text\": \"The hostages have public statements.\"}, {\"start\": 542.32, \"end\": 543.92, \"text\": \"You can go look at them.\"}, {\"start\": 543.92, \"end\": 548.0, \"text\": \"The sexual assault I experienced should never happen to any human being.\"}, {\"start\": 548.0, \"end\": 553.5, \"text\": \"This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie.\"}, {\"start\": 553.5, \"end\": 555.0, \"text\": \"Are you a soldier?\"}, {\"start\": 555.0, \"end\": 556.0, \"text\": \"Yes.\"}, {\"start\": 556.0, \"end\": 557.5, \"text\": \"That seems pretty definitive.\"}, {\"start\": 557.5, \"end\": 560.0, \"text\": \"He never said Hassan Nasrallah was a good guy.\"}, {\"start\": 560.0, \"end\": 562.0, \"text\": \"I can't believe I'm calling Nasrallah base.\"}, {\"start\": 562.0, \"end\": 563.0, \"text\": \"I mean, listen.\"}, {\"start\": 563.0, \"end\": 566.58, \"text\": \"Now for the fun part, let's take a look at the complaints.\"}, {\"start\": 566.76, \"end\": 575.86, \"text\": \"And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron.\"}, {\"start\": 577.0, \"end\": 583.1, \"text\": \"A lot of people have been wanting to watch this without necessarily supporting Ethan Klein.\"}, {\"start\": 583.76, \"end\": 585.78, \"text\": \"So we're going to watch it.\"}, {\"start\": 586.06, \"end\": 589.38, \"text\": \"Well, that's a really dumb thing to say, don't you think?\"}, {\"start\": 589.68, \"end\": 590.94, \"text\": \"Why are you so comfortable?\"}, {\"start\": 591.28, \"end\": 595.12, \"text\": \"We've given each complaint a clever little title, and here's Casey Trons.\"}, {\"start\": 595.38, \"end\": 597.38, \"text\": \"She smoked more than she spoke.\"}, {\"start\": 597.64, \"end\": 600.68, \"text\": \"Casey Tron smokes 42 times during her reaction.\"}, {\"start\": 600.68, \"end\": 602.96, \"text\": \"And just as a silly thought experiment,\"}, {\"start\": 603.14, \"end\": 610.64, \"text\": \"we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well,\"}, {\"start\": 610.64, \"end\": 616.72, \"text\": \"we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and\"}, {\"start\": 616.72, \"end\": 624.0, \"text\": \"55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her\"}, {\"start\": 624.0, \"end\": 625.34, \"text\": \"quote unquote reaction.\"}, {\"start\": 625.64, \"end\": 631.36, \"text\": \"And whatever talking she did was just to express how confused she was, presumably from\"}, {\"start\": 631.36, \"end\": 632.98, \"text\": \"smoking 42 times.\"}, {\"start\": 633.14, \"end\": 634.1, \"text\": \"What is happening?\"}, {\"start\": 634.3, \"end\": 635.4, \"text\": \"I'm trying to follow.\"}, {\"start\": 635.8, \"end\": 636.9, \"text\": \"I've lost the plot.\"}, {\"start\": 637.5, \"end\": 638.7, \"text\": \"The complaint continues.\"}, {\"start\": 638.88, \"end\": 644.7, \"text\": \"Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly\"}, {\"start\": 644.7, \"end\": 645.76, \"text\": \"at her computer screen\"}, {\"start\": 645.76, \"end\": 652.24, \"text\": \"and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated\"}, {\"start\": 652.24, \"end\": 658.56, \"text\": \"forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she\"}, {\"start\": 658.56, \"end\": 663.92, \"text\": \"states quote what is happening i'm trying to follow but i've lost the plot to give you an idea\"}, {\"start\": 663.92, \"end\": 674.76, \"text\": \"the majority of her commentary comes down to this I don't understand this you're doing he's read more\"}, {\"start\": 674.76, \"end\": 680.16, \"text\": \"books than you could ever imagine what the hell is coming out of guitar what the\"}, {\"start\": 680.16, \"end\": 688.0, \"text\": \"kids love anime right he's read more books than you could ever imagine.\"}, {\"start\": 688.0, \"end\": 694.0, \"text\": \"What is happening? I'm trying to follow. I've lost the plot.\"}, {\"start\": 694.0, \"end\": 706.72, \"text\": \"They do musicals. They're very musical people.\"}, {\"start\": 706.72, \"end\": 709.12, \"text\": \"Are you being serious?\"}, {\"start\": 709.12, \"end\": 712.16, \"text\": \"Dog, what do you? Look! You think I made this?\"}, {\"start\": 712.16, \"end\": 716.64, \"text\": \"This isn't music video, Hassan.\"}, {\"start\": 716.64, \"end\": 720.56, \"text\": \"And as dumb as all of that is, this is the part that really got her sued.\"}, {\"start\": 720.56, \"end\": 726.18, \"text\": \"A lot of people have been wanting to watch this without necessarily supporting Ethan Klein.\"}, {\"start\": 726.56, \"end\": 731.12, \"text\": \"Without necessarily supporting Ethan Klein.\"}, {\"start\": 732.0, \"end\": 734.04, \"text\": \"So we're going to watch it.\"}, {\"start\": 734.64, \"end\": 737.1, \"text\": \"What the fuck is going on here?\"}, {\"start\": 737.46, \"end\": 742.44, \"text\": \"Stating outright that her intention of doing this is so that people who don't want to support\"}, {\"start\": 742.44, \"end\": 746.54, \"text\": \"me can watch it through her is why copyright\"}, {\"start\": 746.54, \"end\": 752.2, \"text\": \"infringement laws exist. You could not and should not do that, especially if your commentary\"}, {\"start\": 752.2, \"end\": 757.7, \"text\": \"consists of you taking bong loads. At least try to engage with the content. Whoa, what was that?\"}, {\"start\": 758.04, \"end\": 762.54, \"text\": \"Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys.\"}, {\"start\": 763.7, \"end\": 767.0, \"text\": \"Frogan. Reaction by exiting.\"}, {\"start\": 767.0, \"end\": 771.0, \"text\": \"Here she is getting up to leave the video running as she steps out of the room.\"}, {\"start\": 771.0, \"end\": 773.0, \"text\": \"Is that transformative?\"}, {\"start\": 773.0, \"end\": 774.0, \"text\": \"Hmm.\"}, {\"start\": 774.0, \"end\": 775.0, \"text\": \"I guess the judge will decide.\"}, {\"start\": 775.0, \"end\": 778.0, \"text\": \"She said, quote, it's time to watch the new nuke ethically.\"}, {\"start\": 778.0, \"end\": 779.0, \"text\": \"Hell yeah.\"}, {\"start\": 779.0, \"end\": 780.0, \"text\": \"Huh.\"}, {\"start\": 780.0, \"end\": 782.0, \"text\": \"Very smart to say on camera, by the way.\"}, {\"start\": 782.0, \"end\": 784.0, \"text\": \"She said, quote, thank you guys so much.\"}, {\"start\": 784.0, \"end\": 785.5, \"text\": \"I do appreciate everyone's support\"}, {\"start\": 785.5, \"end\": 790.64, \"text\": \"and thank you for watching it with me well you are so welcome and i'm so glad that you were able to\"}, {\"start\": 790.64, \"end\": 796.96, \"text\": \"enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything\"}, {\"start\": 796.96, \"end\": 802.0, \"text\": \"to say dude because he's cycling the same fucking points over and over again what more what more\"}, {\"start\": 802.0, \"end\": 805.44, \"text\": \"commentary do you need on him repeating the same fucking points for the whole\"}, {\"start\": 811.68, \"end\": 812.0, \"text\": \"first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again.\"}, {\"start\": 821.72, \"end\": 822.24, \"text\": \"This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube.\"}, {\"start\": 825.76, \"end\": 826.04, \"text\": \"They're gonna make it at least one good point. What do you want me to make a point on?\"}, {\"start\": 826.6, \"end\": 826.7, \"text\": \"Oh, I forgot.\"}, {\"start\": 828.98, \"end\": 829.14, \"text\": \"She also said, can I use the bathroom, please?\"}, {\"start\": 830.06, \"end\": 830.24, \"text\": \"I'll leave it playing.\"}, {\"start\": 831.68, \"end\": 831.88, \"text\": \"You may use the bathroom, Frogan.\"}, {\"start\": 833.1, \"end\": 833.24, \"text\": \"Although I don't advise it.\"}, {\"start\": 834.84, \"end\": 834.96, \"text\": \"Can I use a bathroom, please?\"}, {\"start\": 835.76, \"end\": 836.12, \"text\": \"I'll leave it playing.\"}, {\"start\": 837.08, \"end\": 837.38, \"text\": \"This into your stomach.\"}, {\"start\": 838.36, \"end\": 840.04, \"text\": \"And let me state the obvious.\"}, {\"start\": 843.34, \"end\": 845.16, \"text\": \"Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life.\"}, {\"start\": 845.16, \"end\": 845.56, \"text\": \"What happens?\"}, {\"start\": 846.12, \"end\": 848.46, \"text\": \"But you just pause it. You just pause the video, right?\"}, {\"start\": 848.8, \"end\": 851.18, \"text\": \"Like you get up and you go to the bathroom, you just pause it.\"}, {\"start\": 851.92, \"end\": 853.62, \"text\": \"They should be watching for you.\"}, {\"start\": 854.36, \"end\": 858.84, \"text\": \"But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right?\"}, {\"start\": 858.98, \"end\": 863.14, \"text\": \"As lazy and pathetic as her reaction is, this is not why she's getting sued.\"}, {\"start\": 863.3, \"end\": 864.04, \"text\": \"This is...\"}, {\"start\": 864.04, \"end\": 864.84, \"text\": \"Thank you guys so much.\"}, {\"start\": 864.84, \"end\": 868.16, \"text\": \"I do appreciate everyone's support. And thank you for watching it with me.\"}, {\"start\": 868.7, \"end\": 872.28, \"text\": \"First time viewer. Time to watch the new ethically. Hell yeah.\"}, {\"start\": 872.6, \"end\": 877.22, \"text\": \"I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people.\"}, {\"start\": 877.92, \"end\": 881.3, \"text\": \"I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm\"}, {\"start\": 881.3, \"end\": 884.94, \"text\": \"having a great time. Exactly. We're going to watch it live. Yes.\"}, {\"start\": 885.32, \"end\": 888.84, \"text\": \"He doesn't want people to know when it's dropping because we're all watching through other streamers.\"}, {\"start\": 889.02, \"end\": 891.94, \"text\": \"And I suggest you all watch it through other people as well.\"}, {\"start\": 892.04, \"end\": 894.38, \"text\": \"It's the stated malicious intent to steal.\"}, {\"start\": 894.86, \"end\": 898.6, \"text\": \"They talk about watching ethically, but I learned not to steal when I was five.\"}, {\"start\": 898.78, \"end\": 900.04, \"text\": \"Up next is denim's.\"}, {\"start\": 901.24, \"end\": 904.18, \"text\": \"And honestly, just take a look at this, guys.\"}, {\"start\": 904.5, \"end\": 906.5, \"text\": \"It's a nightmare on denim street.\"}, {\"start\": 906.84, \"end\": 911.14, \"text\": \"Not only did she chariact, but she was kind enough to write her name right at the top,\"}, {\"start\": 911.22, \"end\": 915.28, \"text\": \"just so that we knew that she was stealing my content, and it was her room and nobody else's.\"}, {\"start\": 915.38, \"end\": 918.24, \"text\": \"Judge, did you know that we're on denim street right now?\"}, {\"start\": 918.38, \"end\": 919.48, \"text\": \"Here's some quotes from Denims.\"}, {\"start\": 919.62, \"end\": 923.22, \"text\": \"We're relying on you to stay live so we don't have to give the nuke views.\"}, {\"start\": 923.52, \"end\": 925.0, \"text\": \"Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it,\"}, {\"start\": 930.8, \"end\": 931.18, \"text\": \"since he's confirmed it's coming out today. I'm going to stream it. That is very explicit.\"}, {\"start\": 936.14, \"end\": 936.6, \"text\": \"Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video,\"}, {\"start\": 942.18, \"end\": 942.56, \"text\": \"give me a follow, subscribe, throw a prime if you like my content. Your content?\"}, {\"start\": 945.76, \"end\": 950.64, \"text\": \"The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns,\"}, {\"start\": 950.64, \"end\": 956.64, \"text\": \"and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully\"}, {\"start\": 956.64, \"end\": 959.2, \"text\": \"when I'm back, they're done with this.\"}, {\"start\": 964.0, \"end\": 965.44, \"text\": \"You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better.\"}, {\"start\": 965.44, \"end\": 966.52, \"text\": \"Mr. 305.\"}, {\"start\": 967.4, \"end\": 968.12, \"text\": \"I see it.\"}, {\"start\": 968.24, \"end\": 969.38, \"text\": \"Dude, you should do this.\"}, {\"start\": 969.44, \"end\": 970.24, \"text\": \"I have an alternate.\"}, {\"start\": 972.96, \"end\": 975.84, \"text\": \"We're relying on you to stay live so we don't give more views on the nuke.\"}, {\"start\": 975.92, \"end\": 977.2, \"text\": \"Yeah, I'm going to stream it.\"}, {\"start\": 977.24, \"end\": 979.42, \"text\": \"Since he confirmed it's coming out today, we're going to stream it.\"}, {\"start\": 979.54, \"end\": 983.1, \"text\": \"If you want to watch it, watch it with someone else who's already watching it.\"}, {\"start\": 983.18, \"end\": 985.08, \"text\": \"You know, come enjoy the watch party somewhere else.\"}, {\"start\": 985.44, \"end\": 990.44, \"text\": \"If you enjoyed not giving any views to that terrible video, follow,\"}, {\"start\": 991.16, \"end\": 992.64, \"text\": \"subscribe, throw a prime.\"}, {\"start\": 993.1, \"end\": 995.34, \"text\": \"If you liked the content, if you enjoyed your time here.\"}, {\"start\": 995.6, \"end\": 998.2, \"text\": \"Because I'm going to be honest, I did not want to watch that by myself.\"}, {\"start\": 998.2, \"end\": 1004.84, \"text\": \"Let me also commercialize it by asking you to reward me financially for stealing his content.\"}, {\"start\": 1006.44, \"end\": 1006.88, \"text\": \"That is like, Chef Kiss.\"}, {\"start\": 1013.0, \"end\": 1013.18, \"text\": \"By the way, Denham's had a very successful stream. She had 43,000 people watching her live.\"}, {\"start\": 1018.12, \"end\": 1023.64, \"text\": \"Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods.\"}, {\"start\": 1024.02, \"end\": 1026.52, \"text\": \"She went on this dude's podcast to\"}, {\"start\": 1026.52, \"end\": 1031.82, \"text\": \"debate fair use. And would you be surprised if I told you she said a lot of incriminating things\"}, {\"start\": 1031.82, \"end\": 1037.3, \"text\": \"in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on\"}, {\"start\": 1037.3, \"end\": 1041.74, \"text\": \"filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as\"}, {\"start\": 1041.74, \"end\": 1046.48, \"text\": \"a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like\"}, {\"start\": 1046.48, \"end\": 1050.78, \"text\": \"because at least I'm not like directly ripping from one content creator and not like a whole team and stuff.\"}, {\"start\": 1051.08, \"end\": 1057.18, \"text\": \"And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video.\"}, {\"start\": 1057.3, \"end\": 1062.18, \"text\": \"It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator.\"}, {\"start\": 1062.38, \"end\": 1066.8, \"text\": \"The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm\"}, {\"start\": 1066.8, \"end\": 1070.48, \"text\": \"reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be\"}, {\"start\": 1070.48, \"end\": 1074.6, \"text\": \"saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing.\"}, {\"start\": 1074.6, \"end\": 1080.36, \"text\": \"It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain\"}, {\"start\": 1080.36, \"end\": 1084.3, \"text\": \"point. It's the same reason you watch shows with your friends. You want to watch it with other people.\"}, {\"start\": 1084.3, \"end\": 1089.2, \"text\": \"A lot of people go to watch streamers on Twitch for their React content almost as a\"}, {\"start\": 1089.2, \"end\": 1094.0, \"text\": \"curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos.\"}, {\"start\": 1094.0, \"end\": 1097.6, \"text\": \"And they probably never will go through YouTube and click a bunch of videos. They like going to\"}, {\"start\": 1097.6, \"end\": 1102.56, \"text\": \"Twitch because they like to have it as like, this streamer is curating fun content that I want to watch.\"}, {\"start\": 1102.56, \"end\": 1110.5, \"text\": \"From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like.\"}, {\"start\": 1110.5, \"end\": 1121.0, \"text\": \"If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like.\"}, {\"start\": 1121.0, \"end\": 1130.08, \"text\": \"People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend\"}, {\"start\": 1130.08, \"end\": 1137.68, \"text\": \"is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen\"}, {\"start\": 1137.68, \"end\": 1144.64, \"text\": \"and how safe they've you know gotten that she thinks she can go out on public on video and say\"}, {\"start\": 1144.64, \"end\": 1147.58, \"text\": \"shit like i'm stealing this content because I want to\"}, {\"start\": 1147.58, \"end\": 1149.62, \"text\": \"I'm coping even though I know it's stealing\"}, {\"start\": 1150.12, \"end\": 1155.92, \"text\": \"When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable\"}, {\"start\": 1155.92, \"end\": 1164.14, \"text\": \"Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again\"}, {\"start\": 1164.76, \"end\": 1165.94, \"text\": \"I hope it's been\"}, {\"start\": 1165.94, \"end\": 1172.34, \"text\": \"obvious about why I'm suing these three people and not others. These people not only violated\"}, {\"start\": 1172.34, \"end\": 1178.6, \"text\": \"all the principles of fair use. They also did it maliciously. And that's the part that really\"}, {\"start\": 1178.6, \"end\": 1183.96, \"text\": \"got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort\"}, {\"start\": 1183.96, \"end\": 1185.2, \"text\": \"to comment, and if you make a good faith effort to comment,\"}, {\"start\": 1192.28, \"end\": 1192.64, \"text\": \"and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video,\"}, {\"start\": 1195.92, \"end\": 1196.0, \"text\": \"I think you're probably pretty much doing the right thing and that's fine.\"}, {\"start\": 1197.44, \"end\": 1198.06, \"text\": \"And I would never sue someone for that.\"}, {\"start\": 1204.5, \"end\": 1208.0, \"text\": \"Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women,\"}, {\"start\": 1208.34, \"end\": 1212.6, \"text\": \"that I'm a hypocrite for suing for copyright infringement, I just have this to say.\"}, {\"start\": 1215.24, \"end\": 1221.0, \"text\": \"I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves.\"}, {\"start\": 1221.3, \"end\": 1225.78, \"text\": \"Because let's face it, I want to make sure there's money left over for me when I win my lawsuits.\"}, {\"start\": 1226.2, \"end\": 1229.56, \"text\": \"Thanks for watching, everybody. It's been a great time. I'll see you around.\"}]}"
+    ],
+    "memory_stored": false,
+    "graph_created": false,
+    "download": {
+      "platform": "YouTube",
+      "command": "yt-dlp -o /root/crew_data/Downloads/%(title)s [%(id)s].%(ext)s -f bv*[height<=1080]+ba/b[height<=1080] --restrict-filenames --write-info-json --print-json --retries 3 --no-cache-dir https://youtu.be/3yAiuEyJF-I",
+      "runner": "/home/crew/.venv/bin/yt-dlp",
+      "video_id": "3yAiuEyJF-I",
+      "title": "I'm Suing These Three Creators",
+      "uploader": "h3h3Productions",
+      "duration": "1230",
+      "file_size": "205243507",
+      "channel_id": "UCDWIvJwLJsE4LG1Atne2blQ",
+      "channel_url": "https://www.youtube.com/channel/UCDWIvJwLJsE4LG1Atne2blQ",
+      "uploader_url": "https://www.youtube.com/@h3h3productions",
+      "uploader_id": "@h3h3productions",
+      "local_path": "/root/crew_data/Downloads/I_m_Suing_These_Three_Creators [3yAiuEyJF-I].webm",
+      "tool": "YouTubeDownloadTool"
+    },
+    "transcript": {
+      "transcript": "Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers. Today I invite you into my home to share my favorite pastime with you. Join me in creating generational wealth for my attorney. Let me tell you guys a story. About a year and a half ago, it was a big conversation called ReactGate. ReactGate was a debate going on in the streaming community about what constituted fair use. People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream. They would rarely add sufficient commentary or even pause the video to speak. Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title, so that they could cannibalize traffic from the original video. Here's what Lemino had to say about this phenomenon. I don't mind people reacting to my videos, but I do mind when they play the entirety of my video. A face cam in the corner or the occasional interruption does nothing to address that issue. My video is still being played from beginning to end in someone else's stream or video. It's neither ethical nor necessary to feature the entirety of someone else's work, or you know, they could do the bare minimum and ask for permission. Something that none of the major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot of people angry because why should these content thieves essentially get more views than the author of the video which in a lot of cases was happening. I mean, people don't like injustice, and this just, we all see this. And no, it's not right. This debate culminated when XQC, one of the prime suspects, called in to my show to debate me, in which case I'm sad to report that I was terribly owned. So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you? It doesn't matter. Well, if flat out doesn't because that's fair. Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content. Do a week. do a week of no reaction content and see how many fucking views you get oh okay sure i mean that's content man it's a great it's original content at least the ultimate debate bro he hit him with the worm oh why didn't i think of that first i kid exC, but he is not the one I'm suing. Despite my criticism, he's not a malicious infringer. But the ones I am suing, you'll see, are much, much worse. Now, ironically, after this debate and in the wake of this large conversation, the problem seems to have only gotten worse. You have people like Hassan Piker paving the way of fair use with what's known as Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever disappears for extended period of time and leaves the video playing for his chair Mr. Chair they call it. IDF had warned people to leave the area around the main airport and Sana then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of. They include IDFs for an offer. And it was in this setting that I formulated an idea. What if I could make a long form, irresistible piece of content that I knew that these streamers couldn't resist, they couldn't avoid the temptation of watching it. The second it was published. I don't have very sure with them. It's not that I wanted these people to steal my video. It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion. The trap was set and it worked even better than I imagined it would. We captured pretty much every large streamer reacting to it in its entirety immediately after it was published. Now the thing is, there were a few people that went above and beyond to commit copyright infringement. For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular viewership. She's working directly with the Snark Subreddit moderators to siphon views, and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit. Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3. Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here they're offering these streamers as market substitutes for my work. This is the cardinal sin of copyright infringement. The snark subreddit has been a frequent and persistent infringer. That's how I knew. When this video came out, the snarkers were going to encourage, promote, and push streamers to commit copyright infringement. I should thank the Snarkers actually. Because of their predictability, they acted like double agents for us, incriminating their favorite streamers and serving them up on a golden platter. So thank you, Snark. It's one thing for a subreddit to admit it's engaging in copyright infringement. But how do you get the streamers themselves to admit that they're stealing content? Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime if you liked the content, if you enjoyed your time here. It turns out they just do it for you. You couldn't cook up a more incriminating statement if you tried. Denims, the queen of self-owning, you prevail again. There's one thing about copyright you should know is that you got to register it before you publish to be eligible for statutory damages and attorney's fees, which is the main biting force of a copyright infringement lawsuit. Well, I'm happy to tell you guys now, I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress. Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing, but I would never sue them just for doing that. I don't want to chill the reaction community into fear. Actually the opposite. I hope that we can all unite against this type of egregious behavior that not only makes us all look bad, but could destroy the commentary community as we know it. Well guys, if you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. The state of reaction content on Twitch is so broken, these creators feel comfortable looking right into a camera and saying outright, hey, I'm stealing this guy's content, pay me instead of him. This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream, my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent that could endanger our entire field. Now, before I tell you who the three people I'm suing are, I just want to make it clear that they all met this very specific high bar of criteria that I set forth earlier. These people were not targeted based on their gender, their identity, their political beliefs. All three are on this list. In fact, they're the only three as far as I could tell that reacted to the full video. Drum roll please. Who's sweating at home, guys? Casey Tron, the queen of ripping farts and bongloads. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I'm amazing? Frogan who bless her soul, she's still rising. Can I walk away and use a bathroom? Do I have permission? Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that? It's very obvious from the way that guy's talking. He's a Sneiko fan. Oh my God, bro. I love you. I love you, bro. I'm so sweaty, bro. I love you, bro. None of the hostages that have been released so far have said that they have been raped. The hostages have public statements. You can go look at them. The sexual assault I experienced should never happen to any human being. This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie. Are you a soldier? Yes. That seems pretty definitive. He never said Hassan Nasrallah was a good guy. I can't believe I'm calling Nasrallah base. I mean, listen. Now for the fun part, let's take a look at the complaints. And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. So we're going to watch it. Well, that's a really dumb thing to say, don't you think? Why are you so comfortable? We've given each complaint a clever little title, and here's Casey Trons. She smoked more than she spoke. Casey Tron smokes 42 times during her reaction. And just as a silly thought experiment, we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well, we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and 55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her quote unquote reaction. And whatever talking she did was just to express how confused she was, presumably from smoking 42 times. What is happening? I'm trying to follow. I've lost the plot. The complaint continues. Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly at her computer screen and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she states quote what is happening i'm trying to follow but i've lost the plot to give you an idea the majority of her commentary comes down to this I don't understand this you're doing he's read more books than you could ever imagine what the hell is coming out of guitar what the kids love anime right he's read more books than you could ever imagine. What is happening? I'm trying to follow. I've lost the plot. They do musicals. They're very musical people. Are you being serious? Dog, what do you? Look! You think I made this? This isn't music video, Hassan. And as dumb as all of that is, this is the part that really got her sued. A lot of people have been wanting to watch this without necessarily supporting Ethan Klein. Without necessarily supporting Ethan Klein. So we're going to watch it. What the fuck is going on here? Stating outright that her intention of doing this is so that people who don't want to support me can watch it through her is why copyright infringement laws exist. You could not and should not do that, especially if your commentary consists of you taking bong loads. At least try to engage with the content. Whoa, what was that? Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys. Frogan. Reaction by exiting. Here she is getting up to leave the video running as she steps out of the room. Is that transformative? Hmm. I guess the judge will decide. She said, quote, it's time to watch the new nuke ethically. Hell yeah. Huh. Very smart to say on camera, by the way. She said, quote, thank you guys so much. I do appreciate everyone's support and thank you for watching it with me well you are so welcome and i'm so glad that you were able to enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything to say dude because he's cycling the same fucking points over and over again what more what more commentary do you need on him repeating the same fucking points for the whole first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again. This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube. They're gonna make it at least one good point. What do you want me to make a point on? Oh, I forgot. She also said, can I use the bathroom, please? I'll leave it playing. You may use the bathroom, Frogan. Although I don't advise it. Can I use a bathroom, please? I'll leave it playing. This into your stomach. And let me state the obvious. Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life. What happens? But you just pause it. You just pause the video, right? Like you get up and you go to the bathroom, you just pause it. They should be watching for you. But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right? As lazy and pathetic as her reaction is, this is not why she's getting sued. This is... Thank you guys so much. I do appreciate everyone's support. And thank you for watching it with me. First time viewer. Time to watch the new ethically. Hell yeah. I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people. I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm having a great time. Exactly. We're going to watch it live. Yes. He doesn't want people to know when it's dropping because we're all watching through other streamers. And I suggest you all watch it through other people as well. It's the stated malicious intent to steal. They talk about watching ethically, but I learned not to steal when I was five. Up next is denim's. And honestly, just take a look at this, guys. It's a nightmare on denim street. Not only did she chariact, but she was kind enough to write her name right at the top, just so that we knew that she was stealing my content, and it was her room and nobody else's. Judge, did you know that we're on denim street right now? Here's some quotes from Denims. We're relying on you to stay live so we don't have to give the nuke views. Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it, since he's confirmed it's coming out today. I'm going to stream it. That is very explicit. Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video, give me a follow, subscribe, throw a prime if you like my content. Your content? The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns, and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully when I'm back, they're done with this. You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better. Mr. 305. I see it. Dude, you should do this. I have an alternate. We're relying on you to stay live so we don't give more views on the nuke. Yeah, I'm going to stream it. Since he confirmed it's coming out today, we're going to stream it. If you want to watch it, watch it with someone else who's already watching it. You know, come enjoy the watch party somewhere else. If you enjoyed not giving any views to that terrible video, follow, subscribe, throw a prime. If you liked the content, if you enjoyed your time here. Because I'm going to be honest, I did not want to watch that by myself. Let me also commercialize it by asking you to reward me financially for stealing his content. That is like, Chef Kiss. By the way, Denham's had a very successful stream. She had 43,000 people watching her live. Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods. She went on this dude's podcast to debate fair use. And would you be surprised if I told you she said a lot of incriminating things in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like because at least I'm not like directly ripping from one content creator and not like a whole team and stuff. And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video. It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator. The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing. It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain point. It's the same reason you watch shows with your friends. You want to watch it with other people. A lot of people go to watch streamers on Twitch for their React content almost as a curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos. And they probably never will go through YouTube and click a bunch of videos. They like going to Twitch because they like to have it as like, this streamer is curating fun content that I want to watch. From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like. If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like. People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen and how safe they've you know gotten that she thinks she can go out on public on video and say shit like i'm stealing this content because I want to I'm coping even though I know it's stealing When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again I hope it's been obvious about why I'm suing these three people and not others. These people not only violated all the principles of fair use. They also did it maliciously. And that's the part that really got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort to comment, and if you make a good faith effort to comment, and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video, I think you're probably pretty much doing the right thing and that's fine. And I would never sue someone for that. Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women, that I'm a hypocrite for suing for copyright infringement, I just have this to say. I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves. Because let's face it, I want to make sure there's money left over for me when I win my lawsuits. Thanks for watching, everybody. It's been a great time. I'll see you around.",
+      "segments": [
+        {
+          "start": 0.0,
+          "end": 9.84,
+          "text": "Hi there. My name is Ethan Klein and my favorite hobby is spending hundreds of thousands of dollars on lawyers."
+        },
+        {
+          "start": 10.4,
+          "end": 14.72,
+          "text": "Today I invite you into my home to share my favorite pastime with you."
+        },
+        {
+          "start": 15.24,
+          "end": 18.32,
+          "text": "Join me in creating generational wealth for my attorney."
+        },
+        {
+          "start": 22.0,
+          "end": 24.32,
+          "text": "Let me tell you guys a story."
+        },
+        {
+          "start": 25.44,
+          "end": 29.68,
+          "text": "About a year and a half ago, it was a big conversation called ReactGate."
+        },
+        {
+          "start": 30.22,
+          "end": 35.56,
+          "text": "ReactGate was a debate going on in the streaming community about what constituted fair use."
+        },
+        {
+          "start": 35.82,
+          "end": 42.44,
+          "text": "People like Hassan, XQC, and many of the large Twitch streamers would watch other creators' entire video on their stream."
+        },
+        {
+          "start": 42.44,
+          "end": 46.94,
+          "text": "They would rarely add sufficient commentary or even pause the video to speak."
+        },
+        {
+          "start": 46.94,
+          "end": 52.8,
+          "text": "Most egregiously, they would re-upload to YouTube with the same thumbnail, the same title,"
+        },
+        {
+          "start": 52.8,
+          "end": 56.0,
+          "text": "so that they could cannibalize traffic from the original video."
+        },
+        {
+          "start": 56.0,
+          "end": 59.3,
+          "text": "Here's what Lemino had to say about this phenomenon."
+        },
+        {
+          "start": 59.3,
+          "end": 65.68,
+          "text": "I don't mind people reacting to my videos, but I do mind when they play the entirety of my video."
+        },
+        {
+          "start": 65.68,
+          "end": 71.12,
+          "text": "A face cam in the corner or the occasional interruption does nothing to address that issue."
+        },
+        {
+          "start": 71.12,
+          "end": 75.84,
+          "text": "My video is still being played from beginning to end in someone else's stream or video."
+        },
+        {
+          "start": 75.84,
+          "end": 80.64,
+          "text": "It's neither ethical nor necessary to feature the entirety of someone else's work,"
+        },
+        {
+          "start": 80.64,
+          "end": 84.0,
+          "text": "or you know, they could do the bare minimum and ask for permission."
+        },
+        {
+          "start": 84.0,
+          "end": 85.08,
+          "text": "Something that none of the"
+        },
+        {
+          "start": 85.08,
+          "end": 90.44,
+          "text": "major reaction channels have ever done when they've streamed or re-uploaded my videos but to ask you a question"
+        },
+        {
+          "start": 90.44,
+          "end": 98.02,
+          "text": "no i don't want people to stream or re-upload the entirety of my videos now understandably this made a lot"
+        },
+        {
+          "start": 98.02,
+          "end": 104.4,
+          "text": "of people angry because why should these content thieves essentially get more views than the author"
+        },
+        {
+          "start": 104.4,
+          "end": 106.38,
+          "text": "of the video which in a lot of cases was happening."
+        },
+        {
+          "start": 106.58,
+          "end": 109.62,
+          "text": "I mean, people don't like injustice, and this just, we all see this."
+        },
+        {
+          "start": 109.66,
+          "end": 110.5,
+          "text": "And no, it's not right."
+        },
+        {
+          "start": 110.76,
+          "end": 116.86,
+          "text": "This debate culminated when XQC, one of the prime suspects, called in to my show to debate me,"
+        },
+        {
+          "start": 117.22,
+          "end": 120.96,
+          "text": "in which case I'm sad to report that I was terribly owned."
+        },
+        {
+          "start": 121.42,
+          "end": 132.14,
+          "text": "So in that regard, do you care at all about, like, IP or copyright IP or copyright or like the fact that it's illegal? Does that matter? That it might be illegal. Does that matter to you?"
+        },
+        {
+          "start": 132.86,
+          "end": 137.68,
+          "text": "It doesn't matter. Well, if flat out doesn't because that's fair."
+        },
+        {
+          "start": 138.72,
+          "end": 144.14,
+          "text": "Watch me full screen cam. Do the fucking warm. Then watch your prime. Then watch your prime content."
+        },
+        {
+          "start": 144.14,
+          "end": 145.6,
+          "text": "Do a week. do a week of"
+        },
+        {
+          "start": 145.6,
+          "end": 155.12,
+          "text": "no reaction content and see how many fucking views you get oh okay sure i mean that's content man"
+        },
+        {
+          "start": 155.12,
+          "end": 160.08,
+          "text": "it's a great it's original content at least the ultimate debate bro he hit him with the worm"
+        },
+        {
+          "start": 160.08,
+          "end": 165.58,
+          "text": "oh why didn't i think of that first i kid exC, but he is not the one I'm suing."
+        },
+        {
+          "start": 165.72,
+          "end": 168.5,
+          "text": "Despite my criticism, he's not a malicious infringer."
+        },
+        {
+          "start": 168.6,
+          "end": 172.26,
+          "text": "But the ones I am suing, you'll see, are much, much worse."
+        },
+        {
+          "start": 172.5,
+          "end": 176.96,
+          "text": "Now, ironically, after this debate and in the wake of this large conversation,"
+        },
+        {
+          "start": 177.42,
+          "end": 179.54,
+          "text": "the problem seems to have only gotten worse."
+        },
+        {
+          "start": 179.54,
+          "end": 183.92,
+          "text": "You have people like Hassan Piker paving the way of fair use with what's known as"
+        },
+        {
+          "start": 183.92,
+          "end": 190.52,
+          "text": "Cherriacs when Hassan gets up to go to the bathroom or to eat or to talk to his mom or to do whatever"
+        },
+        {
+          "start": 190.52,
+          "end": 195.62,
+          "text": "disappears for extended period of time and leaves the video playing for his chair"
+        },
+        {
+          "start": 195.62,
+          "end": 197.62,
+          "text": "Mr. Chair they call it."
+        },
+        {
+          "start": 197.62,
+          "end": 202.18,
+          "text": "IDF had warned people to leave the area around the main airport and Sana"
+        },
+        {
+          "start": 202.18,
+          "end": 225.16,
+          "text": "then this. around the main airport and Sana And it was in the world. We're a commutation. The Arabian's king's type of."
+        },
+        {
+          "start": 225.58,
+          "end": 228.24,
+          "text": "They include IDFs for an offer."
+        },
+        {
+          "start": 228.82,
+          "end": 232.66,
+          "text": "And it was in this setting that I formulated an idea."
+        },
+        {
+          "start": 233.1,
+          "end": 237.12,
+          "text": "What if I could make a long form, irresistible piece of content"
+        },
+        {
+          "start": 237.12,
+          "end": 240.76,
+          "text": "that I knew that these streamers couldn't resist,"
+        },
+        {
+          "start": 240.92,
+          "end": 243.08,
+          "text": "they couldn't avoid the temptation of watching it."
+        },
+        {
+          "start": 243.16,
+          "end": 244.56,
+          "text": "The second it was published."
+        },
+        {
+          "start": 244.82,
+          "end": 249.92,
+          "text": "I don't have very sure with them. It's not that I wanted these people to steal my video."
+        },
+        {
+          "start": 249.92,
+          "end": 260.64,
+          "text": "It's that I knew they would. I knew they would watch the entire video, add little to no commentary, react to it instantly, giving them no time to form an opinion."
+        },
+        {
+          "start": 260.64,
+          "end": 264.64,
+          "text": "The trap was set and it worked even better than I imagined it would."
+        },
+        {
+          "start": 264.64,
+          "end": 265.28,
+          "text": "We captured"
+        },
+        {
+          "start": 265.28,
+          "end": 270.76,
+          "text": "pretty much every large streamer reacting to it in its entirety immediately after it was published."
+        },
+        {
+          "start": 270.76,
+          "end": 277.84,
+          "text": "Now the thing is, there were a few people that went above and beyond to commit copyright infringement."
+        },
+        {
+          "start": 277.84,
+          "end": 284.92,
+          "text": "For example, Denham sits here silently with nearly 50,000 live viewers. That's 30 times her regular"
+        },
+        {
+          "start": 284.92,
+          "end": 285.6,
+          "text": "viewership."
+        },
+        {
+          "start": 286.16,
+          "end": 290.52,
+          "text": "She's working directly with the Snark Subreddit moderators to siphon views,"
+        },
+        {
+          "start": 290.66,
+          "end": 296.08,
+          "text": "and their intentions couldn't be clearer. Here's an excerpt from a stickied post from the Snark subreddit."
+        },
+        {
+          "start": 296.18,
+          "end": 301.58,
+          "text": "Hey everyone, we've seen a lot of comments about wanting to watch the nuke without showing support for H3."
+        },
+        {
+          "start": 301.94,
+          "end": 306.12,
+          "text": "Here's a list of creators who've supported our sub, either by engaging with us directly or citing our post in their critique of H3. Here's a list of creators who have supported our sub, either by engaging with us directly"
+        },
+        {
+          "start": 306.12,
+          "end": 308.84,
+          "text": "or citing our post in their critique of H3."
+        },
+        {
+          "start": 309.12,
+          "end": 310.82,
+          "text": "Here they're offering these streamers"
+        },
+        {
+          "start": 310.82,
+          "end": 313.22,
+          "text": "as market substitutes for my work."
+        },
+        {
+          "start": 313.44,
+          "end": 315.92,
+          "text": "This is the cardinal sin of copyright infringement."
+        },
+        {
+          "start": 316.02,
+          "end": 317.94,
+          "text": "The snark subreddit has been a frequent"
+        },
+        {
+          "start": 317.94,
+          "end": 319.62,
+          "text": "and persistent infringer."
+        },
+        {
+          "start": 319.88,
+          "end": 320.72,
+          "text": "That's how I knew."
+        },
+        {
+          "start": 320.98,
+          "end": 322.08,
+          "text": "When this video came out,"
+        },
+        {
+          "start": 322.34,
+          "end": 324.34,
+          "text": "the snarkers were going to encourage, promote,"
+        },
+        {
+          "start": 324.34,
+          "end": 327.76,
+          "text": "and push streamers to commit copyright infringement."
+        },
+        {
+          "start": 327.76,
+          "end": 329.76,
+          "text": "I should thank the Snarkers actually."
+        },
+        {
+          "start": 329.76,
+          "end": 334.4,
+          "text": "Because of their predictability, they acted like double agents for us, incriminating their"
+        },
+        {
+          "start": 334.4,
+          "end": 337.76,
+          "text": "favorite streamers and serving them up on a golden platter."
+        },
+        {
+          "start": 337.76,
+          "end": 339.6,
+          "text": "So thank you, Snark."
+        },
+        {
+          "start": 339.6,
+          "end": 344.1,
+          "text": "It's one thing for a subreddit to admit it's engaging in copyright infringement."
+        },
+        {
+          "start": 344.1,
+          "end": 348.24,
+          "text": "But how do you get the streamers themselves to admit that they're stealing content?"
+        },
+        {
+          "start": 348.24,
+          "end": 356.24,
+          "text": "Well guys, if you enjoyed not giving any views to that terrible video, follow,"
+        },
+        {
+          "start": 356.24,
+          "end": 361.12,
+          "text": "subscribe, throw a prime if you liked the content, if you enjoyed your time here."
+        },
+        {
+          "start": 361.12,
+          "end": 363.2,
+          "text": "It turns out they just do it for you."
+        },
+        {
+          "start": 363.2,
+          "end": 367.4,
+          "text": "You couldn't cook up a more incriminating statement if you tried."
+        },
+        {
+          "start": 367.4,
+          "end": 370.96,
+          "text": "Denims, the queen of self-owning, you prevail again."
+        },
+        {
+          "start": 370.96,
+          "end": 375.04,
+          "text": "There's one thing about copyright you should know is that you got to register it before"
+        },
+        {
+          "start": 375.04,
+          "end": 381.24,
+          "text": "you publish to be eligible for statutory damages and attorney's fees, which is the main"
+        },
+        {
+          "start": 381.24,
+          "end": 384.38,
+          "text": "biting force of a copyright infringement lawsuit."
+        },
+        {
+          "start": 384.38,
+          "end": 385.74,
+          "text": "Well, I'm happy to tell you guys now,"
+        },
+        {
+          "start": 385.94,
+          "end": 393.18,
+          "text": "I, Ethan Klein, have registered Hassan Piker Content Nuk with the United States Library of Congress."
+        },
+        {
+          "start": 394.24,
+          "end": 399.82,
+          "text": "Some of you guys out there sweating? Even though theoretically, I could sue a lot more creators"
+        },
+        {
+          "start": 399.82,
+          "end": 408.08,
+          "text": "and rate in millions of dollars, but the purpose of this is not financial gain. People like XQC and Asmin Gold may have watched the entire thing,"
+        },
+        {
+          "start": 408.08,
+          "end": 411.52,
+          "text": "but I would never sue them just for doing that. I don't want to chill the reaction"
+        },
+        {
+          "start": 411.52,
+          "end": 416.0,
+          "text": "community into fear. Actually the opposite. I hope that we can all unite"
+        },
+        {
+          "start": 416.0,
+          "end": 419.84,
+          "text": "against this type of egregious behavior that not only makes us all look bad,"
+        },
+        {
+          "start": 419.84,
+          "end": 423.12,
+          "text": "but could destroy the commentary community as we know it."
+        },
+        {
+          "start": 423.12,
+          "end": 429.72,
+          "text": "Well guys, if you enjoyed not giving any views to that terrible video,"
+        },
+        {
+          "start": 429.72,
+          "end": 432.56,
+          "text": "follow, subscribe, throw a prime."
+        },
+        {
+          "start": 432.56,
+          "end": 435.86,
+          "text": "The state of reaction content on Twitch is so broken,"
+        },
+        {
+          "start": 435.86,
+          "end": 439.2,
+          "text": "these creators feel comfortable looking right into a camera"
+        },
+        {
+          "start": 439.2,
+          "end": 442.72,
+          "text": "and saying outright, hey, I'm stealing this guy's content,"
+        },
+        {
+          "start": 442.72,
+          "end": 444.46,
+          "text": "pay me instead of him."
+        },
+        {
+          "start": 444.46,
+          "end": 449.54,
+          "text": "This is not a healthy environment. And with people like Hassan reacting to entire TV shows on stream,"
+        },
+        {
+          "start": 449.72,
+          "end": 455.08,
+          "text": "my fear is that Sony or Disney comes along, sues everybody, and sets a devastating precedent"
+        },
+        {
+          "start": 455.08,
+          "end": 457.08,
+          "text": "that could endanger our entire field."
+        },
+        {
+          "start": 457.34,
+          "end": 461.48,
+          "text": "Now, before I tell you who the three people I'm suing are, I just want to make it clear"
+        },
+        {
+          "start": 461.48,
+          "end": 468.0,
+          "text": "that they all met this very specific high bar of criteria that I set forth earlier."
+        },
+        {
+          "start": 468.0,
+          "end": 473.0,
+          "text": "These people were not targeted based on their gender, their identity, their political beliefs."
+        },
+        {
+          "start": 473.0,
+          "end": 475.0,
+          "text": "All three are on this list."
+        },
+        {
+          "start": 475.0,
+          "end": 479.0,
+          "text": "In fact, they're the only three as far as I could tell that reacted to the full video."
+        },
+        {
+          "start": 479.0,
+          "end": 482.5,
+          "text": "Drum roll please. Who's sweating at home, guys?"
+        },
+        {
+          "start": 482.5,
+          "end": 487.12,
+          "text": "Casey Tron, the queen of ripping farts and bongloads."
+        },
+        {
+          "start": 487.12,
+          "end": 489.6,
+          "text": "They do musicals. They're very musical people."
+        },
+        {
+          "start": 489.6,
+          "end": 494.96,
+          "text": "Are you being serious? Dog, what do you? Look! You think I'm amazing?"
+        },
+        {
+          "start": 494.96,
+          "end": 498.72,
+          "text": "Frogan who bless her soul, she's still rising."
+        },
+        {
+          "start": 498.72,
+          "end": 501.76,
+          "text": "Can I walk away and use a bathroom? Do I have permission?"
+        },
+        {
+          "start": 525.52,
+          "end": 528.08,
+          "text": "Can I use a bathroom please? I'll leave it playing. who's only known genocide his entire life. What happens? And Denims, the queen of self-owning. And my God, is she the queen of that?"
+        },
+        {
+          "start": 528.08,
+          "end": 530.4,
+          "text": "It's very obvious from the way that guy's talking."
+        },
+        {
+          "start": 530.4,
+          "end": 531.68,
+          "text": "He's a Sneiko fan."
+        },
+        {
+          "start": 531.68,
+          "end": 532.96,
+          "text": "Oh my God, bro."
+        },
+        {
+          "start": 532.96,
+          "end": 533.6,
+          "text": "I love you."
+        },
+        {
+          "start": 533.6,
+          "end": 534.8,
+          "text": "I love you, bro."
+        },
+        {
+          "start": 534.8,
+          "end": 535.68,
+          "text": "I'm so sweaty, bro."
+        },
+        {
+          "start": 535.68,
+          "end": 536.64,
+          "text": "I love you, bro."
+        },
+        {
+          "start": 536.64,
+          "end": 539.84,
+          "text": "None of the hostages that have been released so far have said that they have been raped."
+        },
+        {
+          "start": 539.84,
+          "end": 542.32,
+          "text": "The hostages have public statements."
+        },
+        {
+          "start": 542.32,
+          "end": 543.92,
+          "text": "You can go look at them."
+        },
+        {
+          "start": 543.92,
+          "end": 548.0,
+          "text": "The sexual assault I experienced should never happen to any human being."
+        },
+        {
+          "start": 548.0,
+          "end": 553.5,
+          "text": "This Yemeni kid is just a Yemeni kid with a gun and is not a hootie and there is no proof of him being a hootie."
+        },
+        {
+          "start": 553.5,
+          "end": 555.0,
+          "text": "Are you a soldier?"
+        },
+        {
+          "start": 555.0,
+          "end": 556.0,
+          "text": "Yes."
+        },
+        {
+          "start": 556.0,
+          "end": 557.5,
+          "text": "That seems pretty definitive."
+        },
+        {
+          "start": 557.5,
+          "end": 560.0,
+          "text": "He never said Hassan Nasrallah was a good guy."
+        },
+        {
+          "start": 560.0,
+          "end": 562.0,
+          "text": "I can't believe I'm calling Nasrallah base."
+        },
+        {
+          "start": 562.0,
+          "end": 563.0,
+          "text": "I mean, listen."
+        },
+        {
+          "start": 563.0,
+          "end": 566.58,
+          "text": "Now for the fun part, let's take a look at the complaints."
+        },
+        {
+          "start": 566.76,
+          "end": 575.86,
+          "text": "And let's start with my favorite of the three, the very own, the prestigious, the highly acclaimed, the highly analytical, Casey Tron."
+        },
+        {
+          "start": 577.0,
+          "end": 583.1,
+          "text": "A lot of people have been wanting to watch this without necessarily supporting Ethan Klein."
+        },
+        {
+          "start": 583.76,
+          "end": 585.78,
+          "text": "So we're going to watch it."
+        },
+        {
+          "start": 586.06,
+          "end": 589.38,
+          "text": "Well, that's a really dumb thing to say, don't you think?"
+        },
+        {
+          "start": 589.68,
+          "end": 590.94,
+          "text": "Why are you so comfortable?"
+        },
+        {
+          "start": 591.28,
+          "end": 595.12,
+          "text": "We've given each complaint a clever little title, and here's Casey Trons."
+        },
+        {
+          "start": 595.38,
+          "end": 597.38,
+          "text": "She smoked more than she spoke."
+        },
+        {
+          "start": 597.64,
+          "end": 600.68,
+          "text": "Casey Tron smokes 42 times during her reaction."
+        },
+        {
+          "start": 600.68,
+          "end": 602.96,
+          "text": "And just as a silly thought experiment,"
+        },
+        {
+          "start": 603.14,
+          "end": 610.64,
+          "text": "we thought wouldn't it be funny if she spent more time smoking than she did talking and thinking there was no way that that could be true? Well,"
+        },
+        {
+          "start": 610.64,
+          "end": 616.72,
+          "text": "we tallied them up. And lo and behold, there's 15 minutes, 40 seconds of commentary, versus 18 minutes and"
+        },
+        {
+          "start": 616.72,
+          "end": 624.0,
+          "text": "55 seconds of smoking. She spent three minutes and 15 seconds longer smoking than she did talking in her"
+        },
+        {
+          "start": 624.0,
+          "end": 625.34,
+          "text": "quote unquote reaction."
+        },
+        {
+          "start": 625.64,
+          "end": 631.36,
+          "text": "And whatever talking she did was just to express how confused she was, presumably from"
+        },
+        {
+          "start": 631.36,
+          "end": 632.98,
+          "text": "smoking 42 times."
+        },
+        {
+          "start": 633.14,
+          "end": 634.1,
+          "text": "What is happening?"
+        },
+        {
+          "start": 634.3,
+          "end": 635.4,
+          "text": "I'm trying to follow."
+        },
+        {
+          "start": 635.8,
+          "end": 636.9,
+          "text": "I've lost the plot."
+        },
+        {
+          "start": 637.5,
+          "end": 638.7,
+          "text": "The complaint continues."
+        },
+        {
+          "start": 638.88,
+          "end": 644.7,
+          "text": "Indeed, KC. Tron is often too obliterated to comment on the nuke and instead stares blankly"
+        },
+        {
+          "start": 644.7,
+          "end": 645.76,
+          "text": "at her computer screen"
+        },
+        {
+          "start": 645.76,
+          "end": 652.24,
+          "text": "and a span of two hours and seven minutes k-tron smokes marijuana frequently in highly concentrated"
+        },
+        {
+          "start": 652.24,
+          "end": 658.56,
+          "text": "forms through vaporizers on 42 separate occasions at one point kacytron is so wasted that she"
+        },
+        {
+          "start": 658.56,
+          "end": 663.92,
+          "text": "states quote what is happening i'm trying to follow but i've lost the plot to give you an idea"
+        },
+        {
+          "start": 663.92,
+          "end": 674.76,
+          "text": "the majority of her commentary comes down to this I don't understand this you're doing he's read more"
+        },
+        {
+          "start": 674.76,
+          "end": 680.16,
+          "text": "books than you could ever imagine what the hell is coming out of guitar what the"
+        },
+        {
+          "start": 680.16,
+          "end": 688.0,
+          "text": "kids love anime right he's read more books than you could ever imagine."
+        },
+        {
+          "start": 688.0,
+          "end": 694.0,
+          "text": "What is happening? I'm trying to follow. I've lost the plot."
+        },
+        {
+          "start": 694.0,
+          "end": 706.72,
+          "text": "They do musicals. They're very musical people."
+        },
+        {
+          "start": 706.72,
+          "end": 709.12,
+          "text": "Are you being serious?"
+        },
+        {
+          "start": 709.12,
+          "end": 712.16,
+          "text": "Dog, what do you? Look! You think I made this?"
+        },
+        {
+          "start": 712.16,
+          "end": 716.64,
+          "text": "This isn't music video, Hassan."
+        },
+        {
+          "start": 716.64,
+          "end": 720.56,
+          "text": "And as dumb as all of that is, this is the part that really got her sued."
+        },
+        {
+          "start": 720.56,
+          "end": 726.18,
+          "text": "A lot of people have been wanting to watch this without necessarily supporting Ethan Klein."
+        },
+        {
+          "start": 726.56,
+          "end": 731.12,
+          "text": "Without necessarily supporting Ethan Klein."
+        },
+        {
+          "start": 732.0,
+          "end": 734.04,
+          "text": "So we're going to watch it."
+        },
+        {
+          "start": 734.64,
+          "end": 737.1,
+          "text": "What the fuck is going on here?"
+        },
+        {
+          "start": 737.46,
+          "end": 742.44,
+          "text": "Stating outright that her intention of doing this is so that people who don't want to support"
+        },
+        {
+          "start": 742.44,
+          "end": 746.54,
+          "text": "me can watch it through her is why copyright"
+        },
+        {
+          "start": 746.54,
+          "end": 752.2,
+          "text": "infringement laws exist. You could not and should not do that, especially if your commentary"
+        },
+        {
+          "start": 752.2,
+          "end": 757.7,
+          "text": "consists of you taking bong loads. At least try to engage with the content. Whoa, what was that?"
+        },
+        {
+          "start": 758.04,
+          "end": 762.54,
+          "text": "Oh, sorry, that was a flying star. It almost got me. You know her and you love her, guys."
+        },
+        {
+          "start": 763.7,
+          "end": 767.0,
+          "text": "Frogan. Reaction by exiting."
+        },
+        {
+          "start": 767.0,
+          "end": 771.0,
+          "text": "Here she is getting up to leave the video running as she steps out of the room."
+        },
+        {
+          "start": 771.0,
+          "end": 773.0,
+          "text": "Is that transformative?"
+        },
+        {
+          "start": 773.0,
+          "end": 774.0,
+          "text": "Hmm."
+        },
+        {
+          "start": 774.0,
+          "end": 775.0,
+          "text": "I guess the judge will decide."
+        },
+        {
+          "start": 775.0,
+          "end": 778.0,
+          "text": "She said, quote, it's time to watch the new nuke ethically."
+        },
+        {
+          "start": 778.0,
+          "end": 779.0,
+          "text": "Hell yeah."
+        },
+        {
+          "start": 779.0,
+          "end": 780.0,
+          "text": "Huh."
+        },
+        {
+          "start": 780.0,
+          "end": 782.0,
+          "text": "Very smart to say on camera, by the way."
+        },
+        {
+          "start": 782.0,
+          "end": 784.0,
+          "text": "She said, quote, thank you guys so much."
+        },
+        {
+          "start": 784.0,
+          "end": 785.5,
+          "text": "I do appreciate everyone's support"
+        },
+        {
+          "start": 785.5,
+          "end": 790.64,
+          "text": "and thank you for watching it with me well you are so welcome and i'm so glad that you were able to"
+        },
+        {
+          "start": 790.64,
+          "end": 796.96,
+          "text": "enjoy that day her commentary is so non-existent that even her own fans begin to call her out i have anything"
+        },
+        {
+          "start": 796.96,
+          "end": 802.0,
+          "text": "to say dude because he's cycling the same fucking points over and over again what more what more"
+        },
+        {
+          "start": 802.0,
+          "end": 805.44,
+          "text": "commentary do you need on him repeating the same fucking points for the whole"
+        },
+        {
+          "start": 811.68,
+          "end": 812.0,
+          "text": "first hour and 30 hour hour one minute and 32 seconds? It's been the same shit over and over again."
+        },
+        {
+          "start": 821.72,
+          "end": 822.24,
+          "text": "This video could have been condensed into 20 fucking minutes. Like what what commentary do you want me to add by like, oh, this guy's a fucking idiot. He's mentally ill and he's having a mental breakdown and uploaded it to fucking YouTube."
+        },
+        {
+          "start": 825.76,
+          "end": 826.04,
+          "text": "They're gonna make it at least one good point. What do you want me to make a point on?"
+        },
+        {
+          "start": 826.6,
+          "end": 826.7,
+          "text": "Oh, I forgot."
+        },
+        {
+          "start": 828.98,
+          "end": 829.14,
+          "text": "She also said, can I use the bathroom, please?"
+        },
+        {
+          "start": 830.06,
+          "end": 830.24,
+          "text": "I'll leave it playing."
+        },
+        {
+          "start": 831.68,
+          "end": 831.88,
+          "text": "You may use the bathroom, Frogan."
+        },
+        {
+          "start": 833.1,
+          "end": 833.24,
+          "text": "Although I don't advise it."
+        },
+        {
+          "start": 834.84,
+          "end": 834.96,
+          "text": "Can I use a bathroom, please?"
+        },
+        {
+          "start": 835.76,
+          "end": 836.12,
+          "text": "I'll leave it playing."
+        },
+        {
+          "start": 837.08,
+          "end": 837.38,
+          "text": "This into your stomach."
+        },
+        {
+          "start": 838.36,
+          "end": 840.04,
+          "text": "And let me state the obvious."
+        },
+        {
+          "start": 843.34,
+          "end": 845.16,
+          "text": "Apparently thinks Twitch is liable for me interviewing a Yemeni teenager who's only known genocide his entire life."
+        },
+        {
+          "start": 845.16,
+          "end": 845.56,
+          "text": "What happens?"
+        },
+        {
+          "start": 846.12,
+          "end": 848.46,
+          "text": "But you just pause it. You just pause the video, right?"
+        },
+        {
+          "start": 848.8,
+          "end": 851.18,
+          "text": "Like you get up and you go to the bathroom, you just pause it."
+        },
+        {
+          "start": 851.92,
+          "end": 853.62,
+          "text": "They should be watching for you."
+        },
+        {
+          "start": 854.36,
+          "end": 858.84,
+          "text": "But if you get up to go to the bathroom and they keep watching my video, they're clearly not watching for you, right?"
+        },
+        {
+          "start": 858.98,
+          "end": 863.14,
+          "text": "As lazy and pathetic as her reaction is, this is not why she's getting sued."
+        },
+        {
+          "start": 863.3,
+          "end": 864.04,
+          "text": "This is..."
+        },
+        {
+          "start": 864.04,
+          "end": 864.84,
+          "text": "Thank you guys so much."
+        },
+        {
+          "start": 864.84,
+          "end": 868.16,
+          "text": "I do appreciate everyone's support. And thank you for watching it with me."
+        },
+        {
+          "start": 868.7,
+          "end": 872.28,
+          "text": "First time viewer. Time to watch the new ethically. Hell yeah."
+        },
+        {
+          "start": 872.6,
+          "end": 877.22,
+          "text": "I found my way from Reddit. Hi guys. Welcome Reddit people. Reddit people. Reddit people."
+        },
+        {
+          "start": 877.92,
+          "end": 881.3,
+          "text": "I came from the H3Snickr Reddit. Ethan is so pathetic while Hassan is in Japan. I'm"
+        },
+        {
+          "start": 881.3,
+          "end": 884.94,
+          "text": "having a great time. Exactly. We're going to watch it live. Yes."
+        },
+        {
+          "start": 885.32,
+          "end": 888.84,
+          "text": "He doesn't want people to know when it's dropping because we're all watching through other streamers."
+        },
+        {
+          "start": 889.02,
+          "end": 891.94,
+          "text": "And I suggest you all watch it through other people as well."
+        },
+        {
+          "start": 892.04,
+          "end": 894.38,
+          "text": "It's the stated malicious intent to steal."
+        },
+        {
+          "start": 894.86,
+          "end": 898.6,
+          "text": "They talk about watching ethically, but I learned not to steal when I was five."
+        },
+        {
+          "start": 898.78,
+          "end": 900.04,
+          "text": "Up next is denim's."
+        },
+        {
+          "start": 901.24,
+          "end": 904.18,
+          "text": "And honestly, just take a look at this, guys."
+        },
+        {
+          "start": 904.5,
+          "end": 906.5,
+          "text": "It's a nightmare on denim street."
+        },
+        {
+          "start": 906.84,
+          "end": 911.14,
+          "text": "Not only did she chariact, but she was kind enough to write her name right at the top,"
+        },
+        {
+          "start": 911.22,
+          "end": 915.28,
+          "text": "just so that we knew that she was stealing my content, and it was her room and nobody else's."
+        },
+        {
+          "start": 915.38,
+          "end": 918.24,
+          "text": "Judge, did you know that we're on denim street right now?"
+        },
+        {
+          "start": 918.38,
+          "end": 919.48,
+          "text": "Here's some quotes from Denims."
+        },
+        {
+          "start": 919.62,
+          "end": 923.22,
+          "text": "We're relying on you to stay live so we don't have to give the nuke views."
+        },
+        {
+          "start": 923.52,
+          "end": 925.0,
+          "text": "Yeah, I'm going to stream it, since he's confirmed nuke views. Yeah, I'm going to stream it,"
+        },
+        {
+          "start": 930.8,
+          "end": 931.18,
+          "text": "since he's confirmed it's coming out today. I'm going to stream it. That is very explicit."
+        },
+        {
+          "start": 936.14,
+          "end": 936.6,
+          "text": "Denham said, quote, well, guys, if you enjoyed not giving any views to that terrible video,"
+        },
+        {
+          "start": 942.18,
+          "end": 942.56,
+          "text": "give me a follow, subscribe, throw a prime if you like my content. Your content?"
+        },
+        {
+          "start": 945.76,
+          "end": 950.64,
+          "text": "The Queen of Self-Own included a countdown timer so we could tell exactly how long she was away. After being gone for a few minutes, she returns,"
+        },
+        {
+          "start": 950.64,
+          "end": 956.64,
+          "text": "and then sits silently for another couple of minutes eating. I'm gonna go pee and hopefully"
+        },
+        {
+          "start": 956.64,
+          "end": 959.2,
+          "text": "when I'm back, they're done with this."
+        },
+        {
+          "start": 964.0,
+          "end": 965.44,
+          "text": "You do look better. Literally, Mr. 305. I see it. Dude, you should do this. I do look better."
+        },
+        {
+          "start": 965.44,
+          "end": 966.52,
+          "text": "Mr. 305."
+        },
+        {
+          "start": 967.4,
+          "end": 968.12,
+          "text": "I see it."
+        },
+        {
+          "start": 968.24,
+          "end": 969.38,
+          "text": "Dude, you should do this."
+        },
+        {
+          "start": 969.44,
+          "end": 970.24,
+          "text": "I have an alternate."
+        },
+        {
+          "start": 972.96,
+          "end": 975.84,
+          "text": "We're relying on you to stay live so we don't give more views on the nuke."
+        },
+        {
+          "start": 975.92,
+          "end": 977.2,
+          "text": "Yeah, I'm going to stream it."
+        },
+        {
+          "start": 977.24,
+          "end": 979.42,
+          "text": "Since he confirmed it's coming out today, we're going to stream it."
+        },
+        {
+          "start": 979.54,
+          "end": 983.1,
+          "text": "If you want to watch it, watch it with someone else who's already watching it."
+        },
+        {
+          "start": 983.18,
+          "end": 985.08,
+          "text": "You know, come enjoy the watch party somewhere else."
+        },
+        {
+          "start": 985.44,
+          "end": 990.44,
+          "text": "If you enjoyed not giving any views to that terrible video, follow,"
+        },
+        {
+          "start": 991.16,
+          "end": 992.64,
+          "text": "subscribe, throw a prime."
+        },
+        {
+          "start": 993.1,
+          "end": 995.34,
+          "text": "If you liked the content, if you enjoyed your time here."
+        },
+        {
+          "start": 995.6,
+          "end": 998.2,
+          "text": "Because I'm going to be honest, I did not want to watch that by myself."
+        },
+        {
+          "start": 998.2,
+          "end": 1004.84,
+          "text": "Let me also commercialize it by asking you to reward me financially for stealing his content."
+        },
+        {
+          "start": 1006.44,
+          "end": 1006.88,
+          "text": "That is like, Chef Kiss."
+        },
+        {
+          "start": 1013.0,
+          "end": 1013.18,
+          "text": "By the way, Denham's had a very successful stream. She had 43,000 people watching her live."
+        },
+        {
+          "start": 1018.12,
+          "end": 1023.64,
+          "text": "Take a look at the title of her Twitch stream. Ethan Klein-Hassan content, nuke watch party. A watch party? I don't think that's fair use. Now Denim's, of course, always delivering the goods."
+        },
+        {
+          "start": 1024.02,
+          "end": 1026.52,
+          "text": "She went on this dude's podcast to"
+        },
+        {
+          "start": 1026.52,
+          "end": 1031.82,
+          "text": "debate fair use. And would you be surprised if I told you she said a lot of incriminating things"
+        },
+        {
+          "start": 1031.82,
+          "end": 1037.3,
+          "text": "in that podcast? The queen of self-own never disappoints. I want to be clear on my opinion on"
+        },
+        {
+          "start": 1037.3,
+          "end": 1041.74,
+          "text": "filler content and stuff. Like, I think filler content, like, you shouldn't do it. I know I do it as"
+        },
+        {
+          "start": 1041.74,
+          "end": 1046.48,
+          "text": "a React stream. And I try to do it only when I do it with like Vox videos or vice videos and stuff like"
+        },
+        {
+          "start": 1046.48,
+          "end": 1050.78,
+          "text": "because at least I'm not like directly ripping from one content creator and not like a whole team and stuff."
+        },
+        {
+          "start": 1051.08,
+          "end": 1057.18,
+          "text": "And most of those videos have like five million views. I only get like 500 viewers. Like like what? I'm taking maybe 50 views from the video."
+        },
+        {
+          "start": 1057.3,
+          "end": 1062.18,
+          "text": "It's a lot harder to feel like I guess bad about that. Whereas like I would feel very bad about doing that to like a single content creator."
+        },
+        {
+          "start": 1062.38,
+          "end": 1066.8,
+          "text": "The majority people said that they literally wouldn't watch Hell's Kitchen unless I was streaming. And it doesn't necessarily mean that I'm"
+        },
+        {
+          "start": 1066.8,
+          "end": 1070.48,
+          "text": "reacting hard enough. You know, I'm sure if you click on a random part in the video, I might not be"
+        },
+        {
+          "start": 1070.48,
+          "end": 1074.6,
+          "text": "saying anything, sure, whatever. And I might walk away from the screen. But it's about like the communal thing."
+        },
+        {
+          "start": 1074.6,
+          "end": 1080.36,
+          "text": "It's why like fucking Toast started streaming, uh, death note. It's not about the actual show at a certain"
+        },
+        {
+          "start": 1080.36,
+          "end": 1084.3,
+          "text": "point. It's the same reason you watch shows with your friends. You want to watch it with other people."
+        },
+        {
+          "start": 1084.3,
+          "end": 1089.2,
+          "text": "A lot of people go to watch streamers on Twitch for their React content almost as a"
+        },
+        {
+          "start": 1089.2,
+          "end": 1094.0,
+          "text": "curator. So they don't actually want to go through YouTube themselves and watch a bunch of videos."
+        },
+        {
+          "start": 1094.0,
+          "end": 1097.6,
+          "text": "And they probably never will go through YouTube and click a bunch of videos. They like going to"
+        },
+        {
+          "start": 1097.6,
+          "end": 1102.56,
+          "text": "Twitch because they like to have it as like, this streamer is curating fun content that I want to watch."
+        },
+        {
+          "start": 1102.56,
+          "end": 1110.5,
+          "text": "From the people that I've talked to, the people who watch Twitch content are specifically there to watch it so they don't have to scroll through YouTube and find a video they like."
+        },
+        {
+          "start": 1110.5,
+          "end": 1121.0,
+          "text": "If someone watches content, I already said this, if someone watches content on someone else's stream, there is a very low likelihood that they're going to go watch it separately and give you like the view or the like."
+        },
+        {
+          "start": 1121.0,
+          "end": 1130.08,
+          "text": "People who are watching content on Twitch, curated Twitch content on Twitch twitch aren't necessarily people that would be watching content on youtube that my friend"
+        },
+        {
+          "start": 1130.08,
+          "end": 1137.68,
+          "text": "is um called theft and you're a thief and now i'm suing you this is just a testimony to how brazen"
+        },
+        {
+          "start": 1137.68,
+          "end": 1144.64,
+          "text": "and how safe they've you know gotten that she thinks she can go out on public on video and say"
+        },
+        {
+          "start": 1144.64,
+          "end": 1147.58,
+          "text": "shit like i'm stealing this content because I want to"
+        },
+        {
+          "start": 1147.58,
+          "end": 1149.62,
+          "text": "I'm coping even though I know it's stealing"
+        },
+        {
+          "start": 1150.12,
+          "end": 1155.92,
+          "text": "When people watch it with me they're definitely not gonna go watch the original like you are way too comfortable"
+        },
+        {
+          "start": 1155.92,
+          "end": 1164.14,
+          "text": "Committing Crimes out in the open well there you have it three separate lawsuits for three separate geniuses now I want to make it clear again"
+        },
+        {
+          "start": 1164.76,
+          "end": 1165.94,
+          "text": "I hope it's been"
+        },
+        {
+          "start": 1165.94,
+          "end": 1172.34,
+          "text": "obvious about why I'm suing these three people and not others. These people not only violated"
+        },
+        {
+          "start": 1172.34,
+          "end": 1178.6,
+          "text": "all the principles of fair use. They also did it maliciously. And that's the part that really"
+        },
+        {
+          "start": 1178.6,
+          "end": 1183.96,
+          "text": "got me. I think if you're a reactor on Twitch, for the most part, if you make a good faith effort"
+        },
+        {
+          "start": 1183.96,
+          "end": 1185.2,
+          "text": "to comment, and if you make a good faith effort to comment,"
+        },
+        {
+          "start": 1192.28,
+          "end": 1192.64,
+          "text": "and if you make a good faith effort to promote the author, to link to them, to try to drive traffic to the original video,"
+        },
+        {
+          "start": 1195.92,
+          "end": 1196.0,
+          "text": "I think you're probably pretty much doing the right thing and that's fine."
+        },
+        {
+          "start": 1197.44,
+          "end": 1198.06,
+          "text": "And I would never sue someone for that."
+        },
+        {
+          "start": 1204.5,
+          "end": 1208.0,
+          "text": "Take it to these three absolute morons to state their intention to steal my property on video. You know, and to all the detractors who are saying that I'm targeting women,"
+        },
+        {
+          "start": 1208.34,
+          "end": 1212.6,
+          "text": "that I'm a hypocrite for suing for copyright infringement, I just have this to say."
+        },
+        {
+          "start": 1215.24,
+          "end": 1221.0,
+          "text": "I don't care. What I do hope, though, is that you'll support their crowdfunding efforts to defend themselves."
+        },
+        {
+          "start": 1221.3,
+          "end": 1225.78,
+          "text": "Because let's face it, I want to make sure there's money left over for me when I win my lawsuits."
+        },
+        {
+          "start": 1226.2,
+          "end": 1229.56,
+          "text": "Thanks for watching, everybody. It's been a great time. I'll see you around."
+        }
+      ]
+    },
+    "forced_execution": true,
+    "bypass_reason": "CrewAI agents hallucinate instead of calling tools"
+  }
+}

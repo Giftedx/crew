@@ -404,11 +404,8 @@ class FeatureFlagRegistry:
 
         # Check for deprecated flags in use
         for name, flag in cls._FLAGS.items():
-            if flag.status == FlagStatus.DEPRECATED:
-                if os.getenv(name):
-                    issues.append(
-                        f"{name} is DEPRECATED (removal: {flag.removal_date}). Migrate to alternative or remove."
-                    )
+            if flag.status == FlagStatus.DEPRECATED and os.getenv(name):
+                issues.append(f"{name} is DEPRECATED (removal: {flag.removal_date}). Migrate to alternative or remove.")
 
         # Check dependencies
         for name, flag in cls._FLAGS.items():
@@ -486,7 +483,7 @@ class FeatureFlagRegistry:
             env_flags = set()
             for line in content.splitlines():
                 line = line.strip()
-                if line.startswith("ENABLE_") or line.startswith("#ENABLE_"):
+                if line.startswith(("ENABLE_", "#ENABLE_")):
                     flag_name = line.lstrip("#").split("=")[0].strip()
                     if flag_name.startswith("ENABLE_"):
                         env_flags.add(flag_name)

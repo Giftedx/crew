@@ -11,4 +11,4 @@ from platform.llm.providers.openrouter.openrouter_service.execution import *  # 
 from platform.llm.providers.openrouter.openrouter_service.execution import _compute_reward
 
 
-__all__ = getattr(_mod, "__all__", []) + ["_compute_reward"]
+__all__ = [*getattr(_mod, "__all__", []), "_compute_reward"]

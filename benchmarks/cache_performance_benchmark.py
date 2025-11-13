@@ -143,10 +143,7 @@ class CachePerformanceBenchmarker:
         p95_cached = percentile(cached_latencies, 95) if cached_latencies else 0
         p95_uncached = percentile(uncached_latencies, 95) if uncached_latencies else 0
 
-        if avg_uncached > 0:
-            latency_reduction_pct = ((avg_uncached - avg_cached) / avg_uncached) * 100
-        else:
-            latency_reduction_pct = 0
+        latency_reduction_pct = (avg_uncached - avg_cached) / avg_uncached * 100 if avg_uncached > 0 else 0
 
         # Estimate time saved (cached calls use cached latency instead of uncached)
         estimated_time_saved_ms = cache_hits * (avg_uncached - avg_cached) if avg_uncached > avg_cached else 0

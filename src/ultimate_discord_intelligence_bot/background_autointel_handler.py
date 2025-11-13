@@ -24,6 +24,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from discord import Interaction
+
     from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
     from ultimate_discord_intelligence_bot.background_intelligence_worker import BackgroundIntelligenceWorker
 logger = logging.getLogger(__name__)
@@ -42,8 +43,11 @@ async def handle_autointel_background(
     in the background. Results are delivered via webhook, allowing comprehensive
     fact-checking that can take hours if needed.
 
+    NOTE: The interaction should already be deferred BEFORE calling this function
+    to avoid Discord timeout. This handler expects interaction.response.is_done() == True.
+
     Args:
-        interaction: Discord interaction object
+        interaction: Discord interaction object (should already be deferred)
         orchestrator: The autonomous intelligence orchestrator
         background_worker: Background task worker
         url: Content URL to analyze
@@ -52,8 +56,11 @@ async def handle_autointel_background(
     from ultimate_discord_intelligence_bot.obs import metrics
 
     try:
+        # Verify interaction was already deferred
         if not interaction.response.is_done():
+            logger.warning("⚠️ Interaction not deferred before handler call - deferring now (may cause timeout)")
             await interaction.response.defer(ephemeral=False)
+
         webhook_url = os.getenv("DISCORD_WEBHOOK")
         if not webhook_url:
             await interaction.followup.send(
@@ -85,10 +92,10 @@ async def handle_autointel_background(
         acknowledgment += "_Note: Analysis quality is never rushed. The system will take as long as needed to ensure rigorous validation._"
         await interaction.followup.send(acknowledgment)
         logger.info(f"✅ Background /autointel started: workflow_id={workflow_id}, url={url}, depth={depth}")
-        metrics.counter("autointel_background_started_total", labels={"depth": depth}).inc()
+        metrics.get_metrics().counter("autointel_background_started_total", labels={"depth": depth}).inc()
     except Exception as e:
         logger.error(f"Failed to start background /autointel: {e}", exc_info=True)
-        metrics.counter("autointel_background_errors_total", labels={"depth": depth}).inc()
+        metrics.get_metrics().counter("autointel_background_errors_total", labels={"depth": depth}).inc()
         try:
             await interaction.followup.send(
                 f"❌ **Failed to Start Analysis**\n\nAn error occurred while initiating background processing:\n```{e!s}```\n\nPlease try again or contact an administrator.",

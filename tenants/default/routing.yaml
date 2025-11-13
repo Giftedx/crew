@@ -1,0 +1,9 @@
+allowed_models:
+  - DeepSeek-V3.2-Exp
+  - Claude 4.5
+  - DeepSeek-V3.1
+  - GPT-5
+  - GPT-OSS
+  - Qwen3
+  - o4-mini
+  - Gemini 2.5
