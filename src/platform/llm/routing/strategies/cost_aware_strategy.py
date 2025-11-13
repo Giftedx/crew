@@ -65,19 +65,18 @@ class CostAwareStrategy(RoutingStrategy):
         if self.prioritize_cheap:
             # Select the cheapest affordable model
             selected_model = min(affordable_models, key=lambda m: model_costs[m])
+        # Use learning engine if available to select from affordable models
+        elif self.learning_engine:
+            try:
+                selected_model = self.learning_engine.recommend(
+                    "cost_routing", context.metadata or {}, affordable_models
+                )
+            except Exception as e:
+                logger.warning(f"Learning engine failed, using cheapest: {e}")
+                selected_model = min(affordable_models, key=lambda m: model_costs[m])
         else:
-            # Use learning engine if available to select from affordable models
-            if self.learning_engine:
-                try:
-                    selected_model = self.learning_engine.recommend(
-                        "cost_routing", context.metadata or {}, affordable_models
-                    )
-                except Exception as e:
-                    logger.warning(f"Learning engine failed, using cheapest: {e}")
-                    selected_model = min(affordable_models, key=lambda m: model_costs[m])
-            else:
-                # Use first affordable model
-                selected_model = affordable_models[0]
+            # Use first affordable model
+            selected_model = affordable_models[0]
 
         cost = model_costs[selected_model]
         logger.debug(

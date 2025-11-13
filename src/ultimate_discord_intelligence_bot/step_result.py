@@ -283,11 +283,10 @@ class StepResult(Mapping[str, Any]):
 
         if explicit_metadata is not None:
             sources.append(to_mapping(explicit_metadata))
-        else:
-            if isinstance(self.metadata, dict) and self.metadata:
-                sources.append(dict(self.metadata))
-            elif self.metadata is not None and not isinstance(self.metadata, dict):
-                sources.append(to_mapping(self.metadata))
+        elif isinstance(self.metadata, dict) and self.metadata:
+            sources.append(dict(self.metadata))
+        elif self.metadata is not None and not isinstance(self.metadata, dict):
+            sources.append(to_mapping(self.metadata))
 
         data_has_key = "metadata" in self._data
         if data_has_key:

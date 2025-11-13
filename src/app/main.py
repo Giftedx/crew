@@ -18,6 +18,7 @@ if callable(ensure_platform_proxy):  # type: ignore
         ensure_platform_proxy()  # type: ignore
 
 from domains.orchestration.crew import get_crew
+
 from ultimate_discord_intelligence_bot.enhanced_crew_integration import execute_crew_with_quality_monitoring
 
 
@@ -55,7 +56,6 @@ async def run_async() -> None:
         print("\n📋 Performance Alerts:")
         for alert in result.get("performance_alerts", []):
             print(f"  • {alert.get('type', 'unknown')}: {alert.get('message', 'No message')}")
-    return None
 
 
 def run() -> None:
@@ -86,7 +86,6 @@ def test() -> None:
         print(f"  Quality Score: {result.get('quality_score', 0.0):.2f}")
         print(f"  Execution Time: {result.get('execution_time', 0.0):.1f}s")
         print(f"  Alerts Generated: {len(result.get('performance_alerts', []))}")
-        return None
 
     asyncio.run(test_async())
 

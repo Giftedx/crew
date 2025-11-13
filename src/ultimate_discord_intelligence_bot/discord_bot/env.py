@@ -43,9 +43,8 @@ def check_environment() -> bool:
     if not os.getenv("GOOGLE_CREDENTIALS"):
         os.environ["DISABLE_GOOGLE_DRIVE"] = "true"
         optional_services.append("Google Drive uploads")
-    else:
-        if os.getenv("DISABLE_GOOGLE_DRIVE") == "true":
-            os.environ.pop("DISABLE_GOOGLE_DRIVE", None)
+    elif os.getenv("DISABLE_GOOGLE_DRIVE") == "true":
+        os.environ.pop("DISABLE_GOOGLE_DRIVE", None)
 
     try:
         auth_method = os.getenv("GOOGLE_AUTH_METHOD", "service_account").lower()

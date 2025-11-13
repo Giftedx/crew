@@ -480,8 +480,9 @@ class DSPyOptimizer:
             self.optimization_stats["successful_optimizations"] += 1
 
             # Update best performance
-            if result.primary_metric_score > self.optimization_stats["best_performance"]:
-                self.optimization_stats["best_performance"] = result.primary_metric_score
+            self.optimization_stats["best_performance"] = max(
+                self.optimization_stats["best_performance"], result.primary_metric_score
+            )
 
             # Calculate average improvement
             if self.optimization_history:

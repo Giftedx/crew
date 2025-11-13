@@ -236,11 +236,10 @@ class LLMCache:
             if self.redis_client:
                 # Redis backend
                 return bool(self.redis_client.delete(cache_key))
-            else:
-                # In-memory fallback
-                if cache_key in self._memory_cache:
-                    del self._memory_cache[cache_key]
-                    return True
+            # In-memory fallback
+            elif cache_key in self._memory_cache:
+                del self._memory_cache[cache_key]
+                return True
         except Exception:
             pass
 

@@ -443,7 +443,6 @@ def cached_get(
                 import requests as _requests
 
                 raise _requests.HTTPError(f"status={self.status_code}")
-            return None
 
         def iter_content(self, chunk_size: int = 8192):
             yield self.text.encode("utf-8")

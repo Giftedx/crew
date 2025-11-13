@@ -113,16 +113,15 @@ class PerformanceBaselineConfig:
                 return (
                     (value - baseline.acceptable_range_min) / (baseline.target_value - baseline.acceptable_range_min)
                 ) * 100.0
+        elif value <= baseline.target_value:
+            return 100.0
+        elif value >= baseline.acceptable_range_max:
+            return 0.0
         else:
-            if value <= baseline.target_value:
-                return 100.0
-            elif value >= baseline.acceptable_range_max:
-                return 0.0
-            else:
-                # Linear interpolation between target and max
-                return (
-                    (baseline.acceptable_range_max - value) / (baseline.acceptable_range_max - baseline.target_value)
-                ) * 100.0
+            # Linear interpolation between target and max
+            return (
+                (baseline.acceptable_range_max - value) / (baseline.acceptable_range_max - baseline.target_value)
+            ) * 100.0
 
 
 # Production Performance Baselines

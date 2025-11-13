@@ -168,10 +168,8 @@ class CrewAnalytics:
             execution.status = status
             execution.success_count = success_count
             execution.failure_count = failure_count
-            if memory_usage > execution.memory_usage_peak:
-                execution.memory_usage_peak = memory_usage
-            if cpu_usage > execution.cpu_usage_peak:
-                execution.cpu_usage_peak = cpu_usage
+            execution.memory_usage_peak = max(execution.memory_usage_peak, memory_usage)
+            execution.cpu_usage_peak = max(execution.cpu_usage_peak, cpu_usage)
             if error_messages:
                 execution.error_messages.extend(error_messages)
             return StepResult.ok(data={"execution_id": execution_id, "status": status.value, "updated_at": time.time()})
@@ -210,10 +208,8 @@ class CrewAnalytics:
             execution.success_count = success_count
             execution.failure_count = failure_count
             execution.total_execution_time = execution.end_time - execution.start_time
-            if final_memory_usage > execution.memory_usage_peak:
-                execution.memory_usage_peak = final_memory_usage
-            if final_cpu_usage > execution.cpu_usage_peak:
-                execution.cpu_usage_peak = final_cpu_usage
+            execution.memory_usage_peak = max(execution.memory_usage_peak, final_memory_usage)
+            execution.cpu_usage_peak = max(execution.cpu_usage_peak, final_cpu_usage)
             self._update_crew_metrics(execution)
             logger.info(f"Completed tracking execution {execution_id} for crew {execution.crew_type.value}")
             return StepResult.ok(

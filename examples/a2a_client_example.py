@@ -44,31 +44,30 @@ def main():
         except Exception as exc:
             print(f"Invalid A2A_ARGS_JSON: {exc}", file=sys.stderr)
             sys.exit(2)
+    # Convenience envs for common skills
+    elif skill == "tools.text_analyze":
+        text = os.environ.get("A2A_TEXT", "hello from example client")
+        args = {"text": text}
+    elif skill == "tools.lc_summarize":
+        text = os.environ.get("A2A_TEXT", "hello from example client")
+        max_sentences = int(os.environ.get("A2A_MAX_SENTENCES", "3"))
+        args = {"text": text, "max_sentences": max_sentences}
+    elif skill == "tools.rag_query":
+        query = os.environ.get("A2A_QUERY", "policy")
+        docs_env = os.environ.get("A2A_DOCUMENTS_JSON", "[]")
+        try:
+            documents = json.loads(docs_env)
+            if not isinstance(documents, list):
+                raise ValueError("A2A_DOCUMENTS_JSON must be a JSON array of strings")
+        except Exception as exc:
+            print(f"Invalid A2A_DOCUMENTS_JSON: {exc}", file=sys.stderr)
+            sys.exit(2)
+        top_k = int(os.environ.get("A2A_TOP_K", "3"))
+        args = {"query": query, "documents": documents, "top_k": top_k}
     else:
-        # Convenience envs for common skills
-        if skill == "tools.text_analyze":
-            text = os.environ.get("A2A_TEXT", "hello from example client")
-            args = {"text": text}
-        elif skill == "tools.lc_summarize":
-            text = os.environ.get("A2A_TEXT", "hello from example client")
-            max_sentences = int(os.environ.get("A2A_MAX_SENTENCES", "3"))
-            args = {"text": text, "max_sentences": max_sentences}
-        elif skill == "tools.rag_query":
-            query = os.environ.get("A2A_QUERY", "policy")
-            docs_env = os.environ.get("A2A_DOCUMENTS_JSON", "[]")
-            try:
-                documents = json.loads(docs_env)
-                if not isinstance(documents, list):
-                    raise ValueError("A2A_DOCUMENTS_JSON must be a JSON array of strings")
-            except Exception as exc:
-                print(f"Invalid A2A_DOCUMENTS_JSON: {exc}", file=sys.stderr)
-                sys.exit(2)
-            top_k = int(os.environ.get("A2A_TOP_K", "3"))
-            args = {"query": query, "documents": documents, "top_k": top_k}
-        else:
-            # Fallback
-            text = os.environ.get("A2A_TEXT", "hello from example client")
-            args = {"text": text}
+        # Fallback
+        text = os.environ.get("A2A_TEXT", "hello from example client")
+        args = {"text": text}
     try:
         result = call_agent_execute(base_url, skill, args, tenant, workspace)
     except Exception as exc:
