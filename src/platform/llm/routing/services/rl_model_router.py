@@ -17,11 +17,11 @@ from typing import TYPE_CHECKING, Any
 import numpy as np
 
 from ultimate_discord_intelligence_bot.obs import metrics
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 # Get the metrics facade instance
 _metrics = metrics.get_metrics()
-from ultimate_discord_intelligence_bot.step_result import StepResult
 
 
 if TYPE_CHECKING:

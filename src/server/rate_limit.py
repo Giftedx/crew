@@ -94,64 +94,6 @@ class FixedWindowRateLimiter(BaseHTTPMiddleware):
         self._remaining = self._burst
         self._reset = time.monotonic() + 1.0
 
-
-try:
-    from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
-    from starlette.requests import Request as StarletteRequest
-except Exception:
-
-    class BaseHTTPMiddleware:
-        """Minimal stand-in implementing Starlette's interface enough for tests.
-
-        Provides an ASGI callable that wraps a `dispatch` coroutine method.
-        """
-
-        def __init__(self, app: Any) -> None:
-            self.app = app
-
-        async def __call__(self, scope: dict, receive: Callable, send: Callable):
-            if scope.get("type") != "http":
-                await self.app(scope, receive, send)
-                return
-            request = Request(scope, receive=receive)
-
-            async def call_next(req: Request) -> Response:
-                new_scope = dict(scope)
-                req_scope = getattr(req, "scope", {})
-                if isinstance(req_scope, dict):
-                    new_scope.update({k: v for k, v in req_scope.items() if k in {"path", "raw_path", "query_string"}})
-                    if "method" in req_scope:
-                        new_scope["method"] = req_scope["method"]
-                responder = await self.app(new_scope, receive, send)
-                return responder
-
-            response = await self.dispatch(request, call_next)
-            if isinstance(response, Response):
-                await response(scope, receive, send)
-
-        async def dispatch(self, request: Request, call_next: Callable):
-            return await call_next(request)
-
-    StarletteRequest = Request
-    RequestResponseEndpoint = Callable[[Request], Awaitable[Response]]
-
-
-class FixedWindowRateLimiter(BaseHTTPMiddleware):
-    """Simple fixed-window rate limiter middleware.
-
-    Works with real Starlette (subclassing its BaseHTTPMiddleware) or with the
-    lightweight dummy base when Starlette is absent (tests / shim mode).
-    """
-
-    def __init__(self, app: Any, burst: int) -> None:
-        try:
-            super().__init__(app)
-        except Exception:
-            self.app = app
-        self._burst = max(1, burst)
-        self._remaining = self._burst
-        self._reset = time.monotonic() + 1.0
-
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Any:
         now = time.monotonic()
         raw_path = request.url.path

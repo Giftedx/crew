@@ -14,9 +14,9 @@ optional dependencies like discord.py (tests can set LIGHTWEIGHT_IMPORT=1).
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
+
 
 # Ensure src directory is in PYTHONPATH for proper imports
 _repo_root = Path(__file__).resolve().parent.parent
@@ -30,6 +30,12 @@ print(f"DEBUG: sys.path = {sys.path}")
 print(f"DEBUG: _src_dir = {_src_dir}")
 print(f"DEBUG: _repo_dir = {_repo_dir}")
 
+# Early bootstrap to avoid platform module name collision
+try:
+    from ultimate_discord_intelligence_bot.core.bootstrap import ensure_platform_proxy
+    ensure_platform_proxy()
+except Exception as e:
+    print(f"⚠️ Bootstrap warning: {e}")
 
 # LIGHTWEIGHT_IMPORT flag passthrough for tests (import-safe)
 try:
@@ -49,6 +55,34 @@ except Exception:  # pragma: no cover - degraded mode
     class ToolContainer:  # type: ignore[no-redef]
         def get_all_tools(self):  # pragma: no cover - trivial shim
             return {}
+
+
+# Lightweight helpers re-exported from helpers package (import-safe)
+# Note: Import after sys.path manipulation is intentional (noqa: E402)
+try:
+    from ultimate_discord_intelligence_bot.discord_bot.helpers import (
+        _detect_fallacies,
+        _evaluate_claim,
+        _fallacy_database,
+        _infer_platform,
+        assess_response_quality,
+    )
+except Exception:  # pragma: no cover - optional dep path
+    # Fallback definitions for import safety
+    def _detect_fallacies(*args, **kwargs):  # type: ignore[misc]
+        raise NotImplementedError("helpers module not available")
+
+    def _evaluate_claim(*args, **kwargs):  # type: ignore[misc]
+        raise NotImplementedError("helpers module not available")
+
+    def _fallacy_database(*args, **kwargs):  # type: ignore[misc]
+        raise NotImplementedError("helpers module not available")
+
+    def _infer_platform(*args, **kwargs):  # type: ignore[misc]
+        raise NotImplementedError("helpers module not available")
+
+    def assess_response_quality(*args, **kwargs):  # type: ignore[misc]
+        raise NotImplementedError("helpers module not available")
 
 
 # Delegation to modular runner (safe import; defer exceptions until called)
@@ -72,16 +106,6 @@ except Exception as e:  # pragma: no cover - keep import-safe in lightweight env
         print(f"❌ Runner import failed with: {_import_err_msg}")
         print(f"📋 Full traceback:\n{_import_traceback}")
         raise RuntimeError(f"runner not available: {_import_err_msg}")
-
-
-# Lightweight helpers re-exported from helpers package (import-safe)
-from ultimate_discord_intelligence_bot.discord_bot.helpers import (
-    _detect_fallacies,
-    _evaluate_claim,
-    _fallacy_database,
-    _infer_platform,
-    assess_response_quality,
-)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution path

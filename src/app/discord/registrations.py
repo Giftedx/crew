@@ -31,34 +31,62 @@ def _register_events(bot: Any) -> None:
     @bot.event
     async def on_ready():
         try:
+            print("DEBUG: on_ready() event fired!", flush=True)
             user = getattr(bot, "user", None)
-            print(f"🤖 Bot logged in as {user}")
-            print(f"📊 Connected to {len(getattr(bot, 'guilds', []))} guilds")
-        except Exception:
-            print("🤖 Bot ready")
-        try:
-            synced = await bot.tree.sync()
-            print(f"✅ Synced {len(synced)} slash commands")
+            print(f"🤖 Bot logged in as {user}", flush=True)
+            print(f"📊 Connected to {len(getattr(bot, 'guilds', []))} guilds", flush=True)
         except Exception as e:
-            print(f"⚠️  Could not sync slash commands: {e}")
-        print("✅ Discord Intelligence Bot is ready!")
+            print(f"⚠️  Error in on_ready display: {e}", flush=True)
         try:
+            print("DEBUG: Syncing slash commands...", flush=True)
+            synced = await bot.tree.sync()
+            print(f"✅ Synced {len(synced)} slash commands", flush=True)
+        except Exception as e:
+            print(f"⚠️  Could not sync slash commands: {e}", flush=True)
+        print("✅ Discord Intelligence Bot is ready!", flush=True)
+        try:
+            print("DEBUG: Checking ingest workers...", flush=True)
             if os.getenv("ENABLE_INGEST_WORKER", "0") in {"1", "true", "True"} and (
                 not getattr(bot, "_ingest_workers_started", False)
             ):
                 bot._ingest_workers_started = True
                 await start_ingest_workers(bot.loop)
+            print("DEBUG: Ingest worker check complete", flush=True)
         except Exception as e:
-            print(f"⚠️  Failed to start ingest workers: {e}")
+            print(f"⚠️  Failed to start ingest workers: {e}", flush=True)
+        print("DEBUG: on_ready() event complete, bot should stay running", flush=True)
 
     @bot.event
     async def on_command_error(ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            await ctx.send("❓ Command not found. Use `!help` for available commands.")
-        else:
-            with contextlib.suppress(Exception):
-                await ctx.send(f"❌ Error: {error}")
-            print(f"Command error: {error}")
+        try:
+            if isinstance(error, commands.CommandNotFound):
+                await ctx.send("❓ Command not found. Use `!help` for available commands.")
+            else:
+                with contextlib.suppress(Exception):
+                    await ctx.send(f"❌ Error: {error}")
+                print(f"Command error: {error}")
+        except Exception as e:
+            print(f"⚠️  Error in error handler: {e}")
+
+    @bot.event
+    async def on_error(event, *_args, **_kwargs):
+        """Catch-all error handler to prevent bot crashes"""
+        try:
+            import traceback
+
+            print(f"⚠️  Error in event '{event}': {traceback.format_exc()}", flush=True)
+        except Exception:
+            print(f"⚠️  Error in event '{event}' (details unavailable)", flush=True)
+
+    @bot.event
+    async def on_disconnect():
+        """Called when bot disconnects from Discord"""
+        print(f"⚠️  Bot disconnected from Discord at {default_utc_now()}", flush=True)
+
+    @bot.event
+    async def on_resumed():
+        """Called when bot resumes connection"""
+        print(f"✅ Bot resumed connection at {default_utc_now()}", flush=True)
 
 
 def _register_prefix_commands(bot: Any) -> None:
@@ -319,33 +347,19 @@ async def _execute_autointel(interaction: Any, url: str, depth: str = "standard"
         print("🔄 Attempting to import autonomous orchestrator...")
         orchestrator = None
         orchestrator_type = "unknown"
-        import_attempts = [
-            ("direct", "..autonomous_orchestrator", "AutonomousIntelligenceOrchestrator"),
-            ("crew", "..crew", "UltimateDiscordIntelligenceBotCrew"),
-        ]
         last_error = None
-        for attempt_type, _module_name, _class_name in import_attempts:
-            try:
-                if attempt_type == "direct":
-                    from ..autonomous_orchestrator import AutonomousIntelligenceOrchestrator
+        try:
+            from ultimate_discord_intelligence_bot.autonomous_orchestrator import AutonomousIntelligenceOrchestrator
 
-                    orchestrator = AutonomousIntelligenceOrchestrator()
-                    orchestrator_type = "direct"
-                    print("✅ Using AutonomousIntelligenceOrchestrator (direct)")
-                    break
-                elif attempt_type == "crew":
-                    from ..crew_core import UltimateDiscordIntelligenceBotCrew
+            orchestrator = AutonomousIntelligenceOrchestrator()
+            orchestrator_type = "direct"
+            print("✅ Using AutonomousIntelligenceOrchestrator")
+        except Exception as e:
+            print(f"⚠️ Failed to load orchestrator: {e}")
+            last_error = e
 
-                    orchestrator = UltimateDiscordIntelligenceBotCrew().autonomous_orchestrator()
-                    orchestrator_type = "crew"
-                    print("✅ Using crew-based orchestrator")
-                    break
-            except Exception as e:
-                print(f"⚠️ Failed to load {attempt_type} orchestrator: {e}")
-                last_error = e
-                continue
         if orchestrator is None:
-            error_msg = f"❌ All orchestrator loading attempts failed.\nLast error: {last_error}\n\nThis usually indicates:\n• Missing dependencies (CrewAI, etc.)\n• Configuration issues\n• Import path problems\n\nPlease run 'python -m ultimate_discord_intelligence_bot.setup_cli doctor' to diagnose."
+            error_msg = f"❌ Orchestrator loading failed.\nError: {last_error}\n\nThis usually indicates:\n• Missing dependencies\n• Configuration issues\n• Import path problems\n\nPlease run 'python -m ultimate_discord_intelligence_bot.setup_cli doctor' to diagnose."
             with contextlib.suppress(Exception):
                 await interaction.followup.send(error_msg, ephemeral=True)
             return
