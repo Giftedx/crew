@@ -68,9 +68,9 @@ class EnhancedRedisCache:
         try:
             exc_mod = getattr(redis, "exceptions", None) if redis is not None else None
             BusyLoadingError = getattr(exc_mod, "BusyLoadingError", None) if exc_mod is not None else None
-            ConnectionError = getattr(exc_mod, "ConnectionError", None) if exc_mod is not None else None
-            if BusyLoadingError is not None and ConnectionError is not None:
-                cast("dict[str, Any]", connection_kwargs)["retry_on_error"] = [BusyLoadingError, ConnectionError]
+            RedisConnectionError = getattr(exc_mod, "ConnectionError", None) if exc_mod is not None else None
+            if BusyLoadingError is not None and RedisConnectionError is not None:
+                cast("dict[str, Any]", connection_kwargs)["retry_on_error"] = [BusyLoadingError, RedisConnectionError]
         except Exception:
             pass
         conn_mod = getattr(redis, "connection", None) if redis is not None else None

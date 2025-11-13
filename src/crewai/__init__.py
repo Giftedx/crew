@@ -6,7 +6,7 @@ All tools should actually import from the main crewai module.
 Note: The system CrewAI library has circular import issues, so we provide stub classes here.
 """
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field
 
