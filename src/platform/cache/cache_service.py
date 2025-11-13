@@ -265,11 +265,11 @@ def init_cache_service(
     return _cache_service
 
 
-async def warmup_cache(cache_service: CacheService) -> None:
+async def warmup_cache(_cache_service: CacheService) -> None:
     """Warm up caches with commonly accessed data.
 
     Args:
-        cache_service: Cache service to warm up
+        _cache_service: Cache service to warm up
     """
     logger.info("Cache warm-up completed (placeholder)")
 

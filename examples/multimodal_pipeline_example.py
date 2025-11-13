@@ -85,7 +85,7 @@ def main() -> int:
         print(f"   Errors: {len(data['errors'])}")
         print(f"   Warnings: {len(data['warnings'])}")
 
-        for service, result in data["analysis_results"].items():
+        for service, _result in data["analysis_results"].items():
             print(f"     ✅ {service}")
     else:
         print(f"❌ Fast analysis failed: {fast_result.error}")

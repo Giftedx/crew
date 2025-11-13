@@ -1,6 +1,6 @@
 """Bounded cache implementation with LRU eviction policy.
 
-Provides a simple thread-safe in‑memory LRU cache with TTL and lightweight
+Provides a simple thread-safe in-memory LRU cache with TTL and lightweight
 statistics. Includes defensive handling for ``ttl=None`` (falls back to
 ``DEFAULT_TTL``) to avoid TypeErrors when settings hydration is incomplete.
 """
@@ -43,7 +43,7 @@ class CacheStats:
 
 
 class BoundedLRUCache:
-    """Thread‑safe LRU cache with TTL and bounded size."""
+    """Thread-safe LRU cache with TTL and bounded size."""
 
     def __init__(self, max_size: int | None = None, ttl: int | None = DEFAULT_TTL, name: str = "cache") -> None:
         config = get_config()

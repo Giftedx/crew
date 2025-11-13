@@ -1898,7 +1898,7 @@ class ScalingMonitor:
             }
 
             # Start background monitoring (fire-and-forget)
-            _monitoring_task = asyncio.create_task(self._monitor_performance(session_id))
+            _monitoring_task = asyncio.create_task(self._monitor_performance(session_id))  # noqa: RUF006
 
             # Configure alerts
             alert_configs = self._configure_alerts(scaling_decisions)

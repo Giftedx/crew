@@ -97,7 +97,7 @@ def _bump_counter(name: str) -> None:
 
 
 @router.get("/stats")
-async def get_cache_stats(request: Request) -> CacheStatsResponse:
+async def get_cache_stats(_request: Request) -> CacheStatsResponse:
     """
     Get cache statistics.
 
@@ -122,7 +122,7 @@ async def get_cache_stats(request: Request) -> CacheStatsResponse:
         )
     except Exception as e:
         logger.error(f"Error getting cache stats: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve cache statistics")
+        raise HTTPException(status_code=500, detail="Failed to retrieve cache statistics") from None
 
 
 @router.post("/invalidate")
@@ -142,7 +142,7 @@ async def invalidate_cache(payload: CacheInvalidationRequest) -> CacheInvalidati
         return CacheInvalidationResponse(invalidated_keys=1, message=f"Cache invalidated for {method} {path}")
     except Exception as e:
         logger.error(f"Error invalidating cache: {e}")
-        raise HTTPException(status_code=500, detail="Failed to invalidate cache")
+        raise HTTPException(status_code=500, detail="Failed to invalidate cache") from None
 
 
 @router.post("/clear")
@@ -159,7 +159,7 @@ async def clear_all_cache() -> dict[str, Any]:
         return {"message": "All API cache cleared successfully", "cleared": True}
     except Exception as e:
         logger.error(f"Error clearing cache: {e}")
-        raise HTTPException(status_code=500, detail="Failed to clear cache")
+        raise HTTPException(status_code=500, detail="Failed to clear cache") from None
 
 
 @router.get("/health")
