@@ -17,7 +17,7 @@ from typing import Any
 
 import yaml
 
-from domains.memory.qdrant_provider import get_qdrant_client
+from domains.memory.vector.client_factory import get_qdrant_client
 
 from ..observability.stepresult_observer import observe_step_result
 from ..step_result import StepResult

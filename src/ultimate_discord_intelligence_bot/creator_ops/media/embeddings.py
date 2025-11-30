@@ -19,7 +19,7 @@ try:
 except ImportError:
     torch = None
     SentenceTransformer = None
-from domains.memory.qdrant_provider import get_qdrant_client
+from domains.memory.vector.client_factory import get_qdrant_client
 from ultimate_discord_intelligence_bot.creator_ops.config import CreatorOpsConfig
 from ultimate_discord_intelligence_bot.step_result import StepResult
 

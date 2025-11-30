@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from platform.config.configuration import get_config
 from typing import TYPE_CHECKING, Any
 
-from domains.memory.qdrant_provider import get_qdrant_client
+from domains.memory.vector.client_factory import get_qdrant_client
 from ultimate_discord_intelligence_bot.obs import metrics
 
 
