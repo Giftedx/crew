@@ -5,7 +5,7 @@ from typing import Any
 from qdrant_client.models import Distance, PointStruct, VectorParams
 from sentence_transformers import SentenceTransformer
 
-from domains.memory.qdrant_provider import get_qdrant_client
+from domains.memory.vector.client_factory import get_qdrant_client
 from ultimate_discord_intelligence_bot.step_result import ErrorCategory, StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant, with_tenant
 

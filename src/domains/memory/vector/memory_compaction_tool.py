@@ -23,7 +23,7 @@ from ._base import BaseTool
 if TYPE_CHECKING:
     from collections.abc import Sequence
 try:
-    from domains.memory.qdrant_provider import get_qdrant_client
+    from domains.memory.vector.client_factory import get_qdrant_client
 except Exception:
 
     def get_qdrant_client():
@@ -80,7 +80,7 @@ class MemoryCompactionTool(BaseTool[StepResult]):
         else:
             try:
                 # Lazy import to avoid circular dependency
-                from domains.memory.qdrant_provider import get_qdrant_client as _get_qdrant_client
+                from domains.memory.vector.client_factory import get_qdrant_client as _get_qdrant_client
 
                 self.client = _get_qdrant_client()
             except Exception:

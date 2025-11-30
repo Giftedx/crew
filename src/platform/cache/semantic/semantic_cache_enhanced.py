@@ -31,7 +31,7 @@ class SemanticCacheEnhanced:
         try:
             from qdrant_client.models import Distance, VectorParams
 
-            from domains.memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
 
             client = get_qdrant_client()
         except Exception:
@@ -52,7 +52,7 @@ class SemanticCacheEnhanced:
                 return None
             tenant = current_tenant()
             # Lazy import to avoid circular dependency
-            from domains.memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
 
             client = get_qdrant_client()
             embedding = self.encoder.encode(prompt).tolist()
@@ -84,7 +84,7 @@ class SemanticCacheEnhanced:
             # Lazy import to avoid circular dependency
             from qdrant_client.models import PointStruct
 
-            from domains.memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
 
             client = get_qdrant_client()
             embedding = self.encoder.encode(prompt).tolist()

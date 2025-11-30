@@ -431,8 +431,8 @@ def _doctor(*, as_json: bool = False, quiet: bool = False) -> int:
     try:
         from domains.memory import embeddings as _emb
         from domains.memory import vector_store as _v
-        from domains.memory.vector.qdrant.domains.qdrant_provider import _DummyClient as _QD
-        from domains.memory.vector.qdrant.domains.qdrant_provider import get_qdrant_client
+        from domains.memory.vector.client_factory import _DummyClient as _QD
+        from domains.memory.vector.client_factory import get_qdrant_client
 
         url = os.getenv("QDRANT_URL", "")
         if url:

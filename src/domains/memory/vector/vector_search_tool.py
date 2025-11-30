@@ -5,7 +5,7 @@ from __future__ import annotations
 from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast, runtime_checkable
 
-from domains.memory.qdrant_provider import get_qdrant_client
+from domains.memory.vector.client_factory import get_qdrant_client
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant, mem_ns
