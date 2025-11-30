@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from platform.cache.unified_config import get_unified_cache_config
 from typing import Any
+import warnings
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tenancy.context import current_tenant
@@ -109,6 +110,13 @@ class UnifiedCacheService:
             config: Legacy UnifiedCacheConfig for backward compatibility
             use_new_config: If True, use new unified cache configuration (default)
         """
+        if config:
+             warnings.warn(
+                "UnifiedCacheConfig is deprecated. Use get_unified_cache_config() instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         if use_new_config:
             new_config = get_unified_cache_config()
             self.config = UnifiedCacheConfig(

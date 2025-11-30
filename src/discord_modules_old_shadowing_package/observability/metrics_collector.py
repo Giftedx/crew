@@ -68,13 +68,35 @@ class GuildMetrics:
 class PersonalityMetrics:
     """Metrics for bot personality evolution."""
 
-    trait_name: str
-    current_value: float
+    trait_name: str | None = None
+    current_value: float = 0.0
     evolution_history: list[tuple[float, float]] = field(default_factory=list)
     user_feedback_count: int = 0
     positive_feedback_count: int = 0
     negative_feedback_count: int = 0
     last_updated: float = 0.0
+    adaptation_count: int = 0 # Added to match test expectations
+    last_adaptation: float = 0.0 # Added to match test expectations
+    success_rate: float = 0.0 # Added to match test expectations
+    engagement_score: float = 0.0 # Added to match test expectations
+    user_satisfaction: float = 0.0 # Added to match test expectations
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "trait_name": self.trait_name,
+            "current_value": self.current_value,
+            "evolution_history": self.evolution_history,
+            "user_feedback_count": self.user_feedback_count,
+            "positive_feedback_count": self.positive_feedback_count,
+            "negative_feedback_count": self.negative_feedback_count,
+            "last_updated": self.last_updated,
+            "adaptation_count": self.adaptation_count,
+            "last_adaptation": self.last_adaptation,
+            "success_rate": self.success_rate,
+            "engagement_score": self.engagement_score,
+            "user_satisfaction": self.user_satisfaction,
+        }
 
 
 class DiscordMetricsCollector:
