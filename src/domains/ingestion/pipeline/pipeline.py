@@ -1,4 +1,9 @@
-"""Ingestion orchestration for media sources."""
+"""Ingestion orchestration for media sources.
+
+This module provides the core ingestion pipeline logic, coordinating
+metadata fetching, transcription, segmentation, embedding, and storage
+of media content from various sources (YouTube, Twitch, etc.).
+"""
 
 from __future__ import annotations
 
@@ -24,6 +29,18 @@ from .providers import twitch, youtube
 
 @dataclass
 class IngestJob:
+    """Represents a single content ingestion job.
+
+    Attributes:
+        source: The source platform (e.g., 'youtube', 'twitch').
+        external_id: The unique identifier on the external platform.
+        url: The full URL of the content.
+        tenant: The tenant identifier owning the data.
+        workspace: The workspace identifier.
+        tags: List of tags associated with the content.
+        visibility: Visibility level (e.g., 'public', 'private').
+    """
+
     source: str
     external_id: str
     url: str
@@ -34,6 +51,17 @@ class IngestJob:
 
 
 def _get_provider(source: str):
+    """Retrieve the provider module and creator attribute for a source.
+
+    Args:
+        source: The name of the source (e.g., 'youtube').
+
+    Returns:
+        tuple: (provider_module, creator_attribute_name)
+
+    Raises:
+        ValueError: If the source is unknown.
+    """
     if source == "youtube":
         return (youtube, "channel")
     if source == "twitch":
@@ -44,8 +72,16 @@ def _get_provider(source: str):
 def _fetch_both_concurrent(provider_mod: Any, url: str) -> tuple[Any, str | None]:
     """Fetch metadata & transcript concurrently.
 
-    Falls back to sequential if an exception arises in transcript fetch; metadata
-    failure propagates (cannot proceed without it).
+    Executes metadata and transcript retrieval in parallel threads to reduce
+    total latency. Falls back to sequential fetch if transcript fails, but
+    propagates metadata failures as they are critical.
+
+    Args:
+        provider_mod: The provider module to use for fetching.
+        url: The content URL.
+
+    Returns:
+        tuple: (metadata_object, transcript_text_or_None)
     """
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
         fut_meta = ex.submit(provider_mod.fetch_metadata, url)
@@ -59,6 +95,15 @@ def _fetch_both_concurrent(provider_mod: Any, url: str) -> tuple[Any, str | None
 
 
 def _build_transcript(job: IngestJob, transcript_text: str | None) -> transcribe.Transcript:
+    """Construct a Transcript object, falling back to Whisper if text is missing.
+
+    Args:
+        job: The ingestion job context.
+        transcript_text: The fetched transcript text, or None.
+
+    Returns:
+        transcribe.Transcript: The parsed transcript object.
+    """
     if transcript_text is None:
         handle_error_safely(
             lambda: metrics.INGEST_TRANSCRIPT_FALLBACKS.labels(**metrics.label_ctx(), source=job.source).inc(),
@@ -74,8 +119,14 @@ def _build_transcript(job: IngestJob, transcript_text: str | None) -> transcribe
 def _normalize_published_at(value: Any) -> str:
     """Return a safe ISO8601 string for published_at or empty string.
 
-    - Accepts None, str, datetime, or other types.
-    - For naive datetimes, assume UTC to preserve monotonic ordering in tests.
+    Handles various input types (None, str, datetime) and ensures timezone
+    awareness (defaulting to UTC for naive datetimes).
+
+    Args:
+        value: The raw published_at value.
+
+    Returns:
+        str: ISO8601 formatted string or empty string.
     """
     if value is None:
         return ""
@@ -93,8 +144,20 @@ def _normalize_published_at(value: Any) -> str:
 def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
     """Run an ingest job and upsert transcript chunks into *store*.
 
-    If `ENABLE_INGEST_CONCURRENT` is set, metadata & transcript retrieval
-    execute concurrently (threaded) for supported sources.
+    Orchestrates the entire ingestion process: fetching metadata/transcript,
+    segmentation, privacy filtering, topic extraction, embedding, vector storage,
+    and provenance recording. Supports concurrent fetching via configuration.
+
+    Args:
+        job: The ingestion job configuration.
+        store: The vector store instance to persist embeddings.
+
+    Returns:
+        dict: Result summary containing 'chunks' (count) and 'namespace'.
+
+    Raises:
+        ValueError: If strict mode is enabled and critical metadata is missing.
+        Exception: Propagates exceptions after recording failure metrics.
     """
     provider_mod, creator_attr = _get_provider(job.source)
     strict = os.getenv("ENABLE_INGEST_STRICT", "").lower() in {"1", "true", "yes", "on"}

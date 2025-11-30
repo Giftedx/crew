@@ -3,6 +3,7 @@ Metrics collection for SLO monitoring.
 
 This module provides metrics collection capabilities for monitoring
 Service Level Objectives (SLOs) with both simple and Prometheus-style metrics.
+It supports recording requests, cache operations, vector searches, and model routing events.
 """
 
 from __future__ import annotations
@@ -62,11 +63,14 @@ from .slo import SLO, SLOEvaluator
 def label_ctx(extra_labels: dict[str, str] | None = None) -> dict[str, str]:
     """Return tenant/workspace labels for metrics emission.
 
+    Automatically extracts tenant and workspace context from the current execution
+    environment (via contextvars) to tag metrics appropriately.
+
     Args:
         extra_labels: Optional additional labels to merge into the context.
 
     Returns:
-        Dictionary containing at minimum ``tenant`` and ``workspace`` keys.
+        dict[str, str]: Dictionary containing at minimum ``tenant`` and ``workspace`` keys.
     """
 
     labels = {"tenant": "unknown", "workspace": "unknown"}
@@ -95,7 +99,14 @@ def label_ctx(extra_labels: dict[str, str] | None = None) -> dict[str, str]:
 
 @dataclass
 class MetricPoint:
-    """A single metric measurement point."""
+    """A single metric measurement point.
+
+    Attributes:
+        name: Name of the metric.
+        value: Numerical value.
+        timestamp: Time of recording.
+        labels: Associated labels.
+    """
 
     name: str
     value: float
@@ -105,7 +116,12 @@ class MetricPoint:
 
 @dataclass
 class HistogramBucket:
-    """Histogram bucket for latency measurements."""
+    """Histogram bucket for latency measurements.
+
+    Attributes:
+        le: Upper bound of the bucket (less than or equal).
+        count: Number of observations in this bucket.
+    """
 
     le: float  # less than or equal
     count: int
@@ -113,7 +129,15 @@ class HistogramBucket:
 
 @dataclass
 class Histogram:
-    """Histogram for latency and duration metrics."""
+    """Histogram for latency and duration metrics.
+
+    Attributes:
+        name: Name of the histogram.
+        buckets: List of buckets.
+        count: Total number of observations.
+        sum: Sum of all observed values.
+        labels: Associated labels.
+    """
 
     name: str
     buckets: list[HistogramBucket]
@@ -123,37 +147,77 @@ class Histogram:
 
 
 class MetricsCollector:
-    """Simple in-memory metrics collector for SLO monitoring."""
+    """Simple in-memory metrics collector for SLO monitoring.
+
+    Stores counters, gauges, and histograms in memory. Useful for internal SLO
+    evaluation or when a persistent timeseries database is not available.
+    """
 
     def __init__(self):
+        """Initialize the MetricsCollector."""
         self.counters: dict[str, float] = defaultdict(float)
         self.gauges: dict[str, float] = defaultdict(float)
         self.histograms: dict[str, list[float]] = defaultdict(list)
         self.start_times: dict[str, float] = {}
 
     def increment_counter(self, name: str, value: float = 1.0, labels: dict[str, str] | None = None) -> None:
-        """Increment a counter metric."""
+        """Increment a counter metric.
+
+        Args:
+            name: Metric name.
+            value: Amount to increment.
+            labels: Metric labels.
+        """
         key = self._make_key(name, labels)
         self.counters[key] += value
 
     def set_gauge(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
-        """Set a gauge metric value."""
+        """Set a gauge metric value.
+
+        Args:
+            name: Metric name.
+            value: Value to set.
+            labels: Metric labels.
+        """
         key = self._make_key(name, labels)
         self.gauges[key] = value
 
     def observe_histogram(self, name: str, value: float, labels: dict[str, str] | None = None) -> None:
-        """Record a histogram observation."""
+        """Record a histogram observation.
+
+        Args:
+            name: Metric name.
+            value: Observed value.
+            labels: Metric labels.
+        """
         key = self._make_key(name, labels)
         self.histograms[key].append(value)
 
     def start_timer(self, name: str, labels: dict[str, str] | None = None) -> str:
-        """Start a timer and return a timer ID."""
+        """Start a timer and return a timer ID.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            str: Unique timer ID.
+        """
         timer_id = f"{name}_{int(time.time() * 1000000)}"
         self.start_times[timer_id] = time.time()
         return timer_id
 
     def stop_timer(self, timer_id: str, name: str, labels: dict[str, str] | None = None) -> float:
-        """Stop a timer and record the duration."""
+        """Stop a timer and record the duration.
+
+        Args:
+            timer_id: ID returned by start_timer.
+            name: Metric name (for histogram).
+            labels: Metric labels.
+
+        Returns:
+            float: Duration in seconds.
+        """
         if timer_id not in self.start_times:
             return 0.0
 
@@ -163,17 +227,42 @@ class MetricsCollector:
         return duration
 
     def get_counter(self, name: str, labels: dict[str, str] | None = None) -> float:
-        """Get counter value."""
+        """Get counter value.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            float: Current counter value.
+        """
         key = self._make_key(name, labels)
         return self.counters.get(key, 0.0)
 
     def get_gauge(self, name: str, labels: dict[str, str] | None = None) -> float:
-        """Get gauge value."""
+        """Get gauge value.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            float: Current gauge value.
+        """
         key = self._make_key(name, labels)
         return self.gauges.get(key, 0.0)
 
     def get_histogram_quantile(self, name: str, quantile: float, labels: dict[str, str] | None = None) -> float:
-        """Get histogram quantile value."""
+        """Get histogram quantile value.
+
+        Args:
+            name: Metric name.
+            quantile: Quantile to calculate (0.0-1.0).
+            labels: Metric labels.
+
+        Returns:
+            float: Calculated quantile value.
+        """
         key = self._make_key(name, labels)
         values = self.histograms.get(key, [])
         if not values:
@@ -184,17 +273,41 @@ class MetricsCollector:
         return sorted_values[index]
 
     def get_histogram_sum(self, name: str, labels: dict[str, str] | None = None) -> float:
-        """Get histogram sum."""
+        """Get histogram sum.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            float: Sum of observed values.
+        """
         key = self._make_key(name, labels)
         return sum(self.histograms.get(key, []))
 
     def get_histogram_count(self, name: str, labels: dict[str, str] | None = None) -> int:
-        """Get histogram count."""
+        """Get histogram count.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            int: Count of observations.
+        """
         key = self._make_key(name, labels)
         return len(self.histograms.get(key, []))
 
     def _make_key(self, name: str, labels: dict[str, str] | None) -> str:
-        """Create a key for metric storage."""
+        """Create a unique key for metric storage based on name and labels.
+
+        Args:
+            name: Metric name.
+            labels: Metric labels.
+
+        Returns:
+            str: Composite key.
+        """
         if not labels:
             return name
         label_str = ",".join(f"{k}={v}" for k, v in sorted(labels.items()))
@@ -209,15 +322,29 @@ class MetricsCollector:
 
 
 class SLOMonitor:
-    """SLO monitoring and evaluation."""
+    """SLO monitoring and evaluation.
+
+    Tracks metrics specifically for Service Level Objective compliance.
+    """
 
     def __init__(self, slos: list[SLO]):
+        """Initialize SLO Monitor.
+
+        Args:
+            slos: List of SLO definitions to monitor.
+        """
         self.slos = slos
         self.evaluator = SLOEvaluator(slos)
         self.metrics = MetricsCollector()
 
     def record_request(self, endpoint: str, duration: float, status_code: int) -> None:
-        """Record a request metric."""
+        """Record a request metric.
+
+        Args:
+            endpoint: The API endpoint.
+            duration: Request duration in seconds.
+            status_code: HTTP status code.
+        """
         labels = {"endpoint": endpoint, "status": str(status_code)}
 
         # Record request count
@@ -231,7 +358,12 @@ class SLOMonitor:
             self.metrics.increment_counter("request_errors_total", labels=labels)
 
     def record_cache_operation(self, operation: str, hit: bool) -> None:
-        """Record cache operation metrics."""
+        """Record cache operation metrics.
+
+        Args:
+            operation: Type of cache operation.
+            hit: True if cache hit, False otherwise.
+        """
         labels = {"operation": operation}
 
         if hit:
@@ -240,13 +372,22 @@ class SLOMonitor:
             self.metrics.increment_counter("cache_misses_total", labels=labels)
 
     def record_vector_search(self, duration: float, results_count: int) -> None:
-        """Record vector search metrics."""
+        """Record vector search metrics.
+
+        Args:
+            duration: Search duration in seconds.
+            results_count: Number of results returned.
+        """
         labels = {"operation": "vector_search"}
         self.metrics.observe_histogram("vector_search_duration_seconds", duration, labels=labels)
         self.metrics.set_gauge("vector_search_results_count", float(results_count), labels=labels)
 
     def evaluate_slos(self) -> dict[str, Any]:
-        """Evaluate current metrics against SLOs."""
+        """Evaluate current metrics against SLOs.
+
+        Returns:
+            dict[str, Any]: Evaluation results including error rates, latency, and SLO compliance status.
+        """
         # Calculate current metric values
         current_metrics = {}
 
@@ -280,7 +421,11 @@ class SLOMonitor:
         }
 
     def get_metrics_summary(self) -> dict[str, Any]:
-        """Get a summary of current metrics."""
+        """Get a summary of current metrics.
+
+        Returns:
+            dict[str, Any]: Dictionary of all internal metrics.
+        """
         return {
             "counters": dict(self.metrics.counters),
             "gauges": dict(self.metrics.gauges),
@@ -295,36 +440,67 @@ _global_slo_monitor: SLOMonitor | None = None
 
 
 def get_metrics() -> MetricsCollector:
-    """Get the global metrics collector."""
+    """Get the global metrics collector.
+
+    Returns:
+        MetricsCollector: The global collector instance.
+    """
     return _global_metrics
 
 
 def get_slo_monitor() -> SLOMonitor | None:
-    """Get the global SLO monitor."""
+    """Get the global SLO monitor.
+
+    Returns:
+        SLOMonitor | None: The global monitor instance, or None if not initialized.
+    """
     return _global_slo_monitor
 
 
 def initialize_slo_monitoring(slos: list[SLO]) -> SLOMonitor:
-    """Initialize global SLO monitoring."""
+    """Initialize global SLO monitoring.
+
+    Args:
+        slos: List of Service Level Objectives.
+
+    Returns:
+        SLOMonitor: The initialized monitor.
+    """
     global _global_slo_monitor
     _global_slo_monitor = SLOMonitor(slos)
     return _global_slo_monitor
 
 
 def record_request(endpoint: str, duration: float, status_code: int) -> None:
-    """Record a request metric using global monitor."""
+    """Record a request metric using global monitor.
+
+    Args:
+        endpoint: API endpoint.
+        duration: Request duration.
+        status_code: HTTP status.
+    """
     if _global_slo_monitor:
         _global_slo_monitor.record_request(endpoint, duration, status_code)
 
 
 def record_cache_operation(operation: str, hit: bool) -> None:
-    """Record cache operation using global monitor."""
+    """Record cache operation using global monitor.
+
+    Args:
+        operation: Cache operation type.
+        hit: Success status.
+    """
     if _global_slo_monitor:
         _global_slo_monitor.record_cache_operation(operation, hit)
 
 
 def record_vector_search(duration: float, results_count: int) -> None:
-    """Record vector search using global monitor."""
+    """Record vector search using global monitor.
+
+    Args:
+        duration: Search duration.
+        results_count: Count of results.
+    """
     if _global_slo_monitor:
         _global_slo_monitor.record_vector_search(duration, results_count)
 
@@ -336,7 +512,11 @@ def reset() -> None:
 
 
 def render() -> bytes:
-    """Render metrics output in Prometheus format when available."""
+    """Render metrics output in Prometheus format when available.
+
+    Returns:
+        bytes: Encoded metrics data.
+    """
 
     return get_metrics_data()
 

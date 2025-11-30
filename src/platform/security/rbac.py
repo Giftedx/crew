@@ -1,4 +1,9 @@
-"""Role based access control helpers."""
+"""Role based access control helpers.
+
+This module provides the `RBAC` class for enforcing permissions based on user roles
+and checking Attribute-Based Access Control (ABAC) rules defined in configuration.
+It serves as the central authorization mechanism for the platform.
+"""
 
 from __future__ import annotations
 
@@ -28,7 +33,12 @@ R = TypeVar("R")
 
 
 class RBAC:
-    """Simple RBAC checker backed by a YAML config."""
+    """Simple RBAC checker backed by a YAML config.
+
+    Manages role-to-permission mappings and enforces access control policies.
+    Supports both standard RBAC and an ABAC overlay for fine-grained control
+    based on attributes like risk tier and channel.
+    """
 
     def __init__(
         self,
@@ -37,14 +47,11 @@ class RBAC:
     ) -> None:
         """Create an :class:`RBAC` instance.
 
-        Parameters
-        ----------
-        role_permissions:
-            Optional in-memory map of roles to permission strings. When
-            ``None`` the mapping is loaded from ``config_path``.
-        config_path:
-            Path to the YAML configuration file. Defaults to
-            ``config/security.yaml`` within the repository.
+        Args:
+            role_permissions: Optional in-memory map of roles to permission strings.
+                If ``None``, the mapping is loaded from ``config_path``.
+            config_path: Path to the YAML configuration file. Defaults to
+                ``config/security.yaml`` relative to the module.
         """
 
         self._config_path = config_path or DEFAULT_CONFIG_PATH
@@ -60,7 +67,10 @@ class RBAC:
     def _load(self) -> dict[str, set[str]]:
         """Load role permissions from ``self._config_path``.
 
-        Also caches the ABAC rules section (if present) for attribute overlay checks.
+        Reads the configuration file to populate role permissions and ABAC rules.
+
+        Returns:
+            dict[str, set[str]]: A mapping of role names to sets of permissions.
         """
         if not self._config_path.exists():
             self._abac_rules = {}
@@ -71,6 +81,15 @@ class RBAC:
 
     # --- ABAC helpers -----------------------------------------------------------------
     def _risk_tier_allows(self, required: str | None, provided: str | None) -> bool:
+        """Check if the provided risk tier meets the required level.
+
+        Args:
+            required: The minimum risk tier required (low, medium, high).
+            provided: The risk tier associated with the request context.
+
+        Returns:
+            bool: True if allowed, False otherwise.
+        """
         if not required:
             return True
         if provided is None:
@@ -87,6 +106,14 @@ class RBAC:
         ``min_risk_tier``: lowest acceptable risk classification required.
         ``allowed_channels``: list of channel identifiers where the permission is valid.
         Unknown permissions or empty rule sets default to allow (RBAC governs base access).
+
+        Args:
+            perm: The permission string being checked.
+            channel: The channel identifier (e.g., 'discord', 'web').
+            risk_tier: The risk tier of the operation.
+
+        Returns:
+            bool: True if ABAC rules are satisfied.
         """
         rules = self._abac_rules.get(perm) or {}
         if not rules:
@@ -97,7 +124,15 @@ class RBAC:
         return not (allowed_channels and channel not in allowed_channels)
 
     def has_perm(self, roles: Iterable[str], perm: str) -> bool:
-        """Return ``True`` if any role grants ``perm``."""
+        """Return ``True`` if any role grants ``perm``.
+
+        Args:
+            roles: A list of roles assigned to the user/actor.
+            perm: The permission to check.
+
+        Returns:
+            bool: True if at least one role has the permission or a wildcard ('*').
+        """
         for role in roles:
             perms = self.role_permissions.get(role, set())
             if "*" in perms or perm in perms:
@@ -107,8 +142,16 @@ class RBAC:
     def require(self, perm: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
         """Decorator enforcing ``perm`` based on a ``roles`` kwarg.
 
-        The wrapped function signature is preserved using ``ParamSpec`` so
-        downstream call sites retain their type information.
+        Wraps a function to perform authorization checks before execution. It
+        extracts security context (roles, actor, tenant, etc.) from kwargs,
+        checks permissions, logs the access decision, and strips security
+        metadata before calling the wrapped function.
+
+        Args:
+            perm: The permission string to require.
+
+        Returns:
+            Callable: A decorator that wraps the target function.
         """
 
         def decorator(func: Callable[P, R]) -> Callable[P, R]:

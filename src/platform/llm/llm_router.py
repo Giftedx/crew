@@ -66,7 +66,19 @@ except Exception:
 
 @dataclass
 class CostAwareDecision:
-    """Cost-aware model selection decision with reasoning."""
+    """Cost-aware model selection decision with reasoning.
+
+    Attributes:
+        model: The name of the selected model.
+        estimated_cost: The estimated cost for the request in USD.
+        estimated_quality: The estimated quality score (0.0-1.0).
+        estimated_latency: The estimated latency in milliseconds.
+        utility_score: The calculated utility score used for selection.
+        confidence: Confidence level in the decision (0.0-1.0).
+        reasoning: Human-readable explanation of the selection.
+        fallback_models: List of alternative models if the primary fails.
+        timestamp: Time when the decision was made.
+    """
 
     model: str
     estimated_cost: float
@@ -81,7 +93,20 @@ class CostAwareDecision:
 
 @dataclass
 class ModelPerformanceProfile:
-    """Performance profile for a model including cost and quality metrics."""
+    """Performance profile for a model including cost and quality metrics.
+
+    Maintains moving averages of key metrics to inform routing decisions.
+
+    Attributes:
+        model: The name of the model.
+        avg_cost_per_token: Exponential moving average of cost per token.
+        avg_quality_score: Exponential moving average of quality score.
+        avg_latency_ms: Exponential moving average of latency.
+        total_requests: Total number of requests processed.
+        total_cost: Total accumulated cost.
+        success_rate: Ratio of successful requests.
+        last_updated: Timestamp of the last update.
+    """
 
     model: str
     avg_cost_per_token: float = 0.0
@@ -93,7 +118,15 @@ class ModelPerformanceProfile:
     last_updated: float = field(default_factory=time.time)
 
     def update_metrics(self, cost: float, quality: float, latency_ms: float) -> None:
-        """Update performance metrics with new observation."""
+        """Update performance metrics with new observation.
+
+        Uses an exponential moving average (alpha=0.1) to smooth values.
+
+        Args:
+            cost: The cost of the recent request in USD.
+            quality: The quality score of the response (0.0-1.0).
+            latency_ms: The latency of the request in milliseconds.
+        """
         self.total_requests += 1
         self.total_cost += cost
         alpha = 0.1
@@ -105,7 +138,16 @@ class ModelPerformanceProfile:
 
 @dataclass
 class TaskComplexityMetrics:
-    """Metrics for assessing task complexity."""
+    """Metrics for assessing task complexity.
+
+    Attributes:
+        estimated_tokens: Estimated number of tokens in the input.
+        complexity_score: Aggregated complexity score (0.0-1.0).
+        reasoning_required: Boolean indicating if deep reasoning is detected.
+        creative_task: Boolean indicating if creative generation is detected.
+        factual_accuracy: Boolean indicating if factual verification is needed.
+        multilingual_content: Boolean indicating presence of non-ASCII characters.
+    """
 
     estimated_tokens: int = 0
     complexity_score: float = 0.0
@@ -116,7 +158,17 @@ class TaskComplexityMetrics:
 
     @classmethod
     def analyze_content(cls, messages: Sequence[dict[str, Any]]) -> TaskComplexityMetrics:
-        """Analyze messages to estimate task complexity."""
+        """Analyze messages to estimate task complexity.
+
+        Scans message content for keywords indicating reasoning, creativity,
+        or factual requirements, and estimates token count.
+
+        Args:
+            messages: A sequence of message dictionaries (role/content).
+
+        Returns:
+            TaskComplexityMetrics: The computed complexity metrics.
+        """
         total_chars = 0
         has_reasoning = False
         has_creativity = False
@@ -159,7 +211,17 @@ class TaskComplexityMetrics:
 
 @dataclass
 class CostOptimizationStats:
-    """Statistics for cost optimization performance."""
+    """Statistics for cost optimization performance.
+
+    Attributes:
+        total_requests: Total number of routed requests.
+        cost_aware_selections: Number of times cost-aware routing was used.
+        baseline_selections: Number of times baseline/random routing was used.
+        total_cost_saved: Estimated USD saved compared to baseline.
+        total_cost_baseline: Estimated cost if baseline models were used.
+        avg_cost_savings_per_request: Average savings per request.
+        cost_savings_rate: Percentage of requests where savings occurred.
+    """
 
     total_requests: int = 0
     cost_aware_selections: int = 0
@@ -170,7 +232,13 @@ class CostOptimizationStats:
     cost_savings_rate: float = 0.0
 
     def record_decision(self, was_cost_aware: bool, cost_saved: float, baseline_cost: float) -> None:
-        """Record a routing decision for statistics."""
+        """Record a routing decision for statistics.
+
+        Args:
+            was_cost_aware: True if the decision used cost-aware logic.
+            cost_saved: Amount saved in USD (can be 0).
+            baseline_cost: The cost of the baseline alternative.
+        """
         self.total_requests += 1
         if was_cost_aware:
             self.cost_aware_selections += 1
@@ -184,7 +252,12 @@ class CostOptimizationStats:
             self.cost_savings_rate = self.cost_aware_selections / self.total_requests
 
     def get_summary(self) -> dict[str, Any]:
-        """Get formatted summary of cost optimization performance."""
+        """Get formatted summary of cost optimization performance.
+
+        Returns:
+            dict[str, Any]: A dictionary containing summary statistics including
+            total requests, selections, savings, and projected monthly savings.
+        """
         return {
             "total_requests": self.total_requests,
             "cost_aware_selections": self.cost_aware_selections,
@@ -198,9 +271,33 @@ class CostOptimizationStats:
 
 
 class LLMRouter:
-    """Enhanced LLM Router with cost-aware optimization and performance improvements."""
+    """Enhanced LLM Router with cost-aware optimization and performance improvements.
+
+    This router implements intelligent model selection based on cost, quality,
+    latency, and task complexity. It supports both bandit-based learning (Thompson
+    Sampling, LinUCB) and heuristic cost optimization.
+
+    Attributes:
+        _clients (dict): Map of model names to LLMClient instances.
+        _tenant_mode (bool): Whether tenant-specific routing is enabled.
+        _contextual_enabled (bool): Whether contextual bandits are enabled.
+        _cost_aware_enabled (bool): Whether cost-aware routing is enabled.
+        _adaptive_quality_enabled (bool): Whether adaptive quality thresholds are on.
+        _complexity_analysis_enabled (bool): Whether complexity analysis is on.
+        _router_policy (str): The routing policy (e.g., 'quality_first').
+        _provider_allowlist (list[str] | None): List of allowed providers.
+        _quality_first_tasks (list[str] | None): Tasks forcing quality-first routing.
+    """
 
     def __init__(self, clients: dict[str, LLMClient]):
+        """Initialize the LLMRouter.
+
+        Args:
+            clients: Dictionary mapping model names to LLMClient instances.
+
+        Raises:
+            ValueError: If no clients are provided or if LINUCB_DIMENSION is invalid.
+        """
         if not clients:
             raise ValueError("At least one client required")
         self._clients = clients
@@ -481,6 +578,9 @@ class LLMRouter:
         """Get list of available model names, filtered by provider allowlist if configured.
 
         F005 fix: Validates selected providers against LLM_PROVIDER_ALLOWLIST.
+
+        Returns:
+            list[str]: A list of available model names.
         """
         available = list(self._clients.keys())
 
@@ -543,7 +643,18 @@ class LLMRouter:
         return max(0.0, min(1.0, score))
 
     def chat(self, messages: Sequence[dict[str, Any]]) -> tuple[str, LLMCallResult]:
-        """Enhanced chat method with cost-aware model selection."""
+        """Enhanced chat method with cost-aware model selection.
+
+        Selects the best model based on the configured strategy (cost-aware,
+        contextual bandit, or simple bandit) and routes the chat request.
+        Updates performance profiles after the call.
+
+        Args:
+            messages: A sequence of message dictionaries (role/content).
+
+        Returns:
+            tuple[str, LLMCallResult]: The name of the selected model and the result object.
+        """
         model_names = self._get_available_models()
         if self._cost_aware_enabled:
             cost_aware_decision = self._select_cost_aware_model(messages, model_names)
@@ -585,7 +696,17 @@ class LLMRouter:
         profile.update_metrics(cost, quality_score, latency_ms)
 
     def update(self, model_name: str, reward: float, cost: float = 0.0, latency_ms: float = 0.0) -> None:
-        """Enhanced update method with cost-aware learning."""
+        """Enhanced update method with cost-aware learning.
+
+        Updates the bandit algorithm and the model's performance profile with
+        the observed reward, cost, and latency.
+
+        Args:
+            model_name: The name of the model that was used.
+            reward: The observed reward (0.0-1.0).
+            cost: The cost of the request in USD.
+            latency_ms: The latency of the request in milliseconds.
+        """
         if model_name not in self._clients:
             return
         if model_name in self._model_profiles:
@@ -623,7 +744,20 @@ class LLMRouter:
         cost_usd: float = 0.0,
         latency_ms: float = 0.0,
     ) -> tuple[str, LLMCallResult]:
-        """Convenience method that performs chat and automatic reward update."""
+        """Convenience method that performs chat and automatic reward update.
+
+        Calculates a reward based on quality, cost efficiency, and latency penalty,
+        then updates the router.
+
+        Args:
+            messages: A sequence of message dictionaries (role/content).
+            quality_metric: Observed quality metric (default 0.8).
+            cost_usd: Observed cost in USD.
+            latency_ms: Observed latency in milliseconds.
+
+        Returns:
+            tuple[str, LLMCallResult]: The selected model and result.
+        """
         model, result = self.chat(messages)
         if cost_usd > 0:
             cost_efficiency = quality_metric / max(cost_usd, 0.001)
@@ -637,11 +771,19 @@ class LLMRouter:
         return (model, result)
 
     def get_cost_optimization_stats(self) -> dict[str, Any]:
-        """Get comprehensive cost optimization performance statistics."""
+        """Get comprehensive cost optimization performance statistics.
+
+        Returns:
+            dict[str, Any]: A dictionary of optimization statistics.
+        """
         return self._cost_optimization_stats.get_summary()
 
     def get_model_performance_profiles(self) -> dict[str, dict[str, Any]]:
-        """Get performance profiles for all models."""
+        """Get performance profiles for all models.
+
+        Returns:
+            dict[str, dict[str, Any]]: A map of model names to their performance profiles.
+        """
         profiles = {}
         for model, profile in self._model_profiles.items():
             profiles[model] = {
@@ -656,7 +798,14 @@ class LLMRouter:
         return profiles
 
     def get_recent_decisions(self, limit: int = 10) -> list[dict[str, Any]]:
-        """Get recent cost-aware routing decisions for analysis."""
+        """Get recent cost-aware routing decisions for analysis.
+
+        Args:
+            limit: Maximum number of recent decisions to return.
+
+        Returns:
+            list[dict[str, Any]]: List of recent decision dictionaries.
+        """
         recent = list(self._recent_decisions)[-limit:]
         return [
             {
@@ -674,7 +823,12 @@ class LLMRouter:
         ]
 
     def analyze_routing_effectiveness(self) -> dict[str, Any]:
-        """Analyze the effectiveness of cost-aware routing decisions."""
+        """Analyze the effectiveness of cost-aware routing decisions.
+
+        Returns:
+            dict[str, Any]: Analysis results including average utility, cost,
+            confidence, and model selection distribution.
+        """
         if not self._recent_decisions:
             return {"error": "No recent decisions to analyze"}
         decisions = list(self._recent_decisions)
@@ -702,7 +856,11 @@ class LLMRouter:
         }
 
     def optimize_routing_strategy(self) -> dict[str, Any]:
-        """Analyze current performance and suggest routing strategy optimizations."""
+        """Analyze current performance and suggest routing strategy optimizations.
+
+        Returns:
+            dict[str, Any]: Optimization suggestions and overall assessment.
+        """
         stats = self.get_cost_optimization_stats()
         analysis = self.analyze_routing_effectiveness()
         suggestions = []
@@ -751,6 +909,18 @@ class LLMRouter:
     def chat_with_features(
         self, messages: Sequence[dict[str, Any]], features: Sequence[float]
     ) -> tuple[str, LLMCallResult]:
+        """Perform chat with contextual features for bandit selection.
+
+        Args:
+            messages: A sequence of message dictionaries.
+            features: A sequence of feature floats for the context.
+
+        Returns:
+            tuple[str, LLMCallResult]: Selected model and result.
+
+        Raises:
+            RuntimeError: If contextual mode is not enabled.
+        """
         if not self._contextual_enabled:
             raise RuntimeError("Contextual mode not enabled")
         use_contextual = bool(
@@ -787,6 +957,16 @@ class LLMRouter:
         return (selected, result)
 
     def update_with_features(self, model_name: str, reward: float, features: Sequence[float]) -> None:
+        """Update the contextual bandit with observed reward and features.
+
+        Args:
+            model_name: The name of the selected model.
+            reward: The observed reward.
+            features: The feature context used for selection.
+
+        Raises:
+            RuntimeError: If contextual mode is not enabled.
+        """
         if not self._contextual_enabled:
             raise RuntimeError("Contextual mode not enabled")
         if model_name not in self._clients:
@@ -825,6 +1005,21 @@ class LLMRouter:
         latency_ms: float,
         cost: float,
     ) -> tuple[str, LLMCallResult, float]:
+        """Convenience method for contextual chat and automatic update.
+
+        Args:
+            messages: A sequence of message dictionaries.
+            features: Contextual features.
+            quality: Observed quality.
+            latency_ms: Observed latency in milliseconds.
+            cost: Observed cost in USD.
+
+        Returns:
+            tuple[str, LLMCallResult, float]: Model name, result, and calculated reward.
+
+        Raises:
+            RuntimeError: If contextual mode is not enabled.
+        """
         if not self._contextual_enabled:
             raise RuntimeError("Contextual mode not enabled")
         model, result = self.chat_with_features(messages, features)
@@ -838,12 +1033,12 @@ class LLMRouter:
         """Select the best model for a specific content type and task requirements.
 
         Args:
-            content_type: Type of content (text, image, video, audio, multimodal)
-            task_complexity: Complexity level (quick, standard, comprehensive, expert)
-            quality_requirement: Minimum quality threshold (0.0-1.0)
+            content_type: Type of content (text, image, video, audio, multimodal).
+            task_complexity: Complexity level (quick, standard, comprehensive, expert).
+            quality_requirement: Minimum quality threshold (0.0-1.0).
 
         Returns:
-            Recommended model name for the given requirements
+            str: Recommended model name for the given requirements.
         """
         context = {
             "complexity": task_complexity,
@@ -889,7 +1084,11 @@ class LLMRouter:
         return best_model
 
     def get_routing_cache_stats(self) -> dict[str, Any]:
-        """Get routing cache statistics for monitoring."""
+        """Get routing cache statistics for monitoring.
+
+        Returns:
+            dict[str, Any]: Cache statistics including entries, hits, and utilization.
+        """
         current_time = time.time()
         total_entries = len(self._routing_cache)
         expired_entries = 0

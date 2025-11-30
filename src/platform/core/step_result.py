@@ -29,7 +29,11 @@ logger = logging.getLogger(__name__)
 
 
 class ErrorCategory(Enum):
-    """Comprehensive error categorization for better handling and monitoring."""
+    """Comprehensive error categorization for better handling and monitoring.
+
+    Categories cover input validation, service availability, resource limits,
+    processing failures, system errors, and business logic violations.
+    """
 
     # Input validation errors (10+ types)
     VALIDATION = "validation"
@@ -93,17 +97,34 @@ class ErrorCategory(Enum):
 
 
 class ErrorSeverity(Enum):
-    """Error severity levels for prioritization and alerting."""
+    """Error severity levels for prioritization and alerting.
 
-    LOW = "low"  # Minor issues, no immediate action needed
-    MEDIUM = "medium"  # Moderate impact, should be addressed
-    HIGH = "high"  # Significant impact, requires attention
-    CRITICAL = "critical"  # System-threatening, immediate response required
+    Attributes:
+        LOW: Minor issues, no immediate action needed.
+        MEDIUM: Moderate impact, should be addressed.
+        HIGH: Significant impact, requires immediate attention.
+        CRITICAL: System-threatening, immediate response required.
+    """
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
 
 
 @dataclass
 class ErrorRecoveryStrategy:
-    """Defines recovery strategies for specific error types."""
+    """Defines recovery strategies for specific error types.
+
+    Attributes:
+        error_categories: List of error categories this strategy applies to.
+        max_retries: Maximum number of retry attempts.
+        retry_delay_base: Base delay in seconds for exponential backoff.
+        retry_backoff_factor: Multiplier for exponential backoff.
+        fallback_enabled: Whether a fallback mechanism is enabled.
+        circuit_breaker_threshold: Failures before opening the circuit.
+        alert_on_failure: Whether to trigger an alert on failure.
+    """
 
     error_categories: list[ErrorCategory]
     max_retries: int = 3
@@ -114,11 +135,26 @@ class ErrorRecoveryStrategy:
     alert_on_failure: bool = False
 
     def calculate_retry_delay(self, attempt: int) -> float:
-        """Calculate exponential backoff delay for retry attempts."""
+        """Calculate exponential backoff delay for retry attempts.
+
+        Args:
+            attempt (int): The current retry attempt number (1-based).
+
+        Returns:
+            float: The calculated delay in seconds.
+        """
         return self.retry_delay_base * (self.retry_backoff_factor ** (attempt - 1))
 
     def should_retry(self, attempt: int, error_category: ErrorCategory) -> bool:
-        """Determine if error should be retried based on category and attempt count."""
+        """Determine if error should be retried based on category and attempt count.
+
+        Args:
+            attempt (int): The current retry attempt number.
+            error_category (ErrorCategory): The category of the error occurred.
+
+        Returns:
+            bool: True if the operation should be retried, False otherwise.
+        """
         if attempt > self.max_retries:
             return False
 
@@ -137,7 +173,21 @@ class ErrorRecoveryStrategy:
 
 @dataclass
 class ErrorContext:
-    """Enhanced error context with debugging and recovery information."""
+    """Enhanced error context with debugging and recovery information.
+
+    Attributes:
+        error_id: Unique identifier for the error instance.
+        operation: The operation being performed when error occurred.
+        component: The system component where error originated.
+        tenant: The tenant identifier context.
+        workspace: The workspace identifier context.
+        timestamp: Unix timestamp of error occurrence.
+        stack_trace: Optional stack trace string.
+        request_id: Optional unique request identifier.
+        user_id: Optional user identifier.
+        session_id: Optional session identifier.
+        additional_context: Dictionary of extra contextual data.
+    """
 
     error_id: str = field(default_factory=lambda: f"err_{int(time.time() * 1000000)}")
     operation: str = "unknown"
@@ -152,7 +202,11 @@ class ErrorContext:
     additional_context: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for logging and debugging."""
+        """Convert to dictionary for logging and debugging.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of the error context.
+        """
         return {
             "error_id": self.error_id,
             "operation": self.operation,
@@ -182,6 +236,21 @@ class StepResult(Mapping[str, Any]):
     - Enhanced error context with debugging and recovery information
     - Performance impact tracking for error scenarios
     - Integration with observability systems
+
+    Attributes:
+        success (bool): Whether the operation was successful.
+        data (dict[str, Any]): The result payload.
+        error (str | None): Error message if failed.
+        custom_status (str | None): Override status string (e.g., 'skipped').
+        error_category (ErrorCategory | None): Categorized error type.
+        retryable (bool): Whether the error allows for retry.
+        metadata (dict[str, Any]): Additional metadata about the result.
+        error_context (ErrorContext | None): Detailed context for errors.
+        error_severity (ErrorSeverity): Severity level of the error.
+        recovery_strategy (ErrorRecoveryStrategy | None): Strategy for recovery.
+        performance_impact (float): Estimated impact score (0.0-1.0).
+        suggested_actions (list[str]): Human-readable suggestions for fix.
+        related_errors (list[str]): IDs of related error instances.
     """
 
     success: bool
@@ -209,6 +278,13 @@ class StepResult(Mapping[str, Any]):
         If ``result`` is already a ``StepResult`` instance, return it unchanged.
         Treat ``status in {'success', 'skipped', 'uncertain'}`` as non-error
         (``success`` True) and preserve custom tri-states for compatibility.
+
+        Args:
+            result (Any): The input result, typically a dict or StepResult.
+            context (ErrorContext | None): Optional context for error enrichment.
+
+        Returns:
+            StepResult: A new StepResult instance.
         """
         if isinstance(result, StepResult):
             return result
@@ -348,7 +424,14 @@ class StepResult(Mapping[str, Any]):
 
     @classmethod
     def ok(cls, **data: Any) -> StepResult:
-        """Shortcut for a successful result."""
+        """Shortcut for a successful result.
+
+        Args:
+            **data: Key-value pairs to include in the result data.
+
+        Returns:
+            StepResult: A successful result object.
+        """
         # If called like ok(data={...}), unwrap the nested payload for
         # backward-compatibility with tests expecting direct access
         # to keys via result.data["k"].
@@ -362,6 +445,12 @@ class StepResult(Mapping[str, Any]):
         Semantics: treated as a non-error (``success`` True for control
         flow) but exposes status="uncertain" through the mapping view so
         legacy tests expecting that value continue to pass.
+
+        Args:
+            **data: Key-value pairs to include in the result data.
+
+        Returns:
+            StepResult: A result with status 'uncertain'.
         """
         return cls(success=True, data=data, custom_status="uncertain")
 
@@ -371,12 +460,22 @@ class StepResult(Mapping[str, Any]):
 
         Semantics: treated as non-error (``success`` True for control flow) but exposes
         status="skipped" so callers / tests can branch explicitly. Mirrors ``uncertain``.
+
+        Args:
+            **data: Key-value pairs to include in the result data.
+
+        Returns:
+            StepResult: A result with status 'skipped'.
         """
         return cls(success=True, data=data, custom_status="skipped")
 
     @property
     def skipped(self) -> bool:
-        """Check if this result represents a skipped operation."""
+        """Check if this result represents a skipped operation.
+
+        Returns:
+            bool: True if status is 'skipped'.
+        """
         return self.custom_status == "skipped"
 
     @classmethod
@@ -388,7 +487,18 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a StepResult with enhanced error context."""
+        """Create a StepResult with enhanced error context.
+
+        Args:
+            success (bool): Whether the operation succeeded.
+            error (str | None): Error message.
+            error_category (ErrorCategory | None): The category of the error.
+            context (ErrorContext | None): Context object for the error.
+            **data: Additional data fields.
+
+        Returns:
+            StepResult: A result populated with error context and severity.
+        """
         result = cls(
             success=success,
             data=data,
@@ -463,7 +573,18 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Enhanced shortcut for a failed result with comprehensive error handling."""
+        """Enhanced shortcut for a failed result with comprehensive error handling.
+
+        Args:
+            error (str): Error message.
+            error_category (ErrorCategory | None): Category of the error.
+            retryable (bool): Whether the error is retryable.
+            context (ErrorContext | None): Context for the error.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A failed result object.
+        """
         result = cls(
             success=False,
             error=str(error),
@@ -486,7 +607,16 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a network error result with appropriate categorization."""
+        """Create a network error result with appropriate categorization.
+
+        Args:
+            error (str): Error message.
+            context (ErrorContext | None): Error context.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a network error.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.NETWORK,
@@ -502,7 +632,16 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a timeout error result."""
+        """Create a timeout error result.
+
+        Args:
+            error (str): Error message.
+            context (ErrorContext | None): Error context.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a timeout error.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.TIMEOUT,
@@ -518,7 +657,16 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a model error result."""
+        """Create a model error result.
+
+        Args:
+            error (str): Error message.
+            context (ErrorContext | None): Error context.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a model error.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.MODEL_ERROR,
@@ -534,7 +682,16 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a database error result."""
+        """Create a database error result.
+
+        Args:
+            error (str): Error message.
+            context (ErrorContext | None): Error context.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a database error.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.DATABASE_ERROR,
@@ -550,7 +707,16 @@ class StepResult(Mapping[str, Any]):
         context: ErrorContext | None = None,
         **data: Any,
     ) -> StepResult:
-        """Create a validation error result."""
+        """Create a validation error result.
+
+        Args:
+            error (str): Error message.
+            context (ErrorContext | None): Error context.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a validation error.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.VALIDATION,
@@ -561,27 +727,67 @@ class StepResult(Mapping[str, Any]):
 
     @classmethod
     def bad_request(cls, error: str, **data: Any) -> StepResult:
-        """Create a validation error result."""
+        """Create a validation error result (alias).
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a bad request.
+        """
         return cls.fail(error, error_category=ErrorCategory.VALIDATION, retryable=False, **data)
 
     @classmethod
     def unauthorized(cls, error: str = "Unauthorized", **data: Any) -> StepResult:
-        """Create an authentication/authorization error result."""
+        """Create an authentication/authorization error result.
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for unauthorized access.
+        """
         return cls.fail(error, error_category=ErrorCategory.AUTHENTICATION, retryable=False, **data)
 
     @classmethod
     def not_found(cls, error: str = "Resource not found", **data: Any) -> StepResult:
-        """Create a not found error result."""
+        """Create a not found error result.
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for resource not found.
+        """
         return cls.fail(error, error_category=ErrorCategory.NOT_FOUND, retryable=False, **data)
 
     @classmethod
     def rate_limited(cls, error: str = "Rate limit exceeded", **data: Any) -> StepResult:
-        """Create a rate limit error result."""
+        """Create a rate limit error result.
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for rate limiting.
+        """
         return cls.fail(error, error_category=ErrorCategory.RATE_LIMIT, retryable=True, **data)
 
     @classmethod
     def service_unavailable(cls, error: str = "Service unavailable", **data: Any) -> StepResult:
-        """Create a service unavailable error result."""
+        """Create a service unavailable error result.
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for service unavailable.
+        """
         return cls.fail(
             error,
             error_category=ErrorCategory.SERVICE_UNAVAILABLE,
@@ -591,12 +797,28 @@ class StepResult(Mapping[str, Any]):
 
     @classmethod
     def processing_error(cls, error: str, **data: Any) -> StepResult:
-        """Create a processing error result."""
+        """Create a processing error result.
+
+        Args:
+            error (str): Error message.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A StepResult configured for a processing error.
+        """
         return cls.fail(error, error_category=ErrorCategory.PROCESSING, retryable=False, **data)
 
     @classmethod
     def success_with_warnings(cls, warnings: list[str], **data: Any) -> StepResult:
-        """Create a success result with warnings."""
+        """Create a success result with warnings.
+
+        Args:
+            warnings (list[str]): List of warning messages.
+            **data: Additional data.
+
+        Returns:
+            StepResult: A successful result with warning metadata.
+        """
         return cls(
             success=True,
             data=data,
@@ -605,7 +827,11 @@ class StepResult(Mapping[str, Any]):
         )
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert the result back to a ``dict`` for backward compatibility."""
+        """Convert the result back to a ``dict`` for backward compatibility.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of the StepResult.
+        """
         result = dict(self.data)
         status = self.custom_status or ("success" if self.success else "error")
         result["status"] = status
@@ -633,7 +859,14 @@ class StepResult(Mapping[str, Any]):
         return result
 
     def should_retry(self, attempt: int = 1) -> bool:
-        """Determine if this error should be retried based on recovery strategy."""
+        """Determine if this error should be retried based on recovery strategy.
+
+        Args:
+            attempt (int): The current retry attempt number.
+
+        Returns:
+            bool: True if it should be retried.
+        """
         if not self.retryable:
             return False
 
@@ -651,7 +884,14 @@ class StepResult(Mapping[str, Any]):
         }
 
     def get_retry_delay(self, attempt: int = 1) -> float:
-        """Get recommended retry delay for this error."""
+        """Get recommended retry delay for this error.
+
+        Args:
+            attempt (int): The current retry attempt number.
+
+        Returns:
+            float: Delay in seconds.
+        """
         if self.recovery_strategy:
             return self.recovery_strategy.calculate_retry_delay(attempt)
 
@@ -660,11 +900,20 @@ class StepResult(Mapping[str, Any]):
         return float(base_delay * (2 ** (attempt - 1)))
 
     def is_critical(self) -> bool:
-        """Check if this error is critical and requires immediate attention."""
+        """Check if this error is critical and requires immediate attention.
+
+        Returns:
+            bool: True if severity is CRITICAL or HIGH.
+        """
         return self.error_severity in {ErrorSeverity.CRITICAL, ErrorSeverity.HIGH}
 
     def get_debug_info(self) -> dict[str, Any]:
-        """Get comprehensive debugging information for this error."""
+        """Get comprehensive debugging information for this error.
+
+        Returns:
+            dict[str, Any]: Debug information including ID, category, severity,
+            and suggested actions.
+        """
         debug_info = {
             "error_id": self.error_context.error_id if self.error_context else None,
             "error_category": self.error_category.value if self.error_category else None,
@@ -754,7 +1003,11 @@ class StepResult(Mapping[str, Any]):
             return default
 
     def __str__(self) -> str:
-        """String representation with PII filtering for safe logging."""
+        """String representation with PII filtering for safe logging.
+
+        Returns:
+            str: A safe string representation of the result.
+        """
         # Create a safe representation that filters sensitive data
         safe_data = self._filter_pii(self.data)
 
@@ -868,15 +1121,29 @@ class StepResult(Mapping[str, Any]):
 
 
 class ErrorAnalyzer:
-    """Utility class for analyzing error patterns and trends."""
+    """Utility class for analyzing error patterns and trends.
+
+    Tracks error history, counts patterns, and analyzes categories to identify
+    systematic issues.
+
+    Attributes:
+        error_history (deque): History of recent StepResult errors.
+        error_patterns (dict): Counts of error messages.
+        category_counts (dict): Counts of error categories.
+    """
 
     def __init__(self) -> None:
+        """Initialize the ErrorAnalyzer."""
         self.error_history: deque[StepResult] = deque(maxlen=1000)
         self.error_patterns: dict[str, int] = defaultdict(int)
         self.category_counts: dict[str, int] = defaultdict(int)
 
     def record_error(self, result: StepResult) -> None:
-        """Record an error for pattern analysis."""
+        """Record an error for pattern analysis.
+
+        Args:
+            result (StepResult): The failed result to record.
+        """
         if result.success:
             return
 
@@ -890,7 +1157,12 @@ class ErrorAnalyzer:
             self.category_counts[result.error_category.value] += 1
 
     def get_error_summary(self) -> dict[str, Any]:
-        """Get comprehensive error analysis summary."""
+        """Get comprehensive error analysis summary.
+
+        Returns:
+            dict[str, Any]: Summary including total errors, rate, common patterns,
+            and critical error counts.
+        """
         if not self.error_history:
             return {"total_errors": 0}
 
@@ -906,7 +1178,11 @@ class ErrorAnalyzer:
         }
 
     def get_error_trends(self) -> dict[str, Any]:
-        """Analyze error trends over time."""
+        """Analyze error trends over time.
+
+        Returns:
+            dict[str, Any]: Trend analysis including peak hours and rate direction.
+        """
         if len(self.error_history) < 10:
             return {"insufficient_data": True}
 
@@ -928,22 +1204,48 @@ class ErrorAnalyzer:
 
 
 class ErrorRecoveryManager:
-    """Manages error recovery strategies and circuit breakers."""
+    """Manages error recovery strategies and circuit breakers.
+
+    Attributes:
+        circuit_breakers (dict): State of circuit breakers for components.
+        recovery_strategies (dict): Registered recovery strategies per category.
+    """
 
     def __init__(self) -> None:
+        """Initialize the ErrorRecoveryManager."""
         self.circuit_breakers: dict[str, dict[str, Any]] = {}
         self.recovery_strategies: dict[str, ErrorRecoveryStrategy] = {}
 
     def register_recovery_strategy(self, error_category: ErrorCategory, strategy: ErrorRecoveryStrategy) -> None:
-        """Register a recovery strategy for a specific error category."""
+        """Register a recovery strategy for a specific error category.
+
+        Args:
+            error_category (ErrorCategory): The category to handle.
+            strategy (ErrorRecoveryStrategy): The strategy to apply.
+        """
         self.recovery_strategies[error_category.value] = strategy
 
     def get_recovery_strategy(self, error_category: ErrorCategory) -> ErrorRecoveryStrategy | None:
-        """Get recovery strategy for an error category."""
+        """Get recovery strategy for an error category.
+
+        Args:
+            error_category (ErrorCategory): The error category.
+
+        Returns:
+            ErrorRecoveryStrategy | None: The registered strategy or None.
+        """
         return self.recovery_strategies.get(error_category.value)
 
     def record_failure(self, component: str, error_category: ErrorCategory) -> None:
-        """Record a failure for circuit breaker tracking."""
+        """Record a failure for circuit breaker tracking.
+
+        If failures exceed the threshold defined in the strategy, the circuit
+        breaker is opened.
+
+        Args:
+            component (str): The component name.
+            error_category (ErrorCategory): The error category.
+        """
         if component not in self.circuit_breakers:
             self.circuit_breakers[component] = {
                 "failures": 0,
@@ -961,11 +1263,22 @@ class ErrorRecoveryManager:
             cb["state"] = "open"
 
     def is_circuit_open(self, component: str) -> bool:
-        """Check if circuit breaker is open for a component."""
+        """Check if circuit breaker is open for a component.
+
+        Args:
+            component (str): The component name.
+
+        Returns:
+            bool: True if the circuit is open.
+        """
         return self.circuit_breakers.get(component, {}).get("state") == "open"
 
     def reset_circuit(self, component: str) -> None:
-        """Reset circuit breaker for a component."""
+        """Reset circuit breaker for a component.
+
+        Args:
+            component (str): The component name.
+        """
         if component in self.circuit_breakers:
             self.circuit_breakers[component] = {
                 "failures": 0,
@@ -980,17 +1293,31 @@ _recovery_manager: ErrorRecoveryManager = ErrorRecoveryManager()
 
 
 def get_error_analyzer() -> ErrorAnalyzer:
-    """Get the global error analyzer instance."""
+    """Get the global error analyzer instance.
+
+    Returns:
+        ErrorAnalyzer: The global singleton instance.
+    """
     return _error_analyzer
 
 
 def get_recovery_manager() -> ErrorRecoveryManager:
-    """Get the global recovery manager instance."""
+    """Get the global recovery manager instance.
+
+    Returns:
+        ErrorRecoveryManager: The global singleton instance.
+    """
     return _recovery_manager
 
 
 def record_error_for_analysis(result: StepResult) -> None:
-    """Record an error result for global analysis."""
+    """Record an error result for global analysis.
+
+    Updates both the error analyzer and the recovery manager (circuit breakers).
+
+    Args:
+        result (StepResult): The result object to analyze.
+    """
     if not result.success:
         _error_analyzer.record_error(result)
 

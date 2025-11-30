@@ -47,7 +47,19 @@ except ImportError:
 
 
 class FrameAnalysisResult(TypedDict, total=False):
-    """Result structure for frame analysis."""
+    """Result structure for frame analysis.
+
+    Attributes:
+        timestamp: The time offset of the frame in seconds.
+        frame_id: The index of the frame.
+        objects: List of detected objects with confidence scores.
+        faces: List of detected faces and attributes.
+        text_content: Extracted text via OCR.
+        scene_type: Classification of the scene (e.g., 'indoor', 'outdoor').
+        visual_sentiment: Sentiment classification of the visual content.
+        confidence_scores: Confidence metrics for the analysis.
+        raw_analysis: The raw data returned by the underlying model.
+    """
 
     timestamp: float
     frame_id: int
@@ -61,7 +73,19 @@ class FrameAnalysisResult(TypedDict, total=False):
 
 
 class VideoAnalysisResult(TypedDict, total=False):
-    """Complete video analysis result structure."""
+    """Complete video analysis result structure.
+
+    Attributes:
+        total_frames: Total number of frames in the video.
+        analyzed_frames: Number of frames actually processed.
+        duration_seconds: Duration of the video in seconds.
+        key_frames: List of analysis results for key frames.
+        scene_transitions: List of detected scene changes.
+        overall_sentiment: Aggregated sentiment of the video.
+        dominant_objects: Most frequently appearing objects.
+        text_timeline: Extracted text with timestamps.
+        processing_time: Time taken to complete the analysis.
+    """
 
     total_frames: int
     analyzed_frames: int
@@ -75,7 +99,12 @@ class VideoAnalysisResult(TypedDict, total=False):
 
 
 class VideoFrameAnalysisTool(BaseTool[StepResult]):
-    """Advanced video frame analysis with computer vision capabilities."""
+    """Advanced video frame analysis with computer vision capabilities.
+
+    This tool leverages OpenCV for frame extraction and AI vision models (like GPT-4V)
+    for high-level semantic understanding of video content. It supports extracting key
+    frames, detecting objects and faces, reading text (OCR), and analyzing sentiment.
+    """
 
     name: str = "Video Frame Analysis Tool"
     description: str = "Analyzes video frames using computer vision for object detection, OCR, scene analysis, and visual sentiment detection."
@@ -88,6 +117,15 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
         enable_face_detection: bool = True,
         vision_model: str = "gpt-4-vision-preview",
     ):
+        """Initialize the VideoFrameAnalysisTool.
+
+        Args:
+            max_frames: Maximum number of key frames to extract and analyze.
+            scene_threshold: Threshold for detecting scene changes (0.0-1.0).
+            enable_ocr: Whether to perform Optical Character Recognition.
+            enable_face_detection: Whether to enable face detection.
+            vision_model: The name of the vision model to use (e.g., 'gpt-4-vision-preview').
+        """
         super().__init__()
         self._max_frames = max_frames
         self._scene_threshold = scene_threshold
@@ -104,7 +142,14 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
 
     @cached_property
     def openai_client(self) -> Any:
-        """Initialize OpenAI client for vision analysis."""
+        """Initialize OpenAI client for vision analysis.
+
+        Returns:
+            Any: The initialized OpenAI client instance.
+
+        Raises:
+            RuntimeError: If the 'openai' package is missing or 'OPENAI_API_KEY' is not set.
+        """
         if openai is None:
             raise RuntimeError("OpenAI package not available. Install with: pip install openai")
         api_key = os.getenv("OPENAI_API_KEY")
@@ -120,13 +165,13 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
         Analyze video frames for visual content understanding.
 
         Args:
-            video_path: Path to video file for analysis
-            tenant: Tenant identifier for isolation
-            workspace: Workspace identifier
-            analysis_depth: Depth of analysis (standard, deep, comprehensive)
+            video_path: Path to video file for analysis.
+            tenant: Tenant identifier for isolation.
+            workspace: Workspace identifier.
+            analysis_depth: Depth of analysis ('standard', 'deep', 'comprehensive').
 
         Returns:
-            StepResult with comprehensive video frame analysis
+            StepResult: Result containing comprehensive video frame analysis data.
         """
         start_time = time.monotonic()
         try:
@@ -176,7 +221,15 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             return StepResult.fail(f"Video analysis failed: {e!s}")
 
     def _extract_key_frames(self, video_path: str, analysis_depth: str) -> list[dict[str, Any]]:
-        """Extract key frames from video using scene detection."""
+        """Extract key frames from video using scene detection.
+
+        Args:
+            video_path: Path to the video file.
+            analysis_depth: Determines the density of keyframe extraction.
+
+        Returns:
+            list[dict[str, Any]]: List of dictionaries containing frame data (id, timestamp, image).
+        """
         if cv2 is None:
             return self._extract_frames_simple(video_path)
         frames = []
@@ -217,12 +270,26 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             return []
 
     def _extract_frames_simple(self, video_path: str) -> list[dict[str, Any]]:
-        """Simple frame extraction fallback when OpenCV is not available."""
+        """Simple frame extraction fallback when OpenCV is not available.
+
+        Args:
+            video_path: Path to the video file.
+
+        Returns:
+            list[dict[str, Any]]: Empty list, logs a warning.
+        """
         logging.warning("OpenCV not available - cannot extract video frames")
         return []
 
     def _frame_to_base64(self, frame: Any) -> str:
-        """Convert OpenCV frame to base64 string."""
+        """Convert OpenCV frame to base64 string.
+
+        Args:
+            frame: The OpenCV frame object.
+
+        Returns:
+            str: Base64 encoded string of the frame image.
+        """
         if cv2 is None:
             return ""
         try:
@@ -234,7 +301,15 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             return ""
 
     def _analyze_frame(self, frame_data: dict[str, Any], analysis_depth: str) -> FrameAnalysisResult | None:
-        """Analyze a single frame using computer vision."""
+        """Analyze a single frame using computer vision.
+
+        Args:
+            frame_data: Dictionary containing frame image and metadata.
+            analysis_depth: The depth of analysis to perform.
+
+        Returns:
+            FrameAnalysisResult | None: The analysis result, or None if failed.
+        """
         try:
             frame_base64 = frame_data.get("frame_base64")
             if not frame_base64:
@@ -257,7 +332,15 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             return None
 
     def _analyze_frame_with_gpt4v(self, frame_base64: str, analysis_depth: str) -> dict[str, Any]:
-        """Analyze frame using GPT-4 Vision."""
+        """Analyze frame using GPT-4 Vision.
+
+        Args:
+            frame_base64: Base64 encoded image string.
+            analysis_depth: Depth of analysis influencing the prompt detail.
+
+        Returns:
+            dict[str, Any]: The parsed JSON response from the vision model.
+        """
         if openai is None:
             return self._analyze_frame_fallback()
         try:
@@ -299,7 +382,11 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
             return self._analyze_frame_fallback()
 
     def _analyze_frame_fallback(self) -> dict[str, Any]:
-        """Fallback analysis when AI vision is not available."""
+        """Fallback analysis when AI vision is not available.
+
+        Returns:
+            dict[str, Any]: A default/empty analysis structure with an error message.
+        """
         return {
             "objects": [],
             "faces": [],
@@ -311,7 +398,14 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
         }
 
     def _detect_scene_transitions(self, frame_analyses: list[FrameAnalysisResult]) -> list[dict[str, Any]]:
-        """Detect scene transitions based on frame analysis."""
+        """Detect scene transitions based on frame analysis changes.
+
+        Args:
+            frame_analyses: List of analyzed frames.
+
+        Returns:
+            list[dict[str, Any]]: List of transition events.
+        """
         transitions = []
         for i in range(1, len(frame_analyses)):
             current = frame_analyses[i]
@@ -328,7 +422,17 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
         return transitions
 
     def _generate_overall_analysis(self, frame_analyses: list[FrameAnalysisResult], video_path: str) -> dict[str, Any]:
-        """Generate overall video analysis from frame analyses."""
+        """Generate overall video analysis from frame analyses.
+
+        Aggregates sentiments, objects, and text across all frames.
+
+        Args:
+            frame_analyses: List of analyzed frames.
+            video_path: Path to the video file (for context/logging).
+
+        Returns:
+            dict[str, Any]: Aggregated analysis metrics.
+        """
         if not frame_analyses:
             return {}
         sentiments = [frame.get("visual_sentiment", "neutral") for frame in frame_analyses]
@@ -363,7 +467,14 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
         }
 
     def _get_video_duration(self, video_path: str) -> float:
-        """Get video duration in seconds."""
+        """Get video duration in seconds using OpenCV.
+
+        Args:
+            video_path: Path to the video file.
+
+        Returns:
+            float: Duration in seconds, or 0.0 if failed.
+        """
         if cv2 is None:
             return 0.0
         try:
@@ -379,5 +490,15 @@ class VideoFrameAnalysisTool(BaseTool[StepResult]):
     def run(
         self, video_path: str, tenant: str = "default", workspace: str = "default", analysis_depth: str = "standard"
     ) -> StepResult:
-        """Public interface for video frame analysis."""
+        """Public interface for video frame analysis.
+
+        Args:
+            video_path: Path to the video to analyze.
+            tenant: Tenant ID for execution context.
+            workspace: Workspace ID for execution context.
+            analysis_depth: Depth of analysis ('standard', 'deep', 'comprehensive').
+
+        Returns:
+            StepResult: The result of the video analysis.
+        """
         return self._run(video_path, tenant, workspace, analysis_depth)
