@@ -61,6 +61,8 @@ class _TranscriptionArtifacts:
 class _AnalysisArtifacts:
     analysis: StepResult
     fallacy: StepResult
+    claims: StepResult
+    fact_checks: StepResult
     perspective: StepResult
     summary: str
     memory_payload: dict[str, Any]
@@ -982,16 +984,22 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         if compression_meta:
             analysis.data.setdefault("transcript_compression", compression_meta)
             analysis_span_output["compression"] = compression_meta
+
+        # Launch parallel analysis tasks
         fallacy_task = asyncio.create_task(self._run_fallacy(compressed_transcript), name="fallacy")
+        claims_task = asyncio.create_task(self._run_claim_extraction(compressed_transcript), name="claim_extraction")
         perspective_task = asyncio.create_task(
             self._run_perspective(compressed_transcript, analysis.data), name="perspective"
         )
+
+        # Await fallacy and claims first
         fallacy = await fallacy_task
         if not fallacy.success:
-            if not perspective_task.done():
-                perspective_task.cancel()
-                with suppress(Exception):
-                    await perspective_task
+            for task in [claims_task, perspective_task]:
+                if not task.done():
+                    task.cancel()
+                    with suppress(Exception):
+                        await task
             fallacy_error = fallacy.error or "fallacy failed"
             analysis_span_output.update({"status": "fallacy_failed", "fallacy_error": fallacy_error})
             self._langfuse_finish_span(ctx, "analysis", analysis_span_output, error=fallacy_error)
@@ -1001,6 +1009,14 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                     ctx.span, ctx.start_time, "fallacy", {"status": "error", "error": fallacy_error, "step": "fallacy"}
                 ),
             )
+
+        claims_result = await claims_task
+        fact_checks = StepResult.skip(reason="no_claims_extracted")
+
+        if claims_result.success and claims_result.data.get("claims"):
+            # Run fact checking if claims exist
+            fact_checks = await self._run_fact_checks(claims_result.data["claims"])
+
         try:
             perspective = await perspective_task
         except Exception as exc:
@@ -1031,6 +1047,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
         analysis_span_output.update(
             {"status": "success", "summary_length": len(summary), "sentiment": analysis.data.get("sentiment")}
         )
+
+        # Add verification data to memory payload
         memory_payload = {
             "video_id": download_info.data["video_id"],
             "title": download_info.data["title"],
@@ -1038,6 +1056,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             "sentiment": analysis.data.get("sentiment"),
             "keywords": analysis.data.get("keywords"),
             "summary": summary,
+            "claims_count": len(claims_result.data.get("claims", [])) if claims_result.success else 0,
+            "fact_checks_count": fact_checks.data.get("count", 0) if fact_checks.success else 0,
         }
         if compression_meta:
             memory_payload["transcript_compression"] = compression_meta
@@ -1120,6 +1140,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
             _AnalysisArtifacts(
                 analysis=analysis,
                 fallacy=fallacy,
+                claims=claims_result,
+                fact_checks=fact_checks,
                 perspective=perspective,
                 summary=summary,
                 memory_payload=memory_payload,
@@ -1207,6 +1229,8 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
                 "transcription": transcription_bundle.transcription.to_dict(),
                 "analysis": analysis_bundle.analysis.to_dict(),
                 "fallacy": analysis_bundle.fallacy.to_dict(),
+                "claims": analysis_bundle.claims.to_dict(),
+                "fact_checks": analysis_bundle.fact_checks.to_dict(),
                 "perspective": analysis_bundle.perspective.to_dict(),
                 "memory": memory_step.to_dict(),
                 "graph_memory": graph_step.to_dict() if graph_step is not None else {},
@@ -1493,6 +1517,23 @@ class ContentPipeline(PipelineExecutionMixin, PipelineBase):
 
     async def _run_fallacy(self, transcript: str) -> StepResult:
         return await self._execute_step("fallacy", self.fallacy_detector.run, transcript)
+
+    async def _run_claim_extraction(self, transcript: str) -> StepResult:
+        return await self._execute_step("claim_extraction", self.claim_extractor.run, transcript)
+
+    async def _run_fact_checks(self, claims: list[str]) -> StepResult:
+        if not claims:
+            return StepResult.skip(reason="no_claims")
+
+        async def check_claim(claim: str) -> dict[str, Any]:
+            res = await self._execute_step("fact_check", self.fact_checker.run, claim)
+            if res.success:
+                return res.data
+            return {"claim": claim, "status": "failed", "error": res.error}
+
+        results = await asyncio.gather(*(check_claim(c) for c in claims), return_exceptions=True)
+        valid_results = [r for r in results if isinstance(r, dict)]
+        return StepResult.ok(fact_checks=valid_results, count=len(valid_results))
 
     async def _run_perspective(self, transcript: str, analysis_data: dict[str, Any]) -> StepResult:
         return await self._execute_step("perspective", self.perspective.run, transcript, str(analysis_data))
