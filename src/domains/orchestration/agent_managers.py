@@ -1,7 +1,8 @@
 """Agent management utilities for CrewAI orchestration.
 
 This module provides functions for agent creation, caching, and context management
-in the autonomous intelligence workflow.
+in the autonomous intelligence workflow. It ensures that agents are instantiated
+efficiently and that their tools are properly contextualized with shared data.
 
 Extracted from crew_builders.py to improve maintainability and organization.
 """
@@ -25,13 +26,14 @@ def populate_agent_tool_context(
     """Populate shared context on all tool wrappers for an agent.
 
     This is CRITICAL for CrewAI agents to receive structured data. Without this,
-    tools receive empty parameters and fail or return meaningless results.
+    tools receive empty parameters and fail or return meaningless results. It
+    iterates through the agent's tools and invokes `update_context` if available.
 
     Args:
-        agent: CrewAI Agent instance with tools attribute
-        context_data: Dictionary of data to make available to all tools
-        logger_instance: Optional logger instance
-        metrics_instance: Optional metrics instance for tracking
+        agent: CrewAI Agent instance with a `tools` attribute.
+        context_data: Dictionary of data to make available to all tools.
+        logger_instance: Optional logger instance for structured logging.
+        metrics_instance: Optional metrics instance for tracking success/failure.
     """
     _logger = logger_instance or logger
     if not hasattr(agent, "tools"):
@@ -108,16 +110,16 @@ def get_or_create_agent(
     EMPTY tools, bypassing context population. Always use this method.
 
     Args:
-        agent_name: Name of agent method (e.g., 'analysis_cartographer')
-        agent_coordinators: Dictionary to cache agents (will be mutated)
-        crew_instance: UltimateDiscordIntelligenceBotCrew instance
-        logger_instance: Optional logger instance
+        agent_name: Name of agent method (e.g., 'analysis_cartographer').
+        agent_coordinators: Dictionary to cache agents (will be mutated).
+        crew_instance: UltimateDiscordIntelligenceBotCrew instance.
+        logger_instance: Optional logger instance.
 
     Returns:
-        Cached agent instance with persistent tool context
+        Any: Cached agent instance with persistent tool context.
 
     Raises:
-        ValueError: If agent_name doesn't exist in crew_instance
+        ValueError: If agent_name doesn't exist in crew_instance.
     """
     _logger = logger_instance or logger
     if agent_name in agent_coordinators:

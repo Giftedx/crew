@@ -1,4 +1,9 @@
-"""Social graph analysis tool for creator networks."""
+"""Social graph analysis tool for creator networks.
+
+This module provides the `SocialGraphAnalysisTool`, which analyzes the social
+networks of creators. It calculates centrality measures, influence metrics,
+identifies community clusters, and evaluates collaboration strengths.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +15,19 @@ from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
 
 class SocialGraphAnalysisResult(TypedDict, total=False):
-    """Result of social graph analysis."""
+    """Result of social graph analysis.
+
+    Attributes:
+        creator_id: The ID of the analyzed creator.
+        analysis_type: The type of analysis performed.
+        centrality_scores: Metrics like degree, betweenness, closeness.
+        influence_metrics: Metrics related to follower reach and impact.
+        community_clusters: Data about identified communities and clusters.
+        collaboration_strength: Scores representing strength of collaborations.
+        network_position: Overview of the creator's position in the network.
+        recommendations: Actionable advice based on the analysis.
+        timestamp: When the analysis was performed.
+    """
 
     creator_id: str
     analysis_type: str
@@ -24,7 +41,11 @@ class SocialGraphAnalysisResult(TypedDict, total=False):
 
 
 class SocialGraphAnalysisTool(BaseTool[StepResult]):
-    """Analyze social graphs and creator networks."""
+    """Analyze social graphs and creator networks.
+
+    This tool performs various analyses on the social connections between creators,
+    including centrality calculations, community detection, and influence scoring.
+    """
 
     name: str = "Social Graph Analysis"
     description: str = "Analyze social graph metrics including centrality scores, influence propagation, community detection, and collaboration strength for creator networks"
@@ -34,13 +55,13 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         Analyze social graph metrics for a creator.
 
         Args:
-            creator_id: ID of the creator to analyze
-            analysis_type: Type of analysis ("centrality", "influence", "clusters", "communities", "comprehensive")
-            tenant: Tenant identifier
-            workspace: Workspace identifier
+            creator_id: ID of the creator to analyze.
+            analysis_type: Type of analysis ("centrality", "influence", "clusters", "communities", "comprehensive").
+            tenant: Tenant identifier.
+            workspace: Workspace identifier.
 
         Returns:
-            StepResult with social graph analysis data
+            StepResult: Result containing the social graph analysis data.
         """
         try:
             if not creator_id or not analysis_type:
@@ -53,7 +74,20 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
     def _perform_analysis(
         self, creator_id: str, analysis_type: str, tenant: str, workspace: str
     ) -> SocialGraphAnalysisResult:
-        """Perform the actual social graph analysis."""
+        """Perform the actual social graph analysis based on the requested type.
+
+        Args:
+            creator_id: The creator's identifier.
+            analysis_type: The specific analysis to run.
+            tenant: The tenant context.
+            workspace: The workspace context.
+
+        Returns:
+            SocialGraphAnalysisResult: The structured results of the analysis.
+
+        Raises:
+            ValueError: If an unknown analysis type is provided.
+        """
         mock_network_data = self._get_mock_network_data()
         if analysis_type == "centrality":
             return self._analyze_centrality(creator_id, mock_network_data)
@@ -69,7 +103,11 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             raise ValueError(f"Unknown analysis type: {analysis_type}")
 
     def _get_mock_network_data(self) -> dict[str, Any]:
-        """Get mock network data for analysis."""
+        """Get mock network data for analysis (placeholder for live data).
+
+        Returns:
+            dict[str, Any]: Dictionary containing nodes, edges, and collaboration data.
+        """
         return {
             "nodes": {
                 "h3_podcast": {"type": "show", "followers": 1000000, "platforms": ["youtube", "tiktok"]},
@@ -100,7 +138,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         }
 
     def _analyze_centrality(self, creator_id: str, network_data: dict[str, Any]) -> SocialGraphAnalysisResult:
-        """Analyze centrality metrics for a creator."""
+        """Analyze centrality metrics for a creator.
+
+        Calculates degree, betweenness, closeness, and eigenvector centrality.
+
+        Args:
+            creator_id: The creator's identifier.
+            network_data: The network graph data.
+
+        Returns:
+            SocialGraphAnalysisResult: Result with centrality scores populated.
+        """
         nodes = network_data["nodes"]
         edges = network_data["edges"]
         degree_centrality = len(edges.get(creator_id, []))
@@ -131,7 +179,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         )
 
     def _analyze_influence(self, creator_id: str, network_data: dict[str, Any]) -> SocialGraphAnalysisResult:
-        """Analyze influence metrics for a creator."""
+        """Analyze influence metrics for a creator.
+
+        Evaluates follower reach and impact through collaborations.
+
+        Args:
+            creator_id: The creator's identifier.
+            network_data: The network graph data.
+
+        Returns:
+            SocialGraphAnalysisResult: Result with influence metrics populated.
+        """
         nodes = network_data["nodes"]
         edges = network_data["edges"]
         collaborations = network_data["collaborations"]
@@ -168,7 +226,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         )
 
     def _analyze_clusters(self, creator_id: str, network_data: dict[str, Any]) -> SocialGraphAnalysisResult:
-        """Analyze community clusters for a creator."""
+        """Analyze community clusters for a creator.
+
+        Identifies which community cluster the creator belongs to.
+
+        Args:
+            creator_id: The creator's identifier.
+            network_data: The network graph data.
+
+        Returns:
+            SocialGraphAnalysisResult: Result with cluster information populated.
+        """
         edges = network_data["edges"]
         clusters = self._detect_communities(edges)
         creator_cluster = None
@@ -197,7 +265,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         )
 
     def _analyze_communities(self, creator_id: str, network_data: dict[str, Any]) -> SocialGraphAnalysisResult:
-        """Analyze community structure and dynamics."""
+        """Analyze community structure and dynamics.
+
+        Evaluates community membership and bridge scores (connecting different communities).
+
+        Args:
+            creator_id: The creator's identifier.
+            network_data: The network graph data.
+
+        Returns:
+            SocialGraphAnalysisResult: Result with community analysis populated.
+        """
         edges = network_data["edges"]
         network_data["collaborations"]
         communities = {
@@ -236,7 +314,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         )
 
     def _comprehensive_analysis(self, creator_id: str, network_data: dict[str, Any]) -> SocialGraphAnalysisResult:
-        """Perform comprehensive social graph analysis."""
+        """Perform comprehensive social graph analysis.
+
+        Combines centrality, influence, cluster, and community analyses into a single report.
+
+        Args:
+            creator_id: The creator's identifier.
+            network_data: The network graph data.
+
+        Returns:
+            SocialGraphAnalysisResult: Aggregated analysis results.
+        """
         centrality_result = self._analyze_centrality(creator_id, network_data)
         influence_result = self._analyze_influence(creator_id, network_data)
         cluster_result = self._analyze_clusters(creator_id, network_data)
@@ -268,7 +356,18 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         )
 
     def _calculate_betweenness_centrality(self, creator_id: str, edges: dict[str, list[str]]) -> float:
-        """Calculate betweenness centrality for a creator."""
+        """Calculate betweenness centrality for a creator.
+
+        Betweenness is the fraction of shortest paths between all pairs of nodes
+        that pass through the creator.
+
+        Args:
+            creator_id: The creator's identifier.
+            edges: Adjacency list representing the graph.
+
+        Returns:
+            float: The betweenness centrality score.
+        """
         total_paths = 0
         paths_through_creator = 0
         all_nodes = set(edges.keys()) | {node for connections in edges.values() for node in connections}
@@ -283,13 +382,36 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return paths_through_creator / total_paths if total_paths > 0 else 0
 
     def _calculate_closeness_centrality(self, creator_id: str, edges: dict[str, list[str]]) -> float:
-        """Calculate closeness centrality for a creator."""
+        """Calculate closeness centrality for a creator.
+
+        Closeness is the reciprocal of the sum of the shortest path distances
+        from the creator to all other nodes.
+
+        Args:
+            creator_id: The creator's identifier.
+            edges: Adjacency list representing the graph.
+
+        Returns:
+            float: The closeness centrality score.
+        """
         distances = self._calculate_distances(creator_id, edges)
         total_distance = sum(distances.values())
         return (len(distances) - 1) / total_distance if total_distance > 0 else 0
 
     def _calculate_eigenvector_centrality(self, creator_id: str, edges: dict[str, list[str]]) -> float:
-        """Calculate eigenvector centrality for a creator."""
+        """Calculate eigenvector centrality for a creator.
+
+        Eigenvector centrality assigns relative scores to all nodes in the network
+        based on the concept that connections to high-scoring nodes contribute more
+        to the score of the node in question.
+
+        Args:
+            creator_id: The creator's identifier.
+            edges: Adjacency list representing the graph.
+
+        Returns:
+            float: The eigenvector centrality score.
+        """
         nodes = list(set(edges.keys()) | {node for connections in edges.values() for node in connections})
         n = len(nodes)
         if n == 0:
@@ -306,7 +428,16 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return centrality.get(creator_id, 0)
 
     def _get_reachable_nodes(self, creator_id: str, edges: dict[str, list[str]], max_depth: int = 2) -> set[str]:
-        """Get all nodes reachable within max_depth from creator."""
+        """Get all nodes reachable within max_depth from creator.
+
+        Args:
+            creator_id: The starting node.
+            edges: Adjacency list representing the graph.
+            max_depth: Maximum path length to search.
+
+        Returns:
+            set[str]: A set of reachable node IDs.
+        """
         visited = set()
         queue = [(creator_id, 0)]
         while queue:
@@ -320,7 +451,14 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return visited - {creator_id}
 
     def _detect_communities(self, edges: dict[str, list[str]]) -> dict[str, list[str]]:
-        """Detect communities using connected components."""
+        """Detect communities using connected components analysis.
+
+        Args:
+            edges: Adjacency list representing the graph.
+
+        Returns:
+            dict[str, list[str]]: Map of community IDs to lists of member node IDs.
+        """
         visited = set()
         communities = {}
         community_id = 0
@@ -342,7 +480,19 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
     def _calculate_bridge_score(
         self, creator_id: str, communities: dict[str, list[str]], edges: dict[str, list[str]]
     ) -> float:
-        """Calculate how much a creator bridges different communities."""
+        """Calculate how much a creator bridges different communities.
+
+        The score reflects the proportion of a creator's connections that span
+        across different communities.
+
+        Args:
+            creator_id: The creator's identifier.
+            communities: Map of community names to member lists.
+            edges: Adjacency list representing the graph.
+
+        Returns:
+            float: The bridge score.
+        """
         creator_communities = set()
         for comm_name, members in communities.items():
             if creator_id in members:
@@ -360,7 +510,16 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return cross_community_connections / len(edges.get(creator_id, [])) if edges.get(creator_id) else 0
 
     def _find_shortest_path(self, source: str, target: str, edges: dict[str, list[str]]) -> list[str] | None:
-        """Find shortest path between two nodes using BFS."""
+        """Find shortest path between two nodes using Breadth-First Search (BFS).
+
+        Args:
+            source: Starting node ID.
+            target: Destination node ID.
+            edges: Adjacency list.
+
+        Returns:
+            list[str] | None: List of nodes in the path, or None if no path exists.
+        """
         if source == target:
             return [source]
         queue = [(source, [source])]
@@ -376,7 +535,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return None
 
     def _calculate_distances(self, creator_id: str, edges: dict[str, list[str]]) -> dict[str, int]:
-        """Calculate distances from creator to all other nodes."""
+        """Calculate distances from creator to all other reachable nodes.
+
+        Args:
+            creator_id: Starting node ID.
+            edges: Adjacency list.
+
+        Returns:
+            dict[str, int]: Map of node IDs to their distance from the creator.
+        """
         distances = {creator_id: 0}
         queue = [creator_id]
         while queue:
@@ -388,7 +555,14 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return distances
 
     def _determine_network_tier(self, overall_score: float) -> int:
-        """Determine network tier based on overall score."""
+        """Determine network tier based on overall score.
+
+        Args:
+            overall_score: The calculated overall network score.
+
+        Returns:
+            int: The tier (1 being highest, 4 lowest).
+        """
         if overall_score >= 0.8:
             return 1
         elif overall_score >= 0.6:
@@ -399,7 +573,14 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             return 4
 
     def _determine_influence_level(self, influence_score: float) -> str:
-        """Determine influence level based on score."""
+        """Determine influence level classification.
+
+        Args:
+            influence_score: The calculated influence score.
+
+        Returns:
+            str: Classification ('high', 'medium', 'low', 'minimal').
+        """
         if influence_score >= 0.8:
             return "high"
         elif influence_score >= 0.5:
@@ -410,7 +591,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             return "minimal"
 
     def _generate_centrality_recommendations(self, degree: float, betweenness: float) -> list[str]:
-        """Generate recommendations based on centrality analysis."""
+        """Generate recommendations based on centrality analysis.
+
+        Args:
+            degree: Degree centrality score.
+            betweenness: Betweenness centrality score.
+
+        Returns:
+            list[str]: List of recommendations.
+        """
         recommendations = []
         if degree < 0.3:
             recommendations.append("Consider collaborating with more creators to increase network connections")
@@ -421,7 +610,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return recommendations
 
     def _generate_influence_recommendations(self, influence_score: float, reach: int) -> list[str]:
-        """Generate recommendations based on influence analysis."""
+        """Generate recommendations based on influence analysis.
+
+        Args:
+            influence_score: Influence score.
+            reach: Network reach count.
+
+        Returns:
+            list[str]: List of recommendations.
+        """
         recommendations = []
         if influence_score < 0.3:
             recommendations.append("Focus on building audience and increasing follower engagement")
@@ -434,7 +631,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
     def _generate_cluster_recommendations(
         self, clusters: dict[str, list[str]], creator_cluster: str | None
     ) -> list[str]:
-        """Generate recommendations based on cluster analysis."""
+        """Generate recommendations based on cluster analysis.
+
+        Args:
+            clusters: Detected clusters.
+            creator_cluster: ID of the cluster the creator belongs to.
+
+        Returns:
+            list[str]: List of recommendations.
+        """
         recommendations = []
         if creator_cluster:
             cluster_size = len(clusters.get(creator_cluster, []))
@@ -447,7 +652,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return recommendations
 
     def _generate_community_recommendations(self, communities: list[str], bridge_score: float) -> list[str]:
-        """Generate recommendations based on community analysis."""
+        """Generate recommendations based on community analysis.
+
+        Args:
+            communities: List of communities the creator belongs to.
+            bridge_score: Bridge score.
+
+        Returns:
+            list[str]: List of recommendations.
+        """
         recommendations = []
         if len(communities) == 1:
             recommendations.append("Single community membership - consider bridging to other communities")
@@ -464,7 +677,17 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         cluster_result: SocialGraphAnalysisResult,
         community_result: SocialGraphAnalysisResult,
     ) -> list[str]:
-        """Generate comprehensive recommendations combining all analyses."""
+        """Generate comprehensive recommendations combining all analyses.
+
+        Args:
+            centrality_result: Result of centrality analysis.
+            influence_result: Result of influence analysis.
+            cluster_result: Result of cluster analysis.
+            community_result: Result of community analysis.
+
+        Returns:
+            list[str]: Consolidated list of unique recommendations.
+        """
         recommendations = []
         recommendations.extend(centrality_result.get("recommendations", []))
         recommendations.extend(influence_result.get("recommendations", []))
@@ -488,7 +711,7 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             workspace: Workspace identifier.
 
         Returns:
-            StepResult with temporal analysis data.
+            StepResult: Result containing temporal analysis data.
         """
         try:
             if not creator_id or not time_window:
@@ -500,7 +723,14 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
             return StepResult.fail(f"Temporal evolution analysis failed: {e!s}")
 
     def _get_mock_historical_data(self, time_window: str) -> list[dict[str, Any]]:
-        """Get mock historical network data for temporal analysis."""
+        """Get mock historical network data for temporal analysis.
+
+        Args:
+            time_window: The time window to retrieve data for.
+
+        Returns:
+            list[dict[str, Any]]: List of historical snapshots.
+        """
         snapshots = [
             {"date": "2023-01-01", "followers": 100000, "connections": 5, "influence_score": 0.4},
             {"date": "2023-04-01", "followers": 200000, "connections": 10, "influence_score": 0.5},
@@ -511,7 +741,15 @@ class SocialGraphAnalysisTool(BaseTool[StepResult]):
         return snapshots
 
     def _perform_temporal_analysis(self, creator_id: str, historical_data: list[dict[str, Any]]) -> dict:
-        """Analyzes trends and changes in the creator's network over time."""
+        """Analyzes trends and changes in the creator's network over time.
+
+        Args:
+            creator_id: The creator's identifier.
+            historical_data: List of historical snapshots.
+
+        Returns:
+            dict: Analysis of growth and trends.
+        """
         if not historical_data:
             return {}
         start_data = historical_data[0]

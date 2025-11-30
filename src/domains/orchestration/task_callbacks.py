@@ -1,9 +1,9 @@
 """Task completion callback utilities for CrewAI orchestration.
 
 This module provides the task completion callback functionality for extracting
-and propagating structured data between crew tasks.
-
-Extracted from crew_builders.py to improve maintainability and organization.
+and propagating structured data between crew tasks. It handles validation,
+JSON repair, and context updates to ensure subsequent agents have access to
+previous results.
 """
 
 import contextlib
@@ -27,21 +27,19 @@ def task_completion_callback(
 ) -> None:
     """Callback executed after each task to extract and propagate structured data.
 
-    CRITICAL FIX: CrewAI task context passes TEXT to LLM prompts, NOT structured
-    data to tools. This callback extracts tool results and updates global crew
-    context so subsequent tasks can access the data.
-
-    Now includes Pydantic validation to prevent invalid data propagation.
+    This function is critical for CrewAI workflows where LLMs output text that
+    needs to be converted into structured data for downstream tools. It attempts
+    to validate the output against schemas and updates the agent context.
 
     Args:
-        task_output: TaskOutput object from completed task
-        populate_agent_context_callback: Optional callback to populate agent tool context
-        detect_placeholder_callback: Optional callback to detect placeholder responses
-        repair_json_callback: Optional callback to repair malformed JSON
-        extract_key_values_callback: Optional callback to extract key-value pairs from text
-        logger_instance: Optional logger instance
-        metrics_instance: Optional metrics instance
-        agent_coordinators: Optional dict of cached agents to update
+        task_output: The `TaskOutput` object from the completed CrewAI task.
+        populate_agent_context_callback: Function to update agent tool context with data.
+        detect_placeholder_callback: Function to check if output is a generic placeholder.
+        repair_json_callback: Function to attempt repairing malformed JSON strings.
+        extract_key_values_callback: Function to extract key-value pairs from unstructured text.
+        logger_instance: Optional logger for recording events.
+        metrics_instance: Optional metrics collector.
+        agent_coordinators: Dictionary of cached agents to receive context updates.
     """
     _logger = logger_instance or logger
 
@@ -154,17 +152,21 @@ def create_task_callback_with_dependencies(
 ) -> Any:
     """Create a task completion callback with pre-configured dependencies.
 
+    This factory function simplifies the creation of callbacks by injecting
+    dependencies (callbacks, loggers, metrics) so that the CrewAI executor
+    only needs to provide the `task_output`.
+
     Args:
-        populate_agent_context_callback: Callback to populate agent tool context
-        detect_placeholder_callback: Callback to detect placeholder responses
-        repair_json_callback: Callback to repair malformed JSON
-        extract_key_values_callback: Callback to extract key-value pairs from text
-        logger_instance: Optional logger instance
-        metrics_instance: Optional metrics instance
-        agent_coordinators: Optional dict of cached agents to update
+        populate_agent_context_callback: Callback to populate agent tool context.
+        detect_placeholder_callback: Callback to detect placeholder responses.
+        repair_json_callback: Callback to repair malformed JSON.
+        extract_key_values_callback: Callback to extract key-value pairs from text.
+        logger_instance: Optional logger instance.
+        metrics_instance: Optional metrics instance.
+        agent_coordinators: Optional dict of cached agents to update.
 
     Returns:
-        Configured task completion callback function
+        Callable[[Any], None]: A callback function accepting `task_output`.
     """
 
     def callback(task_output: Any) -> None:

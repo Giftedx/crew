@@ -1,10 +1,9 @@
 """Workflow planning and capability management for autonomous intelligence orchestration.
 
 This module provides workflow planning utilities including duration estimation,
-stage planning, and capability enumeration. All functions are stateless and take
-configuration parameters (like depth) to return planning information.
-
-Extracted from autonomous_orchestrator.py as part of Week 4 decomposition initiative.
+stage planning, and capability enumeration. It extracts planning logic from the
+main orchestrator to improve maintainability and support modular workflow composition.
+All functions are stateless and take configuration parameters to return planning information.
 """
 
 from __future__ import annotations
@@ -16,13 +15,11 @@ def get_available_capabilities() -> list[str]:
     """Get list of all available autonomous capabilities.
 
     Returns:
-        List of capability identifiers representing all available autonomous
-        intelligence capabilities in the system.
+        list[str]: List of capability identifiers representing all available
+        autonomous intelligence capabilities in the system.
 
     Example:
         >>> caps = get_available_capabilities()
-        >>> len(caps)
-        15
         >>> "multi_platform_content_acquisition" in caps
         True
     """
@@ -49,21 +46,17 @@ def estimate_workflow_duration(depth: str) -> dict[str, Any]:
     """Estimate workflow duration based on depth and complexity.
 
     Args:
-        depth: Analysis depth level (standard, deep, comprehensive, experimental)
+        depth: Analysis depth level (standard, deep, comprehensive, experimental).
 
     Returns:
-        Dictionary containing:
-        - estimated_minutes: Expected duration in minutes
-        - confidence_interval: Uncertainty range (±20%)
-        - factors: List of factors affecting duration
+        dict[str, Any]: Dictionary containing:
+            - estimated_minutes: Expected duration in minutes.
+            - confidence_interval: Uncertainty range string.
+            - factors: List of factors affecting duration.
 
     Example:
-        >>> duration = estimate_workflow_duration("standard")
-        >>> duration["estimated_minutes"]
-        3
-        >>> duration = estimate_workflow_duration("experimental")
-        >>> duration["estimated_minutes"]
-        25
+        >>> estimate_workflow_duration("standard")
+        {'estimated_minutes': 3, 'confidence_interval': '±20%', ...}
     """
     base_duration_minutes = {
         "standard": 3,
@@ -82,27 +75,19 @@ def estimate_workflow_duration(depth: str) -> dict[str, Any]:
 def get_planned_stages(depth: str) -> list[dict[str, Any]]:
     """Get planned workflow stages based on analysis depth.
 
-    Different depth levels include different stages based on priority:
+    Filters stages based on priority levels associated with the requested depth:
     - standard: critical + high priority stages
     - deep: critical + high + medium priority stages
     - comprehensive/experimental: all stages
 
     Args:
-        depth: Analysis depth level (standard, deep, comprehensive, experimental)
+        depth: Analysis depth level (standard, deep, comprehensive, experimental).
 
     Returns:
-        List of stage dictionaries, each containing:
-        - name: Stage name
-        - agent: Responsible agent identifier
-        - priority: Stage priority (critical/high/medium/low)
-
-    Example:
-        >>> stages = get_planned_stages("standard")
-        >>> len(stages)  # Only critical + high priority
-        7
-        >>> stages = get_planned_stages("comprehensive")
-        >>> len(stages)  # All stages
-        14
+        list[dict[str, Any]]: List of stage dictionaries, each containing:
+            - name: Stage name.
+            - agent: Responsible agent identifier.
+            - priority: Stage priority (critical, high, medium, low).
     """
     all_stages = [
         {
@@ -192,25 +177,18 @@ def get_capabilities_summary(depth: str) -> dict[str, Any]:
     """Get summary of capabilities used in this workflow.
 
     Provides an overview of the workflow configuration including agent count,
-    tool count, and AI enhancement features.
+    tool count, and AI enhancement features active for the given depth.
 
     Args:
-        depth: Analysis depth level (standard, deep, comprehensive, experimental)
+        depth: Analysis depth level (standard, deep, comprehensive, experimental).
 
     Returns:
-        Dictionary containing:
-        - total_agents: Number of agents planned for this depth
-        - total_tools: Total number of available capabilities
-        - ai_enhancement_features: List of AI enhancement feature identifiers
-        - depth_level: The depth level used
-        - experimental_features_enabled: Whether experimental features are active
-
-    Example:
-        >>> summary = get_capabilities_summary("experimental")
-        >>> summary["experimental_features_enabled"]
-        True
-        >>> summary["total_tools"]
-        15
+        dict[str, Any]: Dictionary containing:
+            - total_agents: Number of agents planned for this depth.
+            - total_tools: Total number of available capabilities.
+            - ai_enhancement_features: List of AI enhancement feature identifiers.
+            - depth_level: The depth level used.
+            - experimental_features_enabled: Whether experimental features are active.
     """
     return {
         "total_agents": len(get_planned_stages(depth)),
