@@ -1,4 +1,9 @@
-"""YouTube ingestion utilities using centralized yt-dlp helpers."""
+"""YouTube ingestion utilities using centralized yt-dlp helpers.
+
+This module acts as an adapter between the ingestion pipeline and the `yt_dlp_download_tool`.
+It provides specialized functions for fetching video metadata and transcripts, formatted
+specifically for the internal ingestion data structures.
+"""
 
 from __future__ import annotations
 
@@ -21,6 +26,19 @@ yt_dlp = None
 
 @dataclass
 class VideoMetadata:
+    """Standardized metadata for a YouTube video.
+
+    Attributes:
+        id: The video ID.
+        title: The video title.
+        channel: The channel name/handle.
+        channel_id: The unique channel identifier.
+        published_at: The publication date string.
+        duration: Duration in seconds.
+        url: The canonical video URL.
+        thumbnails: List of thumbnail URLs.
+    """
+
     id: str
     title: str
     channel: str
@@ -32,6 +50,15 @@ class VideoMetadata:
 
 
 def _as_str(val: object, default: str = "") -> str:
+    """Safely convert a value to a string.
+
+    Args:
+        val: The value to convert.
+        default: The default string if conversion fails or value is None.
+
+    Returns:
+        str: The converted string.
+    """
     if val is None:
         return default
     try:
@@ -41,6 +68,14 @@ def _as_str(val: object, default: str = "") -> str:
 
 
 def _as_float(val: object) -> float | None:
+    """Safely convert a value to a float.
+
+    Args:
+        val: The value to convert.
+
+    Returns:
+        float | None: The float value, or None if conversion fails/infinite.
+    """
     if val is None:
         return None
     if isinstance(val, int | float):
@@ -57,6 +92,14 @@ def _as_float(val: object) -> float | None:
 
 
 def _as_list_str(val: object) -> list[str]:
+    """Safely convert a value to a list of strings.
+
+    Args:
+        val: The value to convert (list, tuple, or single item).
+
+    Returns:
+        list[str]: A list of strings.
+    """
     if val is None:
         return []
     # Treat common iterables; otherwise wrap single value
@@ -71,6 +114,17 @@ def _as_list_str(val: object) -> list[str]:
 
 
 def fetch_metadata(url: str) -> VideoMetadata:
+    """Fetch standardized metadata for a YouTube video.
+
+    Delegates to `youtube_fetch_metadata` and normalizes the output into
+    a `VideoMetadata` object.
+
+    Args:
+        url: The YouTube video URL.
+
+    Returns:
+        VideoMetadata: The normalized metadata.
+    """
     info = youtube_fetch_metadata(url)
     upstream_url = _as_str(info.get("url", ""), "")
     chan_id_val = info.get("channel_id")
@@ -96,7 +150,17 @@ def fetch_metadata(url: str) -> VideoMetadata:
 
 
 def fetch_transcript(url: str) -> str | None:
-    """Return an available transcript for *url* if present in metadata."""
+    """Return an available transcript for *url* if present in metadata.
+
+    Attempts to fetch subtitles/transcripts via `yt-dlp` metadata.
+    Prioritizes English ('en', 'en-US').
+
+    Args:
+        url: The YouTube video URL.
+
+    Returns:
+        str | None: The transcript text, or None if unavailable.
+    """
     info = youtube_fetch_metadata(url)
     subs: dict[str, Any] = info.get("subtitles") or {}
     for lang in ("en", "en-US"):

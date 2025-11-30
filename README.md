@@ -699,6 +699,7 @@ src/
 - Write tests for all new functionality
 - Update documentation for new features
 - Use `StepResult` for all tool returns
+- **Documentation**: All public modules, classes, and functions must have Google-style docstrings explaining purpose, arguments, and return values.
 
 ### Quality Requirements
 

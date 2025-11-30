@@ -47,6 +47,8 @@ else:
 
 
 class _DummyPoint:
+    """Mock PointStruct for testing without Qdrant."""
+
     def __init__(self, point_id: int | str, vector: Sequence[float], payload: dict[str, Any]):
         self.id = point_id
         self.vector = list(vector)
@@ -55,11 +57,15 @@ class _DummyPoint:
 
 
 class _DummyQueryResult:
+    """Mock query result for testing without Qdrant."""
+
     def __init__(self, points: list[_DummyPoint]):
         self.points = points
 
 
 class _DummyCollections:
+    """Mock collection list for testing without Qdrant."""
+
     def __init__(self):
         self.collections: list[Any] = []
 
@@ -207,10 +213,13 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
     - Configurable pool sizes via environment variables
     - Graceful fallback to dummy client for tests and development
 
+    Returns:
+        QdrantClient | _DummyClient: The configured client instance.
+
     Raises
     ------
     RuntimeError
-        If the optional dependency *qdrant-client* is not installed at runtime.
+        If the optional dependency *qdrant-client* is not installed at runtime (and strict mode is enabled, though currently it falls back).
     """
     settings = settings_mod.get_settings()
     prefer_grpc: bool = bool(getattr(settings, "qdrant_prefer_grpc", False))
