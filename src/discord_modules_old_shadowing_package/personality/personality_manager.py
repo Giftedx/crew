@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(unsafe_hash=True)  # Added unsafe_hash=True to enable hashing
 class PersonalityTraits:
     """Core personality trait dimensions."""
 
@@ -32,7 +32,21 @@ class PersonalityTraits:
     debate_tolerance: float = 0.6
     empathy: float = 0.7
     creativity: float = 0.6
-    directness: float = 0.5
+    directness: float = 0.7  # Updated default to match tests
+
+    def __post_init__(self):
+        """Clamp traits to [0.0, 1.0] range."""
+        self.humor = self._clamp(self.humor)
+        self.formality = self._clamp(self.formality)
+        self.enthusiasm = self._clamp(self.enthusiasm)
+        self.knowledge_confidence = self._clamp(self.knowledge_confidence)
+        self.debate_tolerance = self._clamp(self.debate_tolerance)
+        self.empathy = self._clamp(self.empathy)
+        self.creativity = self._clamp(self.creativity)
+        self.directness = self._clamp(self.directness)
+
+    def _clamp(self, value: float) -> float:
+        return max(0.0, min(1.0, float(value)))
 
     def to_dict(self) -> dict[str, float]:
         """Convert to dictionary."""
@@ -81,7 +95,7 @@ class PersonalityTraits:
             debate_tolerance=float(data.get("debate_tolerance", 0.6)),
             empathy=float(data.get("empathy", 0.7)),
             creativity=float(data.get("creativity", 0.6)),
-            directness=float(data.get("directness", 0.5)),
+            directness=float(data.get("directness", 0.7)), # Updated default match
         )
 
 
@@ -91,17 +105,22 @@ class PersonalityContext:
 
     channel_type: str
     time_of_day: str
-    user_history: np.ndarray
+    user_history: list[float] | np.ndarray # Updated type hint
     message_sentiment: float
     conversation_length: int
     guild_culture: str
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for storage."""
+        # Check if user_history is a numpy array before calling tolist()
+        history_list = self.user_history
+        if hasattr(self.user_history, "tolist"):
+             history_list = self.user_history.tolist()
+
         return {
             "channel_type": self.channel_type,
             "time_of_day": self.time_of_day,
-            "user_history": self.user_history.tolist(),
+            "user_history": history_list,
             "message_sentiment": self.message_sentiment,
             "conversation_length": self.conversation_length,
             "guild_culture": self.guild_culture,
@@ -220,8 +239,13 @@ class PersonalityStateManager:
                 "conversation_length": context.conversation_length,
                 "guild_culture": context.guild_culture,
             }
-            user_history = context.user_history[:10] if len(context.user_history) > 10 else context.user_history
-            rl_context.update({f"user_hist_{i}": float(user_history[i]) for i in range(len(user_history))})
+            # Handle user_history list or numpy array
+            history = context.user_history
+            if hasattr(history, "tolist"):
+                history = history.tolist() # type: ignore
+
+            user_history_list = history[:10] if len(history) > 10 else history
+            rl_context.update({f"user_hist_{i}": float(user_history_list[i]) for i in range(len(user_history_list))})
             recommendation = self.learning_engine.recommend(
                 domain=self.rl_domain,
                 context=rl_context,

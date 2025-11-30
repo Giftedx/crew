@@ -7,19 +7,16 @@ across all cache layers.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 from crewai.tools import BaseTool
-from ultimate_discord_intelligence_bot.cache import (
-    ENABLE_CACHE_V2,
-    CacheNamespace,
-    get_cache_namespace,
-    get_unified_cache,
-)
+from platform.cache.unified_cache import UnifiedCacheService, get_unified_cache_config
 from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 
 
 logger = logging.getLogger(__name__)
@@ -28,7 +25,7 @@ logger = logging.getLogger(__name__)
 class CacheOperationInput(BaseModel):
     """Input schema for cache operations"""
 
-    operation: str = Field(..., description="Operation: get, set, delete, get_metrics, optimize_ttl")
+    operation: str = Field(..., description="Operation: get, set, delete, get_metrics")
     key: str = Field(..., description="Cache key")
     value: Any | None = Field(default=None, description="Value to cache (for set operations)")
     ttl: int | None = Field(default=None, description="Time to live in seconds")
@@ -36,17 +33,6 @@ class CacheOperationInput(BaseModel):
     tenant_id: str = Field(default="default", description="Tenant identifier")
     workspace_id: str = Field(default="main", description="Workspace identifier")
     metadata: dict[str, Any] | None = Field(default=None, description="Additional metadata")
-
-
-class CacheOptimizationInput(BaseModel):
-    """Input schema for cache optimization"""
-
-    operation: str = Field(..., description="Operation: optimize_ttl, get_recommendations, get_metrics")
-    key_pattern: str = Field(..., description="Cache key pattern to optimize")
-    current_ttl: int | None = Field(default=None, description="Current TTL value")
-    access_history: list[dict[str, Any]] | None = Field(default=None, description="Access history for optimization")
-    tenant_id: str = Field(default="default", description="Tenant identifier")
-    workspace_id: str = Field(default="main", description="Workspace identifier")
 
 
 class UnifiedCacheTool(BaseTool):
@@ -58,8 +44,8 @@ class UnifiedCacheTool(BaseTool):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._cache = get_unified_cache()
-        logger.info("Unified cache tool initialized with UnifiedCache facade")
+        self._cache = UnifiedCacheService(use_new_config=True)
+        logger.info("Unified cache tool initialized with UnifiedCacheService")
 
     def _run(
         self,
@@ -73,112 +59,79 @@ class UnifiedCacheTool(BaseTool):
         metadata: dict[str, Any] | None = None,
     ) -> StepResult:
         """Execute cache operation"""
+        get_metrics().counter("tool_runs_total", labels={"tool": self.name}).inc()
         try:
-            namespace = get_cache_namespace(tenant_id, workspace_id)
-            cache_name = metadata.get("cache_name", "default") if metadata else "default"
             if operation == "get":
-                return self._get_cache_value(namespace, cache_name, key)
+                return self._run_async(self._cache.get(key, tenant_id, workspace_id))
             elif operation == "set":
                 if value is None:
                     return StepResult.fail("Value is required for set operation")
-                return self._set_cache_value(namespace, cache_name, key, value, metadata)
+                return self._run_async(self._cache.set(key, value, ttl, cache_level, tenant_id, workspace_id, metadata))
             elif operation == "delete":
-                return StepResult.fail("Delete operation not yet implemented in UnifiedCache facade")
+                return self._run_async(self._cache.delete(key, tenant_id, workspace_id))
             elif operation == "get_metrics":
-                return StepResult.ok(data={"message": "Metrics available via obs.metrics module"})
+                 metrics = self._cache.get_metrics(tenant_id, workspace_id)
+                 return StepResult.ok(data=metrics)
             else:
                 return StepResult.fail(f"Unknown operation: {operation}")
         except Exception as e:
             logger.error(f"Error in unified cache tool: {e}", exc_info=True)
             return StepResult.fail(f"Cache operation failed: {e!s}", error_context={"exception": str(e)})
 
-    def _get_cache_value(self, namespace: CacheNamespace, cache_name: str, key: str) -> StepResult:
-        """Get value from cache"""
+    def _run_async(self, coroutine):
+        """Helper to run async methods synchronously."""
         try:
-            import asyncio
-
-            result = asyncio.run(self._cache.get(namespace, cache_name, key))
-            if not result.success:
-                return result
-            return StepResult.ok(data={"hit": result.data.get("hit", False), "value": result.data.get("value")})
-        except Exception as e:
-            return StepResult.fail(f"Cache get failed: {e!s}")
-
-    def _set_cache_value(
-        self, namespace: CacheNamespace, cache_name: str, key: str, value: Any, metadata: dict[str, Any] | None
-    ) -> StepResult:
-        """Set value in cache"""
-        try:
-            import asyncio
-
-            dependencies = None
-            if metadata and "dependencies" in metadata:
-                dependencies = set(metadata["dependencies"])
-            result = asyncio.run(self._cache.set(namespace, cache_name, key, value, dependencies))
-            return result
-        except Exception as e:
-            return StepResult.fail(f"Cache set failed: {e!s}")
+            return asyncio.run(coroutine)
+        except RuntimeError:
+             # Handle case where event loop is already running
+             loop = asyncio.get_event_loop()
+             return loop.run_until_complete(coroutine)
 
 
 class CacheOptimizationTool(BaseTool):
-    """Cache optimization tool for CrewAI agents"""
+    """Cache optimization tool for CrewAI agents. Deprecated."""
 
     name: str = "cache_optimization_tool"
-    description: str = "Provides cache optimization recommendations. Note: RL-based TTL optimization has been deprecated in favor of unified cache strategies."
-    args_schema: type[BaseModel] = CacheOptimizationInput
+    description: str = "DEPRECATED. Use UnifiedCacheTool instead."
+    args_schema: type[BaseModel] = BaseModel
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        logger.info("Cache optimization tool initialized (legacy compatibility mode)")
+        logger.warning("CacheOptimizationTool is deprecated.")
 
-    def _run(
-        self,
-        operation: str,
-        key_pattern: str,
-        current_ttl: int | None = None,
-        access_history: list[dict[str, Any]] | None = None,
-        tenant_id: str = "default",
-        workspace_id: str = "main",
-    ) -> StepResult:
-        """Execute cache optimization operation"""
-        try:
-            if operation == "get_recommendations":
-                return StepResult.ok(
-                    data={
-                        "message": "Cache optimization is now handled by unified cache layer",
-                        "recommendation": "Use ENABLE_CACHE_V2 flag for enhanced caching",
-                    }
-                )
-            elif operation == "get_metrics":
-                return StepResult.ok(data={"message": "Metrics available via obs.metrics module"})
-            else:
-                return StepResult.fail(f"Operation {operation} deprecated. Use unified cache instead.")
-        except Exception as e:
-            logger.error(f"Error in cache optimization tool: {e}", exc_info=True)
-            return StepResult.fail(f"Cache optimization failed: {e!s}", error_context={"exception": str(e)})
+    def _run(self, **kwargs) -> StepResult:
+        get_metrics().counter("tool_runs_total", labels={"tool": self.name}).inc()
+        return StepResult.ok(
+            data={
+                "message": "Cache optimization is now handled automatically by UnifiedCacheService.",
+                "recommendation": "Use UnifiedCacheTool for all cache operations.",
+            }
+        )
 
 
 class CacheStatusTool(BaseTool):
     """Cache status tool for CrewAI agents"""
 
     name: str = "cache_status_tool"
-    description: str = "Provides status information about the unified cache system. Check ENABLE_CACHE_V2 flag status and cache availability."
+    description: str = "Provides status information about the unified cache system."
     args_schema: type[BaseModel] = BaseModel
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._cache = get_unified_cache()
-        logger.info("Cache status tool initialized")
+        self._cache = UnifiedCacheService(use_new_config=True)
 
     def _run(self, tenant_id: str = "default", workspace_id: str = "main") -> StepResult:
-        """Get cache system status"""
+        get_metrics().counter("tool_runs_total", labels={"tool": self.name}).inc()
         try:
-            status_info = {
-                "cache_v2_enabled": ENABLE_CACHE_V2,
-                "unified_cache_available": self._cache is not None,
-                "message": "Unified cache facade operational. Metrics available via obs.metrics.",
-            }
-            return StepResult.ok(data=status_info)
+            metrics = self._cache.get_metrics(tenant_id, workspace_id)
+            return StepResult.ok(
+                data={
+                    "status": "operational",
+                    "metrics": metrics,
+                    "config": str(self._cache.config)
+                }
+            )
         except Exception as e:
-            logger.error(f"Error in cache status tool: {e}", exc_info=True)
-            return StepResult.fail(f"Cache status retrieval failed: {e!s}", error_context={"exception": str(e)})
+            return StepResult.fail(f"Cache status failed: {e}")
+
+__all__ = ["UnifiedCacheTool", "CacheOptimizationTool", "CacheStatusTool"]
