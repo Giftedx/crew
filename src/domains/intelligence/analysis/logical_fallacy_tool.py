@@ -27,6 +27,21 @@ APPEAL_TO_EMOTION_CONFIDENCE = 0.5
 
 
 class LogicalFallacyTool(BaseTool[StepResult]):
+    """Tool for identifying logical fallacies in text.
+
+    This tool analyzes text input to detect common logical fallacies using a
+    combination of keyword matching, regex pattern recognition, and heuristic
+    rules. It identifies fallacies such as ad hominem attacks, straw man
+    arguments, false dilemmas, and more.
+
+    Attributes:
+        name (str): The name of the tool.
+        description (str): A brief description of the tool's purpose.
+        KEYWORD_FALLACIES (ClassVar[dict]): Dictionary mapping fallacy names to list of keywords.
+        PATTERN_FALLACIES (ClassVar[dict]): Dictionary mapping fallacy names to list of regex patterns.
+        STRUCTURAL_PATTERNS (ClassVar[dict]): Dictionary mapping fallacy names to structural regex patterns.
+    """
+
     name: str = "Logical Fallacy Detector"
     description: str = "Identify logical fallacies in statements using pattern matching and linguistic analysis"
     KEYWORD_FALLACIES: ClassVar[dict[str, list[str]]] = {
@@ -101,11 +116,22 @@ class LogicalFallacyTool(BaseTool[StepResult]):
     }
 
     def __init__(self) -> None:
+        """Initialize the LogicalFallacyTool and set up metrics."""
         super().__init__()
         self._metrics = get_metrics()
 
     @cache_tool_result(namespace="tool:logical_fallacy", ttl=3600)
     def _run(self, text: str) -> StepResult:
+        """Execute the logical fallacy detection analysis.
+
+        Args:
+            text (str): The text content to analyze.
+
+        Returns:
+            StepResult: A result object containing a list of detected fallacies,
+                confidence scores, and detailed explanations. Returns a skipped
+                result if the input text is empty or None.
+        """
         if not text or not text.strip():
             self._metrics.counter("tool_runs_total", labels={"tool": "logical_fallacy", "outcome": "skipped"}).inc()
             return StepResult.skip(reason="empty text", fallacies=[], count=0, confidence_scores={}, details={})
@@ -148,7 +174,18 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         return StepResult.ok(**result_data)
 
     def _check_heuristic_fallacies(self, text: str) -> list[tuple[str, float]]:
-        """Check for fallacies using heuristic analysis."""
+        """Check for fallacies using heuristic analysis.
+
+        Analyzes the text for patterns like overuse of absolute words,
+        highly emotional language, loaded questions, and potential false analogies.
+
+        Args:
+            text (str): The text to analyze.
+
+        Returns:
+            list[tuple[str, float]]: A list of tuples, each containing the name
+                of a detected fallacy and its confidence score.
+        """
         fallacies = []
         text_lower = text.lower()
         absolute_words = ["all", "every", "always", "never", "everyone", "nobody", "everything", "nothing"]
@@ -168,7 +205,14 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         return fallacies
 
     def _generate_explanations(self, fallacies: list[str]) -> dict[str, str]:
-        """Generate brief explanations for detected fallacies."""
+        """Generate brief explanations for detected fallacies.
+
+        Args:
+            fallacies (list[str]): List of detected fallacy names.
+
+        Returns:
+            dict[str, str]: A dictionary mapping each fallacy name to its explanation.
+        """
         explanations = {
             "ad hominem": "Attacking the person making the argument rather than the argument itself",
             "appeal to authority": "Using authority or expertise as the sole basis for accepting a claim",
@@ -191,6 +235,17 @@ class LogicalFallacyTool(BaseTool[StepResult]):
         return {fallacy: explanations.get(fallacy, "Logical fallacy detected") for fallacy in fallacies}
 
     def run(self, text: str) -> StepResult:
+        """Public interface for running the tool.
+
+        Wraps the internal _run method with error handling and metric recording.
+
+        Args:
+            text (str): The text to analyze.
+
+        Returns:
+            StepResult: The result of the analysis, or a failure result if an
+                exception occurred.
+        """
         try:
             return self._run(text)
         except Exception as exc:
