@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import datetime
 from typing import Any, TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
@@ -46,6 +48,7 @@ class InstagramStoriesArchiverTool(BaseTool[StepResult]):
 
     def __init__(self) -> None:
         super().__init__()
+        self._metrics = get_metrics()
         self._last_check_times: dict[str, float] = {}
         self._archived_stories: set[str] = set()
 
@@ -79,8 +82,18 @@ class InstagramStoriesArchiverTool(BaseTool[StepResult]):
                 next_check_recommended=time.time() + 4 * 60 * 60,
                 errors=archive_results["errors"],
             )
+
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "outcome": "success", "new_stories": str(len(new_stories))}
+            ).inc()
+
             return StepResult.ok(data=result)
         except Exception as e:
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "outcome": "failure", "new_stories": "0"}
+            ).inc()
             return StepResult.fail(f"Instagram stories archival failed: {e!s}")
 
     def _poll_stories(self, handles: list[str], tenant: str, workspace: str) -> list[StoryPost]:

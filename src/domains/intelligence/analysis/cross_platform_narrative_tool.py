@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 import time
 from platform.cache.tool_cache_decorator import cache_tool_result
 from typing import Any, TypedDict
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
@@ -70,6 +72,7 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
 
     def __init__(self) -> None:
         super().__init__()
+        self._metrics = get_metrics()
         self._active_narratives: dict[str, NarrativeTimeline] = {}
         self._narrative_events: dict[str, list[NarrativeEvent]] = {}
         self._cross_platform_mappings: dict[str, list[str]] = {}
@@ -112,6 +115,9 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
                     processing_time_seconds=time.time() - start_time,
                     errors=["Could not build narrative timeline"],
                 )
+                self._metrics.counter(
+                    "tool_runs_total", labels={"tool": self.name, "outcome": "partial_success"}
+                ).inc()
                 return StepResult.ok(data=result)
             narrative_analysis = self._analyze_narrative_structure(
                 narrative_timeline, analysis_depth, tenant, workspace
@@ -139,8 +145,10 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
                 processing_time_seconds=time.time() - start_time,
                 errors=[],
             )
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "success"}).inc()
             return StepResult.ok(data=result)
         except Exception as e:
+            self._metrics.counter("tool_runs_total", labels={"tool": self.name, "outcome": "failure"}).inc()
             return StepResult.fail(f"Cross-platform narrative tracking failed: {e!s}")
 
     def run(
@@ -666,16 +674,26 @@ class CrossPlatformNarrativeTrackingTool(BaseTool[StepResult]):
         """Add a new event to a narrative."""
         try:
             if narrative_id not in self._active_narratives:
-                return StepResult.fail(f"Narrative {narrative_id} not found")
-            timeline = self._active_narratives[narrative_id]
-            timeline["events"].append(event)
-            timeline["total_events"] = len(timeline["events"])
-            timeline["last_update"] = time.time()
-            timeline["involved_creators"] = list({event["creator_id"] for event in timeline["events"]})
-            timeline["platforms"] = list({event["platform"] for event in timeline["events"]})
-            return StepResult.ok(data={"event_added": event["event_id"]})
+                result = StepResult.fail(f"Narrative {narrative_id} not found")
+            else:
+                timeline = self._active_narratives[narrative_id]
+                timeline["events"].append(event)
+                timeline["total_events"] = len(timeline["events"])
+                timeline["last_update"] = time.time()
+                timeline["involved_creators"] = list({event["creator_id"] for event in timeline["events"]})
+                timeline["platforms"] = list({event["platform"] for event in timeline["events"]})
+                result = StepResult.ok(data={"event_added": event["event_id"]})
         except Exception as e:
-            return StepResult.fail(f"Failed to add narrative event: {e!s}")
+            result = StepResult.fail(f"Failed to add narrative event: {e!s}")
+
+        try:
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "method": "add_event", "outcome": "success" if result.success else "failure"},
+            ).inc()
+        except Exception as exc:
+            logging.debug("metrics emit failed: %s", exc)
+        return result
 
     def get_tool_stats(self) -> dict[str, Any]:
         """Get tool statistics."""

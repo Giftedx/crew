@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass
+from typing import Any
+
 from platform.config.configuration import get_config
 
 from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
@@ -50,8 +52,8 @@ class ContentTypeRoutingTool(BaseTool[dict]):
     name: str = "content_type_routing_tool"
     description: str = "Analyzes content to determine type and route to appropriate processing pipeline"
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self._metrics = get_metrics()
         self._config = get_config()
 
