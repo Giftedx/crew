@@ -350,3 +350,51 @@ def bulk_insert_usage_logs(conn: sqlite3.Connection, usage_records: list[UsageLo
                 for u in usage_records
             ],
         )
+
+
+def pick_next_pending_job(conn: sqlite3.Connection) -> IngestJobRecord | None:
+    """Atomically pick the next pending job and mark it as processing."""
+    try:
+        with conn:
+            now = default_utc_now().isoformat()
+            # Find candidate
+            cur = conn.execute(
+                "SELECT id FROM ingest_job WHERE status='pending' AND scheduled_at <= ? ORDER BY priority DESC, scheduled_at ASC LIMIT 1",
+                (now,),
+            )
+            row = cur.fetchone()
+            if not row:
+                return None
+            job_id = row[0]
+
+            # Mark as processing
+            conn.execute(
+                "UPDATE ingest_job SET status='processing', picked_at=?, attempts=attempts+1 WHERE id=?",
+                (now, job_id),
+            )
+
+            # Return full record
+            cur = conn.execute("SELECT * FROM ingest_job WHERE id=?", (job_id,))
+            return IngestJobRecord(*cur.fetchone())
+    except sqlite3.OperationalError:
+        # Avoid crashing on lock contention
+        return None
+
+
+def update_ingest_job_status(
+    conn: sqlite3.Connection, job_id: int, status: str, error: str | None = None
+) -> None:
+    """Update job status and set finished_at if terminal status."""
+    finished_at = None
+    if status in ("completed", "failed", "cancelled"):
+        finished_at = default_utc_now().isoformat()
+
+    with conn:
+        # We only update finished_at if it's not None, to preserve existing if somehow updated twice
+        if finished_at:
+            conn.execute(
+                "UPDATE ingest_job SET status=?, finished_at=?, error=? WHERE id=?",
+                (status, finished_at, error, job_id),
+            )
+        else:
+            conn.execute("UPDATE ingest_job SET status=?, error=? WHERE id=?", (status, error, job_id))

@@ -11,7 +11,7 @@ from platform.time import default_utc_now
 
 from .discord_env import _DISCORD_AVAILABLE, LIGHTWEIGHT_IMPORT, build_intents, commands
 
-# from domains.ingestion.pipeline import start_ingest_workers  # TODO: Re-enable when implemented
+from domains.ingestion.pipeline import start_ingest_workers
 from .env import check_environment, enable_autonomous_defaults
 from .registrations import _register_events, _register_prefix_commands, _register_slash_commands
 from .tools_bootstrap import attach_tools, load_tools
@@ -71,8 +71,8 @@ async def main():
             f"🧠 Running in headless agent mode (user_cmds={('on' if user_on else 'off')}, admin={('on' if admin_on else 'off')})"
         )
         if os.getenv("ENABLE_INGEST_WORKER", "0") in {"1", "true", "True"}:
-            # await start_ingest_workers(asyncio.get_running_loop())  # TODO: Re-enable when implemented
-            print("INFO: Ingest workers temporarily disabled (not implemented)")
+            await start_ingest_workers(asyncio.get_running_loop())
+            print("INFO: Ingest workers enabled")
         else:
             print("INFO: Ingest workers disabled (ENABLE_INGEST_WORKER=0)")
         print("📨 Discord posts will use webhooks if configured; no gateway commands are exposed.")
