@@ -7,9 +7,12 @@ computational overhead.
 
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
+from typing import Any
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 from ultimate_discord_intelligence_bot.tools._base import BaseTool
 
@@ -35,6 +38,10 @@ class EarlyExitConditionsTool(BaseTool[dict]):
         "Assesses processing confidence to enable early exit when sufficient information has been gathered"
     )
 
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._metrics = get_metrics()
+
     def run(self, input_data: dict) -> StepResult:
         """Run confidence assessment for early exit determination.
 
@@ -54,7 +61,7 @@ class EarlyExitConditionsTool(BaseTool[dict]):
             confidence_metrics = self._calculate_confidence_metrics(
                 transcript, title, partial_analysis, processing_stage
             )
-            result = {
+            result_data = {
                 "confidence_metrics": {
                     "content_clarity": confidence_metrics.content_clarity,
                     "information_density": confidence_metrics.information_density,
@@ -71,8 +78,18 @@ class EarlyExitConditionsTool(BaseTool[dict]):
                 "recommendations": self._generate_exit_recommendations(confidence_metrics),
                 "estimated_savings": self._estimate_processing_savings(confidence_metrics, processing_stage),
             }
-            return StepResult.ok(result=result)
+
+            result = StepResult.ok(result=result_data)
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "outcome": "success", "exit_early": str(confidence_metrics.should_exit_early).lower()}
+            ).inc()
+            return result
         except Exception as e:
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "outcome": "failure", "exit_early": "false"}
+            ).inc()
             return StepResult.fail(error=f"Early exit evaluation failed: {e!s}")
 
     def _calculate_confidence_metrics(
