@@ -18,10 +18,15 @@ import numpy as np
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
+from domains.intelligence.personality import (
+    InteractionMetrics,
+    PersonalityContext,
+    PersonalityStateManager,
+    RewardComputer,
+)
+
 from .message_evaluator import EvaluationResult, MessageEvaluator
 from .opt_in_manager import OptInManager
-from .personality.personality_manager import PersonalityContext, PersonalityStateManager
-from .personality.reward_computer import InteractionMetrics, RewardComputer
 
 
 if TYPE_CHECKING:
