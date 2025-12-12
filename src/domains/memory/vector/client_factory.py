@@ -222,10 +222,11 @@ def get_qdrant_client() -> QdrantClient | _DummyClient:
         return _DummyClient()
     import os
 
-    _pool_size = int(os.getenv("QDRANT_POOL_SIZE", "10"))
-    _max_overflow = int(os.getenv("QDRANT_MAX_OVERFLOW", "5"))
-    _pool_timeout = int(os.getenv("QDRANT_POOL_TIMEOUT", "30"))
-    _pool_recycle = int(os.getenv("QDRANT_POOL_RECYCLE", "3600"))
+    # Pool configuration reserved for future use with HTTP connection pooling
+    # _pool_size = int(os.getenv("QDRANT_POOL_SIZE", "10"))
+    # _max_overflow = int(os.getenv("QDRANT_MAX_OVERFLOW", "5"))
+    # _pool_timeout = int(os.getenv("QDRANT_POOL_TIMEOUT", "30"))
+    # _pool_recycle = int(os.getenv("QDRANT_POOL_RECYCLE", "3600"))
     kwargs: dict[str, object] = {
         "url": url_val,
         "api_key": getattr(settings, "qdrant_api_key", None),

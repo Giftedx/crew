@@ -62,7 +62,7 @@ class HealthCheckService:
             qdrant_url = self._get_qdrant_url()
             if qdrant_url == ":memory:":
                 return {"status": "healthy", "type": "memory", "message": "Using in-memory Qdrant for testing"}
-            from domains.memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
 
             client = get_qdrant_client()
             collections = client.get_collections()

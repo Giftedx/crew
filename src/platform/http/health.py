@@ -262,7 +262,7 @@ class HealthChecker:
         start_time = time.perf_counter()
 
         try:
-            from domains.memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
 
             client = get_qdrant_client()
             if client is None:

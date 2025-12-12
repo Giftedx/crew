@@ -86,7 +86,7 @@ class UnifiedGraphStore:
                     self.default_backend = GraphBackend.NETWORKX
         if (default_backend == GraphBackend.QDRANT or enable_multi_backend) and self._qdrant_client is None:
             try:
-                from domains.memory.qdrant_provider import get_qdrant_client
+                from domains.memory.vector.client_factory import get_qdrant_client
 
                 self._qdrant_client = get_qdrant_client()
             except Exception as e:
