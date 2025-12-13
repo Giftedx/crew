@@ -10,4 +10,4 @@ warnings.warn(
     stacklevel=2,
 )
 
-__all__ = ["get_qdrant_client"]
+__all__ = ["get_qdrant_client", "_DummyClient"]

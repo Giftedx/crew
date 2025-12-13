@@ -13,6 +13,14 @@ Notes:
 - The compression retry uses existing `PromptEngine.optimise_with_metadata` with `force_enable=True` and respects `provider_overrides.max_tokens` when present. If retry still fails, the original error path is preserved.
 - Quality assessment is best-effort and fast; it is meant for routing/observability rather than formal evaluation.
 
+### Refactoring
+
+- **Memory Subsystem**: Centralized Qdrant client factory to `src/domains/memory/vector/client_factory.py` to fix circular imports.
+  - Deprecated `src/domains/memory/qdrant_provider.py`
+  - Deprecated `src/domains/memory/vector/qdrant/domains/qdrant_provider.py`
+  - All deprecated modules emit `DeprecationWarning` and re-export `get_qdrant_client` and `_DummyClient` for backward compatibility.
+  - Updated all consumers to use the new factory path.
+
 ### Security
 
 - **CRITICAL FIX**: Added input validation to prevent Cypher injection in Neo4j store (`src/kg/neo4j/store.py`)

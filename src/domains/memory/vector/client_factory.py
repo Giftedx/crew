@@ -200,12 +200,12 @@ class _DummyClient:
 
 @lru_cache
 def get_qdrant_client() -> QdrantClient | _DummyClient:
-    """Return a cached :class:`QdrantClient` instance configured from settings with connection pooling.
+    """Return a cached :class:`QdrantClient` instance configured from settings.
 
     This implementation includes:
-    - Connection pooling for better performance
-    - Configurable pool sizes via environment variables
+    - Singleton pattern via lru_cache
     - Graceful fallback to dummy client for tests and development
+    - Future support for connection pooling (configuration reserved)
 
     Raises
     ------

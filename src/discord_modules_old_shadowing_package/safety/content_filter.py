@@ -242,7 +242,7 @@ class ContentFilter:
         to find semantically similar content.
 
         Example embedding integration:
-            from memory.qdrant_provider import get_qdrant_client
+            from domains.memory.vector.client_factory import get_qdrant_client
             client = get_qdrant_client()
             results = client.search(collection="flagged_content", query_vector=embedding)
 
