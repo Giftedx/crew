@@ -22,6 +22,7 @@ from .priority_queue import PriorityQueue
 if TYPE_CHECKING:
     import sqlite3
 
+    from domains.memory.unified_graph_store import UnifiedGraphStore
     from domains.memory.vector_store import VectorStore
 logger = logging.getLogger(__name__)
 
@@ -237,7 +238,9 @@ class Scheduler:
         if state_updates:
             self.update_ingest_states_bulk(state_updates)
 
-    def worker_run_once(self, store: VectorStore) -> pipeline.IngestJob | None:
+    def worker_run_once(
+        self, store: VectorStore | UnifiedGraphStore
+    ) -> pipeline.IngestJob | None:
         qjob = self.queue.dequeue()
         if not qjob:
             return None

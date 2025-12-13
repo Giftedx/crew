@@ -98,6 +98,7 @@ class UnifiedGraphStore:
         *,
         labels: Sequence[str] | None = None,
         properties: dict[str, Any] | None = None,
+        vector: list[float] | None = None,
         namespace: str = "default",
         backend: GraphBackend | str | None = None,
     ) -> StepResult:
@@ -107,6 +108,7 @@ class UnifiedGraphStore:
             node_id: Unique node identifier.
             labels: Node labels/types (e.g., ["Person", "Agent"]).
             properties: Node properties/attributes.
+            vector: Embedding vector for the node (optional).
             namespace: Logical namespace for multi-tenancy.
             backend: Override default backend for this operation.
 
@@ -120,9 +122,9 @@ class UnifiedGraphStore:
             if backend == GraphBackend.NEO4J:
                 return self._neo4j_add_node(node_id, labels, properties, namespace)
             elif backend == GraphBackend.NETWORKX:
-                return self._nx_add_node(node_id, labels, properties, namespace)
+                return self._nx_add_node(node_id, labels, properties, vector, namespace)
             elif backend == GraphBackend.QDRANT:
-                return self._qdrant_add_node(node_id, labels, properties, namespace)
+                return self._qdrant_add_node(node_id, labels, properties, vector, namespace)
             else:
                 return StepResult.fail(f"Unsupported backend: {backend}")
         except Exception as exc:
@@ -287,10 +289,20 @@ class UnifiedGraphStore:
             backend="neo4j",
         )
 
-    def _nx_add_node(self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str) -> StepResult:
+    def _nx_add_node(
+        self,
+        node_id: str,
+        labels: list[str],
+        properties: dict[str, Any],
+        vector: list[float] | None,
+        namespace: str,
+    ) -> StepResult:
         """Add node to NetworkX graph."""
         graph = self._get_nx_graph(namespace)
-        graph.add_node(node_id, labels=labels, **properties)
+        props = properties.copy()
+        if vector is not None:
+            props["_vector"] = vector
+        graph.add_node(node_id, labels=labels, **props)
         self._metrics.counter(
             "graph_store_operations_total", labels={"backend": "networkx", "operation": "add_node"}
         ).inc()
@@ -344,7 +356,12 @@ class UnifiedGraphStore:
         return StepResult.ok(nodes=nodes, edges=edges, node_count=len(nodes), edge_count=len(edges), backend="networkx")
 
     def _qdrant_add_node(
-        self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str
+        self,
+        node_id: str,
+        labels: list[str],
+        properties: dict[str, Any],
+        vector: list[float] | None,
+        namespace: str,
     ) -> StepResult:
         """Add node to Qdrant as a point with graph metadata in payload."""
         if self._qdrant_client is None:
@@ -352,13 +369,15 @@ class UnifiedGraphStore:
         payload = {"_graph_type": "node", "_node_id": node_id, "_namespace": namespace, "_labels": labels, **properties}
         from qdrant_client.models import PointStruct
 
-        point = PointStruct(id=hash(f"{namespace}:{node_id}") & 2147483647, vector=[0.0] * 384, payload=payload)
+        vec_data = vector if vector is not None else [0.0] * 384
+        point = PointStruct(id=hash(f"{namespace}:{node_id}") & 2147483647, vector=vec_data, payload=payload)
         collection_name = f"graph_memory_{namespace}"
         with contextlib.suppress(Exception):
             from qdrant_client.models import Distance, VectorParams
 
             self._qdrant_client.create_collection(
-                collection_name=collection_name, vectors_config=VectorParams(size=384, distance=Distance.COSINE)
+                collection_name=collection_name,
+                vectors_config=VectorParams(size=len(vec_data), distance=Distance.COSINE),
             )
         self._qdrant_client.upsert(collection_name=collection_name, points=[point])
         self._metrics.counter(

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import time
-from platform.db_optimizer import get_database_optimizer
+from platform.database.db_optimizer import get_database_optimizer
 from platform.llm_cache import get_llm_cache
 from typing import Any
 
