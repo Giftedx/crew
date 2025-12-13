@@ -127,7 +127,7 @@ class StartupValidator:
                     self.add_success("Qdrant in-memory mode configured")
                 else:
                     try:
-                        from domains.memory.qdrant_provider import get_qdrant_client
+                        from domains.memory.vector.client_factory import get_qdrant_client
 
                         client = get_qdrant_client()
                         client.get_collections()
