@@ -8,6 +8,7 @@ production-ready queries), NetworkX (in-memory, fast testing), and Qdrant
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import logging
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -120,7 +121,7 @@ class UnifiedGraphStore:
         properties = properties or {}
         try:
             if backend == GraphBackend.NEO4J:
-                return self._neo4j_add_node(node_id, labels, properties, namespace)
+                return self._neo4j_add_node(node_id, labels, properties, vector, namespace)
             elif backend == GraphBackend.NETWORKX:
                 return self._nx_add_node(node_id, labels, properties, vector, namespace)
             elif backend == GraphBackend.QDRANT:
@@ -225,17 +226,31 @@ class UnifiedGraphStore:
         return self._networkx_graphs[namespace]
 
     def _neo4j_add_node(
-        self, node_id: str, labels: list[str], properties: dict[str, Any], namespace: str
+        self,
+        node_id: str,
+        labels: list[str],
+        properties: dict[str, Any],
+        vector: list[float] | None,
+        namespace: str,
     ) -> StepResult:
-        """Add node to Neo4j."""
+        """Add node to Neo4j.
+
+        Note: Vector embeddings are currently stored as properties ('embedding') in Neo4j,
+        as native vector indexing requires specific index configuration not yet implemented.
+        """
         if self._neo4j_driver is None:
             return StepResult.fail("Neo4j driver not initialized")
-        properties["_namespace"] = namespace
-        properties["_node_id"] = node_id
+
+        props = properties.copy()
+        if vector is not None:
+            props["embedding"] = vector
+
+        props["_namespace"] = namespace
+        props["_node_id"] = node_id
         label_str = ":".join(labels) if labels else "Node"
         cypher = f"MERGE (n:{label_str} {{_node_id: $node_id, _namespace: $namespace}}) SET n += $props RETURN n"
         with self._neo4j_driver.session() as session:
-            result = session.run(cypher, node_id=node_id, namespace=namespace, props=properties)
+            result = session.run(cypher, node_id=node_id, namespace=namespace, props=props)
             _ = result.single()
         self._metrics.counter(
             "graph_store_operations_total", labels={"backend": "neo4j", "operation": "add_node"}
@@ -370,7 +385,18 @@ class UnifiedGraphStore:
         from qdrant_client.models import PointStruct
 
         vec_data = vector if vector is not None else [0.0] * 384
-        point = PointStruct(id=hash(f"{namespace}:{node_id}") & 2147483647, vector=vec_data, payload=payload)
+        # Use SHA256 for deterministic ID generation instead of unstable hash()
+        id_hash = hashlib.sha256(f"{namespace}:{node_id}".encode("utf-8")).hexdigest()
+        # Qdrant supports UUID strings or uint64 integers. We use the first 64 bits of the hash.
+        # Actually, python's int from hex is easiest, but Qdrant often prefers UUIDs.
+        # For simplicity and backward compat with the hash() approach (which yielded ints),
+        # we'll generate a UUID-like string or a large int.
+        # The previous code used a 31-bit int: hash(...) & 2147483647.
+        # Let's use a full UUID for better uniqueness.
+        import uuid
+        point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{namespace}:{node_id}"))
+
+        point = PointStruct(id=point_id, vector=vec_data, payload=payload)
         collection_name = f"graph_memory_{namespace}"
         with contextlib.suppress(Exception):
             from qdrant_client.models import Distance, VectorParams

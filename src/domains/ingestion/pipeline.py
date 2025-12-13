@@ -187,7 +187,7 @@ def run(job: IngestJob, store: vector_store.VectorStore | UnifiedGraphStore) -> 
         if isinstance(store, UnifiedGraphStore):
             for i, (v, c) in enumerate(zip(vectors, chunks, strict=False)):
                 node_id = f"{episode_id}_chunk_{i}"
-                store.add_node(
+                result = store.add_node(
                     node_id=node_id,
                     labels=["TranscriptChunk"],
                     properties={
@@ -202,15 +202,22 @@ def run(job: IngestJob, store: vector_store.VectorStore | UnifiedGraphStore) -> 
                     vector=v,
                     namespace=namespace,
                 )
+                if not result.success:
+                    handle_error_safely(
+                        lambda: metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="add_node").inc(),
+                        error_message="Failed to record node addition failure metric",
+                    )
+            chunks_count = len(vectors)
         else:
             records = [
                 vector_store.VectorRecord(
                     vector=v,
-                    payload={
+                    # Map legacy VectorRecord fields
+                    content=c.text,
+                    metadata={
                         "source_url": job.url,
                         "start": c.start,
                         "end": c.end,
-                        "text": c.text,
                         "tags": job.tags,
                         "episode_id": episode_id,
                         "published_at": _normalize_published_at(getattr(meta, "published_at", None)),
@@ -219,6 +226,7 @@ def run(job: IngestJob, store: vector_store.VectorStore | UnifiedGraphStore) -> 
                 for v, c in zip(vectors, chunks, strict=False)
             ]
             store.upsert(namespace, records)
+            chunks_count = len(records)
 
         handle_error_safely(
             lambda: metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="upsert").inc(),
@@ -270,7 +278,7 @@ def run(job: IngestJob, store: vector_store.VectorStore | UnifiedGraphStore) -> 
                                 )
             except Exception:
                 pass
-        return {"chunks": len(records), "namespace": namespace}
+        return {"chunks": chunks_count, "namespace": namespace}
     except Exception:
         _status = "error"
         handle_error_safely(
