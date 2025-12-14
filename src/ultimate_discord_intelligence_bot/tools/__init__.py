@@ -263,7 +263,10 @@ __all__ = [
     "XMonitorTool",
     "YouTubeResolverTool",
     "YtDlpDownloadTool",
+    "TOOL_MAPPING",
 ]
+
+TOOL_MAPPING = MAPPING
 
 
 def __getattr__(name: str):  # PEP 562: lazy attribute loading

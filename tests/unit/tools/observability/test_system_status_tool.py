@@ -4,7 +4,7 @@ import os
 import shutil
 from types import SimpleNamespace
 
-from ultimate_discord_intelligence_bot.tools.system_status_tool import SystemStatusTool
+from ultimate_discord_intelligence_bot.tools.observability.system_status_tool import SystemStatusTool
 
 
 def test_system_status_tool_reports_metrics(monkeypatch):
