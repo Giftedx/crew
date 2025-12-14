@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 
 from ultimate_discord_intelligence_bot.step_result import StepResult
+from ultimate_discord_intelligence_bot.tools import TOOL_MAPPING
 
 
 logger = logging.getLogger(__name__)
@@ -191,8 +192,6 @@ class ToolRoutingBandit:
         """Auto-discover available tools"""
         discovered_tools = []
         try:
-            from ultimate_discord_intelligence_bot.tools import TOOL_MAPPING
-
             for tool_name, module_path in TOOL_MAPPING.items():
                 capability = ToolCapability(
                     tool_id=tool_name, tool_name=tool_name, category=self._infer_category(module_path), capabilities=[]
