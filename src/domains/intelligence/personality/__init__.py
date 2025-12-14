@@ -5,9 +5,9 @@ from .reward import InteractionMetrics, RewardComputer
 
 
 __all__ = [
+    "InteractionMetrics",
     "PersonalityContext",
     "PersonalityStateManager",
     "PersonalityTraits",
-    "InteractionMetrics",
     "RewardComputer",
 ]
