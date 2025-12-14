@@ -1,7 +1,8 @@
 """Deprecated: Use src/domains/memory/vector/client_factory.py instead."""
+
 import warnings
-from domains.memory.vector.client_factory import get_qdrant_client
-from domains.memory.vector.client_factory import _DummyClient
+
+from domains.memory.vector.client_factory import _DummyClient, get_qdrant_client
 
 
 warnings.warn(
@@ -10,4 +11,4 @@ warnings.warn(
     stacklevel=2,
 )
 
-__all__ = ["get_qdrant_client", "_DummyClient"]
+__all__ = ["_DummyClient", "get_qdrant_client"]

@@ -16,14 +16,13 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ultimate_discord_intelligence_bot.step_result import StepResult
-
 from domains.intelligence.personality import (
     InteractionMetrics,
     PersonalityContext,
     PersonalityStateManager,
     RewardComputer,
 )
+from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from .message_evaluator import EvaluationResult, MessageEvaluator
 from .opt_in_manager import OptInManager
