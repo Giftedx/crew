@@ -196,8 +196,8 @@ class Settings:
         """Dynamic attribute access for feature flags and other settings."""
         # Try feature flags first (ENABLE_*)
         if name.startswith(("ENABLE_", "enable_")):
-            flag_name = name.replace("ENABLE_", "").replace("enable_", "").upper()
-            return self.feature_flags.is_enabled(flag_name)
+            # FeatureFlags attributes include the ENABLE_ prefix
+            return self.feature_flags.is_enabled(name.upper())
 
         # Try unified config
         if hasattr(self._unified_config, name):
