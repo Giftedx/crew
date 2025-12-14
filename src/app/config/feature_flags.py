@@ -135,6 +135,7 @@ class FeatureFlags:
 
     # Enterprise features
     ENABLE_ENTERPRISE_TENANT_MANAGEMENT: bool = False
+    ENABLE_TENANCY_STRICT: bool = True
 
     # WebSocket features
     ENABLE_WEBSOCKET_UPDATES: bool = False
@@ -325,6 +326,7 @@ class FeatureFlags:
             ENABLE_DEVELOPMENT_TOOLS=get_bool_env("ENABLE_DEVELOPMENT_TOOLS", False),
             # Enterprise features
             ENABLE_ENTERPRISE_TENANT_MANAGEMENT=get_bool_env("ENABLE_ENTERPRISE_TENANT_MANAGEMENT", False),
+            ENABLE_TENANCY_STRICT=get_bool_env("ENABLE_TENANCY_STRICT", True),
             # WebSocket features
             ENABLE_WEBSOCKET_UPDATES=get_bool_env("ENABLE_WEBSOCKET_UPDATES", False),
             # Orchestration features
