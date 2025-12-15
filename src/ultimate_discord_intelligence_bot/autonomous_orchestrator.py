@@ -216,6 +216,7 @@ class AutonomousIntelligenceOrchestrator:
             self._llm_available = bool(self._check_llm_api_available())
         except Exception:
             self._llm_available = False
+        self.last_execution_result = None
 
     def _get_budget_limits(self, depth: str) -> dict[str, Any]:
         """Get budget limits based on analysis depth."""
@@ -545,6 +546,8 @@ class AutonomousIntelligenceOrchestrator:
                 self.logger.warning(f"Failed to create tenant context: {e}")
                 tenant_ctx = None
 
+        self.last_execution_result = None
+
         def _canonical_depth(raw: str | None) -> str:
             if not raw:
                 return "standard"
@@ -704,6 +707,10 @@ class AutonomousIntelligenceOrchestrator:
                             task_output.raw if hasattr(task_output, "raw") else str(task_output)
                         )
                 self.logger.info(f"Extracted {len([v for v in task_outputs.values() if v])} task outputs")
+                self.last_execution_result = {
+                    "task_outputs": task_outputs,
+                    "result": result,
+                }
             await self._send_progress_update(interaction, "📝 Formatting intelligence report...", 4, 5)
             result_message = "## Intelligence Analysis Complete\n\n"
             result_message += f"**URL:** {url}\n"

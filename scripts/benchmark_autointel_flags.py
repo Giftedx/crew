@@ -230,6 +230,34 @@ async def run_single_benchmark(
 
         # Collect results (extract from orchestrator state if available)
         # Note: This requires orchestrator to expose results, which may need enhancement
+        transcript_length = None
+        quality_score = None
+        trustworthiness_score = None
+        insights_count = None
+        verified_claims_count = None
+
+        if hasattr(orchestrator, "last_execution_result") and orchestrator.last_execution_result:
+            try:
+                task_outputs = orchestrator.last_execution_result.get("task_outputs", {})
+
+                # Extract transcript length
+                transcription_output = task_outputs.get("transcription")
+                if transcription_output:
+                    if hasattr(transcription_output, "transcript_length"):
+                         transcript_length = transcription_output.transcript_length
+                    elif isinstance(transcription_output, str):
+                        transcript_length = len(transcription_output)
+                    elif hasattr(transcription_output, "get"): # Dictionary-like
+                         transcript_length = transcription_output.get("transcript_length")
+                         if not transcript_length and transcription_output.get("transcript"):
+                             transcript_length = len(transcription_output.get("transcript"))
+
+                # Extract quality metrics if available (placeholder logic based on available data)
+                # We can expand this as more structured output becomes available
+
+            except Exception as e:
+                logger.warning(f"Failed to extract metrics from orchestrator result: {e}")
+
         result = {
             "combination_id": combination_id,
             "combination_name": combo["name"],
@@ -255,11 +283,11 @@ async def run_single_benchmark(
             },
             # Quality metrics (would need to extract from orchestrator)
             "quality": {
-                "transcript_length": None,  # TODO: Extract from orchestrator
-                "quality_score": None,
-                "trustworthiness_score": None,
-                "insights_count": None,
-                "verified_claims_count": None,
+                "transcript_length": transcript_length,
+                "quality_score": quality_score,
+                "trustworthiness_score": trustworthiness_score,
+                "insights_count": insights_count,
+                "verified_claims_count": verified_claims_count,
             },
             "success": True,
             "error": None,
