@@ -14,9 +14,9 @@ Import specific tools or submodules explicitly as needed.
 
 # Ensure src directory is in path for absolute imports
 import sys
+from pathlib import Path
 
-
-_src_path = "/home/crew/src"
+_src_path = str(Path(__file__).parent.parent.parent.parent)
 if _src_path not in sys.path:
     sys.path.insert(0, _src_path)
 

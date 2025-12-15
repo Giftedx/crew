@@ -17,12 +17,14 @@ from ultimate_discord_intelligence_bot.obs import metrics
 from ultimate_discord_intelligence_bot.tenancy import current_tenant, with_tenant
 from ultimate_discord_intelligence_bot.tenancy.registry import TenantRegistry
 
-from ..cache import TranscriptCache
+from ..caching.transcript_cache import TranscriptCache
 from ..settings import DISCORD_WEBHOOK
 from ..step_result import StepResult
 from ..tools import (
     AudioTranscriptionTool,
     DiscordPostTool,
+    ClaimExtractorTool,
+    FactCheckTool,
     GraphMemoryTool,
     HippoRagContinualMemoryTool,
     LogicalFallacyTool,
@@ -57,6 +59,8 @@ class PipelineBase:
     analyzer: TextAnalysisTool
     drive: DriveUploadTool | None
     discord: DiscordPostTool | None
+    claim_extractor: ClaimExtractorTool
+    fact_checker: FactCheckTool
     fallacy_detector: LogicalFallacyTool
     perspective: PerspectiveSynthesizerTool
     memory: MemoryStorageTool
@@ -73,6 +77,8 @@ class PipelineBase:
         analyzer: TextAnalysisTool | None = None,
         drive: DriveUploadTool | None = None,
         discord: DiscordPostTool | None = None,
+        claim_extractor: ClaimExtractorTool | None = None,
+        fact_checker: FactCheckTool | None = None,
         fallacy_detector: LogicalFallacyTool | None = None,
         perspective: PerspectiveSynthesizerTool | None = None,
         memory: MemoryStorageTool | None = None,
@@ -154,6 +160,8 @@ class PipelineBase:
             else:
                 self.logger.warning("Discord webhook not configured - Discord posting disabled")
             self.discord = None
+        self.claim_extractor = claim_extractor or ClaimExtractorTool()
+        self.fact_checker = fact_checker or FactCheckTool()
         self.fallacy_detector = fallacy_detector or LogicalFallacyTool()
         self.perspective = perspective or PerspectiveSynthesizerTool()
         self.memory = memory or MemoryStorageTool()
