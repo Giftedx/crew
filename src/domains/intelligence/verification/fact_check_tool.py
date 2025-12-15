@@ -42,43 +42,33 @@ class FactCheckTool:
     Performs comprehensive fact-checking by aggregating evidence from multiple
     search backends including DuckDuckGo, Serply, Exa AI, Perplexity, and Wolfram Alpha.
     Handles API failures gracefully and returns evidence from available sources.
-
-    Args:
-        claim: The factual claim to verify (str)
-        tenant: Tenant identifier for data isolation
-        workspace: Workspace identifier for organization
-
-    Returns:
-        StepResult with fact-checking results including:
-        - evidence: List of evidence items with title, url, snippet
-        - backends_used: List of successful backend names
-        - backends_failed: List of failed backend names
-        - evidence_count: Total number of evidence items found
-
-    Raises:
-        StepResult.fail: If all backends fail or unexpected error occurs
-        StepResult.skip: If no claim provided
-
-    Example:
-        >>> tool = FactCheckTool()
-        >>> result = tool.run("The Earth is round")
-        >>> assert result.success
-        >>> print(f"Found {result.data['evidence_count']} evidence items")
     """
 
     def __init__(self) -> None:
+        """Initialize the FactCheckTool and set up metrics."""
         self._metrics = get_metrics()
 
     def run(self, claim: str, tenant: str = "global", workspace: str = "global") -> StepResult:
         """Aggregate evidence across all enabled backends with comprehensive error handling.
 
+        Iterates through configured backends (DuckDuckGo, Serply, Exa, Perplexity, Wolfram)
+        and collects evidence items. If a backend fails (e.g., due to network issues or
+        missing keys), it logs the failure and continues to the next.
+
         Args:
-            claim: The factual claim to verify
-            tenant: Tenant identifier for isolation
-            workspace: Workspace identifier
+            claim: The factual claim to verify.
+            tenant: Tenant identifier for isolation.
+            workspace: Workspace identifier.
 
         Returns:
-            StepResult with evidence and backend status information
+            StepResult: A result object containing:
+                - claim: The original claim.
+                - evidence: A list of dicts with 'title', 'url', and 'snippet'.
+                - backends_used: List of backends that successfully returned data.
+                - backends_failed: List of backends that failed.
+                - evidence_count: The total count of evidence items found.
+                Returns a 'skipped' result if the claim is empty.
+                Returns a 'network_error' result if a non-RequestException occurs.
         """
         from ultimate_discord_intelligence_bot.step_result import ErrorContext
 
@@ -133,7 +123,14 @@ class FactCheckTool:
         )
 
     def _search_duckduckgo(self, query: str) -> list[dict]:
-        """Search DuckDuckGo for evidence (no API key required)."""
+        """Search DuckDuckGo for evidence (no API key required).
+
+        Args:
+            query: The search query string.
+
+        Returns:
+            list[dict]: A list of evidence items (title, url, snippet).
+        """
         try:
             url = "https://api.duckduckgo.com/"
             params = {"q": query, "format": "json", "no_html": "1", "skip_disambig": "1"}
@@ -164,7 +161,14 @@ class FactCheckTool:
             raise RequestException("DuckDuckGo search failed") from None
 
     def _search_serply(self, query: str) -> list[dict]:
-        """Search via Serply API (requires API key)."""
+        """Search via Serply API (requires API key).
+
+        Args:
+            query: The search query string.
+
+        Returns:
+            list[dict]: A list of evidence items from organic search results.
+        """
         api_key = os.getenv("SERPLY_API_KEY")
         if not api_key:
             return []
@@ -190,7 +194,14 @@ class FactCheckTool:
             raise RequestException("Serply search failed") from None
 
     def _search_exa(self, query: str) -> list[dict]:
-        """Search via Exa AI (requires API key)."""
+        """Search via Exa AI (requires API key).
+
+        Args:
+            query: The search query string.
+
+        Returns:
+            list[dict]: A list of evidence items with text snippets.
+        """
         api_key = os.getenv("EXA_API_KEY")
         if not api_key:
             return []
@@ -216,7 +227,16 @@ class FactCheckTool:
             raise RequestException("Exa search failed") from None
 
     def _search_perplexity(self, query: str) -> list[dict]:
-        """Search via Perplexity API (requires API key)."""
+        """Search via Perplexity API (requires API key).
+
+        Uses Perplexity's chat completion model to find evidence and citations.
+
+        Args:
+            query: The search query/claim.
+
+        Returns:
+            list[dict]: A list of evidence items, including citations.
+        """
         api_key = os.getenv("PERPLEXITY_API_KEY")
         if not api_key:
             return []
@@ -249,7 +269,16 @@ class FactCheckTool:
             raise RequestException("Perplexity search failed") from None
 
     def _search_wolfram(self, query: str) -> list[dict]:
-        """Search via Wolfram Alpha API (requires App ID)."""
+        """Search via Wolfram Alpha API (requires App ID).
+
+        Useful for fact-checking mathematical or scientific claims.
+
+        Args:
+            query: The search query.
+
+        Returns:
+            list[dict]: A list of evidence items extracted from Wolfram's pods.
+        """
         app_id = os.getenv("WOLFRAM_ALPHA_APP_ID")
         if not app_id:
             return []
