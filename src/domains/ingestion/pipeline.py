@@ -17,6 +17,7 @@ from typing import Any
 from domains.ingestion.pipeline import models
 from domains.intelligence.analysis import segmenter, topics, transcribe
 from domains.memory import embeddings, vector_store
+from domains.memory.unified_graph_store import UnifiedGraphStore
 from ultimate_discord_intelligence_bot.obs import metrics
 
 from .providers import twitch, youtube
@@ -90,7 +91,7 @@ def _normalize_published_at(value: Any) -> str:
         return ""
 
 
-def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
+def run(job: IngestJob, store: vector_store.VectorStore | UnifiedGraphStore) -> dict:
     """Run an ingest job and upsert transcript chunks into *store*.
 
     If `ENABLE_INGEST_CONCURRENT` is set, metadata & transcript retrieval
@@ -183,22 +184,50 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
             if is_missing_id:
                 missing.append("episode_id")
             raise ValueError(f"ingest strict mode violation: missing {', '.join(missing)}")
-        records = [
-            vector_store.VectorRecord(
-                vector=v,
-                payload={
-                    "source_url": job.url,
-                    "start": c.start,
-                    "end": c.end,
-                    "text": c.text,
-                    "tags": job.tags,
-                    "episode_id": episode_id,
-                    "published_at": _normalize_published_at(getattr(meta, "published_at", None)),
-                },
-            )
-            for v, c in zip(vectors, chunks, strict=False)
-        ]
-        store.upsert(namespace, records)
+        if isinstance(store, UnifiedGraphStore):
+            for i, (v, c) in enumerate(zip(vectors, chunks, strict=False)):
+                node_id = f"{episode_id}_chunk_{i}"
+                result = store.add_node(
+                    node_id=node_id,
+                    labels=["TranscriptChunk"],
+                    properties={
+                        "source_url": job.url,
+                        "start": c.start,
+                        "end": c.end,
+                        "text": c.text,
+                        "tags": job.tags,
+                        "episode_id": episode_id,
+                        "published_at": _normalize_published_at(getattr(meta, "published_at", None)),
+                    },
+                    vector=v,
+                    namespace=namespace,
+                )
+                if not result.success:
+                    handle_error_safely(
+                        lambda: metrics.PIPELINE_STEPS_FAILED.labels(**metrics.label_ctx(), step="add_node").inc(),
+                        error_message="Failed to record node addition failure metric",
+                    )
+            chunks_count = len(vectors)
+        else:
+            records = [
+                vector_store.VectorRecord(
+                    vector=v,
+                    # Map legacy VectorRecord fields
+                    content=c.text,
+                    metadata={
+                        "source_url": job.url,
+                        "start": c.start,
+                        "end": c.end,
+                        "tags": job.tags,
+                        "episode_id": episode_id,
+                        "published_at": _normalize_published_at(getattr(meta, "published_at", None)),
+                    },
+                )
+                for v, c in zip(vectors, chunks, strict=False)
+            ]
+            store.upsert(namespace, records)
+            chunks_count = len(records)
+
         handle_error_safely(
             lambda: metrics.PIPELINE_STEPS_COMPLETED.labels(**metrics.label_ctx(), step="upsert").inc(),
             error_message="Failed to record upsert completion metric",
@@ -249,7 +278,7 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
                                 )
             except Exception:
                 pass
-        return {"chunks": len(records), "namespace": namespace}
+        return {"chunks": chunks_count, "namespace": namespace}
     except Exception:
         _status = "error"
         handle_error_safely(

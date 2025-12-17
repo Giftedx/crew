@@ -186,11 +186,12 @@ def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
         records = [
             vector_store.VectorRecord(
                 vector=v,
-                payload={
+                    # Map legacy VectorRecord fields
+                    content=c.text,
+                    metadata={
                     "source_url": job.url,
                     "start": c.start,
                     "end": c.end,
-                    "text": c.text,
                     "tags": job.tags,
                     "episode_id": episode_id,
                     "published_at": _normalize_published_at(getattr(meta, "published_at", None)),

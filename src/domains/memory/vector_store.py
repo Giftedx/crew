@@ -29,6 +29,13 @@ class VectorStore:
 
     def __init__(self):
         """Initialize vector store."""
+        import warnings
+
+        warnings.warn(
+            "VectorStore is deprecated and will be removed in a future version. Use UnifiedGraphStore instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._collections: dict[str, list[VectorRecord]] = {}
         logger.info("VectorStore initialized")
 
