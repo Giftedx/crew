@@ -19,6 +19,10 @@ from domains.intelligence.analysis import segmenter, topics, transcribe
 from domains.memory import embeddings, vector_store
 from ultimate_discord_intelligence_bot.obs import metrics
 
+import asyncio
+import json
+import logging
+
 from .providers import twitch, youtube
 
 
@@ -88,6 +92,70 @@ def _normalize_published_at(value: Any) -> str:
         return str(value)
     except Exception:
         return ""
+
+
+async def start_ingest_workers(loop: asyncio.AbstractEventLoop) -> None:
+    """Start the background ingestion workers."""
+
+    async def _worker_loop():
+        db_path = os.getenv("INGEST_DB_PATH")
+        if not db_path:
+            logging.info("INGEST_DB_PATH not set; ingest workers disabled.")
+            return
+
+        logging.info("Starting ingest worker loop...")
+        store = vector_store.VectorStore()
+
+        while True:
+            try:
+                conn = models.connect(db_path)
+                try:
+                    job_record = models.pick_next_pending_job(conn)
+
+                    if not job_record:
+                        await asyncio.sleep(5)  # Poll interval
+                        continue
+
+                    logging.info(f"Processing ingest job {job_record.id} ({job_record.source_type} - {job_record.url})")
+
+                    try:
+                        # Parse tags from JSON string if needed
+                        tags_list = []
+                        if job_record.tags:
+                            try:
+                                tags_list = json.loads(job_record.tags)
+                                if not isinstance(tags_list, list):
+                                    tags_list = [str(tags_list)]
+                            except json.JSONDecodeError:
+                                tags_list = [t.strip() for t in job_record.tags.split(",") if t.strip()]
+
+                        job = IngestJob(
+                            source=job_record.source_type,
+                            external_id=job_record.external_id,
+                            url=job_record.url,
+                            tenant=job_record.tenant,
+                            workspace=job_record.workspace,
+                            tags=tags_list,
+                            visibility=job_record.visibility
+                        )
+
+                        # Offload blocking run to thread executor
+                        await loop.run_in_executor(None, run, job, store)
+
+                        models.update_ingest_job_status(conn, job_record.id, "completed")
+                        logging.info(f"Ingest job {job_record.id} completed successfully.")
+
+                    except Exception as e:
+                        logging.error(f"Ingest job {job_record.id} failed: {e}")
+                        models.update_ingest_job_status(conn, job_record.id, "failed", error=str(e))
+                finally:
+                    conn.close()
+
+            except Exception as e:
+                logging.error(f"Ingest worker loop error: {e}")
+                await asyncio.sleep(5)
+
+    loop.create_task(_worker_loop())
 
 
 def run(job: IngestJob, store: vector_store.VectorStore) -> dict:
