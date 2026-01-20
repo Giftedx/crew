@@ -9,11 +9,13 @@ Actions:
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from ultimate_discord_intelligence_bot.obs.metrics import get_metrics
 from ultimate_discord_intelligence_bot.step_result import StepResult
 
 from ._base import BaseTool
@@ -32,6 +34,10 @@ class CheckpointManagementTool(BaseTool[dict]):
     description: str = "Manages LangGraph checkpoints (list/load/delete) using a simple JSON metadata store."
     args_schema: type[BaseModel] = CheckpointArgs
 
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._metrics = get_metrics()
+
     def _read_store(self, path: Path) -> dict[str, Any]:
         if not path.exists():
             return {}
@@ -49,26 +55,42 @@ class CheckpointManagementTool(BaseTool[dict]):
     ) -> StepResult:
         meta_path = Path(store_path or "crew_data/langgraph/checkpoints.meta.json")
         store = self._read_store(meta_path)
+        result: StepResult
+
         if action == "list":
             runs = [
                 {"thread_id": tid, **{k: v for k, v in rec.items() if k != "events"}}
                 for tid, rec in store.items()
                 if isinstance(rec, dict)
             ]
-            return StepResult.ok(data={"runs": runs})
-        if action == "load":
+            result = StepResult.ok(data={"runs": runs})
+        elif action == "load":
             if not thread_id:
-                return StepResult.fail("thread_id is required for load")
-            rec = store.get(thread_id)
-            if not isinstance(rec, dict):
-                return StepResult.not_found("checkpoint not found", thread_id=thread_id)
-            return StepResult.ok(data={"checkpoint": {k: v for k, v in rec.items() if k != "events"}})
-        if action == "delete":
+                result = StepResult.fail("thread_id is required for load")
+            else:
+                rec = store.get(thread_id)
+                if not isinstance(rec, dict):
+                    result = StepResult.not_found("checkpoint not found", thread_id=thread_id)
+                else:
+                    result = StepResult.ok(data={"checkpoint": {k: v for k, v in rec.items() if k != "events"}})
+        elif action == "delete":
             if not thread_id:
-                return StepResult.fail("thread_id is required for delete")
-            if thread_id in store:
+                result = StepResult.fail("thread_id is required for delete")
+            elif thread_id in store:
                 del store[thread_id]
                 self._write_store(meta_path, store)
-                return StepResult.ok(data={"deleted": thread_id})
-            return StepResult.not_found("checkpoint not found", thread_id=thread_id)
-        return StepResult.fail(f"Unknown action: {action}")
+                result = StepResult.ok(data={"deleted": thread_id})
+            else:
+                result = StepResult.not_found("checkpoint not found", thread_id=thread_id)
+        else:
+            result = StepResult.fail(f"Unknown action: {action}")
+
+        try:
+            self._metrics.counter(
+                "tool_runs_total",
+                labels={"tool": self.name, "outcome": "success" if result.success else "failure"},
+            ).inc()
+        except Exception as exc:
+            logging.debug("metrics emit failed: %s", exc)
+
+        return result

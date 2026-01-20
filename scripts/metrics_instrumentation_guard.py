@@ -42,13 +42,6 @@ ALLOWED_UNINSTRUMENTED = {
     "template_tool.py",  # Tool template
     "verification_base.py",  # Base verification tool
     # TODO: Add metrics instrumentation to these tools in future phase
-    "checkpoint_management_tool.py",  # not currently used in crew configuration
-    "confidence_scoring_tool.py",  # not currently used in crew configuration
-    "consistency_check_tool.py",  # not currently used in crew configuration
-    "content_type_routing_tool.py",  # not currently used in crew configuration
-    "cross_platform_narrative_tool.py",  # not currently used in crew configuration
-    "early_exit_conditions_tool.py",  # not currently used in crew configuration
-    "instagram_stories_archiver_tool.py",  # not currently used in crew configuration
     "knowledge_ops_tool.py",  # not currently used in crew configuration
     "multimodal_analysis_tool_old.py",  # old version, not used
     "narrative_tracker_tool.py",  # not currently used in crew configuration
